@@ -10,7 +10,6 @@ import {
 	WEAPON_MASTERIES,
 } from './data';
 import type {
-	Character,
 	CurrencyType,
 	HomebrewForm,
 	InventoryItem,
