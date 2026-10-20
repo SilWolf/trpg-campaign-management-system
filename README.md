@@ -15,3 +15,20 @@
 npm install
 npm run dev
 ```
+
+## TypeScript 檢查與建置
+
+```bash
+npm run typecheck
+npm run build
+npm run lint
+```
+
+應用程式入口與 React 元件使用 TypeScript (`.ts` / `.tsx`)，嚴格型別檢查已納入正式建置流程。
+
+## 程式碼結構
+
+- `src/App.tsx`：應用程式狀態與功能協調。
+- `src/components/`：背包格網、物品資訊卡、自創道具鍛造、貨幣管理與物品圖示元件。
+- `src/data.ts`：預設角色/物品資料、稀有度樣式與武器精通字典。
+- `src/types.ts`：共用 TypeScript 型別。
