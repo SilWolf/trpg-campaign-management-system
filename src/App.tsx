@@ -3,7 +3,12 @@ import InventoryGrid from './components/InventoryGrid';
 import HomebrewModal from './components/HomebrewModal';
 import CurrencyPanel from './components/CurrencyPanel';
 import ItemTooltip from './components/ItemTooltip';
-import { INITIAL_CHARACTERS, INITIAL_ITEMS, RARITY_CONFIG, WEAPON_MASTERIES } from './data';
+import {
+	INITIAL_CHARACTERS,
+	INITIAL_ITEMS,
+	RARITY_CONFIG,
+	WEAPON_MASTERIES,
+} from './data';
 import type {
 	Character,
 	CurrencyType,
@@ -27,15 +32,16 @@ import {
 	Scale,
 	Crown,
 } from 'lucide-react';
+import { useCampaignSync } from './hooks/useCampaignSync';
 
 export default function App() {
 	// 視角狀態：'player' | 'dm'
 	const [viewMode, setViewMode] = useState<ViewMode>('dm');
 	// 當前選中角色
-	const [characters, setCharacters] = useState<Character[]>(INITIAL_CHARACTERS);
-	const [activeCharId, setActiveCharId] = useState('tav');
 	// 背包物品清單
-	const [items, setItems] = useState<InventoryItem[]>(INITIAL_ITEMS);
+	const { characters, setCharacters, items, setItems, syncStatus } =
+		useCampaignSync(INITIAL_CHARACTERS, INITIAL_ITEMS);
+	const [activeCharId, setActiveCharId] = useState('tav');
 	// 當前檢視/選中的物品 ID
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	// 懸停預覽的物品 ID
@@ -346,7 +352,10 @@ export default function App() {
 		}
 	};
 
-	const transferItemToCharacter = (item: InventoryItem, targetCharId: string) => {
+	const transferItemToCharacter = (
+		item: InventoryItem,
+		targetCharId: string,
+	) => {
 		if (targetCharId === item.ownerId) return;
 		const targetItems = items.filter((i) => i.ownerId === targetCharId);
 		const occupied = new Set(targetItems.map((i) => i.slot));
@@ -487,6 +496,36 @@ export default function App() {
 								</h1>
 								<span className='text-[11px] px-2 py-0.5 rounded bg-amber-950/80 border border-amber-600/50 text-amber-300 font-semibold'>
 									D&amp;D 5R (2024)
+								</span>
+								<span
+									className={`text-[11px] px-2 py-0.5 rounded border flex items-center gap-1.5 font-medium ${
+										syncStatus === 'synced'
+											? 'bg-emerald-950/80 border-emerald-600/50 text-emerald-300'
+											: syncStatus === 'connecting'
+												? 'bg-amber-950/80 border-amber-600/50 text-amber-300 animate-pulse'
+												: syncStatus === 'error'
+													? 'bg-red-950/80 border-red-600/50 text-red-300'
+													: 'bg-stone-900 border-stone-700 text-stone-400'
+									}`}
+								>
+									<span
+										className={`w-2 h-2 rounded-full ${
+											syncStatus === 'synced'
+												? 'bg-emerald-400 shadow-[0_0_6px_#34d399]'
+												: syncStatus === 'connecting'
+													? 'bg-amber-400'
+													: syncStatus === 'error'
+														? 'bg-red-400'
+														: 'bg-stone-500'
+										}`}
+									/>
+									{syncStatus === 'synced'
+										? 'Supabase 即時同步中'
+										: syncStatus === 'connecting'
+											? '連線雲端中...'
+											: syncStatus === 'error'
+												? '同步異常'
+												: '單機預覽模式'}
 								</span>
 							</div>
 							<p className='text-xs text-stone-400'>
