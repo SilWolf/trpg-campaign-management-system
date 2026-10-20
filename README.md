@@ -1,16 +1,17 @@
-# React + Vite
+# D&D 5R (2024) 戰役背包管理系統 (BG3 Style Inventory)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+專為 D&D 5R (2024 新規則) 跑團設計的《博德之門3》風格暗黑奇幻風角色背包與戰利品管理工具。
 
-Currently, two official plugins are available:
+## 核心功能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **BG3 視覺風格**：支援稀有度發光邊框（普通、非普通、稀有、極珍稀、傳奇、神器）與動態懸停資訊卡。
+- **D&D 5R 規則支援**：內建 2024 版武器精通（Weapon Mastery）規則說明、同調欄位（上限 3 格）與負重計算（STR × 15 lbs）。
+- **硬幣與公基金系統**：支援 PP / GP / EP / SP / CP 五種貨幣、50 枚硬幣計重規則開關與一鍵換整金幣。
+- **DM 上帝視角與未鑑定機制**：支援隱藏未鑑定魔法物品真實屬性與 DM 專屬詛咒筆記，並內建自創道具（Homebrew）鍛造工坊。
 
-## React Compiler
+## 本地開發啟動
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+```
