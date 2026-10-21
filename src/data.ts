@@ -1,10 +1,11 @@
-import type {
-	Character,
-	InventoryItem,
-	Rarity,
-	RarityStyle,
-	WeaponMasteryInfo,
-	WeaponMasteryKey,
+import {
+	CAMP_CHEST_ID,
+	type Character,
+	type InventoryItem,
+	type Rarity,
+	type RarityStyle,
+	type WeaponMasteryInfo,
+	type WeaponMasteryKey,
 } from './types';
 
 // ==========================================
@@ -141,7 +142,7 @@ export const INITIAL_CHARACTERS: Character[] = [
 		currencies: { pp: 5, gp: 120, ep: 0, sp: 12, cp: 5 },
 	},
 	{
-		id: 'camp',
+		id: CAMP_CHEST_ID,
 		name: '營地旅人儲物箱',
 		title: '小隊公用倉庫 & 公基金',
 		str: 999, // 無限負重

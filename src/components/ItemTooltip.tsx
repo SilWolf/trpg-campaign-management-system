@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import ItemIcon from './ItemIcon';
 import {
+	CAMP_CHEST_ID,
 	resolveItemFlags,
 	type Character,
 	type InventoryItem,
@@ -97,9 +98,11 @@ export default function ItemTooltip({
 		setNoteDraft(inspectedItem?.playerNotes || '');
 	}, [inspectedItem?.id, inspectedItem?.playerNotes]);
 
+	const isInCampChest = inspectedItem?.ownerId === CAMP_CHEST_ID;
 	const canManagePrivacy =
-		viewMode === 'dm' ||
-		(inspectedItem && inspectedItem.ownerId === viewerCharId);
+		!isInCampChest &&
+		(viewMode === 'dm' ||
+			(inspectedItem && inspectedItem.ownerId === viewerCharId));
 
 	return (
 		<div className='flex flex-col'>
@@ -589,8 +592,8 @@ export default function ItemTooltip({
 								{/* 互動操作按鈕列 */}
 								<div className='pt-2 border-t border-stone-800 space-y-2'>
 									<div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
-										{/* 穿脫裝備：依據 isEquippable 判斷 */}
-										{isEquippable && (
+										{/* 穿脫裝備：儲物箱內不可直接穿戴 */}
+										{!isInCampChest && isEquippable && (
 											<button
 												onClick={() => toggleEquip(inspectedItem)}
 												className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
@@ -603,8 +606,8 @@ export default function ItemTooltip({
 											</button>
 										)}
 
-										{/* 同調開關 */}
-										{inspectedItem.requiresAttunement && (
+										{/* 同調開關：儲物箱內不可同調 */}
+										{!isInCampChest && inspectedItem.requiresAttunement && (
 											<button
 												onClick={() => toggleAttune(inspectedItem)}
 												className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
@@ -641,7 +644,7 @@ export default function ItemTooltip({
 											</button>
 										)}
 
-										{/* 消耗品使用：依據 isConsumable 判斷 */}
+										{/* 消耗品使用與拆分堆疊保持不變 */}
 										{isConsumable && (
 											<button
 												onClick={() =>
@@ -666,26 +669,69 @@ export default function ItemTooltip({
 										)}
 									</div>
 
-									{/* 移交給其他隊友 */}
-									<div className='flex items-center gap-2 pt-1'>
-										<span className='text-[11px] text-stone-400 flex items-center gap-1 shrink-0'>
+									{/* 移交給隊友 或 送往/領出營地儲物箱 */}
+									<div className='flex flex-col gap-1.5 pt-1'>
+										<span className='text-[11px] text-stone-400 flex items-center gap-1'>
 											<Send className='w-3 h-3 text-amber-400' />
-											<span>移交給隊友:</span>
+											<span>
+												{isInCampChest
+													? '從儲物箱領取至：'
+													: '移交或送往營地：'}
+											</span>
 										</span>
+
 										<div className='flex items-center gap-1.5 flex-wrap'>
+											{/* 若物品在角色身上：提供「🏕️ 送往營地儲物箱」按鈕 */}
+											{!isInCampChest && (
+												<button
+													onClick={() =>
+														transferItemToCharacter(
+															inspectedItem,
+															CAMP_CHEST_ID,
+														)
+													}
+													className='text-[11px] px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/70 text-cyan-100 font-medium transition cursor-pointer'
+												>
+													🏕️ 送往營地儲物箱
+												</button>
+											)}
+
+											{/* 移交給其他角色（若在玩家視角且從儲物箱領出，將「我的角色」排第一並高亮） */}
 											{characters
-												.filter((c) => c.id !== activeCharId)
-												.map((target) => (
-													<button
-														key={target.id}
-														onClick={() =>
-															transferItemToCharacter(inspectedItem, target.id)
-														}
-														className='text-[11px] px-2 py-1 rounded bg-stone-900 hover:bg-amber-950 border border-stone-700 hover:border-amber-600/60 text-stone-300 transition cursor-pointer'
-													>
-														{target.avatar} {target.name.split(' ')[0]}
-													</button>
-												))}
+												.filter(
+													(c) =>
+														c.id !== activeCharId && c.id !== CAMP_CHEST_ID,
+												)
+												.sort((a, b) =>
+													a.id === viewerCharId
+														? -1
+														: b.id === viewerCharId
+															? 1
+															: 0,
+												)
+												.map((target) => {
+													const isMe =
+														viewMode === 'player' && target.id === viewerCharId;
+													return (
+														<button
+															key={target.id}
+															onClick={() =>
+																transferItemToCharacter(
+																	inspectedItem,
+																	target.id,
+																)
+															}
+															className={`text-[11px] px-2 py-1 rounded border transition cursor-pointer ${
+																isMe && isInCampChest
+																	? 'bg-emerald-950/90 hover:bg-emerald-900 border-emerald-500/70 text-emerald-100 font-semibold'
+																	: 'bg-stone-900 hover:bg-amber-950 border-stone-700 hover:border-amber-600/60 text-stone-300'
+															}`}
+														>
+															{target.avatar} {target.name.split(' ')[0]}
+															{isMe && isInCampChest ? ' (領回背包)' : ''}
+														</button>
+													);
+												})}
 										</div>
 									</div>
 

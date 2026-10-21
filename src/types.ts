@@ -131,3 +131,6 @@ export function getItemSection(item: InventoryItem): ItemSection {
 	if (isConsumable) return 'Consumable';
 	return 'Misc';
 }
+
+// 新增：營地儲物箱專屬 Owner ID
+export const CAMP_CHEST_ID = 'camp-chest';
