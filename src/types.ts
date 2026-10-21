@@ -6,7 +6,7 @@ export type Rarity =
 	| 'Legendary'
 	| 'Artifact';
 export type ItemCategory = 'Weapon' | 'Armor' | 'Consumable' | 'Misc';
-export type WeaponMastery =
+export type WeaponMasteryKey =
 	| 'None'
 	| 'Cleave'
 	| 'Graze'
@@ -16,20 +16,25 @@ export type WeaponMastery =
 	| 'Slow'
 	| 'Topple'
 	| 'Vex';
+export type WeaponMasteryInfo = { name: string; desc: string };
 export type CurrencyType = 'pp' | 'gp' | 'ep' | 'sp' | 'cp';
 export type ViewMode = 'player' | 'dm';
+
+// 新增：背包展示模式（緊湊格字 vs 列表展示）與四大自動分類
+export type InventoryDisplayMode = 'grid6' | 'grid' | 'list';
+export type ItemSection = 'Equipment' | 'Consumable' | 'Important' | 'Misc';
 
 export type InventoryItem = {
 	id: string;
 	ownerId: string;
-	slot: number;
+	slot?: number; // 設為選填以相容舊資料，新系統不再使用格位座標
 	name: string;
 	category: ItemCategory;
 	subType: string;
 	rarity: Rarity;
 	icon: string;
 	damage: string | null;
-	mastery: WeaponMastery;
+	mastery: WeaponMasteryKey;
 	ac: string | null;
 	weight: number;
 	valueGp: number;
@@ -44,6 +49,11 @@ export type InventoryItem = {
 	effects: string;
 	flavor: string;
 	dmNotes: string;
+	playerNotes?: string; // 玩家自己在物品上寫的備註 (支援 Markdown)
+	isPrivate?: boolean; // 是否放在「私人背包」(僅本人與 DM 可見)
+	isEquippable?: boolean; // 可否裝備？
+	isConsumable?: boolean; // 可否消耗？
+	isImportant?: boolean; // 是否重要物品？
 };
 
 export type Character = {
@@ -62,7 +72,7 @@ export type HomebrewForm = {
 	rarity: Rarity;
 	icon: string;
 	damage: string;
-	mastery: WeaponMastery;
+	mastery: WeaponMasteryKey;
 	ac: string;
 	weight: string;
 	valueGp: string;
@@ -73,6 +83,10 @@ export type HomebrewForm = {
 	effects: string;
 	flavor: string;
 	dmNotes: string;
+	isPrivate?: boolean;
+	isEquippable: boolean;
+	isConsumable: boolean;
+	isImportant: boolean;
 };
 
 export type RarityStyle = {
@@ -85,3 +99,26 @@ export type RarityStyle = {
 	text: string;
 	badgeBg: string;
 };
+
+export function resolveItemFlags(item: InventoryItem) {
+	const isEquippable =
+		item.isEquippable !== undefined
+			? item.isEquippable
+			: item.category === 'Weapon' ||
+				item.category === 'Armor' ||
+				item.requiresAttunement;
+	const isConsumable =
+		item.isConsumable !== undefined
+			? item.isConsumable
+			: item.category === 'Consumable';
+	const isImportant = Boolean(item.isImportant);
+	return { isEquippable, isConsumable, isImportant };
+}
+
+export function getItemSection(item: InventoryItem): ItemSection {
+	const { isEquippable, isConsumable, isImportant } = resolveItemFlags(item);
+	if (isImportant) return 'Important';
+	if (isEquippable) return 'Equipment';
+	if (isConsumable) return 'Consumable';
+	return 'Misc';
+}

@@ -1,54 +1,69 @@
+import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import ItemIcon from './ItemIcon';
+import {
+	resolveItemFlags,
+	type Character,
+	type InventoryItem,
+	type Rarity,
+	type RarityStyle,
+	type ViewMode,
+	type WeaponMasteryInfo,
+	type WeaponMasteryKey,
+} from '../types';
 import {
 	Backpack,
-	Eye,
-	EyeOff,
 	HelpCircle,
-	Move,
-	Shield,
-	ShieldAlert,
+	EyeOff,
+	Eye,
 	Sparkles,
-	Star,
 	Sword,
+	Shield,
+	Split,
+	Send,
 	Trash2,
-	Zap,
+	Lock,
+	Unlock,
+	Edit3,
+	StickyNote,
+	Check,
+	Star,
 } from 'lucide-react';
-import ItemIcon from './ItemIcon';
-import type {
-	Character,
-	InventoryItem,
-	Rarity,
-	RarityStyle,
-	ViewMode,
-	WeaponMastery,
-} from '../types';
 
-type ItemTooltipProps = {
+interface ItemTooltipProps {
 	inspectedItem: InventoryItem | null;
 	viewMode: ViewMode;
 	rarityConfig: Record<Rarity, RarityStyle>;
-	weaponMasteries: Record<WeaponMastery, { name: string; desc: string }>;
+	weaponMasteries: Record<WeaponMasteryKey, WeaponMasteryInfo>;
 	characters: Character[];
 	activeCharId: string;
-	moveSourceSlot: number | null;
-	setMoveSourceSlot: (slot: number | null) => void;
+	viewerCharId: string;
 	adjustCharges: (item: InventoryItem, delta: number) => void;
 	toggleEquip: (item: InventoryItem) => void;
 	toggleAttune: (item: InventoryItem) => void;
-	consumeOrSplitStack: (item: InventoryItem, action: 'consume' | 'split') => void;
+	consumeOrSplitStack: (
+		item: InventoryItem,
+		action: 'consume' | 'split',
+	) => void;
 	transferItemToCharacter: (item: InventoryItem, targetCharId: string) => void;
 	toggleIdentify: (item: InventoryItem) => void;
 	deleteItem: (item: InventoryItem) => void;
-};
+	onOpenEditModal: (item: InventoryItem) => void;
+	onUpdatePlayerNotes: (item: InventoryItem, notes: string) => void;
+	onTogglePrivate: (item: InventoryItem) => void;
+}
 
-const ItemTooltip = ({
+const markdownClass =
+	'[&_p]:mb-1.5 [&_p:last-child]:mb-0 [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:mb-1.5 [&_ol]:list-decimal [&_ol]:pl-4 [&_ol]:mb-1.5 [&_strong]:text-amber-200 [&_strong]:font-semibold [&_em]:text-stone-300 [&_blockquote]:border-l-2 [&_blockquote]:border-amber-600/60 [&_blockquote]:pl-2.5 [&_blockquote]:italic [&_blockquote]:text-stone-400 [&_code]:bg-stone-950 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-amber-300';
+
+export default function ItemTooltip({
 	inspectedItem,
 	viewMode,
 	rarityConfig,
 	weaponMasteries,
 	characters,
 	activeCharId,
-	moveSourceSlot,
-	setMoveSourceSlot,
+	viewerCharId,
 	adjustCharges,
 	toggleEquip,
 	toggleAttune,
@@ -56,392 +71,493 @@ const ItemTooltip = ({
 	transferItemToCharacter,
 	toggleIdentify,
 	deleteItem,
-}: ItemTooltipProps) => (
-<div className='lg:col-span-5'>
-					{inspectedItem ? (
-						(() => {
-							const isMasked =
-								!inspectedItem.isIdentified && viewMode === 'player';
-							const rarity = isMasked
-								? rarityConfig.Common
-								: rarityConfig[inspectedItem.rarity] || rarityConfig.Common;
-							const masteryInfo =
-								weaponMasteries[inspectedItem.mastery] ||
-								weaponMasteries.None;
+	onOpenEditModal,
+	onUpdatePlayerNotes,
+	onTogglePrivate,
+}: ItemTooltipProps) {
+	const [isEditingNote, setIsEditingNote] = useState(false);
+	const [noteDraft, setNoteDraft] = useState('');
 
-							return (
-								<div
-									className={`rounded-lg border-2 ${rarity.border} bg-[#110f0d] shadow-[0_0_45px_rgba(0,0,0,0.95)] overflow-hidden transition-all duration-200 sticky top-5`}
-								>
-									{/* 卡片頂部：稀有度漸層標題區 */}
-									<div
-										className={`p-5 bg-gradient-to-b ${rarity.headerGradient} border-b border-amber-500/20 relative`}
-									>
-										<div className='flex items-start justify-between gap-4'>
-											<div>
-												{/* 稀有度與分類標籤 */}
-												<div className='flex flex-wrap items-center gap-1.5 mb-1.5'>
-													<span
-														className={`text-[11px] font-bold px-2 py-0.5 rounded border ${rarity.badgeBg}`}
-													>
-														{isMasked ? '未知稀有度' : rarity.label}
-													</span>
-													<span className='text-xs text-stone-300'>
-														{inspectedItem.subType}
-													</span>
-													{inspectedItem.isHomebrew &&
-														(viewMode === 'dm' ||
-															inspectedItem.isIdentified) && (
-															<span className='text-[11px] px-2 py-0.5 rounded bg-purple-950/90 border border-purple-400/60 text-purple-200 font-medium'>
-																✨ DM 自創道具
-															</span>
-														)}
-													{!inspectedItem.isIdentified && (
-														<span className='text-[11px] px-2 py-0.5 rounded bg-amber-950 border border-amber-500 text-amber-300 font-semibold'>
-															{viewMode === 'dm'
-																? '👁️ 玩家端目前未鑑定'
-																: '❓ 未鑑定物品'}
-														</span>
-													)}
-												</div>
+	useEffect(() => {
+		setIsEditingNote(false);
+		setNoteDraft(inspectedItem?.playerNotes || '');
+	}, [inspectedItem?.id, inspectedItem?.playerNotes]);
 
-												{/* 物品名稱 */}
-												<h2
-													className={`text-xl sm:text-2xl font-serif font-bold tracking-wide ${
-														isMasked ? 'text-purple-300' : rarity.text
-													}`}
+	const canManagePrivacy =
+		viewMode === 'dm' ||
+		(inspectedItem && inspectedItem.ownerId === viewerCharId);
+
+	return (
+		<div className='lg:col-span-5 flex flex-col'>
+			{inspectedItem ? (
+				(() => {
+					const masked = !inspectedItem.isIdentified && viewMode === 'player';
+					const rStyle = masked
+						? rarityConfig.Uncommon
+						: rarityConfig[inspectedItem.rarity] || rarityConfig.Common;
+					const masteryInfo =
+						!masked && inspectedItem.mastery && inspectedItem.mastery !== 'None'
+							? weaponMasteries[inspectedItem.mastery]
+							: null;
+					const { isEquippable, isConsumable, isImportant } =
+						resolveItemFlags(inspectedItem);
+
+					return (
+						<div
+							className={`rounded-lg border-2 ${rStyle.border} bg-[#110e0c] shadow-2xl overflow-hidden flex flex-col transition-all duration-200`}
+						>
+							{/* 頂部稀有度漸層標題區 */}
+							<div
+								className={`p-4 bg-gradient-to-r ${rStyle.headerGradient} border-b border-stone-800 relative`}
+							>
+								<div className='flex items-start justify-between gap-3'>
+									<div className='flex items-center gap-3'>
+										<div
+											className={`w-14 h-14 rounded-md bg-stone-950/90 border ${rStyle.border} ${rStyle.glow} flex items-center justify-center shrink-0 relative`}
+										>
+											{masked ? (
+												<HelpCircle className='w-8 h-8 text-purple-400' />
+											) : (
+												<ItemIcon
+													iconName={inspectedItem.icon}
+													className={`w-8 h-8 ${rStyle.text}`}
+												/>
+											)}
+											{inspectedItem.isPrivate && (
+												<span
+													title='私人背包物品 (其他玩家不可見)'
+													className='absolute -top-1.5 -right-1.5 bg-emerald-900 border border-emerald-400 text-emerald-200 p-0.5 rounded-full shadow'
 												>
-													{isMasked
-														? '未知的魔法物品 (未鑑定)'
-														: inspectedItem.name}
+													<Lock className='w-3 h-3' />
+												</span>
+											)}
+										</div>
+										<div>
+											<div className='flex items-center gap-2 flex-wrap'>
+												<h2
+													className={`text-lg font-serif font-bold ${rStyle.text}`}
+												>
+													{masked ? '未知的魔法物品' : inspectedItem.name}
 												</h2>
-											</div>
-
-											{/* 右上角大型道具圖示框 */}
-											<div
-												className={`w-14 h-14 rounded-lg bg-stone-950/80 border-2 ${rarity.border} flex items-center justify-center shrink-0 shadow-inner ${rarity.text}`}
-											>
-												{isMasked ? (
-													<HelpCircle className='w-8 h-8 text-purple-400' />
-												) : (
-													<ItemIcon
-														iconName={inspectedItem.icon}
-														className='w-8 h-8'
-													/>
+												{isImportant && (
+													<span className='text-[10px] px-1.5 py-0.5 rounded bg-purple-950 border border-purple-400/70 text-purple-200 flex items-center gap-1 font-medium'>
+														<Star className='w-2.5 h-2.5 text-purple-300' />
+														重要物品
+													</span>
 												)}
+												{inspectedItem.isHomebrew && (
+													<span className='text-[10px] px-1.5 py-0.5 rounded bg-purple-950 border border-purple-500/60 text-purple-200 font-medium'>
+														DM 自創
+													</span>
+												)}
+												{inspectedItem.isPrivate && (
+													<span className='text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 flex items-center gap-1 font-medium'>
+														<Lock className='w-2.5 h-2.5' />
+														私人專屬
+													</span>
+												)}
+											</div>
+											<div className='text-xs text-stone-300 mt-0.5 flex items-center gap-2'>
+												<span className={`font-semibold ${rStyle.text}`}>
+													{masked ? '未鑑定' : rStyle.label}
+												</span>
+												<span>•</span>
+												<span>{inspectedItem.subType}</span>
 											</div>
 										</div>
+									</div>
 
-										{/* 核心數值列 (傷害 / AC / 同調狀態) */}
-										{!isMasked && (
-											<div className='mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center gap-4 text-sm'>
-												{inspectedItem.damage && (
-													<div className='flex items-center gap-1.5'>
-														<Sword className='w-4 h-4 text-amber-400' />
-														<span className='text-stone-300'>傷害/效果：</span>
-														<strong className='text-amber-200 font-mono'>
-															{inspectedItem.damage}
-														</strong>
-													</div>
-												)}
-												{inspectedItem.ac && (
-													<div className='flex items-center gap-1.5'>
-														<Shield className='w-4 h-4 text-amber-400' />
-														<span className='text-stone-300'>
-															護甲等級 (AC)：
-														</span>
-														<strong className='text-amber-200 font-mono'>
-															{inspectedItem.ac}
-														</strong>
-													</div>
-												)}
-												{inspectedItem.requiresAttunement && (
-													<div className='flex items-center gap-1 text-xs text-amber-300/90 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-600/40'>
-														<Sparkles className='w-3.5 h-3.5' />
-														<span>
-															需同調 (
-															{inspectedItem.attuned ? '已同調' : '未同調'})
-														</span>
-													</div>
-												)}
+									{/* 裝備 / 同調 / 未鑑定狀態標籤 */}
+									<div className='flex flex-col items-end gap-1 shrink-0'>
+										{inspectedItem.equipped && (
+											<span className='text-[10px] px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400 text-amber-200 font-semibold'>
+												已裝備
+											</span>
+										)}
+										{inspectedItem.attuned && (
+											<span className='text-[10px] px-2 py-0.5 rounded bg-purple-500/20 border border-purple-400 text-purple-200 font-semibold flex items-center gap-1'>
+												<Sparkles className='w-2.5 h-2.5' /> 已同調
+											</span>
+										)}
+										{!inspectedItem.isIdentified && viewMode === 'dm' && (
+											<span className='text-[10px] px-2 py-0.5 rounded bg-red-950 border border-red-500/70 text-red-300 flex items-center gap-1'>
+												<EyeOff className='w-2.5 h-2.5' /> 對玩家隱藏中
+											</span>
+										)}
+									</div>
+								</div>
+							</div>
+
+							{/* 核心數值區 */}
+							<div className='p-4 space-y-3.5 text-sm'>
+								{!masked && (inspectedItem.damage || inspectedItem.ac) && (
+									<div className='grid grid-cols-2 gap-2.5 bg-stone-900/90 border border-stone-800 rounded-md p-2.5'>
+										{inspectedItem.damage && (
+											<div>
+												<div className='text-[10px] text-stone-400 uppercase'>
+													傷害骰 (Damage)
+												</div>
+												<div className='text-sm font-bold text-amber-300 flex items-center gap-1.5 mt-0.5'>
+													<Sword className='w-4 h-4 text-amber-500' />
+													<span>{inspectedItem.damage}</span>
+												</div>
+											</div>
+										)}
+										{inspectedItem.ac && (
+											<div>
+												<div className='text-[10px] text-stone-400 uppercase'>
+													護甲等級 (Armor Class)
+												</div>
+												<div className='text-sm font-bold text-sky-300 flex items-center gap-1.5 mt-0.5'>
+													<Shield className='w-4 h-4 text-sky-400' />
+													<span>AC {inspectedItem.ac}</span>
+												</div>
+											</div>
+										)}
+									</div>
+								)}
+
+								{/* D&D 5R (2024) 武器精通專屬區塊 */}
+								{masteryInfo && (
+									<div className='bg-amber-950/30 border border-amber-700/50 rounded-md p-2.5'>
+										<div className='flex items-center justify-between text-xs font-bold text-amber-300 mb-1'>
+											<span>⚔️ 5R 武器精通：{masteryInfo.name}</span>
+											<span className='text-[10px] px-1.5 py-0.2 bg-amber-900/60 rounded text-amber-200'>
+												2024 規則
+											</span>
+										</div>
+										<p className='text-xs text-stone-300 leading-relaxed'>
+											{masteryInfo.desc}
+										</p>
+									</div>
+								)}
+
+								{/* 充能次數管理 */}
+								{!masked && inspectedItem.maxCharges > 0 && (
+									<div className='bg-stone-900/80 border border-stone-800 rounded-md p-2.5 flex items-center justify-between'>
+										<div>
+											<div className='text-xs text-stone-300 font-medium'>
+												魔法充能 (Charges)
+											</div>
+											<div className='flex items-center gap-1.5 mt-1'>
+												{Array.from({
+													length: inspectedItem.maxCharges,
+												}).map((_, i) => (
+													<span
+														key={i}
+														className={`w-3.5 h-3.5 rounded-full border transition ${
+															i < inspectedItem.charges
+																? 'bg-cyan-400 border-cyan-200 shadow-[0_0_8px_#22d3ee]'
+																: 'bg-stone-950 border-stone-700'
+														}`}
+													/>
+												))}
+											</div>
+										</div>
+										<div className='flex items-center gap-1.5'>
+											<button
+												onClick={() => adjustCharges(inspectedItem, -1)}
+												className='px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-xs font-bold text-stone-200 border border-stone-600 cursor-pointer'
+											>
+												消耗 -1
+											</button>
+											<button
+												onClick={() => adjustCharges(inspectedItem, 1)}
+												className='px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-xs font-bold text-cyan-200 border border-cyan-700/60 cursor-pointer'
+											>
+												恢復 +1
+											</button>
+										</div>
+									</div>
+								)}
+
+								{/* 物品魔法效果描述 (Markdown 渲染) */}
+								<div className='bg-stone-900/50 border border-stone-800/80 rounded-md p-3'>
+									<div className='text-[11px] text-stone-400 font-semibold mb-1.5 flex items-center justify-between'>
+										<span>物品效果與規則</span>
+										{inspectedItem.requiresAttunement && (
+											<span className='text-amber-400'>* 需同調</span>
+										)}
+									</div>
+									{masked ? (
+										<p className='text-xs leading-relaxed text-purple-300/90 italic'>
+											此物品散發著晦澀難明的魔法波動。在透過《鑑定術》(Identify)
+											或短休研究前，無法得知其確切能力與潛在詛咒。
+										</p>
+									) : (
+										<div
+											className={`text-xs leading-relaxed text-stone-200 ${markdownClass}`}
+										>
+											<ReactMarkdown>{inspectedItem.effects}</ReactMarkdown>
+										</div>
+									)}
+								</div>
+
+								{/* 背景風味文字 (Markdown 渲染) */}
+								<div
+									className={`border-l-2 border-amber-700/60 pl-3 py-0.5 text-xs italic text-stone-400 ${markdownClass}`}
+								>
+									<ReactMarkdown>{inspectedItem.flavor}</ReactMarkdown>
+								</div>
+
+								{/* 玩家個人備註區塊 */}
+								<div className='bg-amber-950/15 border border-amber-800/40 rounded-md p-3'>
+									<div className='flex items-center justify-between mb-1.5'>
+										<span className='text-[11px] font-semibold text-amber-300/90 flex items-center gap-1.5'>
+											<StickyNote className='w-3.5 h-3.5 text-amber-400' />
+											<span>玩家物品備註 (支援 Markdown)</span>
+										</span>
+										{!isEditingNote ? (
+											<button
+												onClick={() => setIsEditingNote(true)}
+												className='text-[11px] px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-700/50 flex items-center gap-1 cursor-pointer'
+											>
+												<Edit3 className='w-3 h-3' />
+												<span>
+													{inspectedItem.playerNotes ? '編輯備註' : '新增備註'}
+												</span>
+											</button>
+										) : (
+											<div className='flex items-center gap-1.5'>
+												<button
+													onClick={() => {
+														setIsEditingNote(false);
+														setNoteDraft(inspectedItem.playerNotes || '');
+													}}
+													className='text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-400 hover:text-stone-200 border border-stone-700 cursor-pointer'
+												>
+													取消
+												</button>
+												<button
+													onClick={() => {
+														onUpdatePlayerNotes(inspectedItem, noteDraft);
+														setIsEditingNote(false);
+													}}
+													className='text-[11px] px-2 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-amber-50 flex items-center gap-1 font-medium cursor-pointer'
+												>
+													<Check className='w-3 h-3' />
+													<span>儲存</span>
+												</button>
 											</div>
 										)}
 									</div>
 
-									{/* 卡片中段：D&D 5R 規則細節、武器精通、充能與風味文字 */}
-									<div className='p-5 space-y-4 text-sm'>
-										{isMasked ? (
-											<div className='p-4 rounded-md bg-purple-950/20 border border-purple-800/50 text-purple-200 space-y-2'>
-												<div className='flex items-center gap-2 font-semibold'>
-													<EyeOff className='w-4 h-4 text-purple-400' />
-													<span>這件物品散發著晦澀難懂的奧術波動</span>
-												</div>
-												<p className='text-xs text-stone-400 leading-relaxed'>
-													在完成《鑑定術
-													(Identify)》或花費一次短休仔細研究之前，你無法得知它的真實名稱、魔法特性與潛在詛咒。請向你的
-													DM 提出鑑定申請。
-												</p>
-											</div>
-										) : (
-											<>
-												{/* 魔法特性與規則說明 */}
-												<div className='space-y-1.5'>
-													<div className='text-xs font-semibold uppercase tracking-wider text-amber-500/90'>
-														物品特性與規則效果
-													</div>
-													<div className='text-stone-200 whitespace-pre-line leading-relaxed bg-stone-900/60 p-3 rounded border border-stone-800 text-xs sm:text-sm'>
-														{inspectedItem.effects}
-													</div>
-												</div>
-
-												{/* D&D 5R 武器精通專區 (Weapon Mastery) */}
-												{inspectedItem.mastery &&
-													inspectedItem.mastery !== 'None' && (
-														<div className='p-3 rounded-md bg-gradient-to-r from-amber-950/50 to-stone-900/80 border border-amber-700/50'>
-															<div className='flex items-center gap-2 text-amber-300 font-serif font-bold text-xs sm:text-sm mb-1'>
-																<Star className='w-4 h-4 fill-amber-400 text-amber-400' />
-																<span>5R 武器精通：{masteryInfo.name}</span>
-															</div>
-															<p className='text-xs text-stone-300 leading-relaxed'>
-																{masteryInfo.desc}
-															</p>
-														</div>
-													)}
-
-												{/* 充能次數管理 (Charges) */}
-												{inspectedItem.maxCharges > 0 && (
-													<div className='flex items-center justify-between p-2.5 rounded bg-stone-900/90 border border-stone-800'>
-														<div className='flex items-center gap-2'>
-															<Zap className='w-4 h-4 text-cyan-400' />
-															<span className='text-xs text-stone-300'>
-																魔法充能 ({inspectedItem.charges} /{' '}
-																{inspectedItem.maxCharges})
-															</span>
-														</div>
-														<div className='flex items-center gap-1.5'>
-															{Array.from({
-																length: inspectedItem.maxCharges,
-															}).map((_, idx) => (
-																<span
-																	key={idx}
-																	className={`w-3 h-3 rounded-full border ${
-																		idx < inspectedItem.charges
-																			? 'bg-cyan-400 border-cyan-200 shadow-[0_0_8px_#22d3ee]'
-																			: 'bg-stone-950 border-stone-700'
-																	}`}
-																/>
-															))}
-															<button
-																onClick={() => adjustCharges(inspectedItem, -1)}
-																className='ml-2 px-2 py-0.5 text-xs rounded bg-stone-800 hover:bg-stone-700 text-stone-200 cursor-pointer'
-																title='消耗 1 發充能'
-															>
-																-1
-															</button>
-															<button
-																onClick={() => adjustCharges(inspectedItem, 1)}
-																className='px-2 py-0.5 text-xs rounded bg-stone-800 hover:bg-stone-700 text-stone-200 cursor-pointer'
-																title='恢復 1 發充能'
-															>
-																+1
-															</button>
-														</div>
-													</div>
-												)}
-											</>
-										)}
-
-										{/* DM 專屬隱藏筆記與詛咒觸發條件 (僅在 DM 視角顯示) */}
-										{viewMode === 'dm' && inspectedItem.dmNotes && (
-											<div className='p-3 rounded-md bg-red-950/35 border border-red-500/50 space-y-1'>
-												<div className='flex items-center gap-1.5 text-xs font-bold text-red-400'>
-													<ShieldAlert className='w-4 h-4' />
-													<span>DM 隱藏筆記 / 暗線詛咒 (玩家不可見)</span>
-												</div>
-												<p className='text-xs text-red-200/90 leading-relaxed'>
-													{inspectedItem.dmNotes}
-												</p>
-											</div>
-										)}
-
-										{/* BG3 古典斜體風味引言 */}
-										<blockquote className='italic text-xs text-stone-400 border-l-2 border-amber-700/60 pl-3 py-0.5 font-serif'>
-											{inspectedItem.flavor}
-										</blockquote>
-
-										{/* 底部重量與價值 */}
-										<div className='pt-2 border-t border-stone-800/80 flex items-center justify-between text-xs text-stone-400 font-mono'>
-											<span>
-												單件重量：
-												<strong className='text-stone-200'>
-													{inspectedItem.weight} lb
-												</strong>
-												{inspectedItem.quantity > 1 &&
-													` (總重 ${(inspectedItem.weight * inspectedItem.quantity).toFixed(1)} lb)`}
-											</span>
-											<span>
-												價值：
-												<strong className='text-amber-300'>
-													{isMasked ? '??? GP' : `${inspectedItem.valueGp} GP`}
-												</strong>
-											</span>
+									{isEditingNote ? (
+										<textarea
+											rows={3}
+											value={noteDraft}
+											onChange={(e) => setNoteDraft(e.target.value)}
+											placeholder='在此寫下你的筆記（支援 **粗體** 與清單）'
+											className='w-full bg-stone-950 border border-amber-600/60 rounded p-2 text-xs text-stone-200 outline-none font-mono'
+										/>
+									) : inspectedItem.playerNotes ? (
+										<div
+											className={`text-xs text-amber-100/90 leading-relaxed ${markdownClass}`}
+										>
+											<ReactMarkdown>{inspectedItem.playerNotes}</ReactMarkdown>
 										</div>
+									) : (
+										<p className='text-[11px] text-stone-500 italic'>
+											尚無玩家備註，點擊右上角「新增備註」可記錄獲得來源或用途。
+										</p>
+									)}
+								</div>
 
-										{/* 互動操作按鈕列 */}
-										<div className='pt-3 border-t border-stone-800 space-y-2.5'>
-											<div className='flex flex-wrap gap-2'>
-												{/* 裝備/卸下 */}
-												{(inspectedItem.category === 'Weapon' ||
-													inspectedItem.category === 'Armor') && (
-													<button
-														onClick={() => toggleEquip(inspectedItem)}
-														className={`flex-1 py-2 px-3 rounded text-xs font-semibold border transition cursor-pointer flex items-center justify-center gap-1.5 ${
-															inspectedItem.equipped
-																? 'bg-stone-800 border-stone-600 text-stone-200 hover:bg-stone-700'
-																: 'bg-gradient-to-b from-amber-600 to-amber-800 border-amber-400 text-amber-50 hover:brightness-110'
-														}`}
-													>
-														<Sword className='w-3.5 h-3.5' />
-														<span>
-															{inspectedItem.equipped
-																? '卸下裝備'
-																: '裝備此物品'}
-														</span>
-													</button>
+								{/* DM 專屬秘密筆記 */}
+								{viewMode === 'dm' && inspectedItem.dmNotes && (
+									<div className='bg-red-950/40 border border-red-500/60 rounded-md p-3'>
+										<div className='flex items-center gap-1.5 text-xs font-bold text-red-300 mb-1'>
+											<Eye className='w-3.5 h-3.5 text-red-400' />
+											<span>DM 專屬隱藏筆記 (玩家不可見)</span>
+										</div>
+										<div
+											className={`text-xs text-red-200/90 leading-relaxed ${markdownClass}`}
+										>
+											<ReactMarkdown>{inspectedItem.dmNotes}</ReactMarkdown>
+										</div>
+									</div>
+								)}
+
+								{/* 底部重量與價值資訊 */}
+								<div className='flex items-center justify-between pt-2 border-t border-stone-800 text-xs text-stone-400 font-mono'>
+									<div>
+										單件重量:{' '}
+										<span className='text-stone-200'>
+											{inspectedItem.weight} lb
+										</span>
+										{inspectedItem.quantity > 1 && (
+											<span className='text-stone-400'>
+												{' '}
+												(總重{' '}
+												{
+													+(
+														inspectedItem.weight * inspectedItem.quantity
+													).toFixed(1)
+												}{' '}
+												lb)
+											</span>
+										)}
+									</div>
+									<div>
+										估價:{' '}
+										<span className='text-amber-300 font-semibold'>
+											{masked ? '???' : `${inspectedItem.valueGp} GP`}
+										</span>
+									</div>
+								</div>
+
+								{/* 互動操作按鈕列 */}
+								<div className='pt-2 border-t border-stone-800 space-y-2'>
+									<div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+										{/* 穿脫裝備：依據 isEquippable 判斷 */}
+										{isEquippable && (
+											<button
+												onClick={() => toggleEquip(inspectedItem)}
+												className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
+													inspectedItem.equipped
+														? 'bg-amber-900/60 border-amber-400 text-amber-100'
+														: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-200'
+												}`}
+											>
+												{inspectedItem.equipped ? '卸下裝備' : '穿戴裝備'}
+											</button>
+										)}
+
+										{/* 同調開關 */}
+										{inspectedItem.requiresAttunement && (
+											<button
+												onClick={() => toggleAttune(inspectedItem)}
+												className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
+													inspectedItem.attuned
+														? 'bg-purple-900/70 border-purple-400 text-purple-100'
+														: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-200'
+												}`}
+											>
+												{inspectedItem.attuned ? '解除同調' : '✨ 進行同調'}
+											</button>
+										)}
+
+										{/* 移入/移出私人背包 */}
+										{canManagePrivacy && (
+											<button
+												onClick={() => onTogglePrivate(inspectedItem)}
+												className={`px-3 py-1.5 rounded text-xs font-medium border flex items-center justify-center gap-1 transition cursor-pointer ${
+													inspectedItem.isPrivate
+														? 'bg-emerald-950/80 border-emerald-500/70 text-emerald-200 hover:bg-emerald-900'
+														: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-300'
+												}`}
+											>
+												{inspectedItem.isPrivate ? (
+													<>
+														<Unlock className='w-3.5 h-3.5 text-emerald-400' />
+														<span>移回公開袋</span>
+													</>
+												) : (
+													<>
+														<Lock className='w-3.5 h-3.5 text-stone-400' />
+														<span>藏入私人袋</span>
+													</>
 												)}
+											</button>
+										)}
 
-												{/* 同調/解除同調 */}
-												{inspectedItem.requiresAttunement && (
-													<button
-														onClick={() => toggleAttune(inspectedItem)}
-														className={`flex-1 py-2 px-3 rounded text-xs font-semibold border transition cursor-pointer flex items-center justify-center gap-1.5 ${
-															inspectedItem.attuned
-																? 'bg-amber-950/90 border-amber-500 text-amber-300'
-																: 'bg-stone-900 border-amber-700/60 text-amber-200 hover:bg-amber-950/50'
-														}`}
-													>
-														<Sparkles className='w-3.5 h-3.5' />
-														<span>
-															{inspectedItem.attuned ? '解除同調' : '進行同調'}
-														</span>
-													</button>
-												)}
+										{/* 消耗品使用：依據 isConsumable 判斷 */}
+										{isConsumable && (
+											<button
+												onClick={() =>
+													consumeOrSplitStack(inspectedItem, 'consume')
+												}
+												className='px-3 py-1.5 rounded text-xs font-medium bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-200 cursor-pointer'
+											>
+												飲用 / 消耗 (-1)
+											</button>
+										)}
 
-												{/* 消耗品：飲用/使用 與 拆分堆疊 */}
-												{inspectedItem.category === 'Consumable' && (
+										{inspectedItem.quantity > 1 && (
+											<button
+												onClick={() =>
+													consumeOrSplitStack(inspectedItem, 'split')
+												}
+												className='px-3 py-1.5 rounded text-xs font-medium bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-200 flex items-center justify-center gap-1 cursor-pointer'
+											>
+												<Split className='w-3.5 h-3.5' />
+												<span>拆分堆疊</span>
+											</button>
+										)}
+									</div>
+
+									{/* 移交給其他隊友 */}
+									<div className='flex items-center gap-2 pt-1'>
+										<span className='text-[11px] text-stone-400 flex items-center gap-1 shrink-0'>
+											<Send className='w-3 h-3 text-amber-400' />
+											<span>移交給隊友:</span>
+										</span>
+										<div className='flex items-center gap-1.5 flex-wrap'>
+											{characters
+												.filter((c) => c.id !== activeCharId)
+												.map((target) => (
 													<button
+														key={target.id}
 														onClick={() =>
-															consumeOrSplitStack(inspectedItem, 'consume')
+															transferItemToCharacter(inspectedItem, target.id)
 														}
-														className='flex-1 py-2 px-3 rounded text-xs font-semibold bg-emerald-800 hover:bg-emerald-700 border border-emerald-400 text-emerald-50 transition cursor-pointer'
+														className='text-[11px] px-2 py-1 rounded bg-stone-900 hover:bg-amber-950 border border-stone-700 hover:border-amber-600/60 text-stone-300 transition cursor-pointer'
 													>
-														🧪 使用 / 消耗 1 個
+														{target.avatar} {target.name.split(' ')[0]}
 													</button>
-												)}
-												{inspectedItem.quantity > 1 && (
-													<button
-														onClick={() =>
-															consumeOrSplitStack(inspectedItem, 'split')
-														}
-														className='py-2 px-3 rounded text-xs font-medium bg-stone-800 hover:bg-stone-700 border border-stone-600 text-stone-200 transition cursor-pointer'
-													>
-														拆分堆疊
-													</button>
-												)}
+												))}
+										</div>
+									</div>
 
-												{/* 點擊換位按鈕 (方便手機/平板操作) */}
+									{/* DM 專屬控制列 */}
+									{viewMode === 'dm' && (
+										<div className='pt-2 mt-2 border-t border-red-900/40 flex flex-wrap items-center justify-between gap-2'>
+											<div className='flex items-center gap-2'>
 												<button
-													onClick={() => {
-														setMoveSourceSlot(
-															moveSourceSlot === inspectedItem.slot
-																? null
-																: inspectedItem.slot,
-														);
-													}}
-													className={`py-2 px-3 rounded text-xs font-medium border transition cursor-pointer flex items-center gap-1 ${
-														moveSourceSlot === inspectedItem.slot
-															? 'bg-cyan-900 border-cyan-400 text-cyan-100'
-															: 'bg-stone-900 border-stone-700 text-stone-300 hover:border-stone-500'
-													}`}
+													onClick={() => onOpenEditModal(inspectedItem)}
+													className='px-3 py-1.5 rounded text-xs font-medium bg-amber-950/90 hover:bg-amber-900 border border-amber-500/70 text-amber-200 flex items-center gap-1.5 cursor-pointer'
 												>
-													<Move className='w-3.5 h-3.5' />
-													<span>
-														{moveSourceSlot === inspectedItem.slot
-															? '取消移動'
-															: '移動格位'}
-													</span>
+													<Edit3 className='w-3.5 h-3.5' />
+													<span>DM 編輯物品</span>
+												</button>
+												<button
+													onClick={() => toggleIdentify(inspectedItem)}
+													className='px-3 py-1.5 rounded text-xs font-medium bg-purple-950/90 hover:bg-purple-900 border border-purple-500/70 text-purple-200 flex items-center gap-1.5 cursor-pointer'
+												>
+													{inspectedItem.isIdentified ? (
+														<>
+															<EyeOff className='w-3.5 h-3.5' />
+															<span>設為未鑑定</span>
+														</>
+													) : (
+														<>
+															<Eye className='w-3.5 h-3.5' />
+															<span>向玩家揭露鑑定</span>
+														</>
+													)}
 												</button>
 											</div>
 
-											{/* 移交給其他隊友或營地儲物箱 */}
-											<div className='flex items-center justify-between gap-2 bg-stone-900/80 p-2 rounded border border-stone-800'>
-												<span className='text-xs text-stone-400'>
-													📦 移交給隊友：
-												</span>
-												<div className='flex items-center gap-1.5'>
-													{characters
-														.filter((c) => c.id !== activeCharId)
-														.map((targetChar) => (
-															<button
-																key={targetChar.id}
-																onClick={() =>
-																	transferItemToCharacter(
-																		inspectedItem,
-																		targetChar.id,
-																	)
-																}
-																className='px-2 py-1 rounded bg-stone-800 hover:bg-amber-900/60 border border-stone-700 hover:border-amber-500/60 text-[11px] text-stone-200 transition cursor-pointer'
-																title={`發送至 ${targetChar.name}`}
-															>
-																{targetChar.avatar}{' '}
-																{targetChar.name.split(' ')[0]}
-															</button>
-														))}
-												</div>
-											</div>
-
-											{/* DM 專用控制列：一鍵切換鑑定狀態 & 刪除 */}
-											{viewMode === 'dm' && (
-												<div className='flex items-center justify-between gap-2 pt-2 border-t border-red-950/60'>
-													<button
-														onClick={() => toggleIdentify(inspectedItem)}
-														className='flex-1 py-1.5 px-3 rounded text-xs font-medium bg-purple-950/80 hover:bg-purple-900 border border-purple-500/60 text-purple-200 flex items-center justify-center gap-1.5 transition cursor-pointer'
-													>
-														{inspectedItem.isIdentified ? (
-															<>
-																<EyeOff className='w-3.5 h-3.5' />
-																<span>設為未鑑定 (對玩家隱藏)</span>
-															</>
-														) : (
-															<>
-																<Eye className='w-3.5 h-3.5' />
-																<span>完成鑑定 (向玩家公開屬性)</span>
-															</>
-														)}
-													</button>
-													<button
-														onClick={() => deleteItem(inspectedItem)}
-														className='p-1.5 rounded bg-red-950/60 hover:bg-red-900 border border-red-700/60 text-red-300 transition cursor-pointer'
-														title='銷毀此物品'
-													>
-														<Trash2 className='w-4 h-4' />
-													</button>
-												</div>
-											)}
+											<button
+												onClick={() => deleteItem(inspectedItem)}
+												className='px-2.5 py-1.5 rounded text-xs bg-red-950/70 hover:bg-red-900 border border-red-700/60 text-red-200 flex items-center gap-1 cursor-pointer'
+											>
+												<Trash2 className='w-3.5 h-3.5' />
+												<span>銷毀</span>
+											</button>
 										</div>
-									</div>
+									)}
 								</div>
-							);
-						})()
-					) : (
-						<div className='h-64 rounded-lg border border-stone-800 bg-stone-950/60 flex flex-col items-center justify-center text-stone-500 p-6 text-center'>
-							<Backpack className='w-10 h-10 mb-2 opacity-40' />
-							<p className='text-sm'>
-								將游標懸停或點擊左側網格中的道具，即可檢視《博德之門3》風格詳細資訊卡。
-							</p>
+							</div>
 						</div>
-					)}
+					);
+				})()
+			) : (
+				<div className='h-64 rounded-lg border border-stone-800 bg-stone-950/70 flex flex-col items-center justify-center text-stone-500 text-sm p-6 text-center'>
+					<Backpack className='w-8 h-8 mb-2 opacity-40' />
+					<p>將滑鼠懸停或點擊左側背包中的物品，即可檢視詳細規則與風味描述。</p>
 				</div>
-);
-
-export default ItemTooltip;
+			)}
+		</div>
+	);
+}

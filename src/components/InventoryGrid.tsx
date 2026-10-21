@@ -1,191 +1,377 @@
-import { HelpCircle, Sparkles } from 'lucide-react';
 import ItemIcon from './ItemIcon';
-import type { InventoryItem, Rarity, RarityStyle, ViewMode } from '../types';
+import {
+	getItemSection,
+	resolveItemFlags,
+	type InventoryDisplayMode,
+	type InventoryItem,
+	type ItemSection,
+	type Rarity,
+	type RarityStyle,
+	type ViewMode,
+} from '../types';
+import {
+	Sword,
+	FlaskConical,
+	Star,
+	Package,
+	HelpCircle,
+	Sparkles,
+	Lock,
+	EyeOff,
+	Coins,
+} from 'lucide-react';
 
-type InventoryGridProps = {
+interface InventoryGridProps {
 	items: InventoryItem[];
-	totalSlots: number;
 	viewMode: ViewMode;
+	displayMode: InventoryDisplayMode;
 	inspectedItemId: string | null;
-	moveSourceSlot: number | null;
-	draggedSlot: number | null;
 	totalItemsValueGp: number;
 	rarityConfig: Record<Rarity, RarityStyle>;
-	isItemMatchingFilter: (item: InventoryItem) => boolean;
-	setDraggedSlot: (slot: number | null) => void;
+	isItemMatchingFilter: (item: InventoryItem | null | undefined) => boolean;
 	setHoveredItemId: (id: string | null) => void;
 	setSelectedItemId: (id: string) => void;
-	setMoveSourceSlot: (slot: number | null) => void;
-	swapOrMoveSlot: (fromSlot: number | null, toSlot: number | null) => void;
 	toggleEquip: (item: InventoryItem) => void;
-};
+}
 
-const InventoryGrid = ({
+const SECTION_CONFIG: {
+	key: ItemSection;
+	title: string;
+	subtitle: string;
+	icon: typeof Sword;
+	accentColor: string;
+	badgeClass: string;
+}[] = [
+	{
+		key: 'Equipment',
+		title: '裝備 (Equipment)',
+		subtitle: '可穿戴或持用的武器、護甲與奇物',
+		icon: Sword,
+		accentColor: 'text-amber-300 border-amber-800/50 bg-amber-950/20',
+		badgeClass: 'bg-amber-900/60 text-amber-200 border-amber-600/50',
+	},
+	{
+		key: 'Consumable',
+		title: '消耗品 (Consumables)',
+		subtitle: '藥水、卷軸、食物與拋擲物',
+		icon: FlaskConical,
+		accentColor: 'text-emerald-300 border-emerald-800/50 bg-emerald-950/20',
+		badgeClass: 'bg-emerald-900/60 text-emerald-200 border-emerald-600/50',
+	},
+	{
+		key: 'Important',
+		title: '重要物品 (Key Items)',
+		subtitle: '劇情信物、任務鑰匙與關鍵遺物',
+		icon: Star,
+		accentColor: 'text-purple-300 border-purple-800/50 bg-purple-950/20',
+		badgeClass: 'bg-purple-900/60 text-purple-200 border-purple-600/50',
+	},
+	{
+		key: 'Misc',
+		title: '雜物 (Miscellaneous)',
+		subtitle: '戰利品、材料、工具與一般行囊物品',
+		icon: Package,
+		accentColor: 'text-stone-300 border-stone-800 bg-stone-900/40',
+		badgeClass: 'bg-stone-800 text-stone-300 border-stone-600/50',
+	},
+];
+
+export default function InventoryGrid({
 	items,
-	totalSlots,
 	viewMode,
+	displayMode,
 	inspectedItemId,
-	moveSourceSlot,
-	draggedSlot,
 	totalItemsValueGp,
 	rarityConfig,
 	isItemMatchingFilter,
-	setDraggedSlot,
 	setHoveredItemId,
 	setSelectedItemId,
-	setMoveSourceSlot,
-	swapOrMoveSlot,
 	toggleEquip,
-}: InventoryGridProps) => (
-	<>
-		<div className='p-4 sm:p-5 grid grid-cols-6 gap-2.5 sm:gap-3 bg-[radial-gradient(circle_at_center,_rgba(28,25,23,0.8),_rgba(12,10,9,0.95))]'>
-			{Array.from({ length: totalSlots }).map((_, slotIndex) => {
-				const slotItem = items.find((item) => item.slot === slotIndex);
-				const isSelected = slotItem?.id === inspectedItemId;
-				const isMoveSource = moveSourceSlot === slotIndex;
-				const isMaskedUnidentified =
-					slotItem && !slotItem.isIdentified && viewMode === 'player';
-				const rarityStyle = slotItem
-					? isMaskedUnidentified
-						? rarityConfig.Common
-						: (rarityConfig[slotItem.rarity] ?? rarityConfig.Common)
-					: rarityConfig.Common;
-				const matchesFilter = slotItem
-					? isItemMatchingFilter(slotItem)
-					: true;
+}: InventoryGridProps) {
+	// 將物品依四大類別分組
+	const groupedItems: Record<ItemSection, InventoryItem[]> = {
+		Equipment: [],
+		Consumable: [],
+		Important: [],
+		Misc: [],
+	};
 
-				return (
-					<div
-						key={slotIndex}
-						draggable={!!slotItem}
-						onDragStart={() => setDraggedSlot(slotIndex)}
-						onDragOver={(event) => event.preventDefault()}
-						onDrop={() => {
-							swapOrMoveSlot(draggedSlot, slotIndex);
-							setDraggedSlot(null);
-						}}
-						onMouseEnter={() => {
-							if (slotItem) setHoveredItemId(slotItem.id);
-						}}
-						onMouseLeave={() => setHoveredItemId(null)}
-						onClick={() => {
-							if (moveSourceSlot !== null) {
-								swapOrMoveSlot(moveSourceSlot, slotIndex);
-								setMoveSourceSlot(null);
-								return;
-							}
-							if (slotItem) setSelectedItemId(slotItem.id);
-						}}
-						onDoubleClick={() => {
-							if (
-								slotItem &&
-								(slotItem.category === 'Weapon' ||
-									slotItem.category === 'Armor')
-							) {
-								toggleEquip(slotItem);
-							}
-						}}
-						className={`aspect-square rounded-md relative flex items-center justify-center transition-all duration-150 select-none ${
-							slotItem
-								? `bg-gradient-to-br ${rarityStyle.bg} border-2 ${rarityStyle.border} ${rarityStyle.glow} cursor-grab active:cursor-grabbing`
-								: 'bg-[#100e0c] border border-stone-800/90 shadow-[inset_0_2px_8px_rgba(0,0,0,0.85)] hover:border-amber-900/60'
-						} ${
-							isSelected
-								? 'ring-2 ring-amber-300 ring-offset-2 ring-offset-stone-950 scale-[1.03] z-10'
-								: ''
-						} ${
-							isMoveSource ? 'ring-2 ring-cyan-400 animate-pulse' : ''
-						} ${!matchesFilter ? 'opacity-25 grayscale' : ''}`}
-					>
-						{!slotItem && (
-							<div className='w-2 h-2 rotate-45 border border-stone-800/60 opacity-40' />
-						)}
-						{slotItem && (
-							<>
-								{slotItem.equipped && (
+	items.forEach((item) => {
+		const section = getItemSection(item);
+		groupedItems[section].push(item);
+	});
+
+	const isSixPerRow = displayMode === 'grid6';
+
+	return (
+		<div className='p-3.5 flex-1 flex flex-col justify-between space-y-4'>
+			{items.length === 0 ? (
+				<div className='py-16 text-center text-stone-500 text-xs border border-dashed border-stone-800 rounded-md'>
+					此行囊目前空無一物。
+				</div>
+			) : (
+				<div className='space-y-4'>
+					{SECTION_CONFIG.map((sec) => {
+						const sectionItems = groupedItems[sec.key];
+						const IconComp = sec.icon;
+
+						return (
+							<div
+								key={sec.key}
+								className='rounded-md border border-stone-800/90 bg-stone-950/60 overflow-hidden'
+							>
+								{/* 分類標題列 */}
+								<div
+									className={`px-3 py-1.5 border-b flex items-center justify-between ${sec.accentColor}`}
+								>
+									<div className='flex items-center gap-2'>
+										<IconComp className='w-3.5 h-3.5 shrink-0' />
+										<span className='text-xs font-serif font-bold tracking-wide'>
+											{sec.title}
+										</span>
+										<span className='text-[10px] text-stone-400 hidden sm:inline'>
+											— {sec.subtitle}
+										</span>
+									</div>
+
+									{/* 右側：數量、grid6 模式下額外顯示總重與總價值 */}
+									<div className='flex items-center gap-2 font-mono'>
+										{displayMode === 'grid6' && sectionItems.length > 0 && (
+											<span className='text-[10px] text-stone-400 hidden md:inline'>
+												(
+												{
+													+sectionItems
+														.reduce((sum, i) => sum + i.weight * i.quantity, 0)
+														.toFixed(1)
+												}{' '}
+												lb /{' '}
+												{sectionItems.reduce(
+													(sum, i) => sum + i.valueGp * i.quantity,
+													0,
+												)}{' '}
+												GP)
+											</span>
+										)}
+										<span
+											className={`text-[10px] px-1.5 py-0.2 rounded border ${sec.badgeClass}`}
+										>
+											{sectionItems.length} 件
+										</span>
+									</div>
+								</div>
+
+								{/* 分類內容區 */}
+								{sectionItems.length === 0 ? (
+									<div className='px-3 py-2.5 text-[11px] text-stone-600 italic'>
+										尚無{sec.title.split(' ')[0]}
+									</div>
+								) : displayMode === 'grid6' || displayMode === 'grid' ? (
+									/* ========================================== */
+									/* 模式 A：格字展示 (一行6個 grid6 / 緊湊 grid) */
+									/* ========================================== */
 									<div
-										className='absolute top-1 left-1 px-1 py-0.5 rounded bg-amber-500 text-stone-950 text-[9px] font-extrabold leading-none shadow'
-										title='已裝備'
+										className={
+											isSixPerRow
+												? 'p-2.5 grid grid-cols-6 gap-2'
+												: 'p-2 grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5'
+										}
 									>
-										裝備
+										{sectionItems.map((item) => {
+											const masked =
+												!item.isIdentified && viewMode === 'player';
+											const rStyle = masked
+												? rarityConfig.Uncommon
+												: rarityConfig[item.rarity] || rarityConfig.Common;
+											const isInspected = inspectedItemId === item.id;
+											const matches = isItemMatchingFilter(item);
+											const { isEquippable } = resolveItemFlags(item);
+
+											return (
+												<div
+													key={item.id}
+													onClick={() => setSelectedItemId(item.id)}
+													onDoubleClick={() => {
+														if (isEquippable) toggleEquip(item);
+													}}
+													onMouseEnter={() => setHoveredItemId(item.id)}
+													onMouseLeave={() => setHoveredItemId(null)}
+													title={masked ? '未知魔法物品' : item.name}
+													className={`aspect-square rounded border ${rStyle.border} ${rStyle.bg} ${rStyle.glow} relative flex items-center justify-center cursor-pointer select-none transition-all duration-150 ${
+														isInspected
+															? 'ring-2 ring-amber-400 scale-[1.04] z-10'
+															: 'hover:brightness-125'
+													} ${!matches ? 'opacity-20 grayscale' : ''}`}
+												>
+													{/* 物品圖示 */}
+													{masked ? (
+														<HelpCircle
+															className={`${
+																isSixPerRow
+																	? 'w-6 h-6 sm:w-7 sm:h-7'
+																	: 'w-5 h-5'
+															} text-purple-400 animate-pulse`}
+														/>
+													) : (
+														<ItemIcon
+															iconName={item.icon}
+															className={`${
+																isSixPerRow
+																	? 'w-6 h-6 sm:w-8 sm:h-8'
+																	: 'w-5 h-5 sm:w-6 sm:h-6'
+															} ${rStyle.text}`}
+														/>
+													)}
+
+													{/* 左上角：已裝備標記 (E) 或 同調星號 */}
+													<div className='absolute top-1 left-1 flex items-center gap-0.5'>
+														{item.equipped && (
+															<span className='px-1 text-[9px] font-bold leading-tight rounded-xs bg-amber-500 text-stone-950 shadow'>
+																E
+															</span>
+														)}
+														{item.attuned && (
+															<Sparkles className='w-3 h-3 text-purple-300 drop-shadow' />
+														)}
+													</div>
+
+													{/* 右上角：私人或未鑑定圖示 */}
+													<div className='absolute top-1 right-1 flex items-center gap-0.5'>
+														{item.isPrivate && (
+															<Lock className='w-3 h-3 text-emerald-400 drop-shadow' />
+														)}
+														{!item.isIdentified && viewMode === 'dm' && (
+															<EyeOff className='w-3 h-3 text-red-400 drop-shadow' />
+														)}
+													</div>
+
+													{/* 右下角：堆疊數量 */}
+													{item.quantity > 1 && (
+														<span className='absolute bottom-0.5 right-1.5 text-[11px] font-mono font-bold text-stone-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]'>
+															{item.quantity}
+														</span>
+													)}
+												</div>
+											);
+										})}
+									</div>
+								) : (
+									/* ========================================== */
+									/* 模式 B：詳細列表展示 (List View)            */
+									/* ========================================== */
+									<div className='divide-y divide-stone-800/70'>
+										{sectionItems.map((item) => {
+											const masked =
+												!item.isIdentified && viewMode === 'player';
+											const rStyle = masked
+												? rarityConfig.Uncommon
+												: rarityConfig[item.rarity] || rarityConfig.Common;
+											const isInspected = inspectedItemId === item.id;
+											const matches = isItemMatchingFilter(item);
+											const { isEquippable } = resolveItemFlags(item);
+
+											return (
+												<div
+													key={item.id}
+													onClick={() => setSelectedItemId(item.id)}
+													onDoubleClick={() => {
+														if (isEquippable) toggleEquip(item);
+													}}
+													onMouseEnter={() => setHoveredItemId(item.id)}
+													onMouseLeave={() => setHoveredItemId(null)}
+													className={`px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition ${
+														isInspected
+															? 'bg-amber-950/35 border-l-2 border-l-amber-400'
+															: 'hover:bg-stone-900/80'
+													} ${!matches ? 'opacity-25 grayscale' : ''}`}
+												>
+													{/* 左側：小圖框 + 名稱 + 狀態標籤 */}
+													<div className='flex items-center gap-2.5 min-w-0 flex-1'>
+														<div
+															className={`w-8 h-8 rounded border ${rStyle.border} ${rStyle.bg} flex items-center justify-center shrink-0`}
+														>
+															{masked ? (
+																<HelpCircle className='w-4 h-4 text-purple-400' />
+															) : (
+																<ItemIcon
+																	iconName={item.icon}
+																	className={`w-4 h-4 ${rStyle.text}`}
+																/>
+															)}
+														</div>
+
+														<div className='min-w-0 flex-1'>
+															<div className='flex items-center gap-1.5 flex-wrap'>
+																<span
+																	className={`text-xs font-serif font-bold truncate ${rStyle.text}`}
+																>
+																	{masked ? '未知的魔法物品' : item.name}
+																</span>
+																{item.quantity > 1 && (
+																	<span className='text-[10px] font-mono px-1.5 py-0.2 rounded bg-stone-800 text-stone-200'>
+																		x{item.quantity}
+																	</span>
+																)}
+																{item.equipped && (
+																	<span className='text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 border border-amber-400/60 text-amber-200 font-semibold'>
+																		已裝備
+																	</span>
+																)}
+																{item.attuned && (
+																	<span className='text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-400/60 text-purple-200 flex items-center gap-0.5'>
+																		<Sparkles className='w-2.5 h-2.5' /> 同調
+																	</span>
+																)}
+																{item.isPrivate && (
+																	<Lock className='w-3 h-3 text-emerald-400' />
+																)}
+																{!item.isIdentified && viewMode === 'dm' && (
+																	<EyeOff className='w-3 h-3 text-red-400' />
+																)}
+															</div>
+															<div className='text-[10px] text-stone-400 truncate'>
+																{masked ? '未鑑定' : rStyle.label} •{' '}
+																{item.subType}
+																{!masked && item.damage
+																	? ` • ${item.damage}`
+																	: ''}
+																{!masked && item.ac ? ` • AC ${item.ac}` : ''}
+															</div>
+														</div>
+													</div>
+
+													{/* 右側：重量與價值 */}
+													<div className='flex items-center gap-4 text-[11px] font-mono shrink-0 text-right'>
+														<div className='text-stone-400 w-16'>
+															{+(item.weight * item.quantity).toFixed(1)} lb
+														</div>
+														<div className='text-amber-300 font-semibold w-20'>
+															{masked
+																? '???'
+																: `${item.valueGp * item.quantity} GP`}
+														</div>
+													</div>
+												</div>
+											);
+										})}
 									</div>
 								)}
-								<div className='absolute top-1 right-1 flex items-center gap-0.5'>
-									{!slotItem.isIdentified && (
-										<span
-											className='w-4 h-4 rounded-full bg-purple-950/90 border border-purple-400 text-purple-200 flex items-center justify-center text-[10px] font-bold shadow'
-											title='未鑑定魔法物品'
-										>
-											?
-										</span>
-									)}
-									{slotItem.attuned && (
-										<span
-											className='w-3.5 h-3.5 rounded-full bg-amber-950/90 border border-amber-400 text-amber-300 flex items-center justify-center shadow-[0_0_6px_#f59e0b]'
-											title='已同調 (Attuned)'
-										>
-											<Sparkles className='w-2.5 h-2.5' />
-										</span>
-									)}
-								</div>
-								<div
-									className={`${rarityStyle.text} drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]`}
-								>
-									{isMaskedUnidentified ? (
-										<HelpCircle className='w-7 h-7 sm:w-8 sm:h-8 text-purple-400/80 animate-pulse' />
-									) : (
-										<ItemIcon
-											iconName={slotItem.icon}
-											className='w-7 h-7 sm:w-8 sm:h-8'
-										/>
-									)}
-								</div>
-								{slotItem.isHomebrew &&
-									(viewMode === 'dm' || slotItem.isIdentified) && (
-										<span
-											className='absolute bottom-1 left-1 px-1 rounded bg-purple-950/90 border border-purple-500/60 text-[8px] text-purple-300 font-semibold'
-											title='DM 自創道具 (Homebrew)'
-										>
-											自創
-										</span>
-									)}
-								{slotItem.quantity > 1 && (
-									<span className='absolute bottom-0.5 right-1.5 text-xs font-mono font-bold text-stone-100 drop-shadow-[0_1px_3px_rgba(0,0,0,1)]'>
-										{slotItem.quantity}
-									</span>
-								)}
-							</>
-						)}
-					</div>
-				);
-			})}
-		</div>
-		<div className='mt-auto px-4 py-3 bg-stone-950 border-t border-amber-900/40 flex flex-wrap items-center justify-between gap-2 text-xs text-stone-400'>
-			<div className='flex items-center gap-4'>
-				<span>
-					已用格數：
-					<strong className='text-stone-200'>{items.length}</strong> /{' '}
-					{totalSlots}
-				</span>
-				<span>
-					背包物品總估值：
-					<strong className='text-amber-300'>{totalItemsValueGp} GP</strong>
-				</span>
-			</div>
-			<div className='flex items-center gap-2 text-[11px]'>
-				<span className='inline-block w-2 h-2 rounded-full bg-emerald-500' />{' '}
-				非普通
-				<span className='inline-block w-2 h-2 rounded-full bg-blue-500 ml-1' />{' '}
-				稀有
-				<span className='inline-block w-2 h-2 rounded-full bg-purple-500 ml-1' />{' '}
-				極珍稀
-				<span className='inline-block w-2 h-2 rounded-full bg-amber-400 ml-1' />{' '}
-				傳奇
-				<span className='inline-block w-2 h-2 rounded-full bg-red-500 ml-1' />{' '}
-				神器
-			</div>
-		</div>
-	</>
-);
+							</div>
+						);
+					})}
+				</div>
+			)}
 
-export default InventoryGrid;
+			{/* 底部統計列 */}
+			<div className='pt-2.5 border-t border-stone-800/80 flex items-center justify-between text-xs text-stone-400'>
+				<span>
+					共 <strong className='text-stone-200'>{items.length}</strong> 項物品
+					（雙擊「裝備」類別物品可快速穿脫）
+				</span>
+				<span className='flex items-center gap-1 text-amber-300 font-mono'>
+					<Coins className='w-3.5 h-3.5 text-amber-400' />
+					<span>行囊物品總估值：{totalItemsValueGp} GP</span>
+				</span>
+			</div>
+		</div>
+	);
+}

@@ -3,13 +3,14 @@ import type {
 	InventoryItem,
 	Rarity,
 	RarityStyle,
-	WeaponMastery,
+	WeaponMasteryInfo,
+	WeaponMasteryKey,
 } from './types';
 
 // ==========================================
 // D&D 5R (2024) 武器精通 (Weapon Mastery) 字典
 // ==========================================
-export const WEAPON_MASTERIES: Record<WeaponMastery, { name: string; desc: string }> = {
+export const WEAPON_MASTERIES: Record<WeaponMasteryKey, WeaponMasteryInfo> = {
 	None: { name: '無', desc: '' },
 	Cleave: {
 		name: '順劈 (Cleave)',
@@ -401,4 +402,3 @@ export const INITIAL_ITEMS: InventoryItem[] = [
 		dmNotes: '若影心背棄莎爾，此武器可轉化為塞倫涅月光長矛。',
 	},
 ];
-

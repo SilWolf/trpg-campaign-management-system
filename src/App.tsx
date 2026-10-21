@@ -3,24 +3,23 @@ import InventoryGrid from './components/InventoryGrid';
 import HomebrewModal from './components/HomebrewModal';
 import CurrencyPanel from './components/CurrencyPanel';
 import ItemTooltip from './components/ItemTooltip';
+import { useCampaignSync } from './hooks/useCampaignSync';
 import {
 	INITIAL_CHARACTERS,
 	INITIAL_ITEMS,
 	RARITY_CONFIG,
 	WEAPON_MASTERIES,
 } from './data';
-import type {
-	CurrencyType,
-	HomebrewForm,
-	InventoryItem,
-	Rarity,
-	ViewMode,
+import {
+	resolveItemFlags,
+	type CurrencyType,
+	type HomebrewForm,
+	type InventoryDisplayMode,
+	type InventoryItem,
+	type Rarity,
+	type ViewMode,
 } from './types';
 import {
-	Sword,
-	Shield,
-	FlaskConical,
-	Gem,
 	Coins,
 	Backpack,
 	Sparkles,
@@ -30,82 +29,104 @@ import {
 	User,
 	Scale,
 	Crown,
+	Lock,
+	Globe,
+	Grid3x3,
+	LayoutGrid,
+	List,
 } from 'lucide-react';
-import { useCampaignSync } from './hooks/useCampaignSync';
+
+const DEFAULT_FORM: HomebrewForm = {
+	name: '',
+	category: 'Weapon',
+	subType: '長劍 (雙用)',
+	rarity: 'Rare',
+	icon: 'Sword',
+	damage: '1d8+2 揮砍',
+	mastery: 'Vex',
+	ac: '',
+	weight: '3',
+	valueGp: '1000',
+	quantity: '1',
+	requiresAttunement: true,
+	isIdentified: false,
+	maxCharges: '0',
+	effects: '',
+	flavor: '',
+	dmNotes: '',
+	isPrivate: false,
+	isEquippable: true,
+	isConsumable: false,
+	isImportant: false,
+};
 
 export default function App() {
 	// 視角狀態：'player' | 'dm'
 	const [viewMode, setViewMode] = useState<ViewMode>('dm');
-	// 當前選中角色
-	// 背包物品清單
+	// 玩家視角下「我是哪位玩家」
+	const [viewerCharId, setViewerCharId] = useState<string>('tav');
+	// 當前檢視的背包角色
+	const [activeCharId, setActiveCharId] = useState<string>('tav');
+	// 背包空間分頁：'public' (公開行囊) | 'private' (私人暗袋)
+	const [bagTab, setBagTab] = useState<'public' | 'private'>('public');
+	// 展示模式切換：'grid6' (一列6個) | 'grid' (緊湊格字) | 'list' (詳細列表)
+	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
+
+	// Supabase 即時同步狀態
 	const { characters, setCharacters, items, setItems, syncStatus } =
 		useCampaignSync(INITIAL_CHARACTERS, INITIAL_ITEMS);
-	const [activeCharId, setActiveCharId] = useState('tav');
+
 	// 當前檢視/選中的物品 ID
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	// 懸停預覽的物品 ID
 	const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
 
-	// 背包篩選與搜尋
-	const [categoryFilter, setCategoryFilter] = useState('All');
+	// 背包搜尋與硬幣計重
 	const [searchQuery, setSearchQuery] = useState('');
-	const [countCoinWeight, setCountCoinWeight] = useState(true); // D&D 規則：50枚硬幣 = 1磅
+	const [countCoinWeight, setCountCoinWeight] = useState(true);
 
-	// 拖曳與點擊換位狀態
-	const [draggedSlot, setDraggedSlot] = useState<number | null>(null);
-	const [moveSourceSlot, setMoveSourceSlot] = useState<number | null>(null); // 支援手機/點擊換位
-
-	// 彈窗狀態：自創道具鍛造工坊 & 金幣調整
+	// 彈窗狀態：自創道具鍛造/編輯工坊 & 金幣調整
 	const [isHomebrewModalOpen, setIsHomebrewModalOpen] = useState(false);
+	const [editingItemId, setEditingItemId] = useState<string | null>(null);
 	const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-	// 新建自創道具表單狀態
-	const [newItemForm, setNewItemForm] = useState<HomebrewForm>({
-		name: '',
-		category: 'Weapon',
-		subType: '長劍 (雙用)',
-		rarity: 'Rare',
-		icon: 'Sword',
-		damage: '1d8+2 揮砍',
-		mastery: 'Vex',
-		ac: '',
-		weight: '3',
-		valueGp: '1000',
-		quantity: '1',
-		requiresAttunement: true,
-		isIdentified: false,
-		maxCharges: '0',
-		effects: '',
-		flavor: '',
-		dmNotes: '',
-	});
+	// 自創/編輯道具表單狀態
+	const [newItemForm, setNewItemForm] = useState<HomebrewForm>(DEFAULT_FORM);
 
-	// 顯示輕量提示訊息
 	const showToast = (msg: string) => {
 		setToastMessage(msg);
 		setTimeout(() => setToastMessage(null), 3000);
 	};
 
-	// 取得當前角色
+	const canViewPrivateBag = viewMode === 'dm' || activeCharId === viewerCharId;
+
+	const currentBagTab = !canViewPrivateBag ? 'public' : bagTab;
+
 	const activeCharacter = useMemo(
 		() => characters.find((c) => c.id === activeCharId) || characters[0],
 		[characters, activeCharId],
 	);
 
-	// 取得當前角色的背包物品
-	const characterItems = useMemo(
+	const allCharacterItems = useMemo(
 		() => items.filter((item) => item.ownerId === activeCharId),
 		[items, activeCharId],
 	);
 
-	// 計算同調欄位數量 (D&D 5R 上限為 3)
+	const visibleBagItems = useMemo(() => {
+		return allCharacterItems.filter((item) => {
+			if (!canViewPrivateBag && item.isPrivate) return false;
+			return currentBagTab === 'private'
+				? Boolean(item.isPrivate)
+				: !item.isPrivate;
+		});
+	}, [allCharacterItems, canViewPrivateBag, currentBagTab]);
+
 	const attunedCount = useMemo(
-		() => characterItems.filter((item) => item.attuned).length,
-		[characterItems],
+		() => allCharacterItems.filter((item) => item.attuned).length,
+		[allCharacterItems],
 	);
 
-	// 計算硬幣總重量與總價值(折合GP)
 	const currencyStats = useMemo(() => {
 		const { pp, gp, ep, sp, cp } = activeCharacter.currencies;
 		const totalCoins = pp + gp + ep + sp + cp;
@@ -120,9 +141,12 @@ export default function App() {
 		return { totalCoins, coinWeight, totalValueInGp };
 	}, [activeCharacter, countCoinWeight]);
 
-	// 計算物品總重量與負重上限 (STR * 15)
 	const encumbranceStats = useMemo(() => {
-		const itemsWeight = characterItems.reduce(
+		const itemsForCalc = canViewPrivateBag
+			? allCharacterItems
+			: allCharacterItems.filter((i) => !i.isPrivate);
+
+		const itemsWeight = itemsForCalc.reduce(
 			(sum, item) => sum + item.weight * item.quantity,
 			0,
 		);
@@ -132,7 +156,7 @@ export default function App() {
 			100,
 			Math.round((totalWeight / maxWeight) * 100),
 		);
-		const totalItemsValueGp = characterItems.reduce(
+		const totalItemsValueGp = visibleBagItems.reduce(
 			(sum, item) => sum + item.valueGp * item.quantity,
 			0,
 		);
@@ -143,80 +167,33 @@ export default function App() {
 			percentage,
 			totalItemsValueGp,
 		};
-	}, [characterItems, currencyStats.coinWeight, activeCharacter.str]);
+	}, [
+		allCharacterItems,
+		visibleBagItems,
+		canViewPrivateBag,
+		currencyStats.coinWeight,
+		activeCharacter.str,
+	]);
 
-	// 決定右側資訊卡要顯示哪個物品（優先顯示滑鼠懸停，否則顯示點擊鎖定的物品）
 	const inspectedItem = useMemo(() => {
 		const targetId = hoveredItemId || selectedItemId;
-		const found = items.find(
-			(i) => i.id === targetId && i.ownerId === activeCharId,
-		);
-		return found || characterItems[0] || null;
-	}, [hoveredItemId, selectedItemId, items, activeCharId, characterItems]);
+		const found = visibleBagItems.find((i) => i.id === targetId);
+		return found || visibleBagItems[0] || null;
+	}, [hoveredItemId, selectedItemId, visibleBagItems]);
 
-	// 篩選匹配判斷（在網格中把不符篩選條件的物品變暗，保留 BG3 空間感）
+	// 搜尋匹配判斷
 	const isItemMatchingFilter = (item: InventoryItem | null | undefined) => {
 		if (!item) return false;
-		const matchesCategory =
-			categoryFilter === 'All' || item.category === categoryFilter;
 		const displayName =
 			!item.isIdentified && viewMode === 'player' ? '未知魔法物品' : item.name;
-		const matchesSearch =
+		return (
 			!searchQuery.trim() ||
 			displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			item.subType.toLowerCase().includes(searchQuery.toLowerCase());
-		return matchesCategory && matchesSearch;
+			item.subType.toLowerCase().includes(searchQuery.toLowerCase())
+		);
 	};
 
-	// ==========================================
-	// 背包網格拖曳與交換邏輯 (共 36 格：6列 x 6欄)
-	// ==========================================
-	const TOTAL_SLOTS = 36;
-
-	const swapOrMoveSlot = (fromSlot: number | null, toSlot: number | null) => {
-		if (fromSlot === null || toSlot === null || fromSlot === toSlot) return;
-
-		setItems((prevItems) => {
-			const sourceItem = prevItems.find(
-				(i) => i.ownerId === activeCharId && i.slot === fromSlot,
-			);
-			const targetItem = prevItems.find(
-				(i) => i.ownerId === activeCharId && i.slot === toSlot,
-			);
-
-			if (!sourceItem) return prevItems;
-
-			// 若是同名且可堆疊的消耗品，則合併堆疊
-			if (
-				targetItem &&
-				sourceItem.name === targetItem.name &&
-				sourceItem.category === 'Consumable'
-			) {
-				showToast(`已合併堆疊：${sourceItem.name}`);
-				return prevItems
-					.map((item) => {
-						if (item.id === targetItem.id) {
-							return { ...item, quantity: item.quantity + sourceItem.quantity };
-						}
-						return item;
-					})
-					.filter((item) => item.id !== sourceItem.id);
-			}
-
-			// 否則互換格位座標
-			return prevItems.map((item) => {
-				if (item.id === sourceItem.id) {
-					return { ...item, slot: toSlot };
-				}
-				if (targetItem && item.id === targetItem.id) {
-					return { ...item, slot: fromSlot };
-				}
-				return item;
-			});
-		});
-	};
-
-	// 自動整理排序 (依稀有度 / 重量 / 價值)
+	// 自動整理排序 (依稀有度 / 重量 / 價值重新排列各分類內的物品順序)
 	const handleAutoSort = (sortBy: 'rarity' | 'weight' | 'value') => {
 		const rarityOrder: Record<Rarity, number> = {
 			Artifact: 6,
@@ -227,40 +204,35 @@ export default function App() {
 			Common: 1,
 		};
 
-		const sortedCharItems = [...characterItems].sort((a, b) => {
-			if (sortBy === 'rarity') {
-				return (
-					rarityOrder[b.rarity] - rarityOrder[a.rarity] || b.valueGp - a.valueGp
-				);
-			}
-			if (sortBy === 'weight') {
-				return b.weight * b.quantity - a.weight * a.quantity;
-			}
-			if (sortBy === 'value') {
-				return b.valueGp * b.quantity - a.valueGp * a.quantity;
-			}
-			return 0;
+		setItems((prev) => {
+			const others = prev.filter((i) => i.ownerId !== activeCharId);
+			const charOnes = [...prev.filter((i) => i.ownerId === activeCharId)].sort(
+				(a, b) => {
+					if (sortBy === 'rarity') {
+						return (
+							rarityOrder[b.rarity] - rarityOrder[a.rarity] ||
+							b.valueGp - a.valueGp
+						);
+					}
+					if (sortBy === 'weight') {
+						return b.weight * b.quantity - a.weight * a.quantity;
+					}
+					if (sortBy === 'value') {
+						return b.valueGp * b.quantity - a.valueGp * a.quantity;
+					}
+					return 0;
+				},
+			);
+			return [...others, ...charOnes];
 		});
 
-		const slotMap: Record<string, number> = {};
-		sortedCharItems.forEach((item, index) => {
-			slotMap[item.id] = index;
-		});
-
-		setItems((prev) =>
-			prev.map((item) =>
-				item.ownerId === activeCharId
-					? { ...item, slot: slotMap[item.id] }
-					: item,
-			),
-		);
 		showToast(
-			`已依${sortBy === 'rarity' ? '稀有度' : sortBy === 'weight' ? '重量' : '價值'}重新整理背包`,
+			`已依${sortBy === 'rarity' ? '稀有度' : sortBy === 'weight' ? '重量' : '價值'}重新排序各分類物品`,
 		);
 	};
 
 	// ==========================================
-	// 物品操作：裝備、同調、充能、鑑定、移交、拆分
+	// 物品操作：裝備、同調、充能、鑑定、玩家備註、私人背包切換
 	// ==========================================
 	const toggleEquip = (item: InventoryItem) => {
 		setItems((prev) =>
@@ -293,6 +265,27 @@ export default function App() {
 		);
 	};
 
+	const updatePlayerNotes = (item: InventoryItem, notes: string) => {
+		setItems((prev) =>
+			prev.map((i) => (i.id === item.id ? { ...i, playerNotes: notes } : i)),
+		);
+		showToast(`📝 已儲存「${item.name}」的玩家備註`);
+	};
+
+	const togglePrivateItem = (item: InventoryItem) => {
+		const targetPrivateState = !item.isPrivate;
+		setItems((prev) =>
+			prev.map((i) =>
+				i.id === item.id ? { ...i, isPrivate: targetPrivateState } : i,
+			),
+		);
+		showToast(
+			targetPrivateState
+				? `🔒 已將「${item.name}」藏入私人暗袋（其他玩家不可見）`
+				: `🌐 已將「${item.name}」移回公開行囊`,
+		);
+	};
+
 	const adjustCharges = (item: InventoryItem, delta: number) => {
 		setItems((prev) =>
 			prev.map((i) => {
@@ -322,25 +315,11 @@ export default function App() {
 			}
 			showToast(`已使用 1 個 ${item.name}`);
 		} else if (action === 'split' && item.quantity > 1) {
-			// 尋找第一個空格
-			const occupiedSlots = new Set(characterItems.map((i) => i.slot));
-			let emptySlot = -1;
-			for (let s = 0; s < TOTAL_SLOTS; s++) {
-				if (!occupiedSlots.has(s)) {
-					emptySlot = s;
-					break;
-				}
-			}
-			if (emptySlot === -1) {
-				showToast('⚠️ 背包已滿，無法拆分堆疊！');
-				return;
-			}
 			const half = Math.floor(item.quantity / 2);
 			const remain = item.quantity - half;
-			const newClone = {
+			const newClone: InventoryItem = {
 				...item,
 				id: `item-${Date.now()}`,
-				slot: emptySlot,
 				quantity: half,
 			};
 			setItems((prev) => [
@@ -356,11 +335,6 @@ export default function App() {
 		targetCharId: string,
 	) => {
 		if (targetCharId === item.ownerId) return;
-		const targetItems = items.filter((i) => i.ownerId === targetCharId);
-		const occupied = new Set(targetItems.map((i) => i.slot));
-		let firstFreeSlot = 0;
-		while (occupied.has(firstFreeSlot)) firstFreeSlot++;
-
 		const targetCharName = characters.find((c) => c.id === targetCharId)?.name;
 		setItems((prev) =>
 			prev.map((i) =>
@@ -368,9 +342,9 @@ export default function App() {
 					? {
 							...i,
 							ownerId: targetCharId,
-							slot: firstFreeSlot,
 							equipped: false,
 							attuned: false,
+							isPrivate: false,
 						}
 					: i,
 			),
@@ -399,17 +373,14 @@ export default function App() {
 		);
 	};
 
-	// 一鍵將零錢 (CP/SP/EP) 往上兌換成 GP
 	const consolidateCoinsToGold = () => {
 		setCharacters((prev) =>
 			prev.map((char) => {
 				if (char.id !== activeCharId) return char;
 				const pp = char.currencies.pp;
 				let { gp, ep, sp, cp } = char.currencies;
-				// 先把 CP 換 SP
 				sp += Math.floor(cp / 10);
 				cp = cp % 10;
-				// 把 SP 與 EP 換 GP
 				gp += Math.floor(sp / 10) + Math.floor(ep / 2);
 				sp = sp % 10;
 				ep = ep % 2;
@@ -420,20 +391,95 @@ export default function App() {
 	};
 
 	// ==========================================
-	// DM 鍛造並發放自創道具 (Homebrew Minting)
+	// DM 鍛造新道具 或 編輯現有道具
 	// ==========================================
-	const handleCreateHomebrewItem = (e: FormEvent<HTMLFormElement>) => {
+	const openCreateHomebrewModal = () => {
+		setEditingItemId(null);
+		setNewItemForm({
+			...DEFAULT_FORM,
+			isPrivate: currentBagTab === 'private',
+		});
+		setIsHomebrewModalOpen(true);
+	};
+
+	const openEditItemModal = (item: InventoryItem) => {
+		const flags = resolveItemFlags(item);
+		setEditingItemId(item.id);
+		setNewItemForm({
+			name: item.name,
+			category: item.category,
+			subType: item.subType,
+			rarity: item.rarity,
+			icon: item.icon,
+			damage: item.damage || '',
+			mastery: item.mastery || 'None',
+			ac: item.ac || '',
+			weight: String(item.weight),
+			valueGp: String(item.valueGp),
+			quantity: String(item.quantity),
+			requiresAttunement: item.requiresAttunement,
+			isIdentified: item.isIdentified,
+			maxCharges: String(item.maxCharges),
+			effects: item.effects,
+			flavor: item.flavor,
+			dmNotes: item.dmNotes || '',
+			isPrivate: Boolean(item.isPrivate),
+			isEquippable: flags.isEquippable,
+			isConsumable: flags.isConsumable,
+			isImportant: flags.isImportant,
+		});
+		setIsHomebrewModalOpen(true);
+	};
+
+	const handleSaveHomebrewOrEditItem = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!newItemForm.name.trim()) return;
 
-		const occupied = new Set(characterItems.map((i) => i.slot));
-		let emptySlot = 0;
-		while (occupied.has(emptySlot) && emptySlot < TOTAL_SLOTS) emptySlot++;
+		if (editingItemId) {
+			const maxChg = parseInt(newItemForm.maxCharges, 10) || 0;
+			setItems((prev) =>
+				prev.map((item) => {
+					if (item.id !== editingItemId) return item;
+					return {
+						...item,
+						name: newItemForm.name.trim(),
+						category: newItemForm.category,
+						subType: newItemForm.subType || '奇物',
+						rarity: newItemForm.rarity,
+						icon: newItemForm.icon,
+						damage:
+							newItemForm.category === 'Weapon' ? newItemForm.damage : null,
+						mastery:
+							newItemForm.category === 'Weapon' ? newItemForm.mastery : 'None',
+						ac: newItemForm.category === 'Armor' ? newItemForm.ac : null,
+						weight: parseFloat(newItemForm.weight) || 1.0,
+						valueGp: parseInt(newItemForm.valueGp, 10) || 0,
+						quantity: parseInt(newItemForm.quantity, 10) || 1,
+						requiresAttunement: newItemForm.requiresAttunement,
+						isIdentified: newItemForm.isIdentified,
+						maxCharges: maxChg,
+						charges: Math.min(item.charges, maxChg),
+						effects: newItemForm.effects || '無特殊規則描述。',
+						flavor: newItemForm.flavor || '',
+						dmNotes: newItemForm.dmNotes || '',
+						isPrivate: Boolean(newItemForm.isPrivate),
+						isEquippable: newItemForm.isEquippable,
+						isConsumable: newItemForm.isConsumable,
+						isImportant: newItemForm.isImportant,
+					};
+				}),
+			);
+			setIsHomebrewModalOpen(false);
+			setEditingItemId(null);
+			showToast(`✨ 已更新物品「${newItemForm.name.trim()}」的內容與分類！`);
+			return;
+		}
 
-		const createdItem = {
+		const targetPrivate = Boolean(newItemForm.isPrivate);
+		const createdItem: InventoryItem = {
 			id: `hb-${Date.now()}`,
 			ownerId: activeCharId,
-			slot: emptySlot,
+			slot: 0,
 			name: newItemForm.name.trim(),
 			category: newItemForm.category,
 			subType: newItemForm.subType || '自創奇物',
@@ -455,22 +501,26 @@ export default function App() {
 			effects: newItemForm.effects || '無特殊規則描述。',
 			flavor: newItemForm.flavor || '「由地下城主親手鍛造的神秘器物。」',
 			dmNotes: newItemForm.dmNotes || '',
+			playerNotes: '',
+			isPrivate: targetPrivate,
+			isEquippable: newItemForm.isEquippable,
+			isConsumable: newItemForm.isConsumable,
+			isImportant: newItemForm.isImportant,
 		};
 
 		setItems((prev) => [...prev, createdItem]);
+		setBagTab(targetPrivate ? 'private' : 'public');
 		setSelectedItemId(createdItem.id);
 		setIsHomebrewModalOpen(false);
 		showToast(
-			`✨ 已鍛造自創道具「${createdItem.name}」並放入 ${activeCharacter.name} 的背包！`,
+			`✨ 已鍛造自創道具「${createdItem.name}」並放入 ${activeCharacter.name} 的${targetPrivate ? '私人' : '公開'}背包！`,
 		);
 	};
 
 	return (
 		<div className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden'>
-			{/* 背景古典暗紋與光暈 */}
 			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.14),_rgba(12,10,9,0.95)_70%)]' />
 
-			{/* 頂部動態提示 Toast */}
 			{toastMessage && (
 				<div className='fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 border border-amber-500/80 text-amber-200 px-5 py-2.5 rounded-md shadow-[0_0_25px_rgba(245,158,11,0.35)] flex items-center gap-2.5 text-sm font-medium animate-bounce'>
 					<Sparkles className='w-4 h-4 text-amber-400 shrink-0' />
@@ -479,17 +529,16 @@ export default function App() {
 			)}
 
 			{/* ========================================== */}
-			{/* 頂部導覽列：戰役標題 & DM/玩家視角切換器 */}
+			{/* 頂部導覽列                                  */}
 			{/* ========================================== */}
 			<header className='relative z-10 border-b border-amber-900/40 bg-stone-950/90 backdrop-blur-md px-4 lg:px-8 py-3'>
 				<div className='max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3'>
-					{/* 左側標題 */}
 					<div className='flex items-center gap-3'>
 						<div className='w-10 h-10 rounded-lg bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950 border border-amber-500/60 flex items-center justify-center shadow-[0_0_15px_rgba(217,119,6,0.3)]'>
 							<Backpack className='w-5 h-5 text-amber-300' />
 						</div>
 						<div>
-							<div className='flex items-center gap-2'>
+							<div className='flex items-center gap-2 flex-wrap'>
 								<h1 className='text-lg sm:text-xl font-serif font-bold tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent'>
 									博德之門戰役軍械庫
 								</h1>
@@ -528,16 +577,40 @@ export default function App() {
 								</span>
 							</div>
 							<p className='text-xs text-stone-400'>
-								支援武器精通 (Weapon Mastery)、未鑑定迷霧與即時網格拖曳
+								自動四大分類歸納、6格 / 緊湊格字 / 列表三模式、私人暗袋與
+								Markdown 支援
 							</p>
 						</div>
 					</div>
 
-					{/* 右側：視角切換與 DM 鍛造按鈕 */}
-					<div className='flex items-center gap-3'>
+					<div className='flex flex-wrap items-center gap-2.5'>
+						{viewMode === 'player' && (
+							<div className='flex items-center gap-1.5 bg-stone-900 border border-stone-700 rounded-md px-2.5 py-1 text-xs'>
+								<span className='text-stone-400'>我的身分:</span>
+								<select
+									value={viewerCharId}
+									onChange={(e) => {
+										setViewerCharId(e.target.value);
+										setActiveCharId(e.target.value);
+									}}
+									className='bg-transparent text-amber-300 font-semibold outline-none cursor-pointer'
+								>
+									{characters.map((c) => (
+										<option
+											key={c.id}
+											value={c.id}
+											className='bg-stone-900 text-stone-200'
+										>
+											{c.avatar} {c.name}
+										</option>
+									))}
+								</select>
+							</div>
+						)}
+
 						{viewMode === 'dm' && (
 							<button
-								onClick={() => setIsHomebrewModalOpen(true)}
+								onClick={openCreateHomebrewModal}
 								className='flex items-center gap-2 px-3.5 py-2 rounded bg-gradient-to-b from-purple-700 to-purple-950 border border-purple-400/70 hover:border-purple-300 text-purple-100 text-xs sm:text-sm font-medium shadow-[0_0_15px_rgba(168,85,247,0.35)] hover:brightness-110 transition cursor-pointer'
 							>
 								<Plus className='w-4 h-4 text-purple-300' />
@@ -545,7 +618,6 @@ export default function App() {
 							</button>
 						)}
 
-						{/* 玩家視角 vs DM 上帝視角 */}
 						<div className='flex bg-stone-900 p-1 rounded-lg border border-amber-800/50'>
 							<button
 								onClick={() => setViewMode('player')}
@@ -575,27 +647,29 @@ export default function App() {
 			</header>
 
 			{/* ========================================== */}
-			{/* 角色切換與頂部狀態欄（負重、同調、五種貨幣） */}
+			{/* 角色切換與頂部狀態欄                        */}
 			{/* ========================================== */}
 			<section className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 pt-5'>
 				<div className='grid grid-cols-1 lg:grid-cols-12 gap-4 bg-gradient-to-b from-stone-900/90 to-stone-950/95 border border-amber-800/40 rounded-lg p-4 shadow-xl'>
-					{/* 左側：小隊成員選擇器 */}
 					<div className='lg:col-span-5 flex flex-wrap sm:flex-nowrap items-center gap-2'>
 						{characters.map((char) => {
 							const isSelected = char.id === activeCharId;
+							const isMe = viewMode === 'player' && char.id === viewerCharId;
 							return (
 								<button
 									key={char.id}
-									onClick={() => {
-										setActiveCharId(char.id);
-										setMoveSourceSlot(null);
-									}}
-									className={`flex-1 min-w-[120px] flex items-center gap-2.5 p-2.5 rounded-md border text-left transition cursor-pointer ${
+									onClick={() => setActiveCharId(char.id)}
+									className={`flex-1 min-w-[120px] flex items-center gap-2.5 p-2.5 rounded-md border text-left transition cursor-pointer relative ${
 										isSelected
 											? 'bg-gradient-to-b from-amber-950/80 to-stone-900 border-amber-400/80 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
 											: 'bg-stone-900/60 border-stone-800 hover:border-amber-800/50 opacity-75 hover:opacity-100'
 									}`}
 								>
+									{isMe && (
+										<span className='absolute -top-2 right-2 text-[9px] px-1.5 py-0.2 rounded bg-emerald-900 border border-emerald-400 text-emerald-200 font-semibold'>
+											我
+										</span>
+									)}
 									<div className='w-9 h-9 rounded-full bg-stone-800 border border-amber-600/50 flex items-center justify-center text-lg shrink-0'>
 										{char.avatar}
 									</div>
@@ -614,7 +688,6 @@ export default function App() {
 
 					{/* 中間：負重進度條與同調欄位 */}
 					<div className='lg:col-span-4 flex flex-col justify-center gap-2 border-t lg:border-t-0 lg:border-x border-stone-800 pt-3 lg:pt-0 lg:px-4'>
-						{/* 負重條 */}
 						<div>
 							<div className='flex items-center justify-between text-xs mb-1'>
 								<span className='flex items-center gap-1.5 text-stone-300 font-medium'>
@@ -646,7 +719,6 @@ export default function App() {
 							</div>
 						</div>
 
-						{/* 同調欄位與硬幣計重開關 */}
 						<div className='flex items-center justify-between text-[11px] text-stone-400 pt-0.5'>
 							<div className='flex items-center gap-1.5'>
 								<span>同調欄位:</span>
@@ -741,60 +813,111 @@ export default function App() {
 			</section>
 
 			{/* ========================================== */}
-			{/* 主內容區：左側 BG3 背包網格 (7欄) + 右側物品檢視卡 (5欄) */}
+			{/* 主內容區：改為 Flex 並頂部對齊 (items-start)，避免較低一側被拉長 */}
 			{/* ========================================== */}
-			<main className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-5 grid grid-cols-1 lg:grid-cols-12 gap-6'>
-				{/* ========================================== */}
-				{/* 左側：博德之門3 風格背包網格區 */}
-				{/* ========================================== */}
-				<div className='lg:col-span-7 flex flex-col bg-gradient-to-b from-[#171412] via-[#12100e] to-[#0c0a09] border-2 border-amber-800/50 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.85)] overflow-hidden'>
-					{/* 背包過濾標籤與搜尋列 */}
+			<main className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-5 flex flex-col lg:flex-row lg:items-start gap-6'>
+				{/* 左側分類背包 (佔 7/12 寬度) */}
+				<div className='w-full lg:w-7/12 flex flex-col bg-gradient-to-b from-[#171412] via-[#12100e] to-[#0c0a09] border-2 border-amber-800/50 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.85)] overflow-hidden'>
+					{/* 頂部工具列：公開/私人行囊切換 + 搜尋 + 展示模式切換 + 排序 */}
 					<div className='p-3.5 bg-stone-950/90 border-b border-amber-900/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
-						{/* 分類頁籤 */}
-						<div className='flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0'>
-							{[
-								{ id: 'All', label: '全部', icon: Backpack },
-								{ id: 'Weapon', label: '武器', icon: Sword },
-								{ id: 'Armor', label: '護甲', icon: Shield },
-								{ id: 'Consumable', label: '消耗品', icon: FlaskConical },
-								{ id: 'Misc', label: '奇物/雜物', icon: Gem },
-							].map((tab) => {
-								const IconComp = tab.icon;
-								const active = categoryFilter === tab.id;
-								return (
-									<button
-										key={tab.id}
-										onClick={() => setCategoryFilter(tab.id)}
-										className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap transition cursor-pointer ${
-											active
-												? 'bg-gradient-to-b from-amber-700 to-amber-900 text-amber-100 border border-amber-400/70 shadow'
-												: 'bg-stone-900/80 text-stone-400 border border-stone-800 hover:text-stone-200'
-										}`}
-									>
-										<IconComp className='w-3.5 h-3.5' />
-										<span>{tab.label}</span>
-									</button>
-								);
-							})}
+						{/* 左側：公開行囊 vs 私人暗袋 */}
+						<div className='flex items-center gap-2'>
+							<button
+								onClick={() => setBagTab('public')}
+								className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+									currentBagTab === 'public'
+										? 'bg-amber-800/80 text-amber-100 border border-amber-400/70 shadow'
+										: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+								}`}
+							>
+								<Globe className='w-3.5 h-3.5 text-amber-300' />
+								<span>
+									公開行囊 (
+									{allCharacterItems.filter((i) => !i.isPrivate).length})
+								</span>
+							</button>
+
+							{canViewPrivateBag ? (
+								<button
+									onClick={() => setBagTab('private')}
+									className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
+										currentBagTab === 'private'
+											? 'bg-emerald-900/80 text-emerald-100 border border-emerald-400/70 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+											: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-emerald-300'
+									}`}
+								>
+									<Lock className='w-3.5 h-3.5 text-emerald-400' />
+									<span>
+										私人暗袋 (
+										{allCharacterItems.filter((i) => i.isPrivate).length})
+									</span>
+								</button>
+							) : (
+								<span className='text-[11px] text-stone-500 flex items-center gap-1 px-2'>
+									<Lock className='w-3 h-3' />
+									<span>私人暗袋已隱藏</span>
+								</span>
+							)}
 						</div>
 
-						{/* 搜尋與排序 */}
+						{/* 右側：搜尋、展示模式切換 (6格/格字/列表)、排序 */}
 						<div className='flex items-center gap-2'>
-							<div className='relative flex-1 sm:w-44'>
+							<div className='relative flex-1 sm:w-40'>
 								<Search className='w-3.5 h-3.5 text-stone-500 absolute left-2.5 top-1/2 -translate-y-1/2' />
 								<input
 									type='text'
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
 									placeholder='搜尋道具名稱...'
-									className='w-full bg-stone-900 border border-stone-700 focus:border-amber-500 rounded pl-8 pr-2.5 py-1 text-xs text-stone-200 placeholder:text-stone-500 outline-none'
+									className='w-full bg-stone-900 border border-stone-700 focus:border-amber-500 rounded pl-8 pr-2.5 py-1.5 text-xs text-stone-200 placeholder:text-stone-500 outline-none'
 								/>
 							</div>
 
+							{/* 一列6個 vs 緊湊格字 vs 列表展示切換器 */}
+							<div className='flex bg-stone-900 p-0.5 rounded border border-stone-700'>
+								<button
+									onClick={() => setDisplayMode('grid6')}
+									title='一列 6 個展示'
+									className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
+										displayMode === 'grid6'
+											? 'bg-amber-700/80 text-amber-100'
+											: 'text-stone-400 hover:text-stone-200'
+									}`}
+								>
+									<Grid3x3 className='w-3.5 h-3.5' />
+									<span className='hidden md:inline'>6格</span>
+								</button>
+								<button
+									onClick={() => setDisplayMode('grid')}
+									title='緊湊格字展示'
+									className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
+										displayMode === 'grid'
+											? 'bg-amber-700/80 text-amber-100'
+											: 'text-stone-400 hover:text-stone-200'
+									}`}
+								>
+									<LayoutGrid className='w-3.5 h-3.5' />
+									<span className='hidden md:inline'>格字</span>
+								</button>
+								<button
+									onClick={() => setDisplayMode('list')}
+									title='詳細列表展示'
+									className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
+										displayMode === 'list'
+											? 'bg-amber-700/80 text-amber-100'
+											: 'text-stone-400 hover:text-stone-200'
+									}`}
+								>
+									<List className='w-3.5 h-3.5' />
+									<span className='hidden md:inline'>列表</span>
+								</button>
+							</div>
+
+							{/* 排序選單 */}
 							<div className='relative group'>
 								<button className='flex items-center gap-1 px-2.5 py-1.5 rounded bg-stone-900 border border-stone-700 hover:border-amber-600/60 text-xs text-stone-300 cursor-pointer'>
 									<ArrowUpDown className='w-3.5 h-3.5 text-amber-400' />
-									<span>整理</span>
+									<span>排序</span>
 								</button>
 								<div className='absolute right-0 mt-1 w-32 bg-stone-900 border border-amber-700/70 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30 py-1 text-xs'>
 									<button
@@ -820,74 +943,60 @@ export default function App() {
 						</div>
 					</div>
 
-					{/* 操作小提示 */}
-					<div className='px-4 py-1.5 bg-stone-900/70 border-b border-stone-800/80 flex items-center justify-between text-[11px] text-stone-400'>
-						<span>
-							💡 支援<strong>滑鼠拖曳 (Drag &amp; Drop)</strong>{' '}
-							換位；若使用觸控螢幕，可點擊物品後再點擊目標空格移動。
-						</span>
-						{moveSourceSlot !== null && (
-							<span className='text-amber-400 font-semibold animate-pulse'>
-								請點擊要交換的目標格位...
-							</span>
-						)}
-					</div>
-
 					<InventoryGrid
-						items={characterItems}
-						totalSlots={TOTAL_SLOTS}
+						items={visibleBagItems}
 						viewMode={viewMode}
+						displayMode={displayMode}
 						inspectedItemId={inspectedItem?.id ?? null}
-						moveSourceSlot={moveSourceSlot}
-						draggedSlot={draggedSlot}
 						totalItemsValueGp={encumbranceStats.totalItemsValueGp}
 						rarityConfig={RARITY_CONFIG}
 						isItemMatchingFilter={isItemMatchingFilter}
-						setDraggedSlot={setDraggedSlot}
 						setHoveredItemId={setHoveredItemId}
 						setSelectedItemId={setSelectedItemId}
-						setMoveSourceSlot={setMoveSourceSlot}
-						swapOrMoveSlot={swapOrMoveSlot}
 						toggleEquip={toggleEquip}
 					/>
 				</div>
 
-				{/* ========================================== */}
-				<ItemTooltip
-					inspectedItem={inspectedItem}
-					viewMode={viewMode}
-					rarityConfig={RARITY_CONFIG}
-					weaponMasteries={WEAPON_MASTERIES}
-					characters={characters}
-					activeCharId={activeCharId}
-					moveSourceSlot={moveSourceSlot}
-					setMoveSourceSlot={setMoveSourceSlot}
-					adjustCharges={adjustCharges}
-					toggleEquip={toggleEquip}
-					toggleAttune={toggleAttune}
-					consumeOrSplitStack={consumeOrSplitStack}
-					transferItemToCharacter={transferItemToCharacter}
-					toggleIdentify={toggleIdentify}
-					deleteItem={deleteItem}
-				/>
+				{/* 右側物品檢視卡 (佔 5/12 寬度，獨立高度不隨左欄拉長) */}
+				<div className='w-full lg:w-5/12 shrink-0'>
+					<ItemTooltip
+						inspectedItem={inspectedItem}
+						viewMode={viewMode}
+						rarityConfig={RARITY_CONFIG}
+						weaponMasteries={WEAPON_MASTERIES}
+						characters={characters}
+						activeCharId={activeCharId}
+						viewerCharId={viewerCharId}
+						adjustCharges={adjustCharges}
+						toggleEquip={toggleEquip}
+						toggleAttune={toggleAttune}
+						consumeOrSplitStack={consumeOrSplitStack}
+						transferItemToCharacter={transferItemToCharacter}
+						toggleIdentify={toggleIdentify}
+						deleteItem={deleteItem}
+						onOpenEditModal={openEditItemModal}
+						onUpdatePlayerNotes={updatePlayerNotes}
+						onTogglePrivate={togglePrivateItem}
+					/>
+				</div>
 			</main>
 
-			{/* ========================================== */}
-			{/* 彈窗 1：DM 自創道具鍛造工坊 (Homebrew Creator Modal) */}
-			{/* ========================================== */}
+			{/* 彈窗 1：DM 自創與編輯道具工坊 */}
 			<HomebrewModal
 				isOpen={isHomebrewModalOpen}
+				isEditing={Boolean(editingItemId)}
 				form={newItemForm}
 				setForm={setNewItemForm}
-				onSubmit={handleCreateHomebrewItem}
+				onSubmit={handleSaveHomebrewOrEditItem}
 				characterName={activeCharacter.name}
-				onClose={() => setIsHomebrewModalOpen(false)}
+				onClose={() => {
+					setIsHomebrewModalOpen(false);
+					setEditingItemId(null);
+				}}
 				weaponMasteries={WEAPON_MASTERIES}
 			/>
 
-			{/* ========================================== */}
-			{/* 彈窗 2：角色錢包與五種貨幣管理 (Currency Modal) */}
-			{/* ========================================== */}
+			{/* 彈窗 2：角色錢包與五種貨幣管理 */}
 			<CurrencyPanel
 				isOpen={isCoinModalOpen}
 				activeCharacter={activeCharacter}

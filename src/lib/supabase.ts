@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Character, InventoryItem } from '../types';
+import { resolveItemFlags, type Character, type InventoryItem } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
@@ -42,34 +42,46 @@ export interface DbInventoryItem {
 	effects: string;
 	flavor: string;
 	dm_notes: string;
+	player_notes: string;
+	is_private: boolean;
+	is_equippable: boolean;
+	is_consumable: boolean;
+	is_important: boolean;
 }
-
-export const toDbItem = (item: InventoryItem): DbInventoryItem => ({
-	id: item.id,
-	owner_id: item.ownerId,
-	slot: item.slot,
-	name: item.name,
-	category: item.category,
-	sub_type: item.subType,
-	rarity: item.rarity,
-	icon: item.icon,
-	damage: item.damage,
-	mastery: item.mastery,
-	ac: item.ac,
-	weight: Number(item.weight),
-	value_gp: Number(item.valueGp),
-	quantity: Number(item.quantity),
-	equipped: item.equipped,
-	requires_attunement: item.requiresAttunement,
-	attuned: item.attuned,
-	is_homebrew: item.isHomebrew,
-	is_identified: item.isIdentified,
-	charges: Number(item.charges),
-	max_charges: Number(item.maxCharges),
-	effects: item.effects,
-	flavor: item.flavor,
-	dm_notes: item.dmNotes,
-});
+export const toDbItem = (item: InventoryItem): DbInventoryItem => {
+	const flags = resolveItemFlags(item);
+	return {
+		id: item.id,
+		owner_id: item.ownerId,
+		slot: Number(item.slot ?? 0),
+		name: item.name,
+		category: item.category,
+		sub_type: item.subType,
+		rarity: item.rarity,
+		icon: item.icon,
+		damage: item.damage,
+		mastery: item.mastery,
+		ac: item.ac,
+		weight: Number(item.weight),
+		value_gp: Number(item.valueGp),
+		quantity: Number(item.quantity),
+		equipped: item.equipped,
+		requires_attunement: item.requiresAttunement,
+		attuned: item.attuned,
+		is_homebrew: item.isHomebrew,
+		is_identified: item.isIdentified,
+		charges: Number(item.charges),
+		max_charges: Number(item.maxCharges),
+		effects: item.effects,
+		flavor: item.flavor,
+		dm_notes: item.dmNotes,
+		player_notes: item.playerNotes || '',
+		is_private: Boolean(item.isPrivate),
+		is_equippable: flags.isEquippable,
+		is_consumable: flags.isConsumable,
+		is_important: flags.isImportant,
+	};
+};
 
 export const fromDbItem = (row: DbInventoryItem): InventoryItem => ({
 	id: row.id,
@@ -96,6 +108,19 @@ export const fromDbItem = (row: DbInventoryItem): InventoryItem => ({
 	effects: row.effects || '',
 	flavor: row.flavor || '',
 	dmNotes: row.dm_notes || '',
+	playerNotes: row.player_notes || '',
+	isPrivate: Boolean(row.is_private),
+	isEquippable:
+		row.is_equippable !== undefined
+			? Boolean(row.is_equippable)
+			: row.category === 'Weapon' ||
+				row.category === 'Armor' ||
+				Boolean(row.requires_attunement),
+	isConsumable:
+		row.is_consumable !== undefined
+			? Boolean(row.is_consumable)
+			: row.category === 'Consumable',
+	isImportant: Boolean(row.is_important),
 });
 
 export interface DbCharacter {
