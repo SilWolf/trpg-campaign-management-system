@@ -52,7 +52,11 @@ interface ItemTooltipProps {
 		item: InventoryItem,
 		action: 'consume' | 'split',
 	) => void;
-	transferItemToCharacter: (item: InventoryItem, targetCharId: string) => void;
+	transferItemToCharacter: (
+		item: InventoryItem,
+		targetCharId: string,
+		transferQty?: number,
+	) => void;
 	toggleIdentify: (item: InventoryItem) => void;
 	deleteItem: (item: InventoryItem) => void;
 	onOpenEditModal: (item: InventoryItem) => void;
@@ -92,10 +96,12 @@ export default function ItemTooltip({
 }: ItemTooltipProps) {
 	const [isEditingNote, setIsEditingNote] = useState(false);
 	const [noteDraft, setNoteDraft] = useState('');
+	const [transferQty, setTransferQty] = useState(1);
 
 	useEffect(() => {
 		setIsEditingNote(false);
 		setNoteDraft(inspectedItem?.playerNotes || '');
+		setTransferQty(inspectedItem?.quantity || 1);
 	}, [inspectedItem?.id, inspectedItem?.playerNotes]);
 
 	const isInCampChest = inspectedItem?.ownerId === CAMP_CHEST_ID;
@@ -670,33 +676,93 @@ export default function ItemTooltip({
 									</div>
 
 									{/* 移交給隊友 或 送往/領出營地儲物箱 */}
-									<div className='flex flex-col gap-1.5 pt-1'>
-										<span className='text-[11px] text-stone-400 flex items-center gap-1'>
-											<Send className='w-3 h-3 text-amber-400' />
-											<span>
-												{isInCampChest
-													? '從儲物箱領取至：'
-													: '移交或送往營地：'}
+									<div className='flex flex-col gap-2 pt-1.5 border-t border-stone-800/70'>
+										<div className='flex items-center justify-between gap-2 flex-wrap'>
+											<span className='text-[11px] text-stone-400 flex items-center gap-1'>
+												<Send className='w-3 h-3 text-amber-400' />
+												<span>
+													{isInCampChest
+														? '從儲物箱領取至：'
+														: '移交或送往營地：'}
+												</span>
 											</span>
-										</span>
+
+											{/* 當堆疊數量 > 1 時，顯示移交數量選擇器 */}
+											{inspectedItem.quantity > 1 && (
+												<div className='flex items-center gap-1 bg-stone-950 border border-stone-700 rounded px-1.5 py-0.5 text-[11px]'>
+													<span className='text-stone-400 mr-1'>數量:</span>
+													<button
+														type='button'
+														onClick={() =>
+															setTransferQty((q) => Math.max(1, q - 1))
+														}
+														className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
+													>
+														-
+													</button>
+													<input
+														type='number'
+														min={1}
+														max={inspectedItem.quantity}
+														value={transferQty}
+														onChange={(e) => {
+															const val = parseInt(e.target.value, 10);
+															if (isNaN(val)) setTransferQty(1);
+															else
+																setTransferQty(
+																	Math.max(
+																		1,
+																		Math.min(inspectedItem.quantity, val),
+																	),
+																);
+														}}
+														className='w-10 text-center bg-transparent font-mono font-bold text-amber-300 outline-none'
+													/>
+													<button
+														type='button'
+														onClick={() =>
+															setTransferQty((q) =>
+																Math.min(inspectedItem.quantity, q + 1),
+															)
+														}
+														className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
+													>
+														+
+													</button>
+													<button
+														type='button'
+														onClick={() =>
+															setTransferQty(inspectedItem.quantity)
+														}
+														className='ml-1 px-1.5 py-0.2 rounded bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-700/50 text-[10px] cursor-pointer'
+													>
+														全部 ({inspectedItem.quantity})
+													</button>
+												</div>
+											)}
+										</div>
 
 										<div className='flex items-center gap-1.5 flex-wrap'>
-											{/* 若物品在角色身上：提供「🏕️ 送往營地儲物箱」按鈕 */}
+											{/* 送往營地儲物箱按鈕（帶入 transferQty） */}
 											{!isInCampChest && (
 												<button
 													onClick={() =>
 														transferItemToCharacter(
 															inspectedItem,
 															CAMP_CHEST_ID,
+															transferQty,
 														)
 													}
 													className='text-[11px] px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/70 text-cyan-100 font-medium transition cursor-pointer'
 												>
 													🏕️ 送往營地儲物箱
+													{inspectedItem.quantity > 1
+														? ` (${transferQty})`
+														: ''}
 												</button>
 											)}
 
-											{/* 移交給其他角色（若在玩家視角且從儲物箱領出，將「我的角色」排第一並高亮） */}
+											{/* 移交給其他角色按鈕（帶入 transferQty） */}
 											{characters
 												.filter(
 													(c) =>
@@ -719,6 +785,7 @@ export default function ItemTooltip({
 																transferItemToCharacter(
 																	inspectedItem,
 																	target.id,
+																	transferQty,
 																)
 															}
 															className={`text-[11px] px-2 py-1 rounded border transition cursor-pointer ${
@@ -728,7 +795,10 @@ export default function ItemTooltip({
 															}`}
 														>
 															{target.avatar} {target.name.split(' ')[0]}
-															{isMe && isInCampChest ? ' (領回背包)' : ''}
+															{inspectedItem.quantity > 1
+																? ` (${transferQty})`
+																: ''}
+															{isMe && isInCampChest ? ' 領回' : ''}
 														</button>
 													);
 												})}

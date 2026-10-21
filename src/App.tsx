@@ -15,6 +15,7 @@ import {
 } from './data';
 import {
 	CAMP_CHEST_ID,
+	canStackItems,
 	resolveItemFlags,
 	type CurrencyType,
 	type HomebrewForm,
@@ -362,27 +363,75 @@ export default function App() {
 	const transferItemToCharacter = (
 		item: InventoryItem,
 		targetCharId: string,
+		transferQty?: number,
 	) => {
 		if (targetCharId === item.ownerId) return;
+
+		const qty = Math.max(
+			1,
+			Math.min(item.quantity, transferQty ?? item.quantity),
+		);
+		const isPartial = qty < item.quantity;
+
 		const targetCharName =
 			targetCharId === CAMP_CHEST_ID
 				? '🏕️ 營地儲物箱'
 				: characters.find((c) => c.id === targetCharId)?.name;
 
-		setItems((prev) =>
-			prev.map((i) =>
-				i.id === item.id
-					? {
-							...i,
-							ownerId: targetCharId,
-							equipped: false,
-							attuned: false,
-							isPrivate: false,
+		// 建立準備移交過去的物品基準狀態（卸下裝備、解除同調、設為公開）
+		const transferredBase: InventoryItem = {
+			...item,
+			ownerId: targetCharId,
+			quantity: qty,
+			equipped: false,
+			attuned: false,
+			isPrivate: false,
+		};
+
+		setItems((prev) => {
+			// 檢查目標角色是否已有可合併的「同名同詞條」公開物品
+			const existingMatch = prev.find(
+				(i) =>
+					i.ownerId === targetCharId &&
+					i.id !== item.id &&
+					canStackItems(i, transferredBase),
+			);
+
+			if (existingMatch) {
+				// A. 目標已有同款物品 -> 直接合併數量
+				return prev
+					.map((i) => {
+						if (i.id === existingMatch.id) {
+							return { ...i, quantity: i.quantity + qty };
 						}
-					: i,
-			),
+						if (i.id === item.id) {
+							return isPartial ? { ...i, quantity: i.quantity - qty } : null;
+						}
+						return i;
+					})
+					.filter((i): i is InventoryItem => i !== null);
+			} else {
+				// B. 目標沒有同款物品 -> 全部轉移 或 拆出新堆疊給目標
+				if (!isPartial) {
+					return prev.map((i) => (i.id === item.id ? transferredBase : i));
+				} else {
+					const newStack: InventoryItem = {
+						...transferredBase,
+						id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+					};
+					return [
+						...prev.map((i) =>
+							i.id === item.id ? { ...i, quantity: i.quantity - qty } : i,
+						),
+						newStack,
+					];
+				}
+			}
+		});
+
+		showToast(
+			`📦 已將 ${qty} 個「${item.name}」移交至 ${targetCharName}（同名同詞條自動堆疊）`,
 		);
-		showToast(`📦 已將「${item.name}」移交至 ${targetCharName}`);
 	};
 
 	const deleteItem = (item: InventoryItem) => {
@@ -572,6 +621,35 @@ export default function App() {
 		};
 		updateItemAffixes(item, [...(item.affixes || []), cloned]);
 		showToast(`✨ 已將詞條「${copiedAffix.name}」貼上至「${item.name}」！`);
+	};
+
+	const handleConsolidateStacks = () => {
+		setItems((prev) => {
+			// 分離出「屬於其他角色」的物品與「目前檢視中角色/儲物箱」的物品
+			const others = prev.filter((i) => i.ownerId !== activeCharId);
+			const currentOwnerItems = prev.filter((i) => i.ownerId === activeCharId);
+
+			const consolidated: InventoryItem[] = [];
+
+			currentOwnerItems.forEach((item) => {
+				// 檢查前面已合併的清單中有沒有「可堆疊」的同款物品
+				const existing = consolidated.find((target) =>
+					canStackItems(target, item),
+				);
+
+				if (existing) {
+					// 若有，直接將數量累加
+					existing.quantity += item.quantity;
+				} else {
+					// 若沒有，將這件物品放入合併清單
+					consolidated.push({ ...item });
+				}
+			});
+
+			return [...others, ...consolidated];
+		});
+
+		showToast(`📦 已成功將背包內所有同名同詞條的物品自動合併疊加！`);
 	};
 
 	return (
@@ -1020,7 +1098,7 @@ export default function App() {
 							<div className='relative group'>
 								<button className='flex items-center gap-1 px-2.5 py-1.5 rounded bg-stone-900 border border-stone-700 hover:border-amber-600/60 text-xs text-stone-300 cursor-pointer'>
 									<ArrowUpDown className='w-3.5 h-3.5 text-amber-400' />
-									<span>排序</span>
+									<span>排序與整理</span>
 								</button>
 								<div className='absolute right-0 mt-1 w-32 bg-stone-900 border border-amber-700/70 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30 py-1 text-xs'>
 									<button
@@ -1040,6 +1118,13 @@ export default function App() {
 										className='w-full px-3 py-1.5 text-left hover:bg-amber-900/40 text-stone-200 cursor-pointer'
 									>
 										⚖️ 依重量排序
+									</button>
+									<div className='border-t border-stone-800 my-1' />
+									<button
+										onClick={handleConsolidateStacks}
+										className='w-full px-3 py-1.5 text-left hover:bg-emerald-950/60 text-emerald-300 font-medium cursor-pointer flex items-center gap-1'
+									>
+										<span>📦 合併同名同詞條堆疊</span>
 									</button>
 								</div>
 							</div>
@@ -1126,8 +1211,8 @@ export default function App() {
 									toggleEquip={toggleEquip}
 									toggleAttune={toggleAttune}
 									consumeOrSplitStack={consumeOrSplitStack}
-									transferItemToCharacter={(item, targetId) => {
-										transferItemToCharacter(item, targetId);
+									transferItemToCharacter={(item, targetId, qty) => {
+										transferItemToCharacter(item, targetId, qty);
 										setIsMobileSheetOpen(false);
 									}}
 									toggleIdentify={toggleIdentify}

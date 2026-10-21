@@ -132,5 +132,36 @@ export function getItemSection(item: InventoryItem): ItemSection {
 	return 'Misc';
 }
 
+// 判斷兩件物品是否為「同名、同屬性、同詞條」且可合併堆疊
+export function canStackItems(a: InventoryItem, b: InventoryItem): boolean {
+	// 已裝備、已同調、或擁有獨立充能上限的物品不自動合併，避免吃掉狀態
+	if (a.equipped || b.equipped || a.attuned || b.attuned) return false;
+	if (a.maxCharges > 0 || b.maxCharges > 0) return false;
+
+	const sameBasic =
+		a.name.trim() === b.name.trim() &&
+		a.category === b.category &&
+		a.subType.trim() === b.subType.trim() &&
+		a.rarity === b.rarity &&
+		a.weight === b.weight &&
+		a.valueGp === b.valueGp &&
+		a.isIdentified === b.isIdentified &&
+		Boolean(a.isPrivate) === Boolean(b.isPrivate);
+
+	if (!sameBasic) return false;
+
+	// 比對詞條 (名稱、描述、隱藏狀態、順序皆須一致)
+	const affA = a.affixes || [];
+	const affB = b.affixes || [];
+	if (affA.length !== affB.length) return false;
+
+	return affA.every(
+		(ax, idx) =>
+			ax.name === affB[idx].name &&
+			ax.desc === affB[idx].desc &&
+			Boolean(ax.isHidden) === Boolean(affB[idx].isHidden),
+	);
+}
+
 // 新增：營地儲物箱專屬 Owner ID
 export const CAMP_CHEST_ID = 'camp-chest';
