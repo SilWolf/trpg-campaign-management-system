@@ -10,6 +10,7 @@ import {
 	type ViewMode,
 	type WeaponMasteryInfo,
 	type WeaponMasteryKey,
+	type ItemAffix,
 } from '../types';
 import {
 	Backpack,
@@ -28,6 +29,11 @@ import {
 	StickyNote,
 	Check,
 	Star,
+	Copy,
+	ClipboardPaste,
+	ArrowUp,
+	ArrowDown,
+	Wand2,
 } from 'lucide-react';
 
 interface ItemTooltipProps {
@@ -51,6 +57,10 @@ interface ItemTooltipProps {
 	onOpenEditModal: (item: InventoryItem) => void;
 	onUpdatePlayerNotes: (item: InventoryItem, notes: string) => void;
 	onTogglePrivate: (item: InventoryItem) => void;
+	copiedAffix: ItemAffix | null;
+	onCopyAffix: (affix: ItemAffix) => void;
+	onPasteAffix: (item: InventoryItem) => void;
+	onUpdateAffixes: (item: InventoryItem, nextAffixes: ItemAffix[]) => void;
 }
 
 const markdownClass =
@@ -74,6 +84,10 @@ export default function ItemTooltip({
 	onOpenEditModal,
 	onUpdatePlayerNotes,
 	onTogglePrivate,
+	copiedAffix,
+	onCopyAffix,
+	onPasteAffix,
+	onUpdateAffixes,
 }: ItemTooltipProps) {
 	const [isEditingNote, setIsEditingNote] = useState(false);
 	const [noteDraft, setNoteDraft] = useState('');
@@ -88,7 +102,7 @@ export default function ItemTooltip({
 		(inspectedItem && inspectedItem.ownerId === viewerCharId);
 
 	return (
-		<div className='lg:col-span-5 flex flex-col'>
+		<div className='flex flex-col'>
 			{inspectedItem ? (
 				(() => {
 					const masked = !inspectedItem.isIdentified && viewMode === 'player';
@@ -292,6 +306,172 @@ export default function ItemTooltip({
 										</div>
 									)}
 								</div>
+								{/* ========================================== */}
+								{/* 物品附魔詞條 (Affixes) 區塊                */}
+								{/* ========================================== */}
+								{(() => {
+									const allAffixes = inspectedItem.affixes || [];
+									const visibleAffixes =
+										viewMode === 'dm'
+											? allAffixes
+											: masked
+												? []
+												: allAffixes.filter((a) => !a.isHidden);
+									const hiddenCount = allAffixes.filter(
+										(a) => a.isHidden,
+									).length;
+
+									if (allAffixes.length === 0 && viewMode !== 'dm') return null;
+									if (
+										allAffixes.length === 0 &&
+										viewMode === 'dm' &&
+										!copiedAffix
+									)
+										return null;
+
+									// 詞條排序輔助函式
+									const moveAffix = (index: number, dir: -1 | 1) => {
+										const targetIdx = index + dir;
+										if (targetIdx < 0 || targetIdx >= allAffixes.length) return;
+										const next = [...allAffixes];
+										[next[index], next[targetIdx]] = [
+											next[targetIdx],
+											next[index],
+										];
+										onUpdateAffixes(inspectedItem, next);
+									};
+
+									// 詞條隱藏/揭露切換
+									const toggleAffixHidden = (affixId: string) => {
+										const next = allAffixes.map((a) =>
+											a.id === affixId ? { ...a, isHidden: !a.isHidden } : a,
+										);
+										onUpdateAffixes(inspectedItem, next);
+									};
+
+									return (
+										<div className='bg-stone-900/70 border border-amber-700/40 rounded-md p-3 space-y-2.5'>
+											<div className='flex items-center justify-between'>
+												<span className='text-[11px] font-semibold text-amber-300 flex items-center gap-1.5'>
+													<Wand2 className='w-3.5 h-3.5 text-amber-400' />
+													<span>附魔詞條 (Affixes)</span>
+												</span>
+
+												{/* DM 專屬：貼上已複製的詞條 */}
+												{viewMode === 'dm' && copiedAffix && (
+													<button
+														onClick={() => onPasteAffix(inspectedItem)}
+														className='text-[11px] px-2 py-0.5 rounded bg-purple-950/90 hover:bg-purple-900 border border-purple-500/60 text-purple-200 flex items-center gap-1 cursor-pointer transition'
+														title={`貼上詞條：${copiedAffix.name}`}
+													>
+														<ClipboardPaste className='w-3 h-3 text-purple-300' />
+														<span>貼上「{copiedAffix.name}」</span>
+													</button>
+												)}
+											</div>
+
+											{/* 詞條列表 */}
+											{visibleAffixes.length > 0 && (
+												<div className='space-y-2'>
+													{visibleAffixes.map((affix, idx) => (
+														<div
+															key={affix.id}
+															className={`p-2.5 rounded border transition ${
+																affix.isHidden
+																	? 'bg-red-950/25 border-red-800/50'
+																	: 'bg-stone-950/80 border-stone-800'
+															}`}
+														>
+															<div className='flex items-center justify-between gap-2 mb-1'>
+																<div className='flex items-center gap-1.5 flex-wrap'>
+																	<span className='text-xs font-serif font-bold text-amber-200'>
+																		✦ {affix.name}
+																	</span>
+																	{viewMode === 'dm' && affix.isHidden && (
+																		<span className='text-[9px] px-1.5 py-0.2 rounded bg-red-950 border border-red-500/60 text-red-300 flex items-center gap-0.5'>
+																			<EyeOff className='w-2.5 h-2.5' />{' '}
+																			玩家隱藏中
+																		</span>
+																	)}
+																</div>
+
+																{/* DM 詞條控制列：排序、揭露/隱藏、複製 */}
+																{viewMode === 'dm' && (
+																	<div className='flex items-center gap-1 shrink-0'>
+																		<button
+																			onClick={() => moveAffix(idx, -1)}
+																			disabled={idx === 0}
+																			title='上移詞條'
+																			className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
+																		>
+																			<ArrowUp className='w-3 h-3' />
+																		</button>
+																		<button
+																			onClick={() => moveAffix(idx, 1)}
+																			disabled={
+																				idx === visibleAffixes.length - 1
+																			}
+																			title='下移詞條'
+																			className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
+																		>
+																			<ArrowDown className='w-3 h-3' />
+																		</button>
+																		<button
+																			onClick={() =>
+																				toggleAffixHidden(affix.id)
+																			}
+																			title={
+																				affix.isHidden
+																					? '向玩家揭露此詞條'
+																					: '對玩家隱藏此詞條'
+																			}
+																			className={`p-1 rounded border cursor-pointer ${
+																				affix.isHidden
+																					? 'bg-purple-950/80 border-purple-500/60 text-purple-200 hover:bg-purple-900'
+																					: 'bg-stone-900 border-stone-700 text-stone-400 hover:text-stone-200'
+																			}`}
+																		>
+																			{affix.isHidden ? (
+																				<Eye className='w-3 h-3' />
+																			) : (
+																				<EyeOff className='w-3 h-3' />
+																			)}
+																		</button>
+																		<button
+																			onClick={() => onCopyAffix(affix)}
+																			title='複製此詞條以貼到其他物品'
+																			className='p-1 rounded bg-stone-900 hover:bg-amber-950 border border-stone-700 hover:border-amber-600/60 text-stone-300 hover:text-amber-200 cursor-pointer'
+																		>
+																			<Copy className='w-3 h-3' />
+																		</button>
+																	</div>
+																)}
+															</div>
+
+															{/* 詞條 Markdown 描述 */}
+															<div
+																className={`text-xs leading-relaxed text-stone-300 ${markdownClass}`}
+															>
+																<ReactMarkdown>{affix.desc}</ReactMarkdown>
+															</div>
+														</div>
+													))}
+												</div>
+											)}
+
+											{/* 玩家視角下：若有尚未揭露的隱藏詞條，顯示神秘提示 */}
+											{viewMode === 'player' && !masked && hiddenCount > 0 && (
+												<div className='px-2.5 py-1.5 rounded bg-purple-950/20 border border-dashed border-purple-700/40 text-[11px] text-purple-300/80 italic flex items-center gap-1.5'>
+													<Sparkles className='w-3 h-3 text-purple-400 shrink-0' />
+													<span>
+														此物品似乎還潛藏著 {hiddenCount}{' '}
+														道尚未揭露的未知詞條...
+													</span>
+												</div>
+											)}
+										</div>
+									);
+								})()}
 
 								{/* 背景風味文字 (Markdown 渲染) */}
 								<div

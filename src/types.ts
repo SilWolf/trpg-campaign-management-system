@@ -24,6 +24,13 @@ export type ViewMode = 'player' | 'dm';
 export type InventoryDisplayMode = 'grid6' | 'grid' | 'list';
 export type ItemSection = 'Equipment' | 'Consumable' | 'Important' | 'Misc';
 
+export type ItemAffix = {
+	id: string;
+	name: string;
+	desc: string; // 支援 Markdown
+	isHidden?: boolean; // 是否對玩家隱藏，直到 DM 揭露
+};
+
 export type InventoryItem = {
 	id: string;
 	ownerId: string;
@@ -54,6 +61,7 @@ export type InventoryItem = {
 	isEquippable?: boolean; // 可否裝備？
 	isConsumable?: boolean; // 可否消耗？
 	isImportant?: boolean; // 是否重要物品？
+	affixes?: ItemAffix[]; // 附魔詞條陣列
 };
 
 export type Character = {
@@ -87,6 +95,7 @@ export type HomebrewForm = {
 	isEquippable: boolean;
 	isConsumable: boolean;
 	isImportant: boolean;
+	affixes: ItemAffix[];
 };
 
 export type RarityStyle = {

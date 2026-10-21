@@ -47,6 +47,7 @@ export interface DbInventoryItem {
 	is_equippable: boolean;
 	is_consumable: boolean;
 	is_important: boolean;
+	affixes: InventoryItem['affixes'];
 }
 export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 	const flags = resolveItemFlags(item);
@@ -80,6 +81,7 @@ export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 		is_equippable: flags.isEquippable,
 		is_consumable: flags.isConsumable,
 		is_important: flags.isImportant,
+		affixes: item.affixes,
 	};
 };
 
@@ -121,6 +123,7 @@ export const fromDbItem = (row: DbInventoryItem): InventoryItem => ({
 			? Boolean(row.is_consumable)
 			: row.category === 'Consumable',
 	isImportant: Boolean(row.is_important),
+	affixes: row.affixes ?? [],
 });
 
 export interface DbCharacter {

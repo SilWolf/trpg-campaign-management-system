@@ -1,4 +1,7 @@
 import { useState, useMemo, type FormEvent } from 'react';
+import { Drawer } from 'vaul';
+import { X } from 'lucide-react';
+
 import InventoryGrid from './components/InventoryGrid';
 import HomebrewModal from './components/HomebrewModal';
 import CurrencyPanel from './components/CurrencyPanel';
@@ -15,6 +18,7 @@ import {
 	type CurrencyType,
 	type HomebrewForm,
 	type InventoryDisplayMode,
+	type ItemAffix,
 	type InventoryItem,
 	type Rarity,
 	type ViewMode,
@@ -58,6 +62,7 @@ const DEFAULT_FORM: HomebrewForm = {
 	isEquippable: true,
 	isConsumable: false,
 	isImportant: false,
+	affixes: [],
 };
 
 export default function App() {
@@ -78,12 +83,20 @@ export default function App() {
 
 	// 當前檢視/選中的物品 ID
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
-	// 懸停預覽的物品 ID
-	const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+
+	const handleSelectItem = (id: string) => {
+		setSelectedItemId(id);
+		if (window.innerWidth < 1024) {
+			setIsMobileSheetOpen(true);
+		}
+	};
 
 	// 背包搜尋與硬幣計重
 	const [searchQuery, setSearchQuery] = useState('');
 	const [countCoinWeight, setCountCoinWeight] = useState(true);
+
+	const [copiedAffix, setCopiedAffix] = useState<ItemAffix | null>(null);
 
 	// 彈窗狀態：自創道具鍛造/編輯工坊 & 金幣調整
 	const [isHomebrewModalOpen, setIsHomebrewModalOpen] = useState(false);
@@ -176,10 +189,9 @@ export default function App() {
 	]);
 
 	const inspectedItem = useMemo(() => {
-		const targetId = hoveredItemId || selectedItemId;
-		const found = visibleBagItems.find((i) => i.id === targetId);
+		const found = visibleBagItems.find((i) => i.id === selectedItemId);
 		return found || visibleBagItems[0] || null;
-	}, [hoveredItemId, selectedItemId, visibleBagItems]);
+	}, [selectedItemId, visibleBagItems]);
 
 	// 搜尋匹配判斷
 	const isItemMatchingFilter = (item: InventoryItem | null | undefined) => {
@@ -427,6 +439,7 @@ export default function App() {
 			isEquippable: flags.isEquippable,
 			isConsumable: flags.isConsumable,
 			isImportant: flags.isImportant,
+			affixes: item.affixes ? [...item.affixes] : [],
 		});
 		setIsHomebrewModalOpen(true);
 	};
@@ -466,6 +479,7 @@ export default function App() {
 						isEquippable: newItemForm.isEquippable,
 						isConsumable: newItemForm.isConsumable,
 						isImportant: newItemForm.isImportant,
+						affixes: newItemForm.affixes || [],
 					};
 				}),
 			);
@@ -506,6 +520,7 @@ export default function App() {
 			isEquippable: newItemForm.isEquippable,
 			isConsumable: newItemForm.isConsumable,
 			isImportant: newItemForm.isImportant,
+			affixes: newItemForm.affixes || [],
 		};
 
 		setItems((prev) => [...prev, createdItem]);
@@ -515,6 +530,27 @@ export default function App() {
 		showToast(
 			`✨ 已鍛造自創道具「${createdItem.name}」並放入 ${activeCharacter.name} 的${targetPrivate ? '私人' : '公開'}背包！`,
 		);
+	};
+
+	const updateItemAffixes = (item: InventoryItem, nextAffixes: ItemAffix[]) => {
+		setItems((prev) =>
+			prev.map((i) => (i.id === item.id ? { ...i, affixes: nextAffixes } : i)),
+		);
+	};
+
+	const handleCopyAffix = (affix: ItemAffix) => {
+		setCopiedAffix(affix);
+		showToast(`📋 已複製詞條「${affix.name}」，可切換至其他物品貼上！`);
+	};
+
+	const handlePasteAffixToItem = (item: InventoryItem) => {
+		if (!copiedAffix) return;
+		const cloned: ItemAffix = {
+			...copiedAffix,
+			id: `affix-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+		};
+		updateItemAffixes(item, [...(item.affixes || []), cloned]);
+		showToast(`✨ 已將詞條「${copiedAffix.name}」貼上至「${item.name}」！`);
 	};
 
 	return (
@@ -951,14 +987,12 @@ export default function App() {
 						totalItemsValueGp={encumbranceStats.totalItemsValueGp}
 						rarityConfig={RARITY_CONFIG}
 						isItemMatchingFilter={isItemMatchingFilter}
-						setHoveredItemId={setHoveredItemId}
-						setSelectedItemId={setSelectedItemId}
+						setSelectedItemId={handleSelectItem}
 						toggleEquip={toggleEquip}
 					/>
 				</div>
-
-				{/* 右側物品檢視卡 (佔 5/12 寬度，獨立高度不隨左欄拉長) */}
-				<div className='w-full lg:w-5/12 shrink-0'>
+				{/* 右側物品檢視卡：僅桌面版顯示 (lg 以上) */}
+				<div className='hidden lg:block lg:w-5/12 shrink-0 sticky top-5'>
 					<ItemTooltip
 						inspectedItem={inspectedItem}
 						viewMode={viewMode}
@@ -973,12 +1007,82 @@ export default function App() {
 						consumeOrSplitStack={consumeOrSplitStack}
 						transferItemToCharacter={transferItemToCharacter}
 						toggleIdentify={toggleIdentify}
-						deleteItem={deleteItem}
-						onOpenEditModal={openEditItemModal}
+						deleteItem={(item) => {
+							deleteItem(item);
+							setIsMobileSheetOpen(false);
+						}}
+						onOpenEditModal={(item) => {
+							setIsMobileSheetOpen(false);
+							openEditItemModal(item);
+						}}
 						onUpdatePlayerNotes={updatePlayerNotes}
 						onTogglePrivate={togglePrivateItem}
+						copiedAffix={copiedAffix}
+						onCopyAffix={handleCopyAffix}
+						onPasteAffix={handlePasteAffixToItem}
+						onUpdateAffixes={updateItemAffixes}
 					/>
 				</div>
+
+				{/* 手機版專屬 Bottom Sheet (lg 以下點擊彈出) */}
+				<Drawer.Root
+					open={isMobileSheetOpen}
+					onOpenChange={setIsMobileSheetOpen}
+				>
+					<Drawer.Portal>
+						<Drawer.Overlay className='fixed inset-0 bg-black/75 backdrop-blur-xs z-40 lg:hidden' />
+						<Drawer.Content className='fixed bottom-0 left-0 right-0 max-h-[88vh] bg-[#110e0c] border-t-2 border-amber-700/60 rounded-t-2xl z-50 flex flex-col lg:hidden outline-none shadow-[0_-10px_40px_rgba(0,0,0,0.9)]'>
+							{/* 頂部拖曳把手與關閉鈕 */}
+							<div className='flex items-center justify-between px-4 py-2.5 border-b border-stone-800/80 shrink-0'>
+								<div className='w-6' />
+								<div className='w-12 h-1.5 rounded-full bg-stone-700' />
+								<button
+									onClick={() => setIsMobileSheetOpen(false)}
+									className='p-1 rounded-md text-stone-400 hover:text-stone-200 hover:bg-stone-800'
+								>
+									<X className='w-4 h-4' />
+								</button>
+							</div>
+
+							{/* 內部可滾動詳情區 */}
+							<div className='overflow-y-auto p-3 overscroll-contain'>
+								<Drawer.Title className='sr-only'>物品詳細資訊</Drawer.Title>
+								<ItemTooltip
+									inspectedItem={inspectedItem}
+									viewMode={viewMode}
+									rarityConfig={RARITY_CONFIG}
+									weaponMasteries={WEAPON_MASTERIES}
+									characters={characters}
+									activeCharId={activeCharId}
+									viewerCharId={viewerCharId}
+									adjustCharges={adjustCharges}
+									toggleEquip={toggleEquip}
+									toggleAttune={toggleAttune}
+									consumeOrSplitStack={consumeOrSplitStack}
+									transferItemToCharacter={(item, targetId) => {
+										transferItemToCharacter(item, targetId);
+										setIsMobileSheetOpen(false);
+									}}
+									toggleIdentify={toggleIdentify}
+									deleteItem={(item) => {
+										deleteItem(item);
+										setIsMobileSheetOpen(false);
+									}}
+									onOpenEditModal={(item) => {
+										setIsMobileSheetOpen(false);
+										openEditItemModal(item);
+									}}
+									onUpdatePlayerNotes={updatePlayerNotes}
+									onTogglePrivate={togglePrivateItem}
+									copiedAffix={copiedAffix}
+									onCopyAffix={handleCopyAffix}
+									onPasteAffix={handlePasteAffixToItem}
+									onUpdateAffixes={updateItemAffixes}
+								/>
+							</div>
+						</Drawer.Content>
+					</Drawer.Portal>
+				</Drawer.Root>
 			</main>
 
 			{/* 彈窗 1：DM 自創與編輯道具工坊 */}
@@ -994,6 +1098,8 @@ export default function App() {
 					setEditingItemId(null);
 				}}
 				weaponMasteries={WEAPON_MASTERIES}
+				copiedAffix={copiedAffix}
+				onCopyAffix={handleCopyAffix}
 			/>
 
 			{/* 彈窗 2：角色錢包與五種貨幣管理 */}

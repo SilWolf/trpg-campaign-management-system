@@ -1,6 +1,7 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import type {
 	HomebrewForm,
+	ItemAffix,
 	ItemCategory,
 	Rarity,
 	WeaponMasteryInfo,
@@ -10,11 +11,19 @@ import {
 	Sparkles,
 	X,
 	EyeOff,
+	Eye,
 	Lock,
 	Save,
 	Sword,
 	FlaskConical,
 	Star,
+	Plus,
+	Trash2,
+	ArrowUp,
+	ArrowDown,
+	Copy,
+	ClipboardPaste,
+	Wand2,
 } from 'lucide-react';
 
 interface HomebrewModalProps {
@@ -26,6 +35,8 @@ interface HomebrewModalProps {
 	characterName: string;
 	onClose: () => void;
 	weaponMasteries: Record<WeaponMasteryKey, WeaponMasteryInfo>;
+	copiedAffix: ItemAffix | null;
+	onCopyAffix: (affix: ItemAffix) => void;
 }
 
 const ICON_OPTIONS = [
@@ -50,8 +61,57 @@ export default function HomebrewModal({
 	characterName,
 	onClose,
 	weaponMasteries,
+	copiedAffix,
+	onCopyAffix,
 }: HomebrewModalProps) {
 	if (!isOpen) return null;
+	const affixes = form.affixes || [];
+
+	// 新增空白詞條
+	const addEmptyAffix = () => {
+		const newAffix: ItemAffix = {
+			id: `affix-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+			name: '',
+			desc: '',
+			isHidden: false,
+		};
+		setForm({ ...form, affixes: [...affixes, newAffix] });
+	};
+
+	// 貼上剪貼簿內的詞條
+	const pasteAffixToForm = () => {
+		if (!copiedAffix) return;
+		const cloned: ItemAffix = {
+			...copiedAffix,
+			id: `affix-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+		};
+		setForm({ ...form, affixes: [...affixes, cloned] });
+	};
+
+	// 更新指定詞條欄位
+	const updateAffixField = (index: number, patch: Partial<ItemAffix>) => {
+		const next = affixes.map((a, idx) =>
+			idx === index ? { ...a, ...patch } : a,
+		);
+		setForm({ ...form, affixes: next });
+	};
+
+	// 上下移動詞條順序
+	const moveAffixInForm = (index: number, dir: -1 | 1) => {
+		const targetIdx = index + dir;
+		if (targetIdx < 0 || targetIdx >= affixes.length) return;
+		const next = [...affixes];
+		[next[index], next[targetIdx]] = [next[targetIdx], next[index]];
+		setForm({ ...form, affixes: next });
+	};
+
+	// 刪除詞條
+	const removeAffixFromForm = (index: number) => {
+		setForm({
+			...form,
+			affixes: affixes.filter((_, idx) => idx !== index),
+		});
+	};
 
 	// 計算目前勾選狀態會歸類到哪一區
 	const previewSection = form.isImportant
@@ -352,6 +412,157 @@ export default function HomebrewModal({
 							placeholder='例如：&#10;- **暗影步**：消耗 1 點充能，以附贈動作傳送至 30 呎內的陰影處。'
 							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 font-mono outline-none'
 						/>
+					</div>
+
+					{/* ========================================== */}
+					{/* 新增：附魔詞條 (Affixes) 動態編輯器          */}
+					{/* ========================================== */}
+					<div className='p-3 rounded-md bg-stone-900/90 border border-purple-700/50 space-y-2.5'>
+						<div className='flex flex-wrap items-center justify-between gap-2'>
+							<span className='text-purple-300 font-semibold flex items-center gap-1.5'>
+								<Wand2 className='w-3.5 h-3.5 text-purple-400' />
+								<span>附魔詞條 (Affixes) — 同名物品可擁有不同詞條</span>
+							</span>
+
+							<div className='flex items-center gap-1.5'>
+								{copiedAffix && (
+									<button
+										type='button'
+										onClick={pasteAffixToForm}
+										className='px-2 py-1 rounded bg-purple-950 hover:bg-purple-900 border border-purple-500/70 text-purple-200 flex items-center gap-1 cursor-pointer transition'
+									>
+										<ClipboardPaste className='w-3 h-3' />
+										<span>貼上「{copiedAffix.name}」</span>
+									</button>
+								)}
+								<button
+									type='button'
+									onClick={addEmptyAffix}
+									className='px-2.5 py-1 rounded bg-amber-950/90 hover:bg-amber-900 border border-amber-500/70 text-amber-200 flex items-center gap-1 cursor-pointer transition'
+								>
+									<Plus className='w-3 h-3' />
+									<span>新增詞條</span>
+								</button>
+							</div>
+						</div>
+
+						{affixes.length === 0 ? (
+							<div className='text-[11px] text-stone-500 italic py-2 text-center border border-dashed border-stone-800 rounded'>
+								尚未附加任何詞條。點擊右上角「新增詞條」或從其他物品複製貼上。
+							</div>
+						) : (
+							<div className='space-y-2.5 max-h-60 overflow-y-auto pr-1'>
+								{affixes.map((affix, idx) => (
+									<div
+										key={affix.id}
+										className={`p-2.5 rounded border space-y-2 ${
+											affix.isHidden
+												? 'bg-red-950/20 border-red-800/50'
+												: 'bg-stone-950 border-stone-800'
+										}`}
+									>
+										<div className='flex items-center justify-between gap-2'>
+											<div className='flex items-center gap-1.5 flex-1'>
+												<span className='text-[10px] font-mono text-stone-500 shrink-0'>
+													#{idx + 1}
+												</span>
+												<input
+													type='text'
+													required
+													value={affix.name}
+													onChange={(e) =>
+														updateAffixField(idx, { name: e.target.value })
+													}
+													placeholder='詞條名稱（如：熾焰附魔、嗜血詛咒）'
+													className='w-full bg-stone-900 border border-stone-700 focus:border-amber-500 rounded px-2 py-1 text-xs text-amber-200 font-semibold outline-none'
+												/>
+											</div>
+
+											{/* 詞條工具列：排序、對玩家隱藏、複製、刪除 */}
+											<div className='flex items-center gap-1 shrink-0'>
+												<button
+													type='button'
+													onClick={() => moveAffixInForm(idx, -1)}
+													disabled={idx === 0}
+													title='上移'
+													className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
+												>
+													<ArrowUp className='w-3.5 h-3.5' />
+												</button>
+												<button
+													type='button'
+													onClick={() => moveAffixInForm(idx, 1)}
+													disabled={idx === affixes.length - 1}
+													title='下移'
+													className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
+												>
+													<ArrowDown className='w-3.5 h-3.5' />
+												</button>
+
+												<button
+													type='button'
+													onClick={() =>
+														updateAffixField(idx, { isHidden: !affix.isHidden })
+													}
+													title={
+														affix.isHidden
+															? '目前對玩家隱藏（點擊改為公開）'
+															: '目前對玩家公開（點擊設為隱藏）'
+													}
+													className={`px-1.5 py-1 rounded border flex items-center gap-1 text-[10px] cursor-pointer ${
+														affix.isHidden
+															? 'bg-red-950/80 border-red-500/60 text-red-200'
+															: 'bg-stone-900 border-stone-700 text-stone-400 hover:text-stone-200'
+													}`}
+												>
+													{affix.isHidden ? (
+														<>
+															<EyeOff className='w-3 h-3 text-red-400' />
+															<span>隱藏中</span>
+														</>
+													) : (
+														<>
+															<Eye className='w-3 h-3' />
+															<span>公開</span>
+														</>
+													)}
+												</button>
+
+												<button
+													type='button'
+													onClick={() => {
+														if (affix.name.trim()) onCopyAffix(affix);
+													}}
+													title='複製此詞條'
+													className='p-1 rounded bg-stone-900 hover:bg-amber-950 border border-stone-700 text-stone-300 hover:text-amber-200 cursor-pointer'
+												>
+													<Copy className='w-3.5 h-3.5' />
+												</button>
+
+												<button
+													type='button'
+													onClick={() => removeAffixFromForm(idx)}
+													title='刪除此詞條'
+													className='p-1 rounded bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-300 cursor-pointer'
+												>
+													<Trash2 className='w-3.5 h-3.5' />
+												</button>
+											</div>
+										</div>
+
+										<textarea
+											rows={2}
+											value={affix.desc}
+											onChange={(e) =>
+												updateAffixField(idx, { desc: e.target.value })
+											}
+											placeholder='詞條描述（支援 Markdown，如：命中時額外造成 **1d6 火焰** 傷害）'
+											className='w-full bg-stone-900 border border-stone-700 focus:border-amber-500 rounded px-2.5 py-1 text-xs text-stone-200 font-mono outline-none'
+										/>
+									</div>
+								))}
+							</div>
+						)}
 					</div>
 
 					<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>

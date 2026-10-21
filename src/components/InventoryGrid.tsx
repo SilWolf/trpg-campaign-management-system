@@ -29,7 +29,6 @@ interface InventoryGridProps {
 	totalItemsValueGp: number;
 	rarityConfig: Record<Rarity, RarityStyle>;
 	isItemMatchingFilter: (item: InventoryItem | null | undefined) => boolean;
-	setHoveredItemId: (id: string | null) => void;
 	setSelectedItemId: (id: string) => void;
 	toggleEquip: (item: InventoryItem) => void;
 }
@@ -84,7 +83,6 @@ export default function InventoryGrid({
 	totalItemsValueGp,
 	rarityConfig,
 	isItemMatchingFilter,
-	setHoveredItemId,
 	setSelectedItemId,
 	toggleEquip,
 }: InventoryGridProps) {
@@ -193,8 +191,6 @@ export default function InventoryGrid({
 													onDoubleClick={() => {
 														if (isEquippable) toggleEquip(item);
 													}}
-													onMouseEnter={() => setHoveredItemId(item.id)}
-													onMouseLeave={() => setHoveredItemId(null)}
 													title={masked ? '未知魔法物品' : item.name}
 													className={`aspect-square rounded border ${rStyle.border} ${rStyle.bg} ${rStyle.glow} relative flex items-center justify-center cursor-pointer select-none transition-all duration-150 ${
 														isInspected
@@ -276,8 +272,6 @@ export default function InventoryGrid({
 													onDoubleClick={() => {
 														if (isEquippable) toggleEquip(item);
 													}}
-													onMouseEnter={() => setHoveredItemId(item.id)}
-													onMouseLeave={() => setHoveredItemId(null)}
 													className={`px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition ${
 														isInspected
 															? 'bg-amber-950/35 border-l-2 border-l-amber-400'
