@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { CAMP_CHEST_ID, type Character } from '../types';
-import { UserPlus, Save, X, Shield, Coins } from 'lucide-react';
+import { UserPlus, Save, X, Shield } from 'lucide-react';
 
 interface CharacterModalProps {
 	isOpen: boolean;
