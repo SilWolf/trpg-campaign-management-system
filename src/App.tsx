@@ -9,6 +9,7 @@ import CharacterModal from './components/CharacterModal';
 import ItemTooltip from './components/ItemTooltip';
 import { useCampaignSync } from './hooks/useCampaignSync';
 import {
+	CAMP_CHEST_DEFAULT,
 	INITIAL_CHARACTERS,
 	INITIAL_ITEMS,
 	RARITY_CONFIG,
@@ -462,43 +463,126 @@ export default function App() {
 
 	// 4. DM 刪除角色函式 (連帶清理該角色的背包物品與金幣)
 	const handleDeleteCharacter = (charId: string) => {
-		if (characters.length <= 1) {
-			showToast('⚠️ 戰役中至少需保留一名角色！');
+		if (charId === CAMP_CHEST_ID) return;
+
+		const realChars = characters.filter((c) => c.id !== CAMP_CHEST_ID);
+		if (realChars.length <= 1) {
+			showToast('⚠️ 戰役中至少需保留一名冒險者角色！');
 			return;
 		}
-		const targetChar = characters.find((c) => c.id === charId);
-		if (
-			!window.confirm(
-				`確定要將「${targetChar?.name}」及其所有背包物品永久移除嗎？`,
-			)
-		)
-			return;
 
-		setCharacters((prev) => prev.filter((c) => c.id !== charId));
-		setItems((prev) => prev.filter((i) => i.ownerId !== charId));
-		setActiveCharId(characters.find((c) => c.id !== charId)?.id || 'tav');
-		showToast(`🗑️ 已移除角色與其背包物品`);
+		const targetChar = characters.find((c) => c.id === charId);
+		if (!targetChar) return;
+
+		// 1. 將該角色的五種貨幣全數匯入營地儲物箱 (若 characters 尚無 camp-chest 則自動建立一筆以持久化金幣)
+		setCharacters((prev) => {
+			const withoutTarget = prev.filter((c) => c.id !== charId);
+			const hasCampChest = withoutTarget.some((c) => c.id === CAMP_CHEST_ID);
+			const { pp, gp, ep, sp, cp } = targetChar.currencies;
+
+			if (hasCampChest) {
+				return withoutTarget.map((c) =>
+					c.id === CAMP_CHEST_ID
+						? {
+								...c,
+								currencies: {
+									pp: c.currencies.pp + pp,
+									gp: c.currencies.gp + gp,
+									ep: c.currencies.ep + ep,
+									sp: c.currencies.sp + sp,
+									cp: c.currencies.cp + cp,
+								},
+							}
+						: c,
+				);
+			} else {
+				return [
+					...withoutTarget,
+					{
+						id: CAMP_CHEST_ID,
+						name: '營地儲物箱',
+						title: '團隊共用行囊與公庫',
+						str: 999,
+						avatar: '🏕️',
+						currencies: { pp, gp, ep, sp, cp },
+					},
+				];
+			}
+		});
+
+		// 2. 將該角色的所有物品（含私人暗袋）卸下裝備/解除同調/改為公開，移入營地儲物箱並自動合併同名同詞條堆疊
+		setItems((prev) => {
+			const others = prev.filter(
+				(i) => i.ownerId !== charId && i.ownerId !== CAMP_CHEST_ID,
+			);
+			const campItems = prev
+				.filter((i) => i.ownerId === CAMP_CHEST_ID)
+				.map((i) => ({ ...i }));
+			const charItems = prev.filter((i) => i.ownerId === charId);
+
+			charItems.forEach((item) => {
+				const movedItem: InventoryItem = {
+					...item,
+					ownerId: CAMP_CHEST_ID,
+					equipped: false,
+					attuned: false,
+					isPrivate: false,
+				};
+				const existing = campItems.find((target) =>
+					canStackItems(target, movedItem),
+				);
+				if (existing) {
+					existing.quantity += movedItem.quantity;
+				} else {
+					campItems.push(movedItem);
+				}
+			});
+
+			return [...others, ...campItems];
+		});
+
+		// 3. 安全切換檢視視角
+		const nextCharId =
+			realChars.find((c) => c.id !== charId)?.id || CAMP_CHEST_ID;
+		if (activeCharId === charId) setActiveCharId(nextCharId);
+		if (viewerCharId === charId) setViewerCharId(nextCharId);
+
+		showToast(
+			`🏕️ 已移除角色「${targetChar.name}」，其所有裝備與錢包已全數移入營地儲物箱！`,
+		);
 	};
 
 	// ==========================================
 	// 貨幣調整與自動換算
 	// ==========================================
 	const updateCurrency = (coinType: CurrencyType, delta: number) => {
-		setCharacters((prev) =>
-			prev.map((char) => {
+		setCharacters((prev) => {
+			const exists = prev.some((c) => c.id === activeCharId);
+			const list =
+				!exists && activeCharId === CAMP_CHEST_ID
+					? [...prev, CAMP_CHEST_DEFAULT]
+					: prev;
+
+			return list.map((char) => {
 				if (char.id !== activeCharId) return char;
 				const nextVal = Math.max(0, char.currencies[coinType] + delta);
 				return {
 					...char,
 					currencies: { ...char.currencies, [coinType]: nextVal },
 				};
-			}),
-		);
+			});
+		});
 	};
 
 	const consolidateCoinsToGold = () => {
-		setCharacters((prev) =>
-			prev.map((char) => {
+		setCharacters((prev) => {
+			const exists = prev.some((c) => c.id === activeCharId);
+			const list =
+				!exists && activeCharId === CAMP_CHEST_ID
+					? [...prev, CAMP_CHEST_DEFAULT]
+					: prev;
+
+			return list.map((char) => {
 				if (char.id !== activeCharId) return char;
 				const pp = char.currencies.pp;
 				let { gp, ep, sp, cp } = char.currencies;
@@ -508,8 +592,8 @@ export default function App() {
 				sp = sp % 10;
 				ep = ep % 2;
 				return { ...char, currencies: { pp, gp, ep, sp, cp } };
-			}),
-		);
+			});
+		});
 		showToast('🪙 已自動將銅幣、銀幣與電金幣換算為金幣 (GP)！');
 	};
 
@@ -693,6 +777,101 @@ export default function App() {
 		showToast(`📦 已成功將背包內所有同名同詞條的物品自動合併疊加！`);
 	};
 
+	// 1. 新增：單筆貨幣轉帳 (支援角色 <-> 角色、角色 <-> 營地儲物箱)
+	const transferCurrency = (
+		targetCharId: string,
+		coinType: CurrencyType,
+		amount: number,
+	) => {
+		if (targetCharId === activeCharId || amount <= 0) return;
+		const available = activeCharacter.currencies[coinType];
+		const actualAmount = Math.min(available, amount);
+
+		if (actualAmount <= 0) {
+			showToast('⚠️ 該幣種餘額不足，無法轉出！');
+			return;
+		}
+
+		const targetName =
+			targetCharId === CAMP_CHEST_ID
+				? '🏕️ 營地儲物箱'
+				: characters.find((c) => c.id === targetCharId)?.name;
+
+		setCharacters((prev) => {
+			// 確保 camp-chest 存在於陣列中
+			let list = [...prev];
+			if (!list.some((c) => c.id === CAMP_CHEST_ID)) {
+				list.push(CAMP_CHEST_DEFAULT);
+			}
+
+			return list.map((char) => {
+				if (char.id === activeCharId) {
+					return {
+						...char,
+						currencies: {
+							...char.currencies,
+							[coinType]: char.currencies[coinType] - actualAmount,
+						},
+					};
+				}
+				if (char.id === targetCharId) {
+					return {
+						...char,
+						currencies: {
+							...char.currencies,
+							[coinType]: char.currencies[coinType] + actualAmount,
+						},
+					};
+				}
+				return char;
+			});
+		});
+
+		showToast(
+			`🪙 已將 ${actualAmount} ${coinType.toUpperCase()} 轉入 ${targetName}！`,
+		);
+	};
+
+	// 2. 加碼功能：當在「營地儲物箱」時，可一鍵將公庫內的指定幣種平分給所有隊員（餘數留在公庫）
+	const splitCampCoinToParty = (coinType: CurrencyType) => {
+		if (activeCharId !== CAMP_CHEST_ID) return;
+		const partyMembers = characters.filter((c) => c.id !== CAMP_CHEST_ID);
+		if (partyMembers.length === 0) return;
+
+		const total = activeCharacter.currencies[coinType];
+		const eachShare = Math.floor(total / partyMembers.length);
+		const remainder = total % partyMembers.length;
+
+		if (eachShare <= 0) {
+			showToast(
+				`⚠️ 公庫的 ${coinType.toUpperCase()} 不足平分給 ${partyMembers.length} 名隊員！`,
+			);
+			return;
+		}
+
+		setCharacters((prev) =>
+			prev.map((char) => {
+				if (char.id === CAMP_CHEST_ID) {
+					return {
+						...char,
+						currencies: { ...char.currencies, [coinType]: remainder },
+					};
+				}
+				return {
+					...char,
+					currencies: {
+						...char.currencies,
+						[coinType]: char.currencies[coinType] + eachShare,
+					},
+				};
+			}),
+		);
+
+		showToast(
+			`🎉 已將公庫 ${coinType.toUpperCase()} 平分給全隊，每人獲得 ${eachShare} ${coinType.toUpperCase()}（餘 ${remainder} 留存公庫）！`,
+		);
+	};
+
 	return (
 		<div className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden'>
 			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.14),_rgba(12,10,9,0.95)_70%)]' />
@@ -771,15 +950,17 @@ export default function App() {
 									}}
 									className='bg-transparent text-amber-300 font-semibold outline-none cursor-pointer'
 								>
-									{characters.map((c) => (
-										<option
-											key={c.id}
-											value={c.id}
-											className='bg-stone-900 text-stone-200'
-										>
-											{c.avatar} {c.name}
-										</option>
-									))}
+									{characters
+										.filter((c) => c.id !== CAMP_CHEST_ID)
+										.map((c) => (
+											<option
+												key={c.id}
+												value={c.id}
+												className='bg-stone-900 text-stone-200'
+											>
+												{c.avatar} {c.name}
+											</option>
+										))}
 								</select>
 							</div>
 						)}
@@ -1333,9 +1514,12 @@ export default function App() {
 			<CurrencyPanel
 				isOpen={isCoinModalOpen}
 				activeCharacter={activeCharacter}
+				characters={characters}
 				onClose={() => setIsCoinModalOpen(false)}
 				onUpdateCurrency={updateCurrency}
 				onConsolidateCoinsToGold={consolidateCoinsToGold}
+				onTransferCurrency={transferCurrency}
+				onSplitCampCoinToParty={splitCampCoinToParty}
 			/>
 
 			<CharacterModal
@@ -1343,6 +1527,7 @@ export default function App() {
 				character={editingCharacter}
 				onClose={() => setIsCharModalOpen(false)}
 				onSave={handleSaveCharacter}
+				onDelete={handleDeleteCharacter}
 			/>
 		</div>
 	);

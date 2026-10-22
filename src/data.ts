@@ -116,6 +116,15 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 // ==========================================
 // 預設角色與初始背包資料
 // ==========================================
+export const CAMP_CHEST_DEFAULT: Character = {
+	id: CAMP_CHEST_ID,
+	name: '營地儲物箱',
+	title: '團隊共用行囊與公庫',
+	str: 999,
+	avatar: '🏕️',
+	currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+};
+
 export const INITIAL_CHARACTERS: Character[] = [
 	{
 		id: 'tav',
@@ -141,14 +150,7 @@ export const INITIAL_CHARACTERS: Character[] = [
 		avatar: '🔮',
 		currencies: { pp: 5, gp: 120, ep: 0, sp: 12, cp: 5 },
 	},
-	{
-		id: CAMP_CHEST_ID,
-		name: '營地旅人儲物箱',
-		title: '小隊公用倉庫 & 公基金',
-		str: 999, // 無限負重
-		avatar: '🏕️',
-		currencies: { pp: 14, gp: 2450, ep: 40, sp: 310, cp: 500 },
-	},
+	CAMP_CHEST_DEFAULT,
 ];
 
 export const INITIAL_ITEMS: InventoryItem[] = [

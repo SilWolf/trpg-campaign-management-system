@@ -4,6 +4,7 @@ import {
 	useCallback,
 	useRef,
 	type SetStateAction,
+	type Dispatch,
 } from 'react';
 import {
 	supabase,
@@ -100,22 +101,19 @@ export function useCampaignSync(
 				'postgres_changes',
 				{ event: '*', schema: 'public', table: 'characters' },
 				(payload) => {
-					if (
-						payload.eventType === 'INSERT' ||
-						payload.eventType === 'UPDATE'
-					) {
-						const updatedChar = fromDbCharacter(payload.new as DbCharacter);
+					if (payload.eventType === 'DELETE') {
+						const deletedId = (payload.old as { id: string }).id;
+						setCharactersState((prev) =>
+							prev.filter((c) => c.id !== deletedId),
+						);
+					} else {
+						const updatedChar = toDbCharacter(payload.new as DbCharacter);
 						setCharactersState((prev) => {
 							const exists = prev.some((c) => c.id === updatedChar.id);
 							return exists
 								? prev.map((c) => (c.id === updatedChar.id ? updatedChar : c))
 								: [...prev, updatedChar];
 						});
-					} else if (payload.eventType === 'DELETE') {
-						const deletedId = (payload.old as { id: string }).id;
-						setCharactersState((prev) =>
-							prev.filter((c) => c.id !== deletedId),
-						);
 					}
 				},
 			)
@@ -149,26 +147,46 @@ export function useCampaignSync(
 	}, [initialCharacters, initialItems]);
 
 	// 3. 封裝 setCharacters：樂觀更新畫面 + 自動同步被修改的角色至 Supabase
-	const setCharacters = useCallback((updater: SetStateAction<Character[]>) => {
-		setCharactersState((prev) => {
-			const next = typeof updater === 'function' ? updater(prev) : updater;
-			if (supabase) {
-				const changed = next.filter((char) => {
-					const old = prev.find((p) => p.id === char.id);
-					return !old || JSON.stringify(old) !== JSON.stringify(char);
-				});
-				if (changed.length > 0) {
-					supabase
-						.from('characters')
-						.upsert(changed.map(toDbCharacter))
-						.then(({ error }) => {
-							if (error) console.error('同步角色錢包失敗:', error);
-						});
+	const setCharacters: Dispatch<SetStateAction<Character[]>> = useCallback(
+		(updater) => {
+			setCharactersState((prev) => {
+				const next = typeof updater === 'function' ? updater(prev) : updater;
+
+				if (supabase) {
+					// 1. 找出被刪除的角色 ID
+					const nextIds = new Set(next.map((c) => c.id));
+					const deletedIds = prev
+						.filter((c) => !nextIds.has(c.id))
+						.map((c) => c.id);
+
+					// 2. 若有被刪除的角色，同步從 Supabase characters 表移除
+					if (deletedIds.length > 0) {
+						supabase
+							.from('characters')
+							.delete()
+							.in('id', deletedIds)
+							.then(({ error }) => {
+								if (error) console.error('刪除角色同步失敗:', error);
+							});
+					}
+
+					// 3. Upsert 留存或更新的角色 (例如接收了遺產金幣的 camp-chest)
+					if (next.length > 0) {
+						const dbRows = next.map(toDbCharacter); // 對齊你 supabase.ts 的轉換函式名
+						supabase
+							.from('characters')
+							.upsert(dbRows)
+							.then(({ error }) => {
+								if (error) console.error('更新角色同步失敗:', error);
+							});
+					}
 				}
-			}
-			return next;
-		});
-	}, []);
+
+				return next;
+			});
+		},
+		[],
+	);
 
 	// 4. 封裝 setItems：樂觀更新畫面 + 自動比對新增/修改/刪除的物品並同步至 Supabase
 	const setItems = useCallback((updater: SetStateAction<InventoryItem[]>) => {

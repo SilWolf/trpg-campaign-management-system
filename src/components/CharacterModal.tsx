@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import type { Character } from '../types';
+import { CAMP_CHEST_ID, type Character } from '../types';
 import { UserPlus, Save, X, Shield, Coins } from 'lucide-react';
 
 interface CharacterModalProps {
@@ -7,6 +7,7 @@ interface CharacterModalProps {
 	character: Character | null; // 若為 null 代表是「新增隊員」
 	onClose: () => void;
 	onSave: (charData: Character) => void;
+	onDelete?: (charId: string) => void;
 }
 
 const AVATAR_OPTIONS = [
@@ -27,6 +28,7 @@ export default function CharacterModal({
 	character,
 	onClose,
 	onSave,
+	onDelete,
 }: CharacterModalProps) {
 	const [name, setName] = useState('');
 	const [title, setTitle] = useState('');
@@ -112,7 +114,7 @@ export default function CharacterModal({
 
 					<div className='grid grid-cols-2 gap-3'>
 						<div>
-							<label className='block text-amber-300 mb-1 flex items-center gap-1'>
+							<label className='text-amber-300 mb-1 flex items-center gap-1'>
 								<Shield className='w-3.5 h-3.5' />
 								<span>力量屬性 (STR)</span>
 							</label>
@@ -146,21 +148,44 @@ export default function CharacterModal({
 						</div>
 					</div>
 
-					<div className='flex justify-end gap-2 pt-3 border-t border-stone-800'>
-						<button
-							type='button'
-							onClick={onClose}
-							className='px-4 py-2 rounded bg-stone-900 border border-stone-700 text-stone-300 hover:bg-stone-800 cursor-pointer'
-						>
-							取消
-						</button>
-						<button
-							type='submit'
-							className='px-5 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold shadow flex items-center gap-1.5 cursor-pointer'
-						>
-							<Save className='w-4 h-4' />
-							<span>儲存角色</span>
-						</button>
+					<div className='flex items-center justify-between pt-3 border-t border-stone-800'>
+						{character && character.id !== CAMP_CHEST_ID && onDelete ? (
+							<button
+								type='button'
+								onClick={() => {
+									if (
+										window.confirm(
+											`確定要移除角色「${character.name}」嗎？\n（該角色身上的所有物品與金幣將自動打包移入「🏕️ 營地儲物箱」）`,
+										)
+									) {
+										onDelete(character.id);
+										onClose();
+									}
+								}}
+								className='px-3 py-2 rounded bg-red-950/80 hover:bg-red-900 border border-red-700/60 text-red-200 font-medium transition cursor-pointer'
+							>
+								移除角色 (遺物入庫)
+							</button>
+						) : (
+							<div />
+						)}
+
+						<div className='flex items-center gap-2'>
+							<button
+								type='button'
+								onClick={onClose}
+								className='px-4 py-2 rounded bg-stone-900 border border-stone-700 text-stone-300 hover:bg-stone-800 cursor-pointer'
+							>
+								取消
+							</button>
+							<button
+								type='submit'
+								className='px-5 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold shadow flex items-center gap-1.5 cursor-pointer'
+							>
+								<Save className='w-4 h-4' />
+								<span>儲存角色</span>
+							</button>
+						</div>
 					</div>
 				</form>
 			</div>
