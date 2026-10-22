@@ -28,6 +28,7 @@ import {
 	type InventoryItem,
 	type ViewMode,
 } from '@/types';
+import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 
 export const Route = createFileRoute('/_protected/campaigns/$campaignId/')({
 	beforeLoad: async () => {
@@ -38,6 +39,8 @@ export const Route = createFileRoute('/_protected/campaigns/$campaignId/')({
 
 function CampaignInventoryPage() {
 	const { campaignId } = Route.useParams();
+	const { isDm, user } = useUserCampaignRole(campaignId);
+
 	const [viewMode, setViewMode] = useState<ViewMode>('dm');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
 	const [activeCharId, setActiveCharId] = useState<string>('tav');
@@ -77,11 +80,13 @@ function CampaignInventoryPage() {
 				title: '團隊共用行囊與公庫',
 				str: 999,
 				avatar: '🏕️',
+				campaignId,
+				userId: 'dm',
 				currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			};
 		}
 		return characters[0];
-	}, [characters, activeCharId]);
+	}, [characters, activeCharId, campaignId]);
 
 	const allCharacterItems = useMemo(
 		() => items.filter((item) => item.ownerId === activeCharId),
@@ -204,6 +209,7 @@ function CampaignInventoryPage() {
 			)}
 
 			<AppHeader
+				isDm={isDm}
 				viewMode={viewMode}
 				setViewMode={setViewMode}
 				characters={characters}
@@ -416,6 +422,8 @@ function CampaignInventoryPage() {
 			<CharacterModal
 				isOpen={isCharModalOpen}
 				character={editingCharacter}
+				campaignId={campaignId}
+				userId={user?.id ?? 'guest'}
 				onClose={() => setIsCharModalOpen(false)}
 				onSave={actions.handleSaveCharacter}
 				onDelete={actions.handleDeleteCharacter}

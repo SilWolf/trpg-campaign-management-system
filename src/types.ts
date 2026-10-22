@@ -1,10 +1,5 @@
 export type Rarity =
-	| 'Common'
-	| 'Uncommon'
-	| 'Rare'
-	| 'VeryRare'
-	| 'Legendary'
-	| 'Artifact';
+	'Common' | 'Uncommon' | 'Rare' | 'VeryRare' | 'Legendary' | 'Artifact';
 export type ItemCategory = 'Weapon' | 'Armor' | 'Consumable' | 'Misc';
 export type WeaponMasteryKey =
 	| 'None'
@@ -70,6 +65,8 @@ export type Character = {
 	title: string;
 	str: number;
 	avatar: string;
+	userId: string;
+	campaignId: string;
 	currencies: Record<CurrencyType, number>;
 };
 

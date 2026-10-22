@@ -5,6 +5,8 @@ import { UserPlus, Save, X, Shield } from 'lucide-react';
 
 interface CharacterModalProps {
 	isOpen: boolean;
+	campaignId: string;
+	userId: string;
 	character: Character | null; // 若為 null 代表是「新增隊員」
 	onClose: () => void;
 	onSave: (charData: Character) => void;
@@ -26,6 +28,8 @@ const AVATAR_OPTIONS = [
 
 export default function CharacterModal({
 	isOpen,
+	userId,
+	campaignId,
 	character,
 	onClose,
 	onSave,
@@ -62,6 +66,8 @@ export default function CharacterModal({
 			title: title.trim() || '冒險者',
 			str: Math.max(1, Math.min(30, Number(str) || 10)),
 			avatar,
+			userId: character ? character.userId : userId,
+			campaignId: character ? character.campaignId : campaignId,
 			currencies: character
 				? character.currencies
 				: { pp: 0, gp: 50, ep: 0, sp: 10, cp: 0 }, // 新角色的初始起手金幣

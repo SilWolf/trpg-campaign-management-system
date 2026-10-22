@@ -3,8 +3,7 @@ import { resolveItemFlags, type Character, type InventoryItem } from '@/types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
-	| string
-	| undefined;
+	string | undefined;
 
 // 若未設定環境變數則為 null，自動退回單機模式
 export const supabase =
@@ -132,6 +131,8 @@ export interface DbCharacter {
 	title: string;
 	avatar: string;
 	str: number;
+	user_id: string;
+	campaign_id: string;
 	currencies: Character['currencies'];
 }
 
@@ -141,6 +142,8 @@ export const toDbCharacter = (char: Character): DbCharacter => ({
 	title: char.title,
 	avatar: char.avatar,
 	str: Number(char.str),
+	user_id: char.userId,
+	campaign_id: char.campaignId,
 	currencies: char.currencies,
 });
 
@@ -150,5 +153,7 @@ export const fromDbCharacter = (row: DbCharacter): Character => ({
 	title: row.title,
 	avatar: row.avatar,
 	str: Number(row.str),
+	userId: row.user_id,
+	campaignId: row.campaign_id,
 	currencies: row.currencies,
 });

@@ -1,16 +1,9 @@
-import {
-	ArrowLeft,
-	Backpack,
-	Crown,
-	Plus,
-	User,
-	type LucideIcon,
-} from 'lucide-react';
-import { Link } from '@tanstack/react-router';
+import { Backpack, Crown, Plus, User, type LucideIcon } from 'lucide-react';
 import { CAMP_CHEST_ID, type Character, type ViewMode } from '@/types';
 import type { SyncStatus } from '@/hooks/useCampaignSync';
 
 export interface AppHeaderProps {
+	isDm: boolean;
 	viewMode: ViewMode;
 	setViewMode: (mode: ViewMode) => void;
 	characters: Character[];
@@ -27,6 +20,7 @@ const viewIcons: Record<'player' | 'dm', LucideIcon> = {
 };
 
 export default function AppHeader({
+	isDm,
 	viewMode,
 	setViewMode,
 	characters,
@@ -40,13 +34,6 @@ export default function AppHeader({
 		<header className='relative z-10 border-b border-amber-900/40 bg-stone-950/90 backdrop-blur-md px-4 lg:px-8 py-3'>
 			<div className='max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3'>
 				<div className='flex items-center gap-3'>
-					<Link
-						to='/'
-						className='flex shrink-0 items-center gap-1 rounded-md border border-stone-700 bg-stone-900/80 px-2.5 py-2 text-xs text-stone-300 transition hover:border-amber-700 hover:text-amber-200'
-					>
-						<ArrowLeft className='h-3.5 w-3.5' />
-						<span className='hidden sm:inline'>返回戰役大廳</span>
-					</Link>
 					<div className='w-10 h-10 rounded-lg bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950 border border-amber-500/60 flex items-center justify-center shadow-[0_0_15px_rgba(217,119,6,0.3)]'>
 						<Backpack className='w-5 h-5 text-amber-300' />
 					</div>
@@ -90,73 +77,77 @@ export default function AppHeader({
 							</span>
 						</div>
 						<p className='text-xs text-stone-400'>
-							自動四大分類歸納、6格 / 緊湊格字 / 列表三模式、私人暗袋與
-							Markdown 支援
+							自動四大分類歸納、6格 / 緊湊格字 / 列表三模式、私人暗袋與 Markdown
+							支援
 						</p>
 					</div>
 				</div>
 
-				<div className='flex flex-wrap items-center gap-2.5'>
-					{viewMode === 'player' && (
-						<div className='flex items-center gap-1.5 bg-stone-900 border border-stone-700 rounded-md px-2.5 py-1 text-xs'>
-							<span className='text-stone-400'>我的身分:</span>
-							<select
-								value={viewerCharId}
-								onChange={(e) => {
-									setViewerCharId(e.target.value);
-									setActiveCharId(e.target.value);
-								}}
-								className='bg-transparent text-amber-300 font-semibold outline-none cursor-pointer'
-							>
-								{characters
-									.filter((character) => character.id !== CAMP_CHEST_ID)
-									.map((character) => (
-										<option
-											key={character.id}
-											value={character.id}
-											className='bg-stone-900 text-stone-200'
-										>
-											{character.avatar} {character.name}
-										</option>
-									))}
-							</select>
-						</div>
-					)}
-
-					{viewMode === 'dm' && (
-						<button
-							onClick={onCreateHomebrew}
-							className='flex items-center gap-2 px-3.5 py-2 rounded bg-gradient-to-b from-purple-700 to-purple-950 border border-purple-400/70 hover:border-purple-300 text-purple-100 text-xs sm:text-sm font-medium shadow-[0_0_15px_rgba(168,85,247,0.35)] hover:brightness-110 transition cursor-pointer'
-						>
-							<Plus className='w-4 h-4 text-purple-300' />
-							<span>鍛造自創道具 (Homebrew)</span>
-						</button>
-					)}
-
-					<div className='flex bg-stone-900 p-1 rounded-lg border border-amber-800/50'>
-						{(['player', 'dm'] as const).map((mode) => {
-							const Icon = viewIcons[mode];
-							return (
-								<button
-									key={mode}
-									onClick={() => setViewMode(mode)}
-									className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ${
-										viewMode === mode
-											? mode === 'player'
-												? 'bg-amber-700/90 text-amber-50 border border-amber-400/60 shadow'
-												: 'bg-red-900/90 text-red-100 border border-red-400/70 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
-											: 'text-stone-400 hover:text-stone-200'
-									}`}
+				{isDm && (
+					<div className='flex flex-wrap items-center gap-2.5'>
+						{viewMode === 'player' && (
+							<div className='flex items-center gap-1.5 bg-stone-900 border border-stone-700 rounded-md px-2.5 py-1 text-xs'>
+								<span className='text-stone-400'>我的身分:</span>
+								<select
+									value={viewerCharId}
+									onChange={(e) => {
+										setViewerCharId(e.target.value);
+										setActiveCharId(e.target.value);
+									}}
+									className='bg-transparent text-amber-300 font-semibold outline-none cursor-pointer'
 								>
-									<Icon
-										className={`w-3.5 h-3.5 ${mode === 'dm' ? 'text-amber-400' : ''}`}
-									/>
-									<span>{mode === 'player' ? '玩家視角' : 'DM 上帝視角'}</span>
-								</button>
-							);
-						})}
+									{characters
+										.filter((character) => character.id !== CAMP_CHEST_ID)
+										.map((character) => (
+											<option
+												key={character.id}
+												value={character.id}
+												className='bg-stone-900 text-stone-200'
+											>
+												{character.avatar} {character.name}
+											</option>
+										))}
+								</select>
+							</div>
+						)}
+
+						{viewMode === 'dm' && (
+							<button
+								onClick={onCreateHomebrew}
+								className='flex items-center gap-2 px-3.5 py-2 rounded bg-gradient-to-b from-purple-700 to-purple-950 border border-purple-400/70 hover:border-purple-300 text-purple-100 text-xs sm:text-sm font-medium shadow-[0_0_15px_rgba(168,85,247,0.35)] hover:brightness-110 transition cursor-pointer'
+							>
+								<Plus className='w-4 h-4 text-purple-300' />
+								<span>鍛造自創道具 (Homebrew)</span>
+							</button>
+						)}
+
+						<div className='flex bg-stone-900 p-1 rounded-lg border border-amber-800/50'>
+							{(['player', 'dm'] as const).map((mode) => {
+								const Icon = viewIcons[mode];
+								return (
+									<button
+										key={mode}
+										onClick={() => setViewMode(mode)}
+										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ${
+											viewMode === mode
+												? mode === 'player'
+													? 'bg-amber-700/90 text-amber-50 border border-amber-400/60 shadow'
+													: 'bg-red-900/90 text-red-100 border border-red-400/70 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
+												: 'text-stone-400 hover:text-stone-200'
+										}`}
+									>
+										<Icon
+											className={`w-3.5 h-3.5 ${mode === 'dm' ? 'text-amber-400' : ''}`}
+										/>
+										<span>
+											{mode === 'player' ? '玩家視角' : 'DM 上帝視角'}
+										</span>
+									</button>
+								);
+							})}
+						</div>
 					</div>
-				</div>
+				)}
 			</div>
 		</header>
 	);
