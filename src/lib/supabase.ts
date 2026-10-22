@@ -81,7 +81,7 @@ export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 		is_equippable: flags.isEquippable,
 		is_consumable: flags.isConsumable,
 		is_important: flags.isImportant,
-		affixes: item.affixes,
+		affixes: item.affixes ?? [],
 	};
 };
 

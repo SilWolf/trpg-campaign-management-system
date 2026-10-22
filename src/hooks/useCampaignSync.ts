@@ -107,7 +107,7 @@ export function useCampaignSync(
 							prev.filter((c) => c.id !== deletedId),
 						);
 					} else {
-						const updatedChar = toDbCharacter(payload.new as DbCharacter);
+						const updatedChar = fromDbCharacter(payload.new as DbCharacter); // 修正這裡
 						setCharactersState((prev) => {
 							const exists = prev.some((c) => c.id === updatedChar.id);
 							return exists
@@ -153,33 +153,43 @@ export function useCampaignSync(
 				const next = typeof updater === 'function' ? updater(prev) : updater;
 
 				if (supabase) {
-					// 1. 找出被刪除的角色 ID
 					const nextIds = new Set(next.map((c) => c.id));
 					const deletedIds = prev
 						.filter((c) => !nextIds.has(c.id))
 						.map((c) => c.id);
 
-					// 2. 若有被刪除的角色，同步從 Supabase characters 表移除
-					if (deletedIds.length > 0) {
-						supabase
-							.from('characters')
-							.delete()
-							.in('id', deletedIds)
-							.then(({ error }) => {
-								if (error) console.error('刪除角色同步失敗:', error);
-							});
-					}
+					// 只找出「新增」或「內容有變動」的角色進行 upsert
+					const changedChars = next.filter((char) => {
+						const old = prev.find((p) => p.id === char.id);
+						return !old || JSON.stringify(old) !== JSON.stringify(char);
+					});
 
-					// 3. Upsert 留存或更新的角色 (例如接收了遺產金幣的 camp-chest)
-					if (next.length > 0) {
-						const dbRows = next.map(toDbCharacter); // 對齊你 supabase.ts 的轉換函式名
-						supabase
-							.from('characters')
-							.upsert(dbRows)
-							.then(({ error }) => {
-								if (error) console.error('更新角色同步失敗:', error);
-							});
-					}
+					(async () => {
+						// Step A: 先 Upsert 新增或更新的角色 (確保 camp-chest 先存在於 DB)
+						if (changedChars.length > 0) {
+							const { error: upsertErr } = await supabase
+								.from('characters')
+								.upsert(changedChars.map(toDbCharacter));
+							if (upsertErr) console.error('更新角色同步失敗:', upsertErr);
+						}
+
+						// Step B: 再刪除被移除的角色
+						if (deletedIds.length > 0) {
+							const { data, error: delErr } = await supabase
+								.from('characters')
+								.delete()
+								.in('id', deletedIds)
+								.select();
+							if (delErr) {
+								console.error('刪除角色同步失敗 (請檢查外鍵或 RLS):', delErr);
+							} else if (!data || data.length === 0) {
+								console.warn(
+									'Supabase 未刪除任何角色，請確認已執行 RLS Policy SQL！',
+									deletedIds,
+								);
+							}
+						}
+					})();
 				}
 
 				return next;
