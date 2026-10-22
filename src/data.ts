@@ -6,7 +6,7 @@ import {
 	type RarityStyle,
 	type WeaponMasteryInfo,
 	type WeaponMasteryKey,
-} from './types';
+} from '@/types';
 
 // ==========================================
 // D&D 5R (2024) 武器精通 (Weapon Mastery) 字典

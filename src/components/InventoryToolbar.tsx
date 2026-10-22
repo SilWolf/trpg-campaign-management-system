@@ -7,7 +7,7 @@ import {
 	List,
 	Search,
 } from 'lucide-react';
-import type { InventoryDisplayMode, InventoryItem } from '../types';
+import type { InventoryDisplayMode, InventoryItem } from '@/types';
 
 export interface InventoryToolbarProps {
 	allCharacterItems: InventoryItem[];

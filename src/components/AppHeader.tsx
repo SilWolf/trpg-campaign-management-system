@@ -1,12 +1,14 @@
 import {
+	ArrowLeft,
 	Backpack,
 	Crown,
 	Plus,
 	User,
 	type LucideIcon,
 } from 'lucide-react';
-import { CAMP_CHEST_ID, type Character, type ViewMode } from '../types';
-import type { SyncStatus } from '../hooks/useCampaignSync';
+import { Link } from '@tanstack/react-router';
+import { CAMP_CHEST_ID, type Character, type ViewMode } from '@/types';
+import type { SyncStatus } from '@/hooks/useCampaignSync';
 
 export interface AppHeaderProps {
 	viewMode: ViewMode;
@@ -38,6 +40,13 @@ export default function AppHeader({
 		<header className='relative z-10 border-b border-amber-900/40 bg-stone-950/90 backdrop-blur-md px-4 lg:px-8 py-3'>
 			<div className='max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3'>
 				<div className='flex items-center gap-3'>
+					<Link
+						to='/'
+						className='flex shrink-0 items-center gap-1 rounded-md border border-stone-700 bg-stone-900/80 px-2.5 py-2 text-xs text-stone-300 transition hover:border-amber-700 hover:text-amber-200'
+					>
+						<ArrowLeft className='h-3.5 w-3.5' />
+						<span className='hidden sm:inline'>返回戰役大廳</span>
+					</Link>
 					<div className='w-10 h-10 rounded-lg bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950 border border-amber-500/60 flex items-center justify-center shadow-[0_0_15px_rgba(217,119,6,0.3)]'>
 						<Backpack className='w-5 h-5 text-amber-300' />
 					</div>

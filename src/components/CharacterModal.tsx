@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, type FormEvent } from 'react';
-import { CAMP_CHEST_ID, type Character } from '../types';
+import { CAMP_CHEST_ID, type Character } from '@/types';
 import { UserPlus, Save, X, Shield } from 'lucide-react';
 
 interface CharacterModalProps {

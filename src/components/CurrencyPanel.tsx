@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CAMP_CHEST_ID, type Character, type CurrencyType } from '../types';
+import { CAMP_CHEST_ID, type Character, type CurrencyType } from '@/types';
 import { Coins, X, Sparkles, Send, Users } from 'lucide-react';
 
 interface CurrencyPanelProps {

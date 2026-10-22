@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import ItemIcon from './ItemIcon';
+import ItemIcon from '@/components/ItemIcon';
 import {
 	CAMP_CHEST_ID,
 	resolveItemFlags,
@@ -12,7 +13,7 @@ import {
 	type WeaponMasteryInfo,
 	type WeaponMasteryKey,
 	type ItemAffix,
-} from '../types';
+} from '@/types';
 import {
 	Backpack,
 	HelpCircle,
@@ -102,7 +103,7 @@ export default function ItemTooltip({
 		setIsEditingNote(false);
 		setNoteDraft(inspectedItem?.playerNotes || '');
 		setTransferQty(inspectedItem?.quantity || 1);
-	}, [inspectedItem?.id, inspectedItem?.playerNotes]);
+	}, [inspectedItem?.id, inspectedItem?.playerNotes, inspectedItem?.quantity]);
 
 	const isInCampChest = inspectedItem?.ownerId === CAMP_CHEST_ID;
 	const canManagePrivacy =

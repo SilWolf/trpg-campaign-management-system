@@ -10,7 +10,7 @@ import {
 	type Character,
 	type CurrencyType,
 	type ViewMode,
-} from '../types';
+} from '@/types';
 
 export interface CharacterStatusBarProps {
 	placement: 'characters' | 'status';

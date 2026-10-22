@@ -6,7 +6,7 @@ import type {
 	Rarity,
 	WeaponMasteryInfo,
 	WeaponMasteryKey,
-} from '../types';
+} from '@/types';
 import {
 	Sparkles,
 	X,

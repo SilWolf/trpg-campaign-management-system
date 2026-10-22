@@ -2,7 +2,6 @@ import {
 	useState,
 	useEffect,
 	useCallback,
-	useRef,
 	type SetStateAction,
 	type Dispatch,
 } from 'react';
@@ -15,8 +14,8 @@ import {
 	fromDbCharacter,
 	type DbInventoryItem,
 	type DbCharacter,
-} from '../lib/supabase';
-import type { Character, InventoryItem } from '../types';
+} from '@/lib/supabase';
+import type { Character, InventoryItem } from '@/types';
 
 export type SyncStatus = 'offline' | 'connecting' | 'synced' | 'error';
 
@@ -30,12 +29,6 @@ export function useCampaignSync(
 	const [syncStatus, setSyncStatus] = useState<SyncStatus>(
 		isSupabaseConfigured ? 'connecting' : 'offline',
 	);
-
-	const itemsRef = useRef<InventoryItem[]>(items);
-	itemsRef.current = items;
-
-	const charactersRef = useRef<Character[]>(characters);
-	charactersRef.current = characters;
 
 	// 1. 初始載入與自動植入預設資料 (Auto-Seed)
 	useEffect(() => {

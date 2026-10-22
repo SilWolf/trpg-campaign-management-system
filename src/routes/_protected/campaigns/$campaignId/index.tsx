@@ -1,38 +1,48 @@
+/* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route。 */
 import { useMemo, useState } from 'react';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Drawer } from 'vaul';
 import { Sparkles, X } from 'lucide-react';
 
-import AppHeader from './components/AppHeader';
-import CharacterStatusBar from './components/CharacterStatusBar';
-import CharacterModal from './components/CharacterModal';
-import CurrencyPanel from './components/CurrencyPanel';
-import HomebrewModal from './components/HomebrewModal';
-import InventoryGrid from './components/InventoryGrid';
-import InventoryToolbar from './components/InventoryToolbar';
-import ItemTooltip from './components/ItemTooltip';
-import { useCampaignSync } from './hooks/useCampaignSync';
-import { useInventoryActions } from './hooks/useInventoryActions';
+import AppHeader from '@/components/AppHeader';
+import CharacterStatusBar from '@/components/CharacterStatusBar';
+import CharacterModal from '@/components/CharacterModal';
+import CurrencyPanel from '@/components/CurrencyPanel';
+import HomebrewModal from '@/components/HomebrewModal';
+import InventoryGrid from '@/components/InventoryGrid';
+import InventoryToolbar from '@/components/InventoryToolbar';
+import ItemTooltip from '@/components/ItemTooltip';
+import { useCampaignSync } from '@/hooks/useCampaignSync';
+import { useInventoryActions } from '@/hooks/useInventoryActions';
+import { checkIsAuthenticated } from '@/contexts/AuthContext';
 import {
 	INITIAL_CHARACTERS,
 	INITIAL_ITEMS,
 	RARITY_CONFIG,
 	WEAPON_MASTERIES,
-} from './data';
+} from '@/data';
 import {
 	CAMP_CHEST_ID,
 	type Character,
 	type InventoryDisplayMode,
 	type InventoryItem,
 	type ViewMode,
-} from './types';
+} from '@/types';
 
-export default function App() {
+export const Route = createFileRoute('/_protected/campaigns/$campaignId/')({
+	beforeLoad: async () => {
+		if (!(await checkIsAuthenticated())) throw redirect({ to: '/login' });
+	},
+	component: CampaignInventoryPage,
+});
+
+function CampaignInventoryPage() {
+	const { campaignId } = Route.useParams();
 	const [viewMode, setViewMode] = useState<ViewMode>('dm');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
 	const [activeCharId, setActiveCharId] = useState<string>('tav');
 	const [bagTab, setBagTab] = useState<'public' | 'private'>('public');
-	const [displayMode, setDisplayMode] =
-		useState<InventoryDisplayMode>('grid');
+	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
 
 	const { characters, setCharacters, items, setItems, syncStatus } =
 		useCampaignSync(INITIAL_CHARACTERS, INITIAL_ITEMS);
@@ -151,9 +161,7 @@ export default function App() {
 		if (window.innerWidth < 1024) setIsMobileSheetOpen(true);
 	};
 
-	const isItemMatchingFilter = (
-		item: InventoryItem | null | undefined,
-	) => {
+	const isItemMatchingFilter = (item: InventoryItem | null | undefined) => {
 		if (!item) return false;
 		const displayName =
 			!item.isIdentified && viewMode === 'player' ? '未知魔法物品' : item.name;
@@ -182,7 +190,10 @@ export default function App() {
 	});
 
 	return (
-		<div className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden'>
+		<div
+			data-campaign-id={campaignId}
+			className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden'
+		>
 			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.14),_rgba(12,10,9,0.95)_70%)]' />
 
 			{toastMessage && (

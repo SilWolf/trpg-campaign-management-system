@@ -1,4 +1,4 @@
-import ItemIcon from './ItemIcon';
+import ItemIcon from '@/components/ItemIcon';
 import {
 	getItemSection,
 	resolveItemFlags,
@@ -8,7 +8,7 @@ import {
 	type Rarity,
 	type RarityStyle,
 	type ViewMode,
-} from '../types';
+} from '@/types';
 import {
 	Sword,
 	FlaskConical,

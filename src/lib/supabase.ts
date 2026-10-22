@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { resolveItemFlags, type Character, type InventoryItem } from '../types';
+import { resolveItemFlags, type Character, type InventoryItem } from '@/types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as

@@ -1,5 +1,5 @@
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
-import { CAMP_CHEST_DEFAULT } from '../data';
+import { CAMP_CHEST_DEFAULT } from '@/data';
 import {
 	CAMP_CHEST_ID,
 	canStackItems,
@@ -10,7 +10,7 @@ import {
 	type InventoryItem,
 	type ItemAffix,
 	type Rarity,
-} from '../types';
+} from '@/types';
 
 const DEFAULT_FORM: HomebrewForm = {
 	name: '',
