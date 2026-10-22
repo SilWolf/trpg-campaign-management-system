@@ -45,7 +45,7 @@ function CampaignInventoryPage() {
 	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
 
 	const { characters, setCharacters, items, setItems, syncStatus } =
-		useCampaignSync(INITIAL_CHARACTERS, INITIAL_ITEMS);
+		useCampaignSync(campaignId, INITIAL_CHARACTERS, INITIAL_ITEMS);
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');

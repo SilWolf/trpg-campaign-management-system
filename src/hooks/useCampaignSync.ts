@@ -20,6 +20,7 @@ import type { Character, InventoryItem } from '@/types';
 export type SyncStatus = 'offline' | 'connecting' | 'synced' | 'error';
 
 export function useCampaignSync(
+	campaignId: string,
 	initialCharacters: Character[],
 	initialItems: InventoryItem[],
 ) {
@@ -30,9 +31,9 @@ export function useCampaignSync(
 		isSupabaseConfigured ? 'connecting' : 'offline',
 	);
 
-	// 1. 初始載入與自動植入預設資料 (Auto-Seed)
+	// 1. 根據 campaignId 初始載入與自動植入預設資料 (Auto-Seed)
 	useEffect(() => {
-		if (!supabase) return;
+		if (!supabase || !campaignId) return;
 		let isMounted = true;
 
 		async function initData() {
@@ -42,20 +43,24 @@ export function useCampaignSync(
 					{ data: charRows, error: charErr },
 					{ data: itemRows, error: itemErr },
 				] = await Promise.all([
-					supabase.from('characters').select('*'),
-					supabase.from('inventory_items').select('*'),
+					supabase.from('characters').select('*').eq('campaign_id', campaignId),
+					supabase
+						.from('inventory_items')
+						.select('*')
+						.eq('campaign_id', campaignId),
 				]);
 
 				if (charErr || itemErr) throw charErr || itemErr;
 
-				// 若資料庫是空的，自動將 INITIAL_CHARACTERS 與 INITIAL_ITEMS 寫入雲端
+				// 若該戰役在資料庫是空的，自動將 INITIAL_CHARACTERS 與 INITIAL_ITEMS 寫入並帶上 campaign_id
 				if (!charRows || charRows.length === 0) {
-					await supabase
-						.from('characters')
-						.upsert(initialCharacters.map(toDbCharacter));
+					const charsWithCampaign = initialCharacters.map((c) => ({
+						...toDbCharacter(c),
+						campaign_id: campaignId,
+					}));
+					await supabase.from('characters').upsert(charsWithCampaign);
 					if (isMounted) setCharactersState(initialCharacters);
 				} else {
-					// 依照初始角色順序排列
 					const orderMap = new Map(
 						initialCharacters.map((c, idx) => [c.id, idx]),
 					);
@@ -68,9 +73,11 @@ export function useCampaignSync(
 				}
 
 				if (!itemRows || itemRows.length === 0) {
-					await supabase
-						.from('inventory_items')
-						.upsert(initialItems.map(toDbItem));
+					const itemsWithCampaign = initialItems.map((i) => ({
+						...toDbItem(i),
+						campaign_id: campaignId,
+					}));
+					await supabase.from('inventory_items').upsert(itemsWithCampaign);
 					if (isMounted) setItemsState(initialItems);
 				} else {
 					if (isMounted) {
@@ -87,12 +94,17 @@ export function useCampaignSync(
 
 		initData();
 
-		// 2. 訂閱 Supabase Realtime WebSockets 即時更新
+		// 2. 訂閱 Supabase Realtime WebSockets（以 campaign_id 過濾）
 		const channel = supabase
-			.channel('dnd5r-campaign-realtime')
+			.channel(`campaign-realtime-${campaignId}`)
 			.on(
 				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'characters' },
+				{
+					event: '*',
+					schema: 'public',
+					table: 'characters',
+					filter: `campaign_id=eq.${campaignId}`,
+				},
 				(payload) => {
 					if (payload.eventType === 'DELETE') {
 						const deletedId = (payload.old as { id: string }).id;
@@ -100,7 +112,7 @@ export function useCampaignSync(
 							prev.filter((c) => c.id !== deletedId),
 						);
 					} else {
-						const updatedChar = fromDbCharacter(payload.new as DbCharacter); // 修正這裡
+						const updatedChar = fromDbCharacter(payload.new as DbCharacter);
 						setCharactersState((prev) => {
 							const exists = prev.some((c) => c.id === updatedChar.id);
 							return exists
@@ -112,7 +124,12 @@ export function useCampaignSync(
 			)
 			.on(
 				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'inventory_items' },
+				{
+					event: '*',
+					schema: 'public',
+					table: 'inventory_items',
+					filter: `campaign_id=eq.${campaignId}`,
+				},
 				(payload) => {
 					if (
 						payload.eventType === 'INSERT' ||
@@ -137,50 +154,44 @@ export function useCampaignSync(
 			isMounted = false;
 			supabase?.removeChannel(channel);
 		};
-	}, [initialCharacters, initialItems]);
+	}, [campaignId, initialCharacters, initialItems]);
 
-	// 3. 封裝 setCharacters：樂觀更新畫面 + 自動同步被修改的角色至 Supabase
+	// 3. 封裝 setCharacters：自動帶入 campaign_id 同步至 Supabase
 	const setCharacters: Dispatch<SetStateAction<Character[]>> = useCallback(
 		(updater) => {
 			setCharactersState((prev) => {
 				const next = typeof updater === 'function' ? updater(prev) : updater;
 
-				if (supabase) {
+				if (supabase && campaignId) {
 					const nextIds = new Set(next.map((c) => c.id));
 					const deletedIds = prev
 						.filter((c) => !nextIds.has(c.id))
 						.map((c) => c.id);
 
-					// 只找出「新增」或「內容有變動」的角色進行 upsert
 					const changedChars = next.filter((char) => {
 						const old = prev.find((p) => p.id === char.id);
 						return !old || JSON.stringify(old) !== JSON.stringify(char);
 					});
 
 					(async () => {
-						// Step A: 先 Upsert 新增或更新的角色 (確保 camp-chest 先存在於 DB)
 						if (changedChars.length > 0) {
+							const payload = changedChars.map((char) => ({
+								...toDbCharacter(char),
+								campaign_id: campaignId,
+							}));
 							const { error: upsertErr } = await supabase
 								.from('characters')
-								.upsert(changedChars.map(toDbCharacter));
+								.upsert(payload);
 							if (upsertErr) console.error('更新角色同步失敗:', upsertErr);
 						}
 
-						// Step B: 再刪除被移除的角色
 						if (deletedIds.length > 0) {
-							const { data, error: delErr } = await supabase
+							const { error: delErr } = await supabase
 								.from('characters')
 								.delete()
 								.in('id', deletedIds)
-								.select();
-							if (delErr) {
-								console.error('刪除角色同步失敗 (請檢查外鍵或 RLS):', delErr);
-							} else if (!data || data.length === 0) {
-								console.warn(
-									'Supabase 未刪除任何角色，請確認已執行 RLS Policy SQL！',
-									deletedIds,
-								);
-							}
+								.eq('campaign_id', campaignId);
+							if (delErr) console.error('刪除角色同步失敗:', delErr);
 						}
 					})();
 				}
@@ -188,46 +199,54 @@ export function useCampaignSync(
 				return next;
 			});
 		},
-		[],
+		[campaignId],
 	);
 
-	// 4. 封裝 setItems：樂觀更新畫面 + 自動比對新增/修改/刪除的物品並同步至 Supabase
-	const setItems = useCallback((updater: SetStateAction<InventoryItem[]>) => {
-		setItemsState((prev) => {
-			const next = typeof updater === 'function' ? updater(prev) : updater;
-			if (supabase) {
-				const nextIds = new Set(next.map((i) => i.id));
-				const deletedIds = prev
-					.filter((p) => !nextIds.has(p.id))
-					.map((p) => p.id);
+	// 4. 封裝 setItems：自動帶入 campaign_id 同步至 Supabase
+	const setItems = useCallback(
+		(updater: SetStateAction<InventoryItem[]>) => {
+			setItemsState((prev) => {
+				const next = typeof updater === 'function' ? updater(prev) : updater;
+				if (supabase && campaignId) {
+					const nextIds = new Set(next.map((i) => i.id));
+					const deletedIds = prev
+						.filter((p) => !nextIds.has(p.id))
+						.map((p) => p.id);
 
-				const upserted = next.filter((item) => {
-					const old = prev.find((p) => p.id === item.id);
-					return !old || JSON.stringify(old) !== JSON.stringify(item);
-				});
+					const upserted = next.filter((item) => {
+						const old = prev.find((p) => p.id === item.id);
+						return !old || JSON.stringify(old) !== JSON.stringify(item);
+					});
 
-				if (deletedIds.length > 0) {
-					supabase
-						.from('inventory_items')
-						.delete()
-						.in('id', deletedIds)
-						.then(({ error }) => {
-							if (error) console.error('刪除雲端物品失敗:', error);
-						});
+					if (deletedIds.length > 0) {
+						supabase
+							.from('inventory_items')
+							.delete()
+							.in('id', deletedIds)
+							.eq('campaign_id', campaignId)
+							.then(({ error }) => {
+								if (error) console.error('刪除雲端物品失敗:', error);
+							});
+					}
+
+					if (upserted.length > 0) {
+						const payload = upserted.map((item) => ({
+							...toDbItem(item),
+							campaign_id: campaignId,
+						}));
+						supabase
+							.from('inventory_items')
+							.upsert(payload)
+							.then(({ error }) => {
+								if (error) console.error('同步雲端物品失敗:', error);
+							});
+					}
 				}
-
-				if (upserted.length > 0) {
-					supabase
-						.from('inventory_items')
-						.upsert(upserted.map(toDbItem))
-						.then(({ error }) => {
-							if (error) console.error('同步雲端物品失敗:', error);
-						});
-				}
-			}
-			return next;
-		});
-	}, []);
+				return next;
+			});
+		},
+		[campaignId],
+	);
 
 	return { characters, setCharacters, items, setItems, syncStatus };
 }
