@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProtectedRouteRouteImport } from './routes/_protected/route'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
+import { Route as ProtectedSettingsRouteRouteImport } from './routes/_protected/settings/route'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as ProtectedCampaignsCampaignIdRouteRouteImport } from './routes/_protected/campaigns/$campaignId/route'
 import { Route as ProtectedCampaignsCampaignIdIndexRouteImport } from './routes/_protected/campaigns/$campaignId/index'
@@ -24,6 +25,11 @@ const ProtectedRouteRoute = ProtectedRouteRouteImport.update({
 const ProtectedIndexRoute = ProtectedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
+const ProtectedSettingsRouteRoute = ProtectedSettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => ProtectedRouteRoute,
 } as any)
 const LoginIndexRoute = LoginIndexRouteImport.update({
@@ -45,9 +51,9 @@ const ProtectedCampaignsCampaignIdIndexRoute =
   } as any)
 const ProtectedSettingsProfileIndexRoute =
   ProtectedSettingsProfileIndexRouteImport.update({
-    id: '/settings/profile/',
-    path: '/settings/profile/',
-    getParentRoute: () => ProtectedRouteRoute,
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => ProtectedSettingsRouteRoute,
   } as any)
 const ProtectedCampaignsCampaignIdSettingsIndexRoute =
   ProtectedCampaignsCampaignIdSettingsIndexRouteImport.update({
@@ -58,6 +64,7 @@ const ProtectedCampaignsCampaignIdSettingsIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
+  '/settings': typeof ProtectedSettingsRouteRouteWithChildren
   '/login/': typeof LoginIndexRoute
   '/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdRouteRouteWithChildren
   '/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/settings': typeof ProtectedSettingsRouteRouteWithChildren
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginIndexRoute
   '/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdIndexRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_protected': typeof ProtectedRouteRouteWithChildren
+  '/_protected/settings': typeof ProtectedSettingsRouteRouteWithChildren
   '/_protected/': typeof ProtectedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/_protected/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdRouteRouteWithChildren
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/settings'
     | '/login/'
     | '/campaigns/$campaignId'
     | '/campaigns/$campaignId/'
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
     | '/campaigns/$campaignId/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/settings'
     | '/'
     | '/login'
     | '/campaigns/$campaignId'
@@ -100,6 +111,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_protected'
+    | '/_protected/settings'
     | '/_protected/'
     | '/login/'
     | '/_protected/campaigns/$campaignId'
@@ -129,6 +141,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedIndexRouteImport
       parentRoute: typeof ProtectedRouteRoute
     }
+    '/_protected/settings': {
+      id: '/_protected/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof ProtectedSettingsRouteRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
     '/login/': {
       id: '/login/'
       path: '/login'
@@ -152,10 +171,10 @@ declare module '@tanstack/react-router' {
     }
     '/_protected/settings/profile/': {
       id: '/_protected/settings/profile/'
-      path: '/settings/profile'
+      path: '/profile'
       fullPath: '/settings/profile/'
       preLoaderRoute: typeof ProtectedSettingsProfileIndexRouteImport
-      parentRoute: typeof ProtectedRouteRoute
+      parentRoute: typeof ProtectedSettingsRouteRoute
     }
     '/_protected/campaigns/$campaignId/settings/': {
       id: '/_protected/campaigns/$campaignId/settings/'
@@ -166,6 +185,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ProtectedSettingsRouteRouteChildren {
+  ProtectedSettingsProfileIndexRoute: typeof ProtectedSettingsProfileIndexRoute
+}
+
+const ProtectedSettingsRouteRouteChildren: ProtectedSettingsRouteRouteChildren =
+  {
+    ProtectedSettingsProfileIndexRoute: ProtectedSettingsProfileIndexRoute,
+  }
+
+const ProtectedSettingsRouteRouteWithChildren =
+  ProtectedSettingsRouteRoute._addFileChildren(
+    ProtectedSettingsRouteRouteChildren,
+  )
 
 interface ProtectedCampaignsCampaignIdRouteRouteChildren {
   ProtectedCampaignsCampaignIdIndexRoute: typeof ProtectedCampaignsCampaignIdIndexRoute
@@ -186,16 +219,16 @@ const ProtectedCampaignsCampaignIdRouteRouteWithChildren =
   )
 
 interface ProtectedRouteRouteChildren {
+  ProtectedSettingsRouteRoute: typeof ProtectedSettingsRouteRouteWithChildren
   ProtectedIndexRoute: typeof ProtectedIndexRoute
   ProtectedCampaignsCampaignIdRouteRoute: typeof ProtectedCampaignsCampaignIdRouteRouteWithChildren
-  ProtectedSettingsProfileIndexRoute: typeof ProtectedSettingsProfileIndexRoute
 }
 
 const ProtectedRouteRouteChildren: ProtectedRouteRouteChildren = {
+  ProtectedSettingsRouteRoute: ProtectedSettingsRouteRouteWithChildren,
   ProtectedIndexRoute: ProtectedIndexRoute,
   ProtectedCampaignsCampaignIdRouteRoute:
     ProtectedCampaignsCampaignIdRouteRouteWithChildren,
-  ProtectedSettingsProfileIndexRoute: ProtectedSettingsProfileIndexRoute,
 }
 
 const ProtectedRouteRouteWithChildren = ProtectedRouteRoute._addFileChildren(

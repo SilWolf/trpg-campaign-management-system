@@ -1,3 +1,4 @@
+// src/routes/_protected/campaigns/$campaignId/route.tsx
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route。 */
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import {
@@ -16,7 +17,7 @@ function CampaignLayout() {
 	const { campaignId } = useParams({
 		from: '/_protected/campaigns/$campaignId',
 	});
-	const { isDm } = useUserCampaignRole(campaignId);
+	useUserCampaignRole(campaignId); // 保持身分檢查
 
 	return (
 		<div className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden flex flex-col'>
@@ -41,7 +42,7 @@ function CampaignLayout() {
 						</div>
 					</div>
 
-					{/* 戰役內部分頁切換 */}
+					{/* 戰役內部分頁切換：全面開放所有成員進入設定中心 */}
 					<nav className='flex items-center gap-2 bg-stone-900 p-1 rounded-lg border border-stone-800'>
 						<Link
 							to='/campaigns/$campaignId'
@@ -53,16 +54,14 @@ function CampaignLayout() {
 							<span>軍械庫與背包</span>
 						</Link>
 
-						{isDm && (
-							<Link
-								to='/campaigns/$campaignId/settings'
-								params={{ campaignId }}
-								className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition [&.active]:bg-amber-800/80 [&.active]:text-amber-100 text-stone-400 hover:text-stone-200'
-							>
-								<Settings className='w-3.5 h-3.5' />
-								<span>戰役設定</span>
-							</Link>
-						)}
+						<Link
+							to='/campaigns/$campaignId/settings'
+							params={{ campaignId }}
+							className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition [&.active]:bg-amber-800/80 [&.active]:text-amber-100 text-stone-400 hover:text-stone-200'
+						>
+							<Settings className='w-3.5 h-3.5' />
+							<span>戰役與角色設定</span>
+						</Link>
 					</nav>
 				</div>
 			</header>

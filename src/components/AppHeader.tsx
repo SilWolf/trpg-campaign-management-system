@@ -1,15 +1,15 @@
 import { Backpack, Crown, Plus, User, type LucideIcon } from 'lucide-react';
-import { CAMP_CHEST_ID, type Character, type ViewMode } from '@/types';
+import { type Character, type ViewMode } from '@/types';
 import type { SyncStatus } from '@/hooks/useCampaignSync';
 
 export interface AppHeaderProps {
 	isDm: boolean;
 	viewMode: ViewMode;
 	setViewMode: (mode: ViewMode) => void;
-	characters: Character[];
-	viewerCharId: string;
-	setViewerCharId: (id: string) => void;
-	setActiveCharId: (id: string) => void;
+	characters?: Character[];
+	viewerCharId?: string;
+	setViewerCharId?: (id: string) => void;
+	setActiveCharId?: (id: string) => void;
 	syncStatus: SyncStatus;
 	onCreateHomebrew: () => void;
 }
@@ -23,10 +23,6 @@ export default function AppHeader({
 	isDm,
 	viewMode,
 	setViewMode,
-	characters,
-	viewerCharId,
-	setViewerCharId,
-	setActiveCharId,
 	syncStatus,
 	onCreateHomebrew,
 }: AppHeaderProps) {
@@ -77,40 +73,13 @@ export default function AppHeader({
 							</span>
 						</div>
 						<p className='text-xs text-stone-400'>
-							自動四大分類歸納、6格 / 緊湊格字 / 列表三模式、私人暗袋與 Markdown
-							支援
+							細粒度角色權限控制、公開與私人雙錢包、自動四大分類與 Markdown 支援
 						</p>
 					</div>
 				</div>
 
 				{isDm && (
 					<div className='flex flex-wrap items-center gap-2.5'>
-						{viewMode === 'player' && (
-							<div className='flex items-center gap-1.5 bg-stone-900 border border-stone-700 rounded-md px-2.5 py-1 text-xs'>
-								<span className='text-stone-400'>我的身分:</span>
-								<select
-									value={viewerCharId}
-									onChange={(e) => {
-										setViewerCharId(e.target.value);
-										setActiveCharId(e.target.value);
-									}}
-									className='bg-transparent text-amber-300 font-semibold outline-none cursor-pointer'
-								>
-									{characters
-										.filter((character) => character.id !== CAMP_CHEST_ID)
-										.map((character) => (
-											<option
-												key={character.id}
-												value={character.id}
-												className='bg-stone-900 text-stone-200'
-											>
-												{character.avatar} {character.name}
-											</option>
-										))}
-								</select>
-							</div>
-						)}
-
 						{viewMode === 'dm' && (
 							<button
 								onClick={onCreateHomebrew}
@@ -140,7 +109,7 @@ export default function AppHeader({
 											className={`w-3.5 h-3.5 ${mode === 'dm' ? 'text-amber-400' : ''}`}
 										/>
 										<span>
-											{mode === 'player' ? '玩家視角' : 'DM 上帝視角'}
+											{mode === 'player' ? '玩家視角預覽' : 'DM 上帝視角'}
 										</span>
 									</button>
 								);

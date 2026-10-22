@@ -46,6 +46,8 @@ interface ItemTooltipProps {
 	characters: Character[];
 	activeCharId: string;
 	viewerCharId: string;
+	canEditItemBag?: boolean;
+	canMoveBetweenPublicAndPrivate?: boolean;
 	adjustCharges: (item: InventoryItem, delta: number) => void;
 	toggleEquip: (item: InventoryItem) => void;
 	toggleAttune: (item: InventoryItem) => void;
@@ -80,6 +82,8 @@ export default function ItemTooltip({
 	characters,
 	activeCharId,
 	viewerCharId,
+	canEditItemBag = true,
+	canMoveBetweenPublicAndPrivate = false,
 	adjustCharges,
 	toggleEquip,
 	toggleAttune,
@@ -106,10 +110,7 @@ export default function ItemTooltip({
 	}, [inspectedItem?.id, inspectedItem?.playerNotes, inspectedItem?.quantity]);
 
 	const isInCampChest = inspectedItem?.ownerId === CAMP_CHEST_ID;
-	const canManagePrivacy =
-		!isInCampChest &&
-		(viewMode === 'dm' ||
-			(inspectedItem && inspectedItem.ownerId === viewerCharId));
+	const canManagePrivacy = !isInCampChest && canMoveBetweenPublicAndPrivate;
 
 	return (
 		<div className='flex flex-col'>
@@ -278,24 +279,26 @@ export default function ItemTooltip({
 												))}
 											</div>
 										</div>
-										<div className='flex items-center gap-1.5'>
-											<button
-												onClick={() => adjustCharges(inspectedItem, -1)}
-												className='px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-xs font-bold text-stone-200 border border-stone-600 cursor-pointer'
-											>
-												消耗 -1
-											</button>
-											<button
-												onClick={() => adjustCharges(inspectedItem, 1)}
-												className='px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-xs font-bold text-cyan-200 border border-cyan-700/60 cursor-pointer'
-											>
-												恢復 +1
-											</button>
-										</div>
+										{canEditItemBag && (
+											<div className='flex items-center gap-1.5'>
+												<button
+													onClick={() => adjustCharges(inspectedItem, -1)}
+													className='px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-xs font-bold text-stone-200 border border-stone-600 cursor-pointer'
+												>
+													消耗 -1
+												</button>
+												<button
+													onClick={() => adjustCharges(inspectedItem, 1)}
+													className='px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-xs font-bold text-cyan-200 border border-cyan-700/60 cursor-pointer'
+												>
+													恢復 +1
+												</button>
+											</div>
+										)}
 									</div>
 								)}
 
-								{/* 物品魔法效果描述 (Markdown 渲染) */}
+								{/* 物品魔法效果描述 */}
 								<div className='bg-stone-900/50 border border-stone-800/80 rounded-md p-3'>
 									<div className='text-[11px] text-stone-400 font-semibold mb-1.5 flex items-center justify-between'>
 										<span>物品效果與規則</span>
@@ -316,9 +319,8 @@ export default function ItemTooltip({
 										</div>
 									)}
 								</div>
-								{/* ========================================== */}
-								{/* 物品附魔詞條 (Affixes) 區塊                */}
-								{/* ========================================== */}
+
+								{/* 物品附魔詞條 (Affixes) 區塊 */}
 								{(() => {
 									const allAffixes = inspectedItem.affixes || [];
 									const visibleAffixes =
@@ -339,7 +341,6 @@ export default function ItemTooltip({
 									)
 										return null;
 
-									// 詞條排序輔助函式
 									const moveAffix = (index: number, dir: -1 | 1) => {
 										const targetIdx = index + dir;
 										if (targetIdx < 0 || targetIdx >= allAffixes.length) return;
@@ -351,7 +352,6 @@ export default function ItemTooltip({
 										onUpdateAffixes(inspectedItem, next);
 									};
 
-									// 詞條隱藏/揭露切換
 									const toggleAffixHidden = (affixId: string) => {
 										const next = allAffixes.map((a) =>
 											a.id === affixId ? { ...a, isHidden: !a.isHidden } : a,
@@ -367,7 +367,6 @@ export default function ItemTooltip({
 													<span>附魔詞條 (Affixes)</span>
 												</span>
 
-												{/* DM 專屬：貼上已複製的詞條 */}
 												{viewMode === 'dm' && copiedAffix && (
 													<button
 														onClick={() => onPasteAffix(inspectedItem)}
@@ -380,7 +379,6 @@ export default function ItemTooltip({
 												)}
 											</div>
 
-											{/* 詞條列表 */}
 											{visibleAffixes.length > 0 && (
 												<div className='space-y-2'>
 													{visibleAffixes.map((affix, idx) => (
@@ -405,7 +403,6 @@ export default function ItemTooltip({
 																	)}
 																</div>
 
-																{/* DM 詞條控制列：排序、揭露/隱藏、複製 */}
 																{viewMode === 'dm' && (
 																	<div className='flex items-center gap-1 shrink-0'>
 																		<button
@@ -458,7 +455,6 @@ export default function ItemTooltip({
 																)}
 															</div>
 
-															{/* 詞條 Markdown 描述 */}
 															<div
 																className={`text-xs leading-relaxed text-stone-300 ${markdownClass}`}
 															>
@@ -469,7 +465,6 @@ export default function ItemTooltip({
 												</div>
 											)}
 
-											{/* 玩家視角下：若有尚未揭露的隱藏詞條，顯示神秘提示 */}
 											{viewMode === 'player' && !masked && hiddenCount > 0 && (
 												<div className='px-2.5 py-1.5 rounded bg-purple-950/20 border border-dashed border-purple-700/40 text-[11px] text-purple-300/80 italic flex items-center gap-1.5'>
 													<Sparkles className='w-3 h-3 text-purple-400 shrink-0' />
@@ -483,7 +478,7 @@ export default function ItemTooltip({
 									);
 								})()}
 
-								{/* 背景風味文字 (Markdown 渲染) */}
+								{/* 背景風味文字 */}
 								<div
 									className={`border-l-2 border-amber-700/60 pl-3 py-0.5 text-xs italic text-stone-400 ${markdownClass}`}
 								>
@@ -497,39 +492,42 @@ export default function ItemTooltip({
 											<StickyNote className='w-3.5 h-3.5 text-amber-400' />
 											<span>玩家物品備註 (支援 Markdown)</span>
 										</span>
-										{!isEditingNote ? (
-											<button
-												onClick={() => setIsEditingNote(true)}
-												className='text-[11px] px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-700/50 flex items-center gap-1 cursor-pointer'
-											>
-												<Edit3 className='w-3 h-3' />
-												<span>
-													{inspectedItem.playerNotes ? '編輯備註' : '新增備註'}
-												</span>
-											</button>
-										) : (
-											<div className='flex items-center gap-1.5'>
+										{canEditItemBag &&
+											(!isEditingNote ? (
 												<button
-													onClick={() => {
-														setIsEditingNote(false);
-														setNoteDraft(inspectedItem.playerNotes || '');
-													}}
-													className='text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-400 hover:text-stone-200 border border-stone-700 cursor-pointer'
+													onClick={() => setIsEditingNote(true)}
+													className='text-[11px] px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-700/50 flex items-center gap-1 cursor-pointer'
 												>
-													取消
+													<Edit3 className='w-3 h-3' />
+													<span>
+														{inspectedItem.playerNotes
+															? '編輯備註'
+															: '新增備註'}
+													</span>
 												</button>
-												<button
-													onClick={() => {
-														onUpdatePlayerNotes(inspectedItem, noteDraft);
-														setIsEditingNote(false);
-													}}
-													className='text-[11px] px-2 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-amber-50 flex items-center gap-1 font-medium cursor-pointer'
-												>
-													<Check className='w-3 h-3' />
-													<span>儲存</span>
-												</button>
-											</div>
-										)}
+											) : (
+												<div className='flex items-center gap-1.5'>
+													<button
+														onClick={() => {
+															setIsEditingNote(false);
+															setNoteDraft(inspectedItem.playerNotes || '');
+														}}
+														className='text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-400 hover:text-stone-200 border border-stone-700 cursor-pointer'
+													>
+														取消
+													</button>
+													<button
+														onClick={() => {
+															onUpdatePlayerNotes(inspectedItem, noteDraft);
+															setIsEditingNote(false);
+														}}
+														className='text-[11px] px-2 py-0.5 rounded bg-amber-700 hover:bg-amber-600 text-amber-50 flex items-center gap-1 font-medium cursor-pointer'
+													>
+														<Check className='w-3 h-3' />
+														<span>儲存</span>
+													</button>
+												</div>
+											))}
 									</div>
 
 									{isEditingNote ? (
@@ -548,7 +546,7 @@ export default function ItemTooltip({
 										</div>
 									) : (
 										<p className='text-[11px] text-stone-500 italic'>
-											尚無玩家備註，點擊右上角「新增備註」可記錄獲得來源或用途。
+											尚無玩家備註。
 										</p>
 									)}
 								</div>
@@ -598,213 +596,216 @@ export default function ItemTooltip({
 
 								{/* 互動操作按鈕列 */}
 								<div className='pt-2 border-t border-stone-800 space-y-2'>
-									<div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
-										{/* 穿脫裝備：儲物箱內不可直接穿戴 */}
-										{!isInCampChest && isEquippable && (
-											<button
-												onClick={() => toggleEquip(inspectedItem)}
-												className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
-													inspectedItem.equipped
-														? 'bg-amber-900/60 border-amber-400 text-amber-100'
-														: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-200'
-												}`}
-											>
-												{inspectedItem.equipped ? '卸下裝備' : '穿戴裝備'}
-											</button>
-										)}
-
-										{/* 同調開關：儲物箱內不可同調 */}
-										{!isInCampChest && inspectedItem.requiresAttunement && (
-											<button
-												onClick={() => toggleAttune(inspectedItem)}
-												className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
-													inspectedItem.attuned
-														? 'bg-purple-900/70 border-purple-400 text-purple-100'
-														: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-200'
-												}`}
-											>
-												{inspectedItem.attuned ? '解除同調' : '✨ 進行同調'}
-											</button>
-										)}
-
-										{/* 移入/移出私人背包 */}
-										{canManagePrivacy && (
-											<button
-												onClick={() => onTogglePrivate(inspectedItem)}
-												className={`px-3 py-1.5 rounded text-xs font-medium border flex items-center justify-center gap-1 transition cursor-pointer ${
-													inspectedItem.isPrivate
-														? 'bg-emerald-950/80 border-emerald-500/70 text-emerald-200 hover:bg-emerald-900'
-														: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-300'
-												}`}
-											>
-												{inspectedItem.isPrivate ? (
-													<>
-														<Unlock className='w-3.5 h-3.5 text-emerald-400' />
-														<span>移回公開袋</span>
-													</>
-												) : (
-													<>
-														<Lock className='w-3.5 h-3.5 text-stone-400' />
-														<span>藏入私人袋</span>
-													</>
+									{canEditItemBag ? (
+										<>
+											<div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+												{!isInCampChest && isEquippable && (
+													<button
+														onClick={() => toggleEquip(inspectedItem)}
+														className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
+															inspectedItem.equipped
+																? 'bg-amber-900/60 border-amber-400 text-amber-100'
+																: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-200'
+														}`}
+													>
+														{inspectedItem.equipped ? '卸下裝備' : '穿戴裝備'}
+													</button>
 												)}
-											</button>
-										)}
 
-										{/* 消耗品使用與拆分堆疊保持不變 */}
-										{isConsumable && (
-											<button
-												onClick={() =>
-													consumeOrSplitStack(inspectedItem, 'consume')
-												}
-												className='px-3 py-1.5 rounded text-xs font-medium bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-200 cursor-pointer'
-											>
-												飲用 / 消耗 (-1)
-											</button>
-										)}
-
-										{inspectedItem.quantity > 1 && (
-											<button
-												onClick={() =>
-													consumeOrSplitStack(inspectedItem, 'split')
-												}
-												className='px-3 py-1.5 rounded text-xs font-medium bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-200 flex items-center justify-center gap-1 cursor-pointer'
-											>
-												<Split className='w-3.5 h-3.5' />
-												<span>拆分堆疊</span>
-											</button>
-										)}
-									</div>
-
-									{/* 移交給隊友 或 送往/領出營地儲物箱 */}
-									<div className='flex flex-col gap-2 pt-1.5 border-t border-stone-800/70'>
-										<div className='flex items-center justify-between gap-2 flex-wrap'>
-											<span className='text-[11px] text-stone-400 flex items-center gap-1'>
-												<Send className='w-3 h-3 text-amber-400' />
-												<span>
-													{isInCampChest
-														? '從儲物箱領取至：'
-														: '移交或送往營地：'}
-												</span>
-											</span>
-
-											{/* 當堆疊數量 > 1 時，顯示移交數量選擇器 */}
-											{inspectedItem.quantity > 1 && (
-												<div className='flex items-center gap-1 bg-stone-950 border border-stone-700 rounded px-1.5 py-0.5 text-[11px]'>
-													<span className='text-stone-400 mr-1'>數量:</span>
+												{!isInCampChest && inspectedItem.requiresAttunement && (
 													<button
-														type='button'
-														onClick={() =>
-															setTransferQty((q) => Math.max(1, q - 1))
-														}
-														className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
+														onClick={() => toggleAttune(inspectedItem)}
+														className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
+															inspectedItem.attuned
+																? 'bg-purple-900/70 border-purple-400 text-purple-100'
+																: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-200'
+														}`}
 													>
-														-
+														{inspectedItem.attuned ? '解除同調' : '✨ 進行同調'}
 													</button>
-													<input
-														type='number'
-														min={1}
-														max={inspectedItem.quantity}
-														value={transferQty}
-														onChange={(e) => {
-															const val = parseInt(e.target.value, 10);
-															if (isNaN(val)) setTransferQty(1);
-															else
-																setTransferQty(
-																	Math.max(
-																		1,
-																		Math.min(inspectedItem.quantity, val),
-																	),
-																);
-														}}
-														className='w-10 text-center bg-transparent font-mono font-bold text-amber-300 outline-none'
-													/>
+												)}
+
+												{canManagePrivacy && (
 													<button
-														type='button'
-														onClick={() =>
-															setTransferQty((q) =>
-																Math.min(inspectedItem.quantity, q + 1),
-															)
-														}
-														className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
+														onClick={() => onTogglePrivate(inspectedItem)}
+														className={`px-3 py-1.5 rounded text-xs font-medium border flex items-center justify-center gap-1 transition cursor-pointer ${
+															inspectedItem.isPrivate
+																? 'bg-emerald-950/80 border-emerald-500/70 text-emerald-200 hover:bg-emerald-900'
+																: 'bg-stone-900 hover:bg-stone-800 border-stone-700 text-stone-300'
+														}`}
 													>
-														+
+														{inspectedItem.isPrivate ? (
+															<>
+																<Unlock className='w-3.5 h-3.5 text-emerald-400' />
+																<span>移回公開袋</span>
+															</>
+														) : (
+															<>
+																<Lock className='w-3.5 h-3.5 text-stone-400' />
+																<span>藏入私人袋</span>
+															</>
+														)}
 													</button>
+												)}
+
+												{isConsumable && (
 													<button
-														type='button'
 														onClick={() =>
-															setTransferQty(inspectedItem.quantity)
+															consumeOrSplitStack(inspectedItem, 'consume')
 														}
-														className='ml-1 px-1.5 py-0.2 rounded bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-700/50 text-[10px] cursor-pointer'
+														className='px-3 py-1.5 rounded text-xs font-medium bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-200 cursor-pointer'
 													>
-														全部 ({inspectedItem.quantity})
+														飲用 / 消耗 (-1)
 													</button>
+												)}
+
+												{inspectedItem.quantity > 1 && (
+													<button
+														onClick={() =>
+															consumeOrSplitStack(inspectedItem, 'split')
+														}
+														className='px-3 py-1.5 rounded text-xs font-medium bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-200 flex items-center justify-center gap-1 cursor-pointer'
+													>
+														<Split className='w-3.5 h-3.5' />
+														<span>拆分堆疊</span>
+													</button>
+												)}
+											</div>
+
+											{/* 單向移交給隊友或營地儲物箱（只要有來源背包修改權即可移出） */}
+											<div className='flex flex-col gap-2 pt-1.5 border-t border-stone-800/70'>
+												<div className='flex items-center justify-between gap-2 flex-wrap'>
+													<span className='text-[11px] text-stone-400 flex items-center gap-1'>
+														<Send className='w-3 h-3 text-amber-400' />
+														<span>
+															{isInCampChest
+																? '從儲物箱領取至：'
+																: '單向移交或送往營地：'}
+														</span>
+													</span>
+
+													{inspectedItem.quantity > 1 && (
+														<div className='flex items-center gap-1 bg-stone-950 border border-stone-700 rounded px-1.5 py-0.5 text-[11px]'>
+															<span className='text-stone-400 mr-1'>數量:</span>
+															<button
+																type='button'
+																onClick={() =>
+																	setTransferQty((q) => Math.max(1, q - 1))
+																}
+																className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
+															>
+																-
+															</button>
+															<input
+																type='number'
+																min={1}
+																max={inspectedItem.quantity}
+																value={transferQty}
+																onChange={(e) => {
+																	const val = parseInt(e.target.value, 10);
+																	if (isNaN(val)) setTransferQty(1);
+																	else
+																		setTransferQty(
+																			Math.max(
+																				1,
+																				Math.min(inspectedItem.quantity, val),
+																			),
+																		);
+																}}
+																className='w-10 text-center bg-transparent font-mono font-bold text-amber-300 outline-none'
+															/>
+															<button
+																type='button'
+																onClick={() =>
+																	setTransferQty((q) =>
+																		Math.min(inspectedItem.quantity, q + 1),
+																	)
+																}
+																className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
+															>
+																+
+															</button>
+															<button
+																type='button'
+																onClick={() =>
+																	setTransferQty(inspectedItem.quantity)
+																}
+																className='ml-1 px-1.5 py-0.2 rounded bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-700/50 text-[10px] cursor-pointer'
+															>
+																全部 ({inspectedItem.quantity})
+															</button>
+														</div>
+													)}
 												</div>
-											)}
-										</div>
 
-										<div className='flex items-center gap-1.5 flex-wrap'>
-											{/* 送往營地儲物箱按鈕（帶入 transferQty） */}
-											{!isInCampChest && (
-												<button
-													onClick={() =>
-														transferItemToCharacter(
-															inspectedItem,
-															CAMP_CHEST_ID,
-															transferQty,
-														)
-													}
-													className='text-[11px] px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/70 text-cyan-100 font-medium transition cursor-pointer'
-												>
-													🏕️ 送往營地儲物箱
-													{inspectedItem.quantity > 1
-														? ` (${transferQty})`
-														: ''}
-												</button>
-											)}
-
-											{/* 移交給其他角色按鈕（帶入 transferQty） */}
-											{characters
-												.filter(
-													(c) =>
-														c.id !== activeCharId && c.id !== CAMP_CHEST_ID,
-												)
-												.sort((a, b) =>
-													a.id === viewerCharId
-														? -1
-														: b.id === viewerCharId
-															? 1
-															: 0,
-												)
-												.map((target) => {
-													const isMe =
-														viewMode === 'player' && target.id === viewerCharId;
-													return (
+												<div className='flex items-center gap-1.5 flex-wrap'>
+													{!isInCampChest && (
 														<button
-															key={target.id}
 															onClick={() =>
 																transferItemToCharacter(
 																	inspectedItem,
-																	target.id,
+																	CAMP_CHEST_ID,
 																	transferQty,
 																)
 															}
-															className={`text-[11px] px-2 py-1 rounded border transition cursor-pointer ${
-																isMe && isInCampChest
-																	? 'bg-emerald-950/90 hover:bg-emerald-900 border-emerald-500/70 text-emerald-100 font-semibold'
-																	: 'bg-stone-900 hover:bg-amber-950 border-stone-700 hover:border-amber-600/60 text-stone-300'
-															}`}
+															className='text-[11px] px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-500/70 text-cyan-100 font-medium transition cursor-pointer'
 														>
-															{target.avatar} {target.name.split(' ')[0]}
+															🏕️ 送往營地儲物箱
 															{inspectedItem.quantity > 1
 																? ` (${transferQty})`
 																: ''}
-															{isMe && isInCampChest ? ' 領回' : ''}
 														</button>
-													);
-												})}
+													)}
+
+													{characters
+														.filter(
+															(c) =>
+																c.id !== activeCharId && c.id !== CAMP_CHEST_ID,
+														)
+														.sort((a, b) =>
+															a.id === viewerCharId
+																? -1
+																: b.id === viewerCharId
+																	? 1
+																	: 0,
+														)
+														.map((target) => {
+															const isMe =
+																viewMode === 'player' &&
+																target.id === viewerCharId;
+															return (
+																<button
+																	key={target.id}
+																	onClick={() =>
+																		transferItemToCharacter(
+																			inspectedItem,
+																			target.id,
+																			transferQty,
+																		)
+																	}
+																	className={`text-[11px] px-2 py-1 rounded border transition cursor-pointer ${
+																		isMe && isInCampChest
+																			? 'bg-emerald-950/90 hover:bg-emerald-900 border-emerald-500/70 text-emerald-100 font-semibold'
+																			: 'bg-stone-900 hover:bg-amber-950 border-stone-700 hover:border-amber-600/60 text-stone-300'
+																	}`}
+																>
+																	{target.avatar} {target.name.split(' ')[0]}
+																	{inspectedItem.quantity > 1
+																		? ` (${transferQty})`
+																		: ''}
+																	{isMe && isInCampChest ? ' 領回' : ''}
+																</button>
+															);
+														})}
+												</div>
+											</div>
+										</>
+									) : (
+										<div className='py-2 text-xs text-stone-500 italic flex items-center gap-1.5'>
+											<Lock className='w-3.5 h-3.5 text-stone-500 shrink-0' />
+											<span>唯讀檢視：你沒有修改或轉移此背包物品的權限。</span>
 										</div>
-									</div>
+									)}
 
 									{/* DM 專屬控制列 */}
 									{viewMode === 'dm' && (

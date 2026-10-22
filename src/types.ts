@@ -15,9 +15,28 @@ export type WeaponMasteryInfo = { name: string; desc: string };
 export type CurrencyType = 'pp' | 'gp' | 'ep' | 'sp' | 'cp';
 export type ViewMode = 'player' | 'dm';
 
-// 新增：背包展示模式（緊湊格字 vs 列表展示）與四大自動分類
+// 背包展示模式與四大自動分類
 export type InventoryDisplayMode = 'grid6' | 'grid' | 'list';
 export type ItemSection = 'Equipment' | 'Consumable' | 'Important' | 'Misc';
+
+// ==========================================
+// 角色控制權限系統型別 (ACL)
+// ==========================================
+export type AccessLevel = 0 | 1 | 2; // 0: 無權限, 1: 僅閱讀, 2: 閱讀+修改
+
+export interface CharacterPermission {
+	id: string;
+	campaignId: string;
+	characterId: string;
+	userId: string;
+	publicBagAccess: AccessLevel;
+	privateBagAccess: AccessLevel;
+	publicWalletAccess: AccessLevel;
+	privateWalletAccess: AccessLevel;
+	canEditProfile: boolean;
+	canDeleteCharacter: boolean;
+	canManagePermissions: boolean;
+}
 
 export type ItemAffix = {
 	id: string;
@@ -29,7 +48,7 @@ export type ItemAffix = {
 export type InventoryItem = {
 	id: string;
 	ownerId: string;
-	slot?: number; // 設為選填以相容舊資料，新系統不再使用格位座標
+	slot?: number;
 	name: string;
 	category: ItemCategory;
 	subType: string;
@@ -51,23 +70,24 @@ export type InventoryItem = {
 	effects: string;
 	flavor: string;
 	dmNotes: string;
-	playerNotes?: string; // 玩家自己在物品上寫的備註 (支援 Markdown)
-	isPrivate?: boolean; // 是否放在「私人背包」(僅本人與 DM 可見)
-	isEquippable?: boolean; // 可否裝備？
-	isConsumable?: boolean; // 可否消耗？
-	isImportant?: boolean; // 是否重要物品？
-	affixes?: ItemAffix[]; // 附魔詞條陣列
+	playerNotes?: string;
+	isPrivate?: boolean;
+	isEquippable?: boolean;
+	isConsumable?: boolean;
+	isImportant?: boolean;
+	affixes?: ItemAffix[];
 };
 
 export type Character = {
+	userId: string;
+	campaignId: string;
 	id: string;
 	name: string;
 	title: string;
 	str: number;
 	avatar: string;
-	userId: string;
-	campaignId: string;
-	currencies: Record<CurrencyType, number>;
+	currencies: Record<CurrencyType, number>; // 公開錢包
+	privateCurrencies: Record<CurrencyType, number>; // 私人暗袋錢包
 };
 
 export type HomebrewForm = {
@@ -129,9 +149,7 @@ export function getItemSection(item: InventoryItem): ItemSection {
 	return 'Misc';
 }
 
-// 判斷兩件物品是否為「同名、同屬性、同詞條」且可合併堆疊
 export function canStackItems(a: InventoryItem, b: InventoryItem): boolean {
-	// 已裝備、已同調、或擁有獨立充能上限的物品不自動合併，避免吃掉狀態
 	if (a.equipped || b.equipped || a.attuned || b.attuned) return false;
 	if (a.maxCharges > 0 || b.maxCharges > 0) return false;
 
@@ -147,7 +165,6 @@ export function canStackItems(a: InventoryItem, b: InventoryItem): boolean {
 
 	if (!sameBasic) return false;
 
-	// 比對詞條 (名稱、描述、隱藏狀態、順序皆須一致)
 	const affA = a.affixes || [];
 	const affB = b.affixes || [];
 	if (affA.length !== affB.length) return false;
@@ -160,5 +177,4 @@ export function canStackItems(a: InventoryItem, b: InventoryItem): boolean {
 	);
 }
 
-// 新增：營地儲物箱專屬 Owner ID
 export const CAMP_CHEST_ID = 'camp-chest';

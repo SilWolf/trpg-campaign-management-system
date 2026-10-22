@@ -7,7 +7,9 @@ interface CharacterModalProps {
 	isOpen: boolean;
 	campaignId: string;
 	userId: string;
-	character: Character | null; // 若為 null 代表是「新增隊員」
+	character: Character | null;
+	canEditProfile?: boolean;
+	canDeleteCharacter?: boolean;
 	onClose: () => void;
 	onSave: (charData: Character) => void;
 	onDelete?: (charId: string) => void;
@@ -24,6 +26,7 @@ const AVATAR_OPTIONS = [
 	'🍀',
 	'🏹',
 	'📜',
+	'🌙',
 ];
 
 export default function CharacterModal({
@@ -31,6 +34,8 @@ export default function CharacterModal({
 	userId,
 	campaignId,
 	character,
+	canEditProfile = true,
+	canDeleteCharacter = true,
 	onClose,
 	onSave,
 	onDelete,
@@ -39,6 +44,9 @@ export default function CharacterModal({
 	const [title, setTitle] = useState('');
 	const [str, setStr] = useState(10);
 	const [avatar, setAvatar] = useState('🛡️');
+
+	const isCreating = !character;
+	const allowFormEdit = isCreating || canEditProfile;
 
 	useEffect(() => {
 		if (character) {
@@ -58,7 +66,7 @@ export default function CharacterModal({
 
 	const handleSubmit = (e: FormEvent) => {
 		e.preventDefault();
-		if (!name.trim()) return;
+		if (!allowFormEdit || !name.trim()) return;
 
 		const savedCharacter: Character = {
 			id: character ? character.id : `char-${Date.now()}`,
@@ -70,7 +78,10 @@ export default function CharacterModal({
 			campaignId: character ? character.campaignId : campaignId,
 			currencies: character
 				? character.currencies
-				: { pp: 0, gp: 50, ep: 0, sp: 10, cp: 0 }, // 新角色的初始起手金幣
+				: { pp: 0, gp: 50, ep: 0, sp: 10, cp: 0 },
+			privateCurrencies: character
+				? character.privateCurrencies || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }
+				: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		};
 
 		onSave(savedCharacter);
@@ -101,10 +112,11 @@ export default function CharacterModal({
 						<input
 							type='text'
 							required
+							disabled={!allowFormEdit}
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder='例如：阿斯代倫 (Astarion)'
-							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 focus:border-amber-500 outline-none'
+							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 focus:border-amber-500 outline-none disabled:opacity-50'
 						/>
 					</div>
 
@@ -112,10 +124,11 @@ export default function CharacterModal({
 						<label className='block text-stone-400 mb-1'>頭銜 / 職業背景</label>
 						<input
 							type='text'
+							disabled={!allowFormEdit}
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder='例如：高等精靈 / 游蕩者'
-							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none'
+							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none disabled:opacity-50'
 						/>
 					</div>
 
@@ -130,9 +143,10 @@ export default function CharacterModal({
 								min='1'
 								max='30'
 								required
+								disabled={!allowFormEdit}
 								value={str}
 								onChange={(e) => setStr(parseInt(e.target.value, 10) || 10)}
-								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-amber-200 font-mono font-bold outline-none'
+								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-amber-200 font-mono font-bold outline-none disabled:opacity-50'
 							/>
 							<span className='text-[10px] text-stone-500 mt-0.5 block'>
 								負重上限 = STR × 15 ({Number(str) * 15} lbs)
@@ -142,9 +156,10 @@ export default function CharacterModal({
 						<div>
 							<label className='block text-stone-400 mb-1'>選擇頭像符號</label>
 							<select
+								disabled={!allowFormEdit}
 								value={avatar}
 								onChange={(e) => setAvatar(e.target.value)}
-								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none'
+								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none disabled:opacity-50'
 							>
 								{AVATAR_OPTIONS.map((icon) => (
 									<option key={icon} value={icon}>
@@ -156,13 +171,16 @@ export default function CharacterModal({
 					</div>
 
 					<div className='flex items-center justify-between pt-3 border-t border-stone-800'>
-						{character && character.id !== CAMP_CHEST_ID && onDelete ? (
+						{character &&
+						character.id !== CAMP_CHEST_ID &&
+						canDeleteCharacter &&
+						onDelete ? (
 							<button
 								type='button'
 								onClick={() => {
 									if (
 										window.confirm(
-											`確定要移除角色「${character.name}」嗎？\n（該角色身上的所有物品與金幣將自動打包移入「🏕️ 營地儲物箱」）`,
+											`確定要移除角色「${character.name}」嗎？\n（該角色身上的所有物品與公開/私人金幣將自動打包移入「🏕️ 營地儲物箱」）`,
 										)
 									) {
 										onDelete(character.id);
@@ -185,13 +203,15 @@ export default function CharacterModal({
 							>
 								取消
 							</button>
-							<button
-								type='submit'
-								className='px-5 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold shadow flex items-center gap-1.5 cursor-pointer'
-							>
-								<Save className='w-4 h-4' />
-								<span>儲存角色</span>
-							</button>
+							{allowFormEdit && (
+								<button
+									type='submit'
+									className='px-5 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold shadow flex items-center gap-1.5 cursor-pointer'
+								>
+									<Save className='w-4 h-4' />
+									<span>儲存角色</span>
+								</button>
+							)}
 						</div>
 					</div>
 				</form>

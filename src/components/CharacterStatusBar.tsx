@@ -1,10 +1,4 @@
-import {
-	Coins,
-	Scale,
-	Settings,
-	Tent,
-	UserPlus,
-} from 'lucide-react';
+import { Coins, Lock, Scale, Settings, Tent, UserPlus } from 'lucide-react';
 import {
 	CAMP_CHEST_ID,
 	type Character,
@@ -32,6 +26,12 @@ export interface CharacterStatusBarProps {
 	setCountCoinWeight: (count: boolean) => void;
 	coinWeight: number;
 	totalValueInGp: number;
+	displayedCurrencies: Record<CurrencyType, number>;
+	isDisplayingPrivateWallet: boolean;
+	canReadDisplayedWallet: boolean;
+	canEditCharacterModal: boolean;
+	canCreateCharacter: boolean;
+	createCharTooltip: string;
 	onOpenCurrencyPanel: () => void;
 	onEditCharacter: () => void;
 	onAddCharacter: () => void;
@@ -53,6 +53,12 @@ export default function CharacterStatusBar({
 	setCountCoinWeight,
 	coinWeight,
 	totalValueInGp,
+	displayedCurrencies,
+	isDisplayingPrivateWallet,
+	canReadDisplayedWallet,
+	canEditCharacterModal,
+	canCreateCharacter,
+	createCharTooltip,
 	onOpenCurrencyPanel,
 	onEditCharacter,
 	onAddCharacter,
@@ -101,23 +107,24 @@ export default function CharacterStatusBar({
 						</div>
 
 						<div className='flex items-center gap-1.5 shrink-0'>
-							<button
-								onClick={onEditCharacter}
-								title='編輯目前角色設定 (力量值、名稱)'
-								className='p-2 rounded bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-amber-300 transition cursor-pointer'
-							>
-								<Settings className='w-4 h-4' />
-							</button>
-
-							{viewMode === 'dm' && (
+							{!isCampChestActive && canEditCharacterModal && (
 								<button
-									onClick={onAddCharacter}
-									title='DM 新增冒險者隊員'
-									className='p-2 rounded bg-purple-950/90 hover:bg-purple-900 border border-purple-500/70 text-purple-200 transition cursor-pointer'
+									onClick={onEditCharacter}
+									title='編輯目前角色基本資料 (名稱、頭銜、力量值)'
+									className='p-2 rounded bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-amber-300 transition cursor-pointer'
 								>
-									<UserPlus className='w-4 h-4' />
+									<Settings className='w-4 h-4' />
 								</button>
 							)}
+
+							<button
+								onClick={onAddCharacter}
+								disabled={!canCreateCharacter}
+								title={createCharTooltip}
+								className='p-2 rounded bg-purple-950/90 hover:bg-purple-900 disabled:opacity-35 disabled:cursor-not-allowed border border-purple-500/70 text-purple-200 transition cursor-pointer'
+							>
+								<UserPlus className='w-4 h-4' />
+							</button>
 						</div>
 
 						<button
@@ -139,7 +146,11 @@ export default function CharacterStatusBar({
 									營地儲物箱
 								</div>
 								<div className='text-[10px] text-stone-400 truncate'>
-									共 {items.filter((item) => item.ownerId === CAMP_CHEST_ID).length}{' '}
+									共{' '}
+									{
+										items.filter((item) => item.ownerId === CAMP_CHEST_ID)
+											.length
+									}{' '}
 									件公物
 								</div>
 							</div>
@@ -183,7 +194,8 @@ export default function CharacterStatusBar({
 											: 'text-amber-200'
 									}`}
 								>
-									{encumbranceStats.totalWeight} / {encumbranceStats.maxWeight} lbs
+									{encumbranceStats.totalWeight} / {encumbranceStats.maxWeight}{' '}
+									lbs
 								</span>
 							</div>
 							<div className='w-full h-2 bg-stone-950 rounded-full overflow-hidden border border-stone-700/80'>
@@ -237,14 +249,25 @@ export default function CharacterStatusBar({
 			<div className='lg:col-span-6 flex flex-col justify-between border-t lg:border-t-0 border-stone-800 pt-3 lg:pt-0'>
 				<div className='flex items-center justify-between mb-1.5'>
 					<span className='text-xs text-stone-400 flex items-center gap-1'>
-						<Coins className='w-3.5 h-3.5 text-amber-400' />
-						<span>角色錢包 (折合 {totalValueInGp} GP)</span>
+						{isDisplayingPrivateWallet ? (
+							<Lock className='w-3.5 h-3.5 text-emerald-400' />
+						) : (
+							<Coins className='w-3.5 h-3.5 text-amber-400' />
+						)}
+						<span>
+							{isCampChestActive
+								? '營地公庫錢包'
+								: isDisplayingPrivateWallet
+									? '私人暗袋錢包'
+									: '角色公開錢包'}{' '}
+							(折合 {canReadDisplayedWallet ? `${totalValueInGp} GP` : '???'})
+						</span>
 					</span>
 					<button
 						onClick={onOpenCurrencyPanel}
 						className='text-[11px] px-2 py-0.5 rounded bg-amber-950/90 hover:bg-amber-900 text-amber-300 border border-amber-600/50 transition cursor-pointer'
 					>
-						管理金錢
+						管理錢包
 					</button>
 				</div>
 
@@ -280,10 +303,12 @@ export default function CharacterStatusBar({
 							key={coin.key}
 							onClick={onOpenCurrencyPanel}
 							className={`px-1 py-1 rounded border ${coin.color} cursor-pointer hover:brightness-125 transition`}
-							title='點擊調整貨幣數量'
+							title='點擊開啟錢包管理'
 						>
 							<div className='text-xs font-mono font-bold'>
-								{activeCharacter.currencies[coin.key as CurrencyType]}
+								{canReadDisplayedWallet
+									? (displayedCurrencies[coin.key as CurrencyType] ?? 0)
+									: '🔒'}
 							</div>
 							<div className='text-[9px] opacity-80'>{coin.label}</div>
 						</div>

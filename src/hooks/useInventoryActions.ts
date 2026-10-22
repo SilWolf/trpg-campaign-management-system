@@ -1,4 +1,9 @@
-import { useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
+import {
+	useState,
+	type Dispatch,
+	type FormEvent,
+	type SetStateAction,
+} from 'react';
 import { CAMP_CHEST_DEFAULT } from '@/data';
 import {
 	CAMP_CHEST_ID,
@@ -318,7 +323,11 @@ export function useInventoryActions({
 		showToast(`✨ 已將詞條「${copiedAffix.name}」貼上至「${item.name}」！`);
 	};
 
-	const updateCurrency = (coinType: CurrencyType, delta: number) => {
+	const updateCurrency = (
+		coinType: CurrencyType,
+		delta: number,
+		walletType: 'public' | 'private' = 'public',
+	) => {
 		setCharacters((prev) => {
 			const exists = prev.some((c) => c.id === activeCharId);
 			const list =
@@ -328,16 +337,29 @@ export function useInventoryActions({
 
 			return list.map((char) => {
 				if (char.id !== activeCharId) return char;
-				const nextVal = Math.max(0, char.currencies[coinType] + delta);
+				const field =
+					walletType === 'private' && char.id !== CAMP_CHEST_ID
+						? 'privateCurrencies'
+						: 'currencies';
+				const currentWallet = char[field] || {
+					pp: 0,
+					gp: 0,
+					ep: 0,
+					sp: 0,
+					cp: 0,
+				};
+				const nextVal = Math.max(0, (currentWallet[coinType] ?? 0) + delta);
 				return {
 					...char,
-					currencies: { ...char.currencies, [coinType]: nextVal },
+					[field]: { ...currentWallet, [coinType]: nextVal },
 				};
 			});
 		});
 	};
 
-	const consolidateCoinsToGold = () => {
+	const consolidateCoinsToGold = (
+		walletType: 'public' | 'private' = 'public',
+	) => {
 		setCharacters((prev) => {
 			const exists = prev.some((c) => c.id === activeCharId);
 			const list =
@@ -347,26 +369,80 @@ export function useInventoryActions({
 
 			return list.map((char) => {
 				if (char.id !== activeCharId) return char;
-				const pp = char.currencies.pp;
-				let { gp, ep, sp, cp } = char.currencies;
+				const field =
+					walletType === 'private' && char.id !== CAMP_CHEST_ID
+						? 'privateCurrencies'
+						: 'currencies';
+				const wallet = char[field] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+				const pp = wallet.pp;
+				let { gp, ep, sp, cp } = wallet;
 				sp += Math.floor(cp / 10);
 				cp = cp % 10;
 				gp += Math.floor(sp / 10) + Math.floor(ep / 2);
 				sp = sp % 10;
 				ep = ep % 2;
-				return { ...char, currencies: { pp, gp, ep, sp, cp } };
+				return { ...char, [field]: { pp, gp, ep, sp, cp } };
 			});
 		});
 		showToast('🪙 已自動將銅幣、銀幣與電金幣換算為金幣 (GP)！');
+	};
+
+	const transferBetweenOwnWallets = (
+		fromWallet: 'public' | 'private',
+		coinType: CurrencyType,
+		amount: number,
+	) => {
+		if (activeCharId === CAMP_CHEST_ID || amount <= 0) return;
+		const fromField =
+			fromWallet === 'private' ? 'privateCurrencies' : 'currencies';
+		const toField =
+			fromWallet === 'private' ? 'currencies' : 'privateCurrencies';
+		const available = activeCharacter[fromField]?.[coinType] ?? 0;
+		const actualAmount = Math.min(available, amount);
+
+		if (actualAmount <= 0) {
+			showToast('⚠️ 該幣種餘額不足，無法轉移！');
+			return;
+		}
+
+		setCharacters((prev) =>
+			prev.map((char) => {
+				if (char.id !== activeCharId) return char;
+				const src = char[fromField] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+				const dst = char[toField] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+				return {
+					...char,
+					[fromField]: {
+						...src,
+						[coinType]: (src[coinType] ?? 0) - actualAmount,
+					},
+					[toField]: {
+						...dst,
+						[coinType]: (dst[coinType] ?? 0) + actualAmount,
+					},
+				};
+			}),
+		);
+
+		showToast(
+			fromWallet === 'public'
+				? `🔒 已將 ${actualAmount} ${coinType.toUpperCase()} 藏入私人錢包！`
+				: `🌐 已將 ${actualAmount} ${coinType.toUpperCase()} 移回公開錢包！`,
+		);
 	};
 
 	const transferCurrency = (
 		targetCharId: string,
 		coinType: CurrencyType,
 		amount: number,
+		fromWallet: 'public' | 'private' = 'public',
 	) => {
 		if (targetCharId === activeCharId || amount <= 0) return;
-		const available = activeCharacter.currencies[coinType];
+		const fromField =
+			fromWallet === 'private' && activeCharId !== CAMP_CHEST_ID
+				? 'privateCurrencies'
+				: 'currencies';
+		const available = activeCharacter[fromField]?.[coinType] ?? 0;
 		const actualAmount = Math.min(available, amount);
 
 		if (actualAmount <= 0) {
@@ -386,11 +462,12 @@ export function useInventoryActions({
 			}
 			return list.map((char) => {
 				if (char.id === activeCharId) {
+					const src = char[fromField] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
 					return {
 						...char,
-						currencies: {
-							...char.currencies,
-							[coinType]: char.currencies[coinType] - actualAmount,
+						[fromField]: {
+							...src,
+							[coinType]: (src[coinType] ?? 0) - actualAmount,
 						},
 					};
 				}
@@ -399,7 +476,7 @@ export function useInventoryActions({
 						...char,
 						currencies: {
 							...char.currencies,
-							[coinType]: char.currencies[coinType] + actualAmount,
+							[coinType]: (char.currencies[coinType] ?? 0) + actualAmount,
 						},
 					};
 				}
@@ -408,7 +485,7 @@ export function useInventoryActions({
 		});
 
 		showToast(
-			`🪙 已將 ${actualAmount} ${coinType.toUpperCase()} 轉入 ${targetName}！`,
+			`🪙 已將 ${actualAmount} ${coinType.toUpperCase()} 轉入 ${targetName} 的公開錢包！`,
 		);
 	};
 
@@ -475,18 +552,39 @@ export function useInventoryActions({
 		setCharacters((prev) => {
 			const withoutTarget = prev.filter((c) => c.id !== charId);
 			const hasCampChest = withoutTarget.some((c) => c.id === CAMP_CHEST_ID);
-			const { pp, gp, ep, sp, cp } = targetChar.currencies;
+			const pub = targetChar.currencies || {
+				pp: 0,
+				gp: 0,
+				ep: 0,
+				sp: 0,
+				cp: 0,
+			};
+			const priv = targetChar.privateCurrencies || {
+				pp: 0,
+				gp: 0,
+				ep: 0,
+				sp: 0,
+				cp: 0,
+			};
+			const totalCoins = {
+				pp: pub.pp + priv.pp,
+				gp: pub.gp + priv.gp,
+				ep: pub.ep + priv.ep,
+				sp: pub.sp + priv.sp,
+				cp: pub.cp + priv.cp,
+			};
+
 			if (hasCampChest) {
 				return withoutTarget.map((c) =>
 					c.id === CAMP_CHEST_ID
 						? {
 								...c,
 								currencies: {
-									pp: c.currencies.pp + pp,
-									gp: c.currencies.gp + gp,
-									ep: c.currencies.ep + ep,
-									sp: c.currencies.sp + sp,
-									cp: c.currencies.cp + cp,
+									pp: c.currencies.pp + totalCoins.pp,
+									gp: c.currencies.gp + totalCoins.gp,
+									ep: c.currencies.ep + totalCoins.ep,
+									sp: c.currencies.sp + totalCoins.sp,
+									cp: c.currencies.cp + totalCoins.cp,
 								},
 							}
 						: c,
@@ -495,12 +593,10 @@ export function useInventoryActions({
 			return [
 				...withoutTarget,
 				{
-					id: CAMP_CHEST_ID,
-					name: '營地儲物箱',
-					title: '團隊共用行囊與公庫',
-					str: 999,
-					avatar: '🏕️',
-					currencies: { pp, gp, ep, sp, cp },
+					...CAMP_CHEST_DEFAULT,
+					campaignId: targetChar.campaignId,
+					userId: 'dm',
+					currencies: totalCoins,
 				},
 			];
 		});
@@ -537,7 +633,7 @@ export function useInventoryActions({
 		if (activeCharId === charId) setActiveCharId(nextCharId);
 		if (viewerCharId === charId) setViewerCharId(nextCharId);
 		showToast(
-			`🏕️ 已移除角色「${targetChar.name}」，其所有裝備與錢包已全數移入營地儲物箱！`,
+			`🏕️ 已移除角色「${targetChar.name}」，其所有裝備與公開/私人錢包已全數移入營地儲物箱！`,
 		);
 	};
 
@@ -580,9 +676,7 @@ export function useInventoryActions({
 		setIsHomebrewModalOpen(true);
 	};
 
-	const handleSaveHomebrewOrEditItem = (
-		e: FormEvent<HTMLFormElement>,
-	) => {
+	const handleSaveHomebrewOrEditItem = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!newItemForm.name.trim()) return;
 
@@ -688,6 +782,7 @@ export function useInventoryActions({
 		handlePasteAffixToItem,
 		updateCurrency,
 		consolidateCoinsToGold,
+		transferBetweenOwnWallets,
 		transferCurrency,
 		splitCampCoinToParty,
 		handleSaveCharacter,

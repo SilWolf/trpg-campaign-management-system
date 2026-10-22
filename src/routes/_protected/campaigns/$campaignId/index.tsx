@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route。 */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Drawer } from 'vaul';
 import { Sparkles, X } from 'lucide-react';
@@ -14,7 +14,9 @@ import InventoryToolbar from '@/components/InventoryToolbar';
 import ItemTooltip from '@/components/ItemTooltip';
 import { useCampaignSync } from '@/hooks/useCampaignSync';
 import { useInventoryActions } from '@/hooks/useInventoryActions';
+import { useCharacterPermissions } from '@/hooks/useCharacterPermissions';
 import { checkIsAuthenticated } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import {
 	INITIAL_CHARACTERS,
 	INITIAL_ITEMS,
@@ -41,14 +43,44 @@ function CampaignInventoryPage() {
 	const { campaignId } = Route.useParams();
 	const { isDm, user } = useUserCampaignRole(campaignId);
 
-	const [viewMode, setViewMode] = useState<ViewMode>('dm');
+	const [viewMode, setViewMode] = useState<ViewMode>('player');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
 	const [activeCharId, setActiveCharId] = useState<string>('tav');
 	const [bagTab, setBagTab] = useState<'public' | 'private'>('public');
 	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
+	const [maxCharsPerPlayer, setMaxCharsPerPlayer] = useState<number>(1);
 
-	const { characters, setCharacters, items, setItems, syncStatus } =
-		useCampaignSync(campaignId, INITIAL_CHARACTERS, INITIAL_ITEMS);
+	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		if (isDm) setViewMode('dm');
+		else setViewMode('player');
+	}, [isDm]);
+
+	// 讀取當前玩家在此戰役的個人角色創建上限 (campaign_members.max_characters)
+	useEffect(() => {
+		async function fetchMyCharacterLimit() {
+			if (!supabase || campaignId === 'default' || !user?.id) return;
+			const { data } = await supabase
+				.from('campaign_members')
+				.select('max_characters')
+				.eq('campaign_id', campaignId)
+				.eq('user_id', user.id)
+				.single();
+			if (data && typeof data.max_characters === 'number') {
+				setMaxCharsPerPlayer(data.max_characters);
+			}
+		}
+		fetchMyCharacterLimit();
+	}, [campaignId, user?.id]);
+
+	const {
+		characters,
+		setCharacters,
+		items,
+		setItems,
+		permissions,
+		syncStatus,
+	} = useCampaignSync(campaignId, INITIAL_CHARACTERS, INITIAL_ITEMS);
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -65,11 +97,6 @@ function CampaignInventoryPage() {
 		setTimeout(() => setToastMessage(null), 3000);
 	};
 
-	const isCampChestActive = activeCharId === CAMP_CHEST_ID;
-	const canViewPrivateBag =
-		!isCampChestActive && (viewMode === 'dm' || activeCharId === viewerCharId);
-	const currentBagTab = !canViewPrivateBag ? 'public' : bagTab;
-
 	const activeCharacter = useMemo(() => {
 		const found = characters.find((character) => character.id === activeCharId);
 		if (found) return found;
@@ -83,36 +110,130 @@ function CampaignInventoryPage() {
 				campaignId,
 				userId: 'dm',
 				currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+				privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			};
 		}
 		return characters[0];
 	}, [characters, activeCharId, campaignId]);
+
+	// 計算當前登入使用者對 activeCharacter 的 7 項細粒度權限
+	const charPerms = useCharacterPermissions(
+		activeCharId,
+		user?.id,
+		permissions,
+		isDm,
+		viewMode,
+		activeCharacter?.userId,
+	);
+
+	const isCampChestActive = activeCharId === CAMP_CHEST_ID;
+	const canViewPrivateBag = !isCampChestActive && charPerms.canReadPrivateBag;
+	const currentBagTab = !canViewPrivateBag ? 'public' : bagTab;
+
+	const canReadCurrentBag =
+		currentBagTab === 'private'
+			? charPerms.canReadPrivateBag
+			: charPerms.canReadPublicBag;
+	const canEditCurrentBag =
+		currentBagTab === 'private'
+			? charPerms.canEditPrivateBag
+			: charPerms.canEditPublicBag;
+
+	// 計算當前玩家已創建的角色數，檢查是否可創建新角色
+	const myCreatedCharCount = useMemo(() => {
+		if (!user?.id) return 0;
+		return characters.filter(
+			(c) => c.id !== CAMP_CHEST_ID && c.userId === user.id,
+		).length;
+	}, [characters, user]);
+
+	const canCreateCharacter =
+		(isDm && viewMode === 'dm') || myCreatedCharCount < maxCharsPerPlayer;
+	const createCharTooltip =
+		isDm && viewMode === 'dm'
+			? 'DM 新增冒險者隊員 (無數量限制)'
+			: maxCharsPerPlayer <= 0
+				? '本戰役目前設定禁止玩家自行創建角色'
+				: canCreateCharacter
+					? `創建新冒險者角色 (目前已創建 ${myCreatedCharCount}/${maxCharsPerPlayer})`
+					: `已達本戰役玩家可創建角色數量上限 (${myCreatedCharCount}/${maxCharsPerPlayer})`;
 
 	const allCharacterItems = useMemo(
 		() => items.filter((item) => item.ownerId === activeCharId),
 		[items, activeCharId],
 	);
 
-	const visibleBagItems = useMemo(
-		() =>
-			allCharacterItems.filter((item) => {
-				if (!canViewPrivateBag && item.isPrivate) return false;
-				return currentBagTab === 'private'
-					? Boolean(item.isPrivate)
-					: !item.isPrivate;
-			}),
-		[allCharacterItems, canViewPrivateBag, currentBagTab],
-	);
+	const visibleBagItems = useMemo(() => {
+		if (!canReadCurrentBag) return [];
+		return allCharacterItems.filter((item) =>
+			currentBagTab === 'private' ? Boolean(item.isPrivate) : !item.isPrivate,
+		);
+	}, [allCharacterItems, canReadCurrentBag, currentBagTab]);
 
 	const attunedCount = useMemo(
-		() => allCharacterItems.filter((item) => item.attuned).length,
-		[allCharacterItems],
+		() =>
+			allCharacterItems.filter((item) => {
+				if (item.isPrivate && !charPerms.canReadPrivateBag) return false;
+				if (!item.isPrivate && !charPerms.canReadPublicBag) return false;
+				return item.attuned;
+			}).length,
+		[
+			allCharacterItems,
+			charPerms.canReadPrivateBag,
+			charPerms.canReadPublicBag,
+		],
 	);
 
+	// 狀態列顯示的錢包（隨當前公開/私人分頁切換）
+	const isDisplayingPrivateWallet =
+		!isCampChestActive && currentBagTab === 'private';
+	const displayedCurrencies = useMemo(
+		() =>
+			isDisplayingPrivateWallet
+				? activeCharacter.privateCurrencies || {
+						pp: 0,
+						gp: 0,
+						ep: 0,
+						sp: 0,
+						cp: 0,
+					}
+				: activeCharacter.currencies,
+		[
+			activeCharacter.currencies,
+			activeCharacter.privateCurrencies,
+			isDisplayingPrivateWallet,
+		],
+	);
+	const canReadDisplayedWallet = isDisplayingPrivateWallet
+		? charPerms.canReadPrivateWallet
+		: charPerms.canReadPublicWallet;
+
 	const currencyStats = useMemo(() => {
-		const { pp, gp, ep, sp, cp } = activeCharacter.currencies;
-		const totalCoins = pp + gp + ep + sp + cp;
-		const coinWeight = countCoinWeight ? +(totalCoins / 50).toFixed(1) : 0;
+		const pub = charPerms.canReadPublicWallet
+			? activeCharacter.currencies
+			: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+		const priv = charPerms.canReadPrivateWallet
+			? activeCharacter.privateCurrencies || {
+					pp: 0,
+					gp: 0,
+					ep: 0,
+					sp: 0,
+					cp: 0,
+				}
+			: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+
+		const totalCoinsForWeight =
+			pub.pp +
+			pub.gp +
+			pub.ep +
+			pub.sp +
+			pub.cp +
+			(priv.pp + priv.gp + priv.ep + priv.sp + priv.cp);
+		const coinWeight = countCoinWeight
+			? +(totalCoinsForWeight / 50).toFixed(1)
+			: 0;
+
+		const { pp, gp, ep, sp, cp } = displayedCurrencies;
 		const totalValueInGp = +(
 			pp * 10 +
 			gp +
@@ -120,13 +241,22 @@ function CampaignInventoryPage() {
 			sp * 0.1 +
 			cp * 0.01
 		).toFixed(2);
-		return { totalCoins, coinWeight, totalValueInGp };
-	}, [activeCharacter, countCoinWeight]);
 
+		return { coinWeight, totalValueInGp };
+	}, [
+		activeCharacter,
+		charPerms.canReadPublicWallet,
+		charPerms.canReadPrivateWallet,
+		countCoinWeight,
+		displayedCurrencies,
+	]);
+
+	// 負重計算嚴格過濾無閱讀權限的背包與錢包，避免洩漏暗袋重量
 	const encumbranceStats = useMemo(() => {
-		const itemsForCalc = canViewPrivateBag
-			? allCharacterItems
-			: allCharacterItems.filter((item) => !item.isPrivate);
+		const itemsForCalc = allCharacterItems.filter((item) => {
+			if (item.isPrivate) return charPerms.canReadPrivateBag;
+			return charPerms.canReadPublicBag;
+		});
 		const itemsWeight = itemsForCalc.reduce(
 			(sum, item) => sum + item.weight * item.quantity,
 			0,
@@ -151,7 +281,8 @@ function CampaignInventoryPage() {
 	}, [
 		allCharacterItems,
 		visibleBagItems,
-		canViewPrivateBag,
+		charPerms.canReadPrivateBag,
+		charPerms.canReadPublicBag,
 		currencyStats.coinWeight,
 		activeCharacter.str,
 	]);
@@ -160,6 +291,13 @@ function CampaignInventoryPage() {
 		const found = visibleBagItems.find((item) => item.id === selectedItemId);
 		return found || visibleBagItems[0] || null;
 	}, [selectedItemId, visibleBagItems]);
+
+	const canEditInspectedItem = useMemo(() => {
+		if (!inspectedItem) return false;
+		return inspectedItem.isPrivate
+			? charPerms.canEditPrivateBag
+			: charPerms.canEditPublicBag;
+	}, [inspectedItem, charPerms.canEditPrivateBag, charPerms.canEditPublicBag]);
 
 	const handleSelectItem = (id: string) => {
 		setSelectedItemId(id);
@@ -236,12 +374,24 @@ function CampaignInventoryPage() {
 				setCountCoinWeight={setCountCoinWeight}
 				coinWeight={currencyStats.coinWeight}
 				totalValueInGp={currencyStats.totalValueInGp}
+				displayedCurrencies={displayedCurrencies}
+				isDisplayingPrivateWallet={isDisplayingPrivateWallet}
+				canReadDisplayedWallet={canReadDisplayedWallet}
+				canEditCharacterModal={
+					charPerms.canEditProfile || charPerms.canDeleteCharacter
+				}
+				canCreateCharacter={canCreateCharacter}
+				createCharTooltip={createCharTooltip}
 				onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
 				onEditCharacter={() => {
 					setEditingCharacter(activeCharacter);
 					setIsCharModalOpen(true);
 				}}
 				onAddCharacter={() => {
+					if (!canCreateCharacter) {
+						showToast(`⚠️ ${createCharTooltip}`);
+						return;
+					}
 					setEditingCharacter(null);
 					setIsCharModalOpen(true);
 				}}
@@ -265,12 +415,24 @@ function CampaignInventoryPage() {
 						setCountCoinWeight={setCountCoinWeight}
 						coinWeight={currencyStats.coinWeight}
 						totalValueInGp={currencyStats.totalValueInGp}
+						displayedCurrencies={displayedCurrencies}
+						isDisplayingPrivateWallet={isDisplayingPrivateWallet}
+						canReadDisplayedWallet={canReadDisplayedWallet}
+						canEditCharacterModal={
+							charPerms.canEditProfile || charPerms.canDeleteCharacter
+						}
+						canCreateCharacter={canCreateCharacter}
+						createCharTooltip={createCharTooltip}
 						onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
 						onEditCharacter={() => {
 							setEditingCharacter(activeCharacter);
 							setIsCharModalOpen(true);
 						}}
 						onAddCharacter={() => {
+							if (!canCreateCharacter) {
+								showToast(`⚠️ ${createCharTooltip}`);
+								return;
+							}
 							setEditingCharacter(null);
 							setIsCharModalOpen(true);
 						}}
@@ -278,7 +440,9 @@ function CampaignInventoryPage() {
 
 					<InventoryToolbar
 						allCharacterItems={allCharacterItems}
+						canReadPublicBag={charPerms.canReadPublicBag}
 						canViewPrivateBag={canViewPrivateBag}
+						canEditCurrentBag={canEditCurrentBag}
 						currentBagTab={currentBagTab}
 						setBagTab={setBagTab}
 						searchQuery={searchQuery}
@@ -296,6 +460,8 @@ function CampaignInventoryPage() {
 						inspectedItemId={inspectedItem?.id ?? null}
 						totalItemsValueGp={encumbranceStats.totalItemsValueGp}
 						rarityConfig={RARITY_CONFIG}
+						canReadCurrentBag={canReadCurrentBag}
+						canEditCurrentBag={canEditCurrentBag}
 						isItemMatchingFilter={isItemMatchingFilter}
 						setSelectedItemId={handleSelectItem}
 						toggleEquip={actions.toggleEquip}
@@ -311,6 +477,10 @@ function CampaignInventoryPage() {
 						characters={characters}
 						activeCharId={activeCharId}
 						viewerCharId={viewerCharId}
+						canEditItemBag={canEditInspectedItem}
+						canMoveBetweenPublicAndPrivate={
+							charPerms.canEditPublicBag && charPerms.canEditPrivateBag
+						}
 						adjustCharges={actions.adjustCharges}
 						toggleEquip={actions.toggleEquip}
 						toggleAttune={actions.toggleAttune}
@@ -362,6 +532,10 @@ function CampaignInventoryPage() {
 									characters={characters}
 									activeCharId={activeCharId}
 									viewerCharId={viewerCharId}
+									canEditItemBag={canEditInspectedItem}
+									canMoveBetweenPublicAndPrivate={
+										charPerms.canEditPublicBag && charPerms.canEditPrivateBag
+									}
 									adjustCharges={actions.adjustCharges}
 									toggleEquip={actions.toggleEquip}
 									toggleAttune={actions.toggleAttune}
@@ -412,10 +586,16 @@ function CampaignInventoryPage() {
 				isOpen={isCoinModalOpen}
 				activeCharacter={activeCharacter}
 				characters={characters}
+				initialWalletTab={currentBagTab}
+				canReadPublicWallet={charPerms.canReadPublicWallet}
+				canEditPublicWallet={charPerms.canEditPublicWallet}
+				canReadPrivateWallet={charPerms.canReadPrivateWallet}
+				canEditPrivateWallet={charPerms.canEditPrivateWallet}
 				onClose={() => setIsCoinModalOpen(false)}
 				onUpdateCurrency={actions.updateCurrency}
 				onConsolidateCoinsToGold={actions.consolidateCoinsToGold}
 				onTransferCurrency={actions.transferCurrency}
+				onTransferBetweenOwnWallets={actions.transferBetweenOwnWallets}
 				onSplitCampCoinToParty={actions.splitCampCoinToParty}
 			/>
 
@@ -424,6 +604,8 @@ function CampaignInventoryPage() {
 				character={editingCharacter}
 				campaignId={campaignId}
 				userId={user?.id ?? 'guest'}
+				canEditProfile={charPerms.canEditProfile}
+				canDeleteCharacter={charPerms.canDeleteCharacter}
 				onClose={() => setIsCharModalOpen(false)}
 				onSave={actions.handleSaveCharacter}
 				onDelete={actions.handleDeleteCharacter}

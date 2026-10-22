@@ -11,7 +11,9 @@ import type { InventoryDisplayMode, InventoryItem } from '@/types';
 
 export interface InventoryToolbarProps {
 	allCharacterItems: InventoryItem[];
+	canReadPublicBag: boolean;
 	canViewPrivateBag: boolean;
+	canEditCurrentBag: boolean;
 	currentBagTab: 'public' | 'private';
 	setBagTab: (tab: 'public' | 'private') => void;
 	searchQuery: string;
@@ -24,7 +26,9 @@ export interface InventoryToolbarProps {
 
 export default function InventoryToolbar({
 	allCharacterItems,
+	canReadPublicBag,
 	canViewPrivateBag,
+	canEditCurrentBag,
 	currentBagTab,
 	setBagTab,
 	searchQuery,
@@ -47,7 +51,11 @@ export default function InventoryToolbar({
 				>
 					<Globe className='w-3.5 h-3.5 text-amber-300' />
 					<span>
-						公開行囊 ({allCharacterItems.filter((item) => !item.isPrivate).length})
+						公開行囊 (
+						{canReadPublicBag
+							? allCharacterItems.filter((item) => !item.isPrivate).length
+							: '🔒'}
+						)
 					</span>
 				</button>
 
@@ -62,7 +70,8 @@ export default function InventoryToolbar({
 					>
 						<Lock className='w-3.5 h-3.5 text-emerald-400' />
 						<span>
-							私人暗袋 ({allCharacterItems.filter((item) => item.isPrivate).length})
+							私人暗袋 (
+							{allCharacterItems.filter((item) => item.isPrivate).length})
 						</span>
 					</button>
 				) : (
@@ -148,13 +157,17 @@ export default function InventoryToolbar({
 						>
 							⚖️ 依重量排序
 						</button>
-						<div className='border-t border-stone-800 my-1' />
-						<button
-							onClick={handleConsolidateStacks}
-							className='w-full px-3 py-1.5 text-left hover:bg-emerald-950/60 text-emerald-300 font-medium cursor-pointer flex items-center gap-1'
-						>
-							<span>📦 合併同名同詞條堆疊</span>
-						</button>
+						{canEditCurrentBag && (
+							<>
+								<div className='border-t border-stone-800 my-1' />
+								<button
+									onClick={handleConsolidateStacks}
+									className='w-full px-3 py-1.5 text-left hover:bg-emerald-950/60 text-emerald-300 font-medium cursor-pointer flex items-center gap-1'
+								>
+									<span>📦 合併同名同詞條堆疊</span>
+								</button>
+							</>
+						)}
 					</div>
 				</div>
 			</div>

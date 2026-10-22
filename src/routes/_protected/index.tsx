@@ -9,6 +9,7 @@ import {
 	Users,
 	X,
 	Sparkles,
+	UserCog,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, toDbCharacter, toDbItem } from '@/lib/supabase';
@@ -100,6 +101,7 @@ function CampaignLobbyPage() {
 						name: campaignName.trim(),
 						dm_id: dmId,
 						invite_code: inviteCodeGenerated,
+						max_characters_per_player: 1,
 					});
 
 				if (campaignError) throw campaignError;
@@ -219,6 +221,13 @@ function CampaignLobbyPage() {
 								{isGuest ? '訪客冒險者' : (user?.email ?? '已登入使用者')}
 							</span>
 						</div>
+						<Link
+							to='/settings/profile'
+							className='flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-stone-700 bg-stone-900/80 text-xs text-stone-300 transition hover:border-amber-700 hover:text-amber-200 cursor-pointer'
+						>
+							<UserCog className='w-3.5 h-3.5' />
+							<span>帳號設定</span>
+						</Link>
 						<button
 							type='button'
 							onClick={handleSignOut}
