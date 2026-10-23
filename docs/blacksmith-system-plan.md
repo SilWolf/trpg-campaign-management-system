@@ -14,7 +14,7 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 ## 目前進度與續接資訊
 
-截至 2026-10-24，**階段一至階段三的程式與本機驗收已完成；維護者已手動執行階段三 SQL，但真實 RLS 驗收仍待進行**。目前成果如下：
+截至 2026-10-24，**階段一至階段五的程式與本機自動化驗收已完成；階段三及階段四 SQL 依維護者回報已手動執行，但離線環境端對端及真實 Supabase 多帳號驗收仍待進行**。目前成果如下：
 
 - `public/data/blacksmith/SOURCE-CONTRACT.md`：記錄現有 index、物品 JSON、lookup 格式與欄位型別，並明確界定來源定義與戰役物品實例。
 - `scripts/validate-blacksmith-source.mjs`：驗證目錄索引、資料結構、欄位型別、ID 唯一性及 items／lookup 一對一對照；可執行 `npm run validate:blacksmith-source`。
@@ -25,7 +25,7 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 **階段二已完成。**定義官方目錄型別，實作靜態目錄載入、結構／lookup 驗證及唯讀瀏覽 UI。現行路由為 `/blacksmith` 工坊大廳、`/blacksmith/officials` 規則書清單、`/blacksmith/officials/$catelogId` 單本目錄內容；`catelogId` 是既有路由參數拼字，新增功能沿用目前網址，不手動修改自動產生的路由樹。
 
-**階段三已完成程式實作、本機型別與 UI 測試。**已新增獨立 `blacksmith_items` migration、snake_case ↔ camelCase 轉換、雲端 CRUD 服務及 `/blacksmith/workshop` 鍛造／分享頁。migration 尚未在 Supabase 執行，故多帳號 RLS、實際 schema 相容、取消分享後的即時拒絕仍未驗收；不可宣稱此功能已部署或已由真實資料庫驗證。
+**階段三已完成程式實作、本機型別與 UI 測試。**已新增獨立 `blacksmith_items` migration、snake_case ↔ camelCase 轉換、雲端 CRUD 服務及 `/blacksmith/workshop` 鍛造／分享頁。migration 依維護者回報已在 Supabase 手動執行；多帳號 RLS、實際 schema 相容、取消分享後的拒絕仍未由真實資料庫驗收。
 
 ## 現有實作依據
 
@@ -248,14 +248,20 @@ public/data/blacksmith/
 - 匯入成功顯示戰役、接收角色及數量；失敗會顯示錯誤並保留匯入視窗。匯入寫入由 RPC 在單一列交易完成，之後由既有戰役初始載入及 inventory Realtime 訂閱顯示；此流程不涉及多列轉帳，不宣稱跨列原子性。
 - 本機驗證：`npm run build`（含 TypeScript typecheck）、受影響檔案 `npx eslint`、`npm run validate:blacksmith-source`、`git diff --check`，以及 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts`（7 項）通過。E2E 使用 Supabase 測試替身，只證明 UI 與 RPC request contract，未驗證真實 RPC、RLS、資料庫 migration 或 Realtime。
 - **既有 inventory policy 邊界：**匯入介面只呼叫上述 DM 驗證 RPC；本階段沒有收窄既有 `inventory_items` 成員寫入 policy，避免破壞依角色 ACL 的日常新增物品、背包編輯及移轉流程。因此不能宣稱一般成員無法以既有直接 inventory REST INSERT 建立內容相同的物品列。若產品要求封鎖這種等效直寫，須另行設計並驗證兼容既有 ACL／新增／移轉的資料庫授權，不可只加 DM-only INSERT policy。
-- **待手動部署／驗收：**`20261024000001_blacksmith_campaign_import.sql` 尚未執行。維護者須先確認目標 Supabase 專案與 migration history，再手動套用。真實測試需驗證 DM 可匯入、非 DM／錯誤 campaign／不存在角色被拒，以及官方、私有自創與分享樣板均能建立獨立副本；營地箱物品須為公開。
+- **SQL 執行紀錄（維護者於階段五前回報）：**`20261024000001_blacksmith_campaign_import.sql` 已手動執行。此紀錄不代表本次已連線檢查目標專案或 migration history，也不代表 RPC、RLS 與資料庫結果已完成真實環境驗收。
+- **待真實環境驗收：**驗證 DM 可匯入、非 DM／錯誤 campaign／不存在角色被拒，以及官方、私人自創與分享樣板均建立獨立副本；營地箱物品須為公開。須使用實際 Supabase 專案與多帳號執行，不能以 mock E2E 取代。
 
 ### 階段五：整合與驗收
 
-- 驗證本機未設定 Supabase 時仍能瀏覽靜態目錄；需登入的自創／分享／雲端匯入功能應明確提示不可用，不可假裝已保存。
-- 階段四本機 lint、typecheck、build 及相關測試已通過；階段五仍須在新增 RPC migration 部署後，完成隔離 Supabase 專案端對端驗收。
-- 用多帳號驗證私人樣板不可互見、分享樣板可讀不可改、取消分享後不可讀、非 DM 不可匯入、跨戰役資料不混淆。
-- 確認是否要求防止玩家繞過匯入 RPC、直接呼叫既有 `inventory_items` INSERT 建立等效物品；若要求，先設計不破壞 ACL、正常新增與跨角色移轉的資料庫方案，再補直接 API 測試。
+- **狀態：本機自動化驗收與程式檢視完成；離線環境端對端及真實 Supabase 多帳號驗收待執行。**階段三與階段四 migration 已依維護者回報手動執行，但本次未連線至 Supabase，未驗證遠端 schema、RLS 或 RPC 執行結果。
+- **離線／未登入行為：**程式檢視確認官方靜態目錄不依賴雲端；鍛造、分享與匯入在 Supabase 未設定或使用訪客帳號時會顯示明確不可用提示，不回報假保存成功。尚未在未設定 Supabase 的獨立執行環境做端對端測試；雲端操作 E2E 使用 Supabase 測試替身，不能替代此驗收。
+- **本機驗證（2026-10-24）：**
+  - `npm run validate:blacksmith-source` 通過：1 本目錄，537 筆物品及 537 筆 lookup 對照。
+  - `npm run typecheck`、`npm run lint`、`npm run build` 通過。
+  - `npm run test:e2e -- tests/e2e/blacksmith.spec.ts` 通過：7 項。
+  - `npm run test:e2e` 通過：31 項。E2E 對 Supabase REST／RPC 使用測試替身，只驗證前端流程與請求合約。
+- **真實 Supabase 待驗收：**以至少兩個帳號直接驗證私人樣板不可互見、分享樣板可讀不可改、取消分享後不可讀；再驗證 DM 匯入成功、非 DM／錯誤 campaign／不存在角色遭拒、每次匯入產生新 ID、`camp-chest` 保持公開，以及跨 campaign 隔離。這些項目未完成前，不宣稱 RLS、RPC 或整合已在真實資料庫驗收。
+- **直接 INSERT 權限邊界仍待產品決策：**現有 `inventory_items` policy 未收窄；目前可確認匯入 UI 使用 DM 驗證 RPC，但尚未阻止或測試一般成員直接呼叫既有 INSERT 建立等效物品。若要求封鎖，須先設計兼容 ACL、日常新增及移轉的資料庫方案，再部署並測試。
 
 ## 驗收清單
 
