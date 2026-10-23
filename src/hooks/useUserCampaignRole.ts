@@ -46,26 +46,7 @@ export function useUserCampaignRole(campaignId: string) {
 					return;
 				}
 
-				// 3. 查詢 campaigns 主表，檢查是否為該戰役的 DM (dm_id)
-				const { data: campaignData, error: campaignError } = await supabase
-					.from('campaigns')
-					.select('dm_id')
-					.eq('id', campaignId)
-					.single();
-
-				if (
-					!campaignError &&
-					campaignData &&
-					campaignData.dm_id === currentUserId
-				) {
-					if (isMounted) {
-						setRole('dm');
-						setLoading(false);
-					}
-					return;
-				}
-
-				// 4. 查詢 campaign_members 關聯表，檢查成員身分
+				// 3. 以 campaign_members.role 判斷戰役成員身分，支援多名 DM
 				const { data: memberData, error: memberError } = await supabase
 					.from('campaign_members')
 					.select('role')
@@ -81,7 +62,7 @@ export function useUserCampaignRole(campaignId: string) {
 					return;
 				}
 
-				// 5. 若皆不符合，預設為一般玩家或訪客
+				// 4. 若非戰役成員，預設為一般玩家
 				if (isMounted) {
 					setRole('player');
 					setLoading(false);

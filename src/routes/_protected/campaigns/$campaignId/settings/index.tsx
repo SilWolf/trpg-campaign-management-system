@@ -11,10 +11,12 @@ import {
 	Shield,
 	User,
 	Trash2,
+	ArrowRightLeft,
 } from 'lucide-react';
 import {
 	supabase,
 	fromDbItem,
+	fromDbPermission,
 	toDbItem,
 	type DbInventoryItem,
 } from '@/lib/supabase';
@@ -41,6 +43,9 @@ interface DisplayMember {
 	type: 'dm' | 'player' | 'pending';
 	roleText: string;
 	maxCharacters?: number; // 新增：該玩家可創建的角色數量上限
+	invitationStatus?: string;
+	invitedAt?: string | null;
+	acceptedAt?: string | null;
 }
 
 const AVATAR_OPTIONS = [
@@ -74,6 +79,7 @@ function CampaignSettingsPage() {
 	const [allPermissions, setAllPermissions] = useState<CharacterPermission[]>(
 		[],
 	);
+	const [transferTargetUserId, setTransferTargetUserId] = useState('');
 
 	// 角色基本資料編輯表單狀態
 	const [editCharName, setEditCharName] = useState('');
@@ -134,21 +140,19 @@ function CampaignSettingsPage() {
 				setInviteCode(campData.invite_code || '無');
 			}
 
-			// 取得已加入成員（包含每位玩家的 max_characters）
+			// 取得戰役成員與邀請接受狀態
 			const { data: memberData } = await supabase
 				.from('campaign_members')
-				.select(`user_id, role, max_characters, profiles (full_name, email)`)
-				.eq('campaign_id', campaignId);
-
-			const { data: inviteData } = await supabase
-				.from('campaign_invites')
-				.select('id, email')
+				.select(
+					`user_id, role, max_characters, invited_at, accepted_at, profiles (full_name, email)`,
+				)
 				.eq('campaign_id', campaignId);
 
 			const membersList: DisplayMember[] = [];
 			if (memberData) {
 				memberData.forEach((m) => {
-					const isCampDm = campData && campData.dm_id === m.user_id;
+					const isCampDm = m.role === 'dm';
+					const isPendingInvite = Boolean(m.invited_at && !m.accepted_at);
 					const profile = Array.isArray(m.profiles)
 						? m.profiles[0]
 						: m.profiles;
@@ -156,20 +160,21 @@ function CampaignSettingsPage() {
 					membersList.push({
 						id: m.user_id,
 						identifier: displayName,
-						type: isCampDm ? 'dm' : 'player',
-						roleText: isCampDm ? '地下城主 (DM)' : '玩家',
+						type: isCampDm ? 'dm' : isPendingInvite ? 'pending' : 'player',
+						roleText: isCampDm
+							? '地下城主 (DM)'
+							: isPendingInvite
+								? '等待完成註冊'
+								: '玩家',
 						maxCharacters:
 							typeof m.max_characters === 'number' ? m.max_characters : 1,
-					});
-				});
-			}
-			if (inviteData) {
-				inviteData.forEach((inv) => {
-					membersList.push({
-						id: inv.id,
-						identifier: inv.email,
-						type: 'pending',
-						roleText: '等待接受邀請',
+						invitationStatus: m.invited_at
+							? m.accepted_at
+								? '已接受邀請'
+								: '等待接受邀請'
+							: undefined,
+						invitedAt: m.invited_at,
+						acceptedAt: m.accepted_at,
 					});
 				});
 			}
@@ -231,6 +236,21 @@ function CampaignSettingsPage() {
 	const currentSelectedChar = campaignCharacters.find(
 		(c) => c.id === activeTab,
 	);
+	const transferCandidates = allMembers.filter(
+		(member) => member.type === 'player',
+	);
+	const currentOwnerName =
+		allMembers.find((member) => member.id === currentSelectedChar?.userId)
+			?.identifier ?? currentSelectedChar?.userId;
+	const selectedTransferTarget =
+		transferCandidates.find(
+			(member) =>
+				member.id === transferTargetUserId &&
+				member.id !== currentSelectedChar?.userId,
+		) ??
+		transferCandidates.find(
+			(member) => member.id !== currentSelectedChar?.userId,
+		);
 
 	useEffect(() => {
 		if (currentSelectedChar) {
@@ -352,7 +372,9 @@ function CampaignSettingsPage() {
 					id: inviteEmail.trim(),
 					identifier: inviteEmail.trim(),
 					type: 'pending',
-					roleText: '等待接受邀請',
+					roleText: '等待完成註冊',
+					invitationStatus: '等待接受邀請',
+					invitedAt: new Date().toISOString(),
 				},
 			]);
 			setInviteEmail('');
@@ -427,6 +449,139 @@ function CampaignSettingsPage() {
 
 		setNotice(`✨ 角色「${updatedChar.name}」基本資料已更新！`);
 		setTimeout(() => setNotice(null), 3000);
+	};
+
+	const handleTransferCharacter = async (char: Character, targetUserId: string) => {
+		if (!isDm || !supabase || campaignId === 'default') {
+			setNotice('只有線上戰役的 DM 可以轉移角色擁有權。');
+			return;
+		}
+
+		const targetMember = allMembers.find(
+			(member) => member.id === targetUserId && member.type === 'player',
+		);
+		if (!targetMember || targetUserId === char.userId) {
+			setNotice('請選擇一位已加入戰役、且尚未擁有此角色的玩家。');
+			return;
+		}
+
+		if (
+			!window.confirm(
+				`確定將「${char.name}」的擁有權轉移給 ${targetMember.identifier} 嗎？\n對方將取得此角色的完整控制權，原擁有者的個別權限設定將被移除。`,
+			)
+		) {
+			return;
+		}
+
+		try {
+			const { data: updatedCharacter, error: ownerError } = await supabase
+				.from('characters')
+				.update({ user_id: targetUserId })
+				.eq('id', char.id)
+				.eq('campaign_id', campaignId)
+				.select('id')
+				.single();
+			if (ownerError || !updatedCharacter) {
+				throw ownerError ?? new Error('找不到要移轉的角色。');
+			}
+
+			const { data: permissionData, error: permissionError } = await supabase
+				.from('character_permissions')
+				.upsert(
+					{
+						campaign_id: campaignId,
+						character_id: char.id,
+						user_id: targetUserId,
+						public_bag_access: 2,
+						private_bag_access: 2,
+						public_wallet_access: 2,
+						private_wallet_access: 2,
+						can_edit_profile: true,
+						can_delete_character: true,
+						can_manage_permissions: true,
+						updated_at: new Date().toISOString(),
+					},
+					{ onConflict: 'character_id,user_id' },
+				)
+				.select('*')
+				.single();
+
+			if (permissionError || !permissionData) {
+				const { data: rolledBackCharacter, error: rollbackError } = await supabase
+					.from('characters')
+					.update({ user_id: char.userId })
+					.eq('id', char.id)
+					.eq('campaign_id', campaignId)
+					.select('id')
+					.single();
+				if (rollbackError || !rolledBackCharacter) {
+					setNotice(
+						`角色已更新擁有者，但權限設定失敗，且無法復原擁有者：${permissionError?.message ?? '未取得權限資料'}；${rollbackError?.message ?? '找不到要復原的角色'}`,
+					);
+					return;
+				}
+				throw permissionError ?? new Error('未取得更新後的角色權限資料。');
+			}
+			const updatedPermission = fromDbPermission(permissionData);
+
+			if (char.userId && char.userId !== targetUserId) {
+				const { error: revokeError } = await supabase
+					.from('character_permissions')
+					.delete()
+					.eq('campaign_id', campaignId)
+					.eq('character_id', char.id)
+					.eq('user_id', char.userId);
+				if (revokeError) {
+					setCampaignCharacters((prev) =>
+						prev.map((current) =>
+							current.id === char.id
+								? { ...current, userId: targetUserId }
+								: current,
+						),
+					);
+					setAllPermissions((prev) => [
+						...prev.filter(
+							(permission) =>
+								!(
+									permission.characterId === char.id &&
+									permission.userId === targetUserId
+								),
+						),
+						updatedPermission,
+					]);
+					setNotice(
+						`擁有權已轉移給 ${targetMember.identifier}，但無法撤除原擁有者權限：${revokeError.message}`,
+					);
+					return;
+				}
+			}
+
+			setCampaignCharacters((prev) =>
+				prev.map((current) =>
+					current.id === char.id
+						? { ...current, userId: targetUserId }
+						: current,
+				),
+			);
+			setAllPermissions((prev) => [
+				...prev.filter(
+					(permission) =>
+						!(
+							permission.characterId === char.id &&
+							(permission.userId === targetUserId ||
+								permission.userId === char.userId)
+						),
+				),
+				updatedPermission,
+			]);
+			setNotice(`✨ 已將「${char.name}」的擁有權轉移給 ${targetMember.identifier}。`);
+			setTimeout(() => setNotice(null), 3500);
+		} catch (error) {
+			setNotice(
+				'轉移角色擁有權失敗：' +
+					(error instanceof Error ? error.message : '未知錯誤'),
+			);
+		}
 	};
 
 	const handleUpdatePermission = async (
@@ -821,6 +976,31 @@ function CampaignSettingsPage() {
 											</div>
 
 											<div className='flex items-center gap-3 shrink-0'>
+												{member.invitationStatus && (
+													<div className='text-right text-[10px] text-stone-400'>
+														<p
+															className={
+																member.acceptedAt
+																	? 'text-emerald-300'
+																	: 'text-amber-300'
+															}
+														>
+															{member.invitationStatus}
+														</p>
+														{member.invitedAt && (
+															<p>
+																邀請時間：
+																{new Date(member.invitedAt).toLocaleString('zh-TW')}
+															</p>
+														)}
+														{member.acceptedAt && (
+															<p>
+																接受時間：
+																{new Date(member.acceptedAt).toLocaleString('zh-TW')}
+															</p>
+														)}
+													</div>
+												)}
 												{member.type === 'dm' && (
 													<span className='text-[11px] text-amber-300/90 font-mono'>
 														已建 {createdCount} 名角色（DM 無上限）
@@ -921,6 +1101,69 @@ function CampaignSettingsPage() {
 			{/* ========================================== */}
 			{currentSelectedChar && (
 				<div className='space-y-6'>
+					{isDm && campaignId !== 'default' && (
+						<section className='bg-stone-950 border border-cyan-900/70 rounded-lg p-6 space-y-4 shadow-xl'>
+							<div className='flex items-center gap-2 border-b border-stone-800 pb-3'>
+								<ArrowRightLeft className='w-4 h-4 text-cyan-300' />
+								<div>
+									<h2 className='text-sm font-serif font-bold text-cyan-200'>
+										角色擁有權移轉
+									</h2>
+									<p className='text-xs text-stone-400 mt-0.5'>
+										目前擁有者：{currentOwnerName}
+									</p>
+								</div>
+							</div>
+							<p className='text-xs text-stone-400 leading-relaxed'>
+								你可以先替尚未加入的玩家建立角色；等玩家建立帳號並加入本戰役後，再將角色交給他。移轉後，玩家會取得角色完整控制權，原擁有者的個別權限設定會被移除（原擁有者仍依戰役預設權限讀取公開內容）。
+							</p>
+							{transferCandidates.length === 0 ? (
+								<p className='rounded border border-stone-800 bg-stone-900/70 px-3 py-2 text-xs text-stone-500'>
+									目前沒有已加入戰役的玩家。玩家接受邀請並加入後，即可在此移轉角色。
+								</p>
+							) : (
+								<div className='flex flex-col sm:flex-row gap-2'>
+									<select
+										value={selectedTransferTarget?.id ?? ''}
+										onChange={(event) =>
+											setTransferTargetUserId(event.target.value)
+										}
+										className='flex-1 bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm text-stone-100 outline-none focus:border-cyan-500'
+									>
+										{transferCandidates.map((member) => (
+											<option
+												key={member.id}
+												value={member.id}
+												disabled={member.id === currentSelectedChar.userId}
+											>
+												{member.identifier}
+												{member.id === currentSelectedChar.userId
+													? '（目前擁有者）'
+													: ''}
+											</option>
+										))}
+									</select>
+									<button
+										type='button'
+										disabled={!selectedTransferTarget}
+										onClick={() => {
+											if (selectedTransferTarget) {
+												void handleTransferCharacter(
+													currentSelectedChar,
+													selectedTransferTarget.id,
+												);
+											}
+										}}
+										className='px-4 py-2 rounded bg-cyan-900 hover:bg-cyan-800 border border-cyan-700 text-cyan-100 font-semibold text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed'
+									>
+										<ArrowRightLeft className='w-4 h-4' />
+										轉移擁有權
+									</button>
+								</div>
+							)}
+						</section>
+					)}
+
 					{/* 區塊 1：角色基本資料設定 (can_edit_profile) */}
 					<form
 						onSubmit={handleSaveCharacterProfile}
