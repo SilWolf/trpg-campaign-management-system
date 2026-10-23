@@ -13,11 +13,11 @@ test('一般成員只能閱讀公開背包與公開錢包，私人資料和負�
 		'Supabase 即時同步中',
 	);
 
-	await expect(page.getByTestId('inventory-bag-public')).toHaveAttribute(
+	await expect(page.getByRole('button', { name: /公開行囊/ })).toHaveAttribute(
 		'aria-pressed',
 		'true',
 	);
-	await expect(page.getByTestId('inventory-bag-private')).toHaveCount(0);
+	await expect(page.getByRole('button', { name: /私人暗袋/ })).toHaveCount(0);
 	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
 	await expect(page.getByTestId('inventory-item-inventory-private-letter')).toHaveCount(
 		0,
@@ -42,28 +42,30 @@ test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', as
 	);
 
 	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
-	await page.getByTestId('inventory-bag-private').click();
+	await page.getByRole('button', { name: /私人暗袋/ }).click();
 	await expect(page.getByTestId('inventory-item-inventory-private-letter')).toBeVisible();
-	await expect(page.getByTestId('inventory-bag-private')).toHaveAttribute(
+	await expect(page.getByRole('button', { name: /私人暗袋/ })).toHaveAttribute(
 		'aria-pressed',
 		'true',
 	);
 
-	await page.getByTestId('inventory-bag-public').click();
-	await page.getByTestId('inventory-search').fill('治療');
+	await page.getByRole('button', { name: /公開行囊/ }).click();
+	await page.getByRole('searchbox', { name: '搜尋道具名稱' }).fill('治療');
 	await expect(
 		page.getByTestId('inventory-item-inventory-public-potion'),
 	).toHaveAttribute('data-filter-match', 'true');
-	await page.getByTestId('inventory-display-list').click();
-	await expect(page.getByTestId('inventory-display-list')).toHaveAttribute(
+	await page.getByRole('button', { name: '列表' }).click();
+	await expect(page.getByRole('button', { name: '列表' })).toHaveAttribute(
 		'aria-pressed',
 		'true',
 	);
 	const sortTrigger = page.getByTestId('inventory-sort-trigger');
 	await sortTrigger.focus();
 	await page.keyboard.press('Enter');
-	await expect(page.getByTestId('inventory-sort-rarity')).toBeVisible();
-	await page.getByTestId('inventory-sort-rarity').click();
+	await expect(
+		page.getByRole('button', { name: /依稀有度排序/ }),
+	).toBeVisible();
+	await page.getByRole('button', { name: /依稀有度排序/ }).click();
 	await expect(page.getByTestId('inventory-sort-menu')).toHaveJSProperty(
 		'open',
 		false,
@@ -96,7 +98,9 @@ test('Campaign 背包頁在 375px 窄螢幕可用且沒有水平溢位', async (
 		'Supabase 即時同步中',
 	);
 
-	await expect(page.getByTestId('inventory-search')).toBeVisible();
+	await expect(
+		page.getByRole('searchbox', { name: '搜尋道具名稱' }),
+	).toBeVisible();
 	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
 	const hasHorizontalOverflow = await page.evaluate(
 		() => document.documentElement.scrollWidth > window.innerWidth,

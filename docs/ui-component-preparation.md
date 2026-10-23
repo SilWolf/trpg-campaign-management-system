@@ -42,10 +42,10 @@
 
 ## E2E 元素定位規範
 
-- Phase 1 E2E 的頁面互動目標（輸入欄位、按鈕、對話框、錯誤／成功狀態與標題）一律使用明確的 `data-testid` 搭配 `page.getByTestId()` 定位。
-- `data-testid` 使用穩定且具語意的名稱，不依賴 Tailwind class、DOM 階層或容易修改的 UI 文案。
-- 測試仍須驗證使用者可見的訊息與標題；以已定位的 test id 元素斷言文字和值，不以 `getByText`、`getByRole`、`getByLabel` 或 placeholder 作為元素定位器。
-- 導入共用元件或遷移頁面時，保留這些測試 ID，或在同一變更中同步更新對應 E2E 測試。
+- 互動目標優先以使用者可感知的語意定位：按鈕、連結、頁籤、對話框與提示使用 `getByRole()` 搭配可見名稱；表單欄位使用 `getByLabel()`；使用者可見訊息以文字或其語意角色斷言。
+- 避免依賴 Tailwind class、脆弱的 DOM 階層、CSS 選擇器或實作細節定位。測試若需檢查欄位焦點、操作狀態或驗證文字，應對使用者可見的欄位／訊息做斷言。
+- 只有在元素沒有合適的可存取語意、重複元素無法透過可見名稱區分，或需檢查測試資料本身時，才使用穩定且具語意的 `data-testid`；此時仍應驗證對應的可見內容。
+- UI 遷移若改變可存取名稱或語意角色，應同步更新測試以反映使用者實際操作方式。`data-testid` 不應成為一般互動的預設定位器。
 
 ## Phase 1 基準情境
 
@@ -69,3 +69,5 @@ npm install
 npx playwright install chromium
 npm run test:e2e
 ```
+
+日常驗證另須執行 `npm run typecheck`、`npm run lint` 與 `npm run build`；完整驗證包含以上四項指令。E2E 使用每測試獨立的瀏覽器 context 及隔離 Supabase 網路替身，不會寫入共用或正式資料。

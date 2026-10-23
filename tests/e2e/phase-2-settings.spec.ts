@@ -8,13 +8,17 @@ test('DM 可更新戰役設定與玩家配額，並取得邀請操作回饋', as
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
-	await expect(page.getByTestId('campaign-settings-heading')).toBeVisible();
-	await expect(page.getByTestId('campaign-name')).toBeEnabled();
-	await expect(page.getByTestId('campaign-email-invite')).toBeVisible();
-	await expect(page.getByTestId('campaign-delete')).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: '戰役與角色控制權限中心' }),
+	).toBeVisible();
+	await expect(page.getByLabel('戰役名稱')).toBeEnabled();
+	await expect(page.getByRole('button', { name: '發送邀請' })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: '永久刪除此戰役' }),
+	).toBeVisible();
 
-	await page.getByTestId('campaign-name').fill('更新後的測試戰役');
-	await page.getByTestId('campaign-save').click();
+	await page.getByLabel('戰役名稱').fill('更新後的測試戰役');
+	await page.getByRole('button', { name: '儲存變更' }).click();
 	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
 		'戰役設定已成功更新',
 	);
@@ -32,8 +36,8 @@ test('DM 可更新戰役設定與玩家配額，並取得邀請操作回饋', as
 		)
 		.toBe(true);
 
-	await page.getByTestId('campaign-invite-email').fill('invitee@example.test');
-	await page.getByTestId('campaign-email-invite').click();
+	await page.getByLabel('受邀玩家電子郵件').fill('invitee@example.test');
+	await page.getByRole('button', { name: '發送邀請' }).click();
 	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
 		'已成功透過 Supabase Auth',
 	);
@@ -47,14 +51,16 @@ test('一般成員只能檢視 Campaign 設定，且不能修改自己的權限�
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
-	await expect(page.getByTestId('campaign-name')).toBeDisabled();
-	await expect(page.getByTestId('campaign-email-invite')).toHaveCount(0);
-	await expect(page.getByTestId('campaign-delete')).toHaveCount(0);
+	await expect(page.getByLabel('戰役名稱')).toBeDisabled();
+	await expect(page.getByRole('button', { name: '發送邀請' })).toHaveCount(0);
+	await expect(
+		page.getByRole('button', { name: '永久刪除此戰役' }),
+	).toHaveCount(0);
 	await expect(
 		page.getByTestId('campaign-member-quota-other-player-id'),
 	).toHaveCount(0);
 
-	const characterTab = page.getByTestId('campaign-settings-tab-settings-character');
+	const characterTab = page.getByRole('tab', { name: /測試冒險者/ });
 	await characterTab.click();
 	await expect(
 		page.getByTestId(
@@ -71,11 +77,13 @@ test('Campaign 設定頁籤支援鍵盤操作，角色移轉確認可取消', as
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
-	const generalTab = page.getByTestId('campaign-settings-tab-general');
+	const generalTab = page.getByRole('tab', {
+		name: /戰役常規設定與成員配額/,
+	});
 	await generalTab.focus();
-	await page.keyboard.press('ArrowRight');
+	await generalTab.press('ArrowRight');
 
-	const characterTab = page.getByTestId('campaign-settings-tab-settings-character');
+	const characterTab = page.getByRole('tab', { name: /測試冒險者/ });
 	await expect(characterTab).toBeFocused();
 	await expect(characterTab).toHaveAttribute('aria-selected', 'true');
 	await expect(page.getByTestId('campaign-settings-panel')).toBeVisible();
@@ -98,9 +106,9 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
-	const campaignName = page.getByTestId('campaign-name');
+	const campaignName = page.getByLabel('戰役名稱');
 	await campaignName.fill('');
-	await page.getByTestId('campaign-save').click();
+	await page.getByRole('button', { name: '儲存變更' }).click();
 	await expect
 		.poll(() =>
 			campaignName.evaluate((input) => (input as HTMLInputElement).validity.valid),
@@ -111,9 +119,9 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 	).toBe(false);
 
 	await page.getByTestId('campaign-settings-tab-settings-character').click();
-	const characterName = page.getByTestId('character-name');
+	const characterName = page.getByLabel('角色名稱 *');
 	await characterName.fill('更新後的角色');
-	await page.getByTestId('character-save').click();
+	await page.getByRole('button', { name: '儲存角色基本資料' }).click();
 	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
 		'角色「更新後的角色」基本資料已更新',
 	);
@@ -151,7 +159,7 @@ test('永久刪除戰役前會要求確認，取消後停留在設定頁', async
 		expect(dialog.type()).toBe('confirm');
 		await dialog.dismiss();
 	});
-	await page.getByTestId('campaign-delete').click();
+	await page.getByRole('button', { name: '永久刪除此戰役' }).click();
 
 	await expect(page).toHaveURL(new RegExp(`${campaignSettingsUrl}$`));
 });
@@ -162,7 +170,9 @@ test('Campaign 設定頁在窄螢幕沒有水平溢出', async ({ page }) => {
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
-	await expect(page.getByTestId('campaign-settings-heading')).toBeVisible();
+	await expect(
+		page.getByRole('heading', { name: '戰役與角色控制權限中心' }),
+	).toBeVisible();
 	const hasHorizontalOverflow = await page.evaluate(
 		() => document.documentElement.scrollWidth > window.innerWidth,
 	);

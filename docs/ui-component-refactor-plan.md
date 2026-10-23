@@ -77,7 +77,7 @@
 - 已引入 `@playwright/test`，新增 `test:e2e` 指令、Chromium 專案與 Vite 本機測試伺服器設定：[`package.json`](../package.json)、[`playwright.config.ts`](../playwright.config.ts)。
 - 已新增 Supabase Auth、PostgREST 與 RPC 的網路替身及虛構測試 session：[`tests/e2e/supabase-mock.ts`](../tests/e2e/supabase-mock.ts)。測試只使用隔離的 `127.0.0.1:54321` URL 和 `example.test` 虛構帳號，不連接正式服務、不使用真實玩家資料，也不寄送 Email。
 - 已新增 Phase 1 基準測試：[`tests/e2e/phase-1-baseline.spec.ts`](../tests/e2e/phase-1-baseline.spec.ts)，共 8 項情境，涵蓋註冊與 Email 驗證提示、登入欄位與錯誤回饋、無效邀請、邀請密碼確認與接受邀請、建立／加入戰役、個人資料更新，以及 375px 下 Phase 1 四頁的水平溢位。
-- 後續依測試維護要求，Phase 1 E2E 互動元素改以 `data-testid` 定位；畫面可見文字仍以對應 test id 元素斷言，避免測試定位耦合於文案、樣式或 DOM 結構。
+- 基準階段曾以穩定 `data-testid` 定位互動與狀態；收尾階段已將主要表單、按鈕、頁籤與可見狀態改為語意角色、標籤和可見名稱，並只在需檢查唯一資料或原生摘要等缺少合適定位器時保留 test id。
 - 已將 Playwright 報告與測試結果目錄排除於版本控制：[`.gitignore`](../.gitignore)；並在 [`README.md`](../README.md) 記錄瀏覽器安裝及測試執行指令。
 - 驗收結果：`npm run test:e2e`（8 項通過）、`npm run typecheck`、`npm run lint`、`npm run build` 與 `git diff --check` 均通過。
 
@@ -203,6 +203,17 @@ Phase 3 已完成；背包頁主要操作已遷移至共用 UI 元件，保留�
 5. 視維護成本再評估 Storybook、視覺回歸測試或更多表單抽象，不把它們列為本次必需條件。
 
 **完成條件：** 三個 Phase 的 E2E 測試可穩定重複執行；共用元件有明確使用方式；客製化例外合理且可辨識。
+
+#### 執行紀錄（2026-10-23）
+
+收尾階段已完成；保留各 Phase 已驗收的 UI 與業務行為，集中補齊共用元件文件、測試定位慣例和日常驗證指引。
+
+- 已新增 [`src/components/ui/README.md`](../src/components/ui/README.md)，說明 Button 的 variant／尺寸／loading／asChild、Input／Textarea 的標籤與錯誤關聯、Select、Checkbox 及 Badge 的使用方式與範例。
+- 已更新 [`docs/ui-component-preparation.md`](./ui-component-preparation.md) 的 E2E 定位規範：互動優先採可存取角色與名稱、表單標籤及可見文字；僅在無適當語意或需區分唯一資料時保留穩定 `data-testid`，不以樣式或 DOM 階層定位。
+- 已將 Phase 1、Phase 2 與 Phase 3 的主要表單和操作 E2E 定位改為使用者可感知的標籤、角色與名稱；焦點狀態、唯一成員配額、背包項目和自訂排序摘要等無合適唯一語意定位的情境仍使用 `data-testid`。
+- 已確認 `src/App.css` 是未載入且無 JSX 使用的舊 Vite 範例樣式並移除；未發現其他可確認閒置的舊 UI 元件，因此未作推測性刪除。
+- 已在 [`README.md`](../README.md) 列出日常 typecheck、lint、build 與 E2E 驗證方式，並連結共用元件指南。檢查 `.github/` 後確認目前沒有 CI workflow，因此本次未新增 CI 設定，也未引入新依賴。
+- 驗收結果：`npm run typecheck`、`npm run lint`、`npm run build`、完整 Playwright E2E（19 項）與 `git diff --check` 均通過；E2E 使用既有隔離 Supabase 替身。
 
 ## 驗收標準
 

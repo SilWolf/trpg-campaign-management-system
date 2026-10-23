@@ -22,9 +22,11 @@ npm run dev
 npm run typecheck
 npm run build
 npm run lint
+npm run test:e2e
 ```
 
 應用程式入口與 React 元件使用 TypeScript (`.ts` / `.tsx`)，嚴格型別檢查已納入正式建置流程。
+以上指令是日常驗證項目；E2E 測試使用隔離的 Supabase 替身，無須連接正式服務。
 
 ## Playwright E2E 基準測試
 
@@ -34,6 +36,10 @@ npm run test:e2e
 ```
 
 E2E 使用本機隔離的 Supabase 網路替身與虛構測試資料，不連接實際專案或寄送 Email。路由盤點、測試涵蓋與資料策略記錄於 [docs/ui-component-preparation.md](./docs/ui-component-preparation.md)。
+
+## 共用 UI 元件
+
+`src/components/ui/` 提供按鈕、輸入欄位、選單、核取方塊、文字區域與狀態標籤。元件匯入方式、variant、尺寸、無障礙行為與使用範例見 [src/components/ui/README.md](./src/components/ui/README.md)。
 
 ## 程式碼結構
 
