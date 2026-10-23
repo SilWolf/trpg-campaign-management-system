@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "lint": "eslint .",
     "test:e2e": "playwright test",
+    "validate:blacksmith-source": "node scripts/validate-blacksmith-source.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
