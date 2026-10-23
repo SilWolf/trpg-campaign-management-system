@@ -3,6 +3,7 @@ import {
 	resolveItemFlags,
 	type Character,
 	type CharacterPermission,
+	type CurrencyType,
 	type InventoryItem,
 } from '@/types';
 
@@ -17,6 +18,35 @@ export const supabase =
 		: null;
 
 export const isSupabaseConfigured = Boolean(supabase);
+
+export type CampaignCurrency = Record<CurrencyType, number>;
+
+export interface DbCampaignCurrency {
+	camp_chest_currency?: Partial<CampaignCurrency> | null;
+}
+
+export const toDbCampaignCurrency = (
+	currency: CampaignCurrency,
+): Pick<DbCampaignCurrency, 'camp_chest_currency'> => ({
+	camp_chest_currency: currency,
+});
+
+export const fromDbCampaignCurrency = (
+	row: DbCampaignCurrency | null | undefined,
+): CampaignCurrency => {
+	const currency = row?.camp_chest_currency;
+	const valueFor = (coin: CurrencyType) => {
+		const value = currency?.[coin];
+		return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+	};
+	return {
+		pp: valueFor('pp'),
+		gp: valueFor('gp'),
+		ep: valueFor('ep'),
+		sp: valueFor('sp'),
+		cp: valueFor('cp'),
+	};
+};
 
 // ==========================================
 // 資料庫欄位 (snake_case) <-> 前端型別 (camelCase) 轉換器

@@ -15,7 +15,7 @@ import ItemTooltip from '@/components/ItemTooltip';
 import { useCampaignSync } from '@/hooks/useCampaignSync';
 import { useInventoryActions } from '@/hooks/useInventoryActions';
 import { useCharacterPermissions } from '@/hooks/useCharacterPermissions';
-import { checkIsAuthenticated } from '@/contexts/AuthContext';
+import { checkIsAuthenticated, useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
 	INITIAL_CHARACTERS,
@@ -42,6 +42,7 @@ export const Route = createFileRoute('/_protected/campaigns/$campaignId/')({
 function CampaignInventoryPage() {
 	const { campaignId } = Route.useParams();
 	const { isDm, user } = useUserCampaignRole(campaignId);
+	const { isGuest } = useAuth();
 
 	const [viewMode, setViewMode] = useState<ViewMode>('player');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
@@ -79,8 +80,15 @@ function CampaignInventoryPage() {
 		items,
 		setItems,
 		permissions,
+		campChestCurrency,
+		setCampChestCurrency,
 		syncStatus,
-	} = useCampaignSync(campaignId, INITIAL_CHARACTERS, INITIAL_ITEMS);
+	} = useCampaignSync(
+		campaignId,
+		INITIAL_CHARACTERS,
+		INITIAL_ITEMS,
+		!isGuest && Boolean(user?.id) && campaignId !== 'default',
+	);
 	useEffect(() => {
 		if (
 			activeCharId === CAMP_CHEST_ID ||
@@ -100,8 +108,11 @@ function CampaignInventoryPage() {
 		if (nextCharacter) {
 			// eslint-disable-next-line react-hooks/set-state-in-effect -- 遠端戰役角色載入後需同步修正無效的預設選取。
 			setActiveCharId(nextCharacter.id);
+		} else if (syncStatus === 'synced') {
+			// 空白戰役仍可直接進入虛擬營地箱。
+			setActiveCharId(CAMP_CHEST_ID);
 		}
-	}, [activeCharId, characters, user?.id]);
+	}, [activeCharId, characters, syncStatus, user?.id]);
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -120,22 +131,19 @@ function CampaignInventoryPage() {
 
 	const activeCharacter = useMemo(() => {
 		const found = characters.find((character) => character.id === activeCharId);
-		if (found) return found;
-		if (activeCharId === CAMP_CHEST_ID) {
-			return {
-				id: CAMP_CHEST_ID,
-				name: '營地儲物箱',
-				title: '團隊共用行囊與公庫',
-				str: 999,
-				avatar: '🏕️',
-				campaignId,
-				userId: 'dm',
-				currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-				privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-			};
-		}
-		return characters[0];
-	}, [characters, activeCharId, campaignId]);
+		if (found && found.id !== CAMP_CHEST_ID) return found;
+		return {
+			id: CAMP_CHEST_ID,
+			name: '營地儲物箱',
+			title: '團隊共用行囊與公庫',
+			str: 999,
+			avatar: '🏕️',
+			campaignId,
+			userId: '',
+			currencies: campChestCurrency,
+			privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+		};
+	}, [characters, activeCharId, campaignId, campChestCurrency]);
 
 	// 計算當前登入使用者對 activeCharacter 的 7 項細粒度權限
 	const charPerms = useCharacterPermissions(
@@ -339,6 +347,8 @@ function CampaignInventoryPage() {
 	const actions = useInventoryActions({
 		characters,
 		setCharacters,
+		campChestCurrency,
+		setCampChestCurrency,
 		items,
 		setItems,
 		activeCharId,

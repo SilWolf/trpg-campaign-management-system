@@ -39,10 +39,12 @@ export async function mockSupabase(
 		campaignSettingsRole?: CampaignSettingsRole;
 		campaignInventoryRole?: CampaignSettingsRole;
 		createCampaignError?: string;
+		blankCampaign?: boolean;
 	} = {},
 ) {
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
+	const campaignUpdates: unknown[] = [];
 	const campaignSettingsRole = options.campaignSettingsRole;
 	const campaignInventoryRole = options.campaignInventoryRole;
 	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
@@ -315,6 +317,14 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/campaigns' &&
 			method === 'GET'
 		) {
+			if (url.searchParams.get('select') === 'camp_chest_currency') {
+				await route.fulfill({
+					json: {
+						camp_chest_currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+					},
+				});
+				return;
+			}
 			await route.fulfill({
 				json: {
 					id: campaignInventoryRole
@@ -351,7 +361,9 @@ export async function mockSupabase(
 			method === 'GET'
 		) {
 			await route.fulfill({
-				json: campaignInventoryRole
+				json: options.blankCampaign
+					? []
+					: campaignInventoryRole
 					? inventoryCharacters
 					: campaignCharacters,
 			});
@@ -363,7 +375,9 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/inventory_items' &&
 			method === 'GET'
 		) {
-			await route.fulfill({ json: inventoryItems });
+			await route.fulfill({
+				json: options.blankCampaign ? [] : inventoryItems,
+			});
 			return;
 		}
 
@@ -390,6 +404,12 @@ export async function mockSupabase(
 		}
 
 		if (url.pathname.startsWith('/rest/v1/')) {
+			if (
+				url.pathname === '/rest/v1/campaigns' &&
+				(method === 'PATCH' || method === 'POST')
+			) {
+				campaignUpdates.push(request.postDataJSON());
+			}
 			if (method === 'GET') {
 				await route.fulfill({ json: [] });
 			} else {
@@ -404,5 +424,5 @@ export async function mockSupabase(
 		});
 	});
 
-	return { requests, functionRequests };
+	return { requests, functionRequests, campaignUpdates };
 }

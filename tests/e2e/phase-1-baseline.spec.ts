@@ -110,6 +110,38 @@ test('大廳可建立戰役並進入該戰役', async ({ page }) => {
 	});
 });
 
+test('大廳可建立不帶角色與物品的空白戰役', async ({ page }) => {
+	const { functionRequests } = await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+
+	await page.getByRole('button', { name: '建立新戰役 (DM)' }).click();
+	const dialog = page.getByRole('dialog', { name: '建立新戰役 (DM)' });
+	await dialog.getByLabel('戰役名稱').fill('空白測試戰役');
+	await dialog.getByLabel('戰役初始內容').selectOption('blank');
+	await dialog.getByRole('button', { name: '確認建立戰役' }).click();
+
+	await expect(page).toHaveURL(/\/campaigns\/mock-created-campaign$/);
+	const payload = functionRequests[0] as {
+		template: string;
+		seed: {
+			characters: unknown[];
+			items: unknown[];
+			camp_chest_currency: Record<string, number>;
+		};
+	};
+	expect(payload.template).toBe('blank');
+	expect(payload.seed.characters).toEqual([]);
+	expect(payload.seed.items).toEqual([]);
+	expect(payload.seed.camp_chest_currency).toEqual({
+		pp: 0,
+		gp: 0,
+		ep: 0,
+		sp: 0,
+		cp: 0,
+	});
+});
+
 test('大廳建立戰役失敗會顯示伺服器錯誤且不導向', async ({ page }) => {
 	await mockSupabase(page, { createCampaignError: '資料庫建立失敗' });
 	await seedAuthenticatedSession(page);

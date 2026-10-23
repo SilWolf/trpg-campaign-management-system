@@ -61,12 +61,14 @@
 - 新增 `create-campaign` Edge Function：gateway JWT 驗證、伺服器端使用者驗證、固定的 sample／blank 兩種建立模式；service-role key 不進入前端。
 - 更新部署文件，要求維護者手動檢查 Schema、Secrets、migration 計畫並部署 SQL／Function。**此工作階段未連線或執行 SQL，資料庫、Edge Function 尚未部署。**
 
-### 階段三：前端建立／加入流程與營地箱資料串接 — 部分完成
+### 階段三：前端建立／加入流程與營地箱資料串接 — 前端實作完成，待隔離環境驗收
 
-- 大廳建立示範戰役已改呼叫 Edge Function，並在 request body 傳送從 `src/data.ts` 組裝的角色、物品及營地箱貨幣；採用伺服器回傳的 ID，錯誤顯示於介面。正式登入者才能在遠端建立，訪客／離線走既有本地退避。
-- 大廳邀請加入已改呼叫 `join_campaign_by_invite_code`，避免先直接查詢不具讀取權限的 campaign row。
-- `blank` 建團已由 Edge Function 與交易 RPC 支援，後續可於 UI 加入建立模式選擇。
-- camp-chest 背包／錢包 UI、同步 Hook、Realtime、campaign-scoped 讀寫仍須逐一串接；完成前不可宣稱公共庫互動符合新 Schema。
+- 大廳可選擇範例或空白戰役；範例模式從 `src/data.ts` 傳入三名角色、九件物品及營地箱初始錢包，空白模式傳入空集合和零錢包。正式登入者透過 `create-campaign` 建立並採用伺服器回傳的 ID；訪客／離線仍退回本地示範資料。
+- 邀請加入呼叫 `join_campaign_by_invite_code`，不再直接查詢 campaign 邀請碼。
+- 遠端同步不再以 `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 回填空集合；camp-chest 僅是前端虛擬角色，不會寫入 `characters`。
+- 營地箱物品透過 `inventory_items.campaign_id` 查詢、Realtime、建立、更新及刪除；寫入 camp-chest 的物品會強制公開。營地箱錢包讀寫 `campaigns.camp_chest_currency`，並訂閱 campaigns Realtime；角色刪除、存取／取出及平分操作已改用該錢包狀態。
+- 同步失敗會記錄錯誤並將狀態列標示為「同步異常」。本階段未新增或執行 SQL，使用既有階段二 Schema／Edge Function。
+- 跨角色與 campaign 錢包目前仍由前端分別寫入角色列與 campaign 列，並非資料庫單一交易；跨客戶端同時轉帳的原子性須在階段五特別驗證，若不能接受短暫或競爭狀態，需另增資料庫轉帳 RPC 並由維護者手動部署。
 
 ### 階段四：移除預設戰役特例 — 待執行
 

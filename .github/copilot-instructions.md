@@ -11,8 +11,8 @@
 ### ✅ 已完成的核心功能
 
 1. **多戰役大廳與加入機制 (`/`)**：
-   - 建立新戰役時自動生成 6 碼大寫邀請碼 (`invite_code`) 並初始化範例資料。
-   - 支援輸入邀請碼直接加入戰役。
+   - 建立戰役透過 `create-campaign` Edge Function，支援範例 seed 與空白 seed，邀請碼由伺服器生成。
+   - 輸入邀請碼時呼叫 `join_campaign_by_invite_code` RPC，不可直接查詢受 RLS 保護的 campaign row。
 2. **Email 官方邀請與用戶個人資料 (`profiles`)**：
    - 透過 Supabase Edge Function (`invite-player`) 發送官方 Email 邀請信。
    - 公開 `profiles` 表格透過 Trigger 自動與 `auth.users` 同步 `full_name` 與 `email`，並支援於 `/settings/profile` 修改。
@@ -37,6 +37,12 @@
 5. **背包與雙錢包介面 (`/campaigns/$campaignId/`)**：
    - 支援四大自動分類（裝備、消耗品、重要物品、雜物）、三種檢視模式（6格、緊湊格字、列表）、附魔詞條 (Affixes) 系統、未鑑定遮罩與 Markdown 描述。
    - 負重計算嚴格過濾無閱讀權限的背包與錢包，防止洩漏暗袋重量。
+6. **戰役建立與營地箱同步規則（階段三前端已完成）**：
+   - 遠端戰役空的角色／物品集合代表有效空白戰役，不可用 `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 自動補值。
+   - `camp-chest` 是 UI 虛擬儲存庫，不建立 `characters` 或權限資料列；物品必須以當前 `campaign_id` 隔離，且強制維持公開。
+   - 營地箱貨幣唯一遠端來源為 `campaigns.camp_chest_currency`，同步 Hook 訂閱 campaigns Realtime；不得存入虛擬角色的 `currencies`。
+   - 角色錢包與營地箱錢包分屬不同資料列，前端移轉目前不是單一資料庫交易；不得宣稱跨列轉帳具原子性。需要跨使用者競爭保護時，先新增並手動部署交易 RPC。
+   - 階段三未執行 SQL；Supabase Schema 與 Edge Function 由維護者依部署文件管理。
 
 ---
 
@@ -54,7 +60,7 @@
 #### 2. 資料同步與轉換器規範 (`src/lib/supabase.ts` & `src/hooks/useCampaignSync.ts`)
 
 - **命名轉換隔離**：資料庫欄位一律使用 `snake_case`，前端 TypeScript 型別（`src/types.ts`）一律使用 `camelCase`。所有新增欄位都必須在 `src/lib/supabase.ts` 的 `toDb*` 與 `fromDb*` 轉換器中雙向對應，並提供向下相容的 Fallback 預設值。
-- **Optimistic UI + Realtime 雙向同步**：前端狀態修改透過封裝後的 `setCharacters`、`setItems`、`setPermissions` 先行更新本地 State（計算 Diff 後非同步 `upsert`/`delete` 至 Supabase），並仰賴 `postgres_changes` WebSocket 頻道接收他人變更。
+- **Optimistic UI + Realtime 雙向同步**：前端狀態修改透過封裝後的 `setCharacters`、`setItems`、`setPermissions`、`setCampChestCurrency` 先行更新本地 State（計算 Diff 後非同步同步至 Supabase），並仰賴 `postgres_changes` WebSocket 頻道接收他人變更。
 - **單機與訪客模式退避 (Graceful Fallback)**：當 `!supabase`（未設定環境變數）、`isGuest` 或 `campaignId === 'default'` 時，所有功能需優雅退回本地端狀態操作，不可直接崩潰。
 
 #### 3. 前端架構、TypeScript 與 UI 風格規範

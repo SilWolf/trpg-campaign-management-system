@@ -43,8 +43,9 @@ supabase db push --linked
 
 ## 前端整合與邀請碼
 
-- 戰役大廳以 Supabase `functions.invoke('create-campaign', { body: { name, template: 'sample' } })` 建立示範戰役，使用 RPC 回傳的新戰役 ID 導向頁面；錯誤會顯示給使用者，不會導向半成品。
-- 空白戰役呼叫同一 Edge Function 並傳入 `template: 'blank'`。此選項已由伺服器端支援；若大廳提供空白選項，仍須保留此 payload 契約。
+- 戰役大廳提供範例／空白選擇，使用 Supabase `functions.invoke('create-campaign', ...)` 傳送對應 template 與 seed，並以 RPC 回傳的新戰役 ID 導向頁面；錯誤會顯示給使用者，不會導向半成品。
+- 邀請加入使用 `join_campaign_by_invite_code` RPC，不直接讀取受 RLS 保護的 campaign 邀請碼。
+- 遠端空白集合不會被前端範例資料回填；離線、訪客及 `default` 相容模式仍採本地資料退避。
 - 因 campaign row 只允許成員／DM 讀取，邀請加入必須呼叫 `join_campaign_by_invite_code`，不可再用前端直接查詢 `campaigns.invite_code` 後寫入成員表。
 - 既有資料表與 `campaigns` RLS 還需依照專案 ACL 規則，持續驗證角色、物品和 `camp_chest_currency` 的寫入權限；Realtime 僅提供資料同步，不取代授權。
 
@@ -52,8 +53,9 @@ supabase db push --linked
 
 - `camp-chest` 是每個戰役都有的虛擬公共儲存庫，不屬於角色或使用者，沒有私人背包／錢包；不建立 `characters` 列、不建立範本表。
 - 公共貨幣存於該戰役的 `campaigns.camp_chest_currency`；營地箱物品使用 `owner_id = 'camp-chest'`，且每列都必須帶正確的 `campaign_id`。
-- 前端所有營地箱物品查詢、排序、建立、更新、刪除、移轉及負重計算均須帶當前 `campaign_id`。跨戰役相同 owner ID 不可互通。
-- UI 保留既有 camp-chest 專用外觀與公共庫存互動：角色能存取物品及公共貨幣；不顯示角色設定、刪除、擁有人或私人欄位。公共錢包改讀寫 campaign row，並透過 Realtime 更新畫面。
+- 前端所有營地箱物品查詢、建立、更新、刪除及移轉均由同步 Hook 加上當前 `campaign_id`；Realtime 同樣以 campaign 篩選。跨戰役相同 owner ID 不可互通。
+- UI 保留 camp-chest 專用外觀與公共庫存互動：營地箱是虛擬角色，不寫入 `characters`，不顯示角色設定、刪除、擁有人或私人欄位。公共錢包改讀寫 campaign row，並透過 Realtime 更新畫面。
+- 角色↔營地箱的貨幣移轉目前是前端對角色列與 campaign 列分開寫入，尚未提供跨列資料庫交易；部署前需在隔離環境驗證競爭情境，必要時新增轉帳 RPC。
 
 ## 手動驗收清單
 

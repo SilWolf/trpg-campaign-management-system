@@ -89,6 +89,56 @@ test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', as
 		.toBe(true);
 });
 
+test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列', async ({
+	page,
+}) => {
+	const { campaignUpdates, requests } = await mockSupabase(page, {
+		campaignInventoryRole: 'dm',
+		blankCampaign: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(inventoryUrl);
+
+	await expect(page.getByTestId('campaign-sync-status')).toHaveText(
+		'Supabase 即時同步中',
+	);
+	await expect(
+		page.getByTestId('inventory-character-inventory-character'),
+	).toHaveCount(0);
+	await expect(
+		page.getByTestId('inventory-character-camp-chest'),
+	).toHaveAttribute('aria-pressed', 'true');
+	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toHaveCount(
+		0,
+	);
+
+	await page.getByTestId('inventory-currency-open').last().click();
+	await page.getByTestId('currency-add-gp-1').click();
+	await expect(page.getByTestId('currency-balance-gp')).toHaveText('1');
+	expect(
+		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
+	).toBe(false);
+	expect(
+		requests.some((request) =>
+			request.startsWith('POST /rest/v1/inventory_items'),
+		),
+	).toBe(false);
+	await expect
+		.poll(() =>
+			requests.some(
+				(request) =>
+					request.startsWith('PATCH /rest/v1/campaigns') &&
+					request.includes('id=eq.inventory-campaign'),
+			),
+		)
+		.toBe(true);
+	await expect.poll(() => campaignUpdates).toEqual([
+		{
+			camp_chest_currency: { pp: 0, gp: 1, ep: 0, sp: 0, cp: 0 },
+		},
+	]);
+});
+
 test('Campaign 背包頁在 375px 窄螢幕可用且沒有水平溢位', async ({ page }) => {
 	await page.setViewportSize({ width: 375, height: 812 });
 	await mockSupabase(page, { campaignInventoryRole: 'player' });

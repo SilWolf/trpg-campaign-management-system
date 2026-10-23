@@ -2,12 +2,15 @@ import {
 	useState,
 	useEffect,
 	useCallback,
+	useMemo,
+	useRef,
 	type SetStateAction,
 	type Dispatch,
 } from 'react';
 import {
 	supabase,
-	isSupabaseConfigured,
+	toDbCampaignCurrency,
+	fromDbCampaignCurrency,
 	toDbItem,
 	fromDbItem,
 	toDbCharacter,
@@ -17,8 +20,23 @@ import {
 	type DbInventoryItem,
 	type DbCharacter,
 	type DbCharacterPermission,
+	type CampaignCurrency,
+	type DbCampaignCurrency,
 } from '@/lib/supabase';
-import type { Character, InventoryItem, CharacterPermission } from '@/types';
+import {
+	CAMP_CHEST_ID,
+	type Character,
+	type CharacterPermission,
+	type InventoryItem,
+} from '@/types';
+
+const EMPTY_CURRENCY: CampaignCurrency = {
+	pp: 0,
+	gp: 0,
+	ep: 0,
+	sp: 0,
+	cp: 0,
+};
 
 export type SyncStatus = 'offline' | 'connecting' | 'synced' | 'error';
 
@@ -26,30 +44,70 @@ export function useCampaignSync(
 	campaignId: string,
 	initialCharacters: Character[],
 	initialItems: InventoryItem[],
+	remoteEnabled: boolean,
 ) {
+	const isRemoteCampaign = Boolean(supabase && remoteEnabled);
+	const localCharacters = useMemo(
+		() =>
+			initialCharacters.map((character) => ({
+				...character,
+				campaignId,
+			})),
+		[campaignId, initialCharacters],
+	);
+	const localItems = useMemo(
+		() => initialItems.map((item) => ({ ...item })),
+		[initialItems],
+	);
+	const currencyWriteQueue = useRef<Promise<void>>(Promise.resolve());
+	const lastQueuedCurrency = useRef<CampaignCurrency | null>(null);
 	const [characters, setCharactersState] =
-		useState<Character[]>(initialCharacters);
-	const [items, setItemsState] = useState<InventoryItem[]>(initialItems);
+		useState<Character[]>(isRemoteCampaign ? [] : localCharacters);
+	const [items, setItemsState] = useState<InventoryItem[]>(
+		isRemoteCampaign ? [] : localItems,
+	);
+	const [campChestCurrency, setCampChestCurrencyState] =
+		useState<CampaignCurrency>(
+			isRemoteCampaign
+				? EMPTY_CURRENCY
+				: (initialCharacters.find((character) => character.id === CAMP_CHEST_ID)
+						?.currencies ?? EMPTY_CURRENCY),
+		);
 	const [permissions, setPermissionsState] = useState<CharacterPermission[]>(
 		[],
 	);
 	const [syncStatus, setSyncStatus] = useState<SyncStatus>(
-		isSupabaseConfigured ? 'connecting' : 'offline',
+		isRemoteCampaign ? 'connecting' : 'offline',
 	);
 
 	// 1. 初始化資料拉取
 	useEffect(() => {
-		if (!supabase || !campaignId) return;
+		if (!supabase || !isRemoteCampaign || !campaignId) return;
 		let isMounted = true;
+		lastQueuedCurrency.current = null;
+		// 切換戰役時先清掉上一個戰役的畫面資料，避免跨戰役短暫殘留。
+		/* eslint-disable react-hooks/set-state-in-effect */
+		setCharactersState([]);
+		setItemsState([]);
+		setCampChestCurrencyState(EMPTY_CURRENCY);
+		setPermissionsState([]);
+		setSyncStatus('connecting');
+		/* eslint-enable react-hooks/set-state-in-effect */
 
 		async function initData() {
 			if (!supabase) return;
 			try {
 				const [
+					{ data: campaignRow, error: campaignErr },
 					{ data: charRows, error: charErr },
 					{ data: itemRows, error: itemErr },
 					{ data: permRows, error: permErr },
 				] = await Promise.all([
+					supabase
+						.from('campaigns')
+						.select('camp_chest_currency')
+						.eq('id', campaignId)
+						.single(),
 					supabase.from('characters').select('*').eq('campaign_id', campaignId),
 					supabase
 						.from('inventory_items')
@@ -61,38 +119,22 @@ export function useCampaignSync(
 						.eq('campaign_id', campaignId),
 				]);
 
-				if (charErr || itemErr || permErr) throw charErr || itemErr || permErr;
-
-				if (!charRows || charRows.length === 0) {
-					const charsWithCampaign = initialCharacters.map((c) => ({
-						...toDbCharacter(c),
-						campaign_id: campaignId,
-					}));
-					await supabase.from('characters').upsert(charsWithCampaign);
-					if (isMounted) setCharactersState(initialCharacters);
-				} else {
-					const orderMap = new Map(
-						initialCharacters.map((c, idx) => [c.id, idx]),
-					);
-					const loadedChars = (charRows as DbCharacter[])
-						.map(fromDbCharacter)
-						.sort(
-							(a, b) => (orderMap.get(a.id) ?? 99) - (orderMap.get(b.id) ?? 99),
-						);
-					if (isMounted) setCharactersState(loadedChars);
+				if (campaignErr || charErr || itemErr || permErr) {
+					throw campaignErr || charErr || itemErr || permErr;
 				}
 
-				if (!itemRows || itemRows.length === 0) {
-					const itemsWithCampaign = initialItems.map((i) => ({
-						...toDbItem(i),
-						campaign_id: campaignId,
-					}));
-					await supabase.from('inventory_items').upsert(itemsWithCampaign);
-					if (isMounted) setItemsState(initialItems);
-				} else {
-					if (isMounted) {
-						setItemsState((itemRows as DbInventoryItem[]).map(fromDbItem));
-					}
+				const loadedChars = ((charRows ?? []) as DbCharacter[])
+					.filter((row) => row.id !== CAMP_CHEST_ID)
+					.map(fromDbCharacter);
+				const loadedItems = ((itemRows ?? []) as DbInventoryItem[]).map(
+					fromDbItem,
+				);
+				const loadedCurrency = fromDbCampaignCurrency(campaignRow);
+				if (isMounted) {
+					setCharactersState(loadedChars);
+					setItemsState(loadedItems);
+					lastQueuedCurrency.current = loadedCurrency;
+					setCampChestCurrencyState(loadedCurrency);
 				}
 
 				if (permRows && isMounted) {
@@ -108,7 +150,7 @@ export function useCampaignSync(
 			}
 		}
 
-		initData();
+		void initData();
 
 		// 2. 訂閱 Realtime
 		const channel = supabase
@@ -129,6 +171,7 @@ export function useCampaignSync(
 						);
 					} else {
 						const updatedChar = fromDbCharacter(payload.new as DbCharacter);
+						if (updatedChar.id === CAMP_CHEST_ID) return;
 						setCharactersState((prev) => {
 							const exists = prev.some((c) => c.id === updatedChar.id);
 							return exists
@@ -194,13 +237,55 @@ export function useCampaignSync(
 					}
 				},
 			)
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'campaigns',
+					filter: `id=eq.${campaignId}`,
+				},
+				(payload) => {
+					const campaignRow = payload.new as DbCampaignCurrency;
+					if (campaignRow.camp_chest_currency) {
+						const nextCurrency = fromDbCampaignCurrency(campaignRow);
+						lastQueuedCurrency.current = nextCurrency;
+						setCampChestCurrencyState(nextCurrency);
+					}
+				},
+			)
 			.subscribe();
 
 		return () => {
 			isMounted = false;
 			supabase?.removeChannel(channel);
 		};
-	}, [campaignId, initialCharacters, initialItems]);
+	}, [campaignId, isRemoteCampaign, initialCharacters, initialItems]);
+
+	useEffect(() => {
+		if (!supabase || !isRemoteCampaign || !campaignId) return;
+		const previous = lastQueuedCurrency.current;
+		if (!previous || JSON.stringify(previous) === JSON.stringify(campChestCurrency)) {
+			return;
+		}
+
+		lastQueuedCurrency.current = campChestCurrency;
+		const client = supabase;
+		currencyWriteQueue.current = currencyWriteQueue.current
+			.then(async () => {
+				const { error } = await client
+					.from('campaigns')
+					.update(toDbCampaignCurrency(campChestCurrency))
+					.eq('id', campaignId)
+					.select('id')
+					.single();
+				if (error) throw error;
+			})
+			.catch((error: unknown) => {
+				console.error('同步營地儲物箱錢包失敗：', error);
+				setSyncStatus('error');
+			});
+	}, [campChestCurrency, campaignId, isRemoteCampaign]);
 
 	// 封裝 setCharacters
 	const setCharacters: Dispatch<SetStateAction<Character[]>> = useCallback(
@@ -208,13 +293,17 @@ export function useCampaignSync(
 			setCharactersState((prev) => {
 				const next = typeof updater === 'function' ? updater(prev) : updater;
 
-				if (supabase && campaignId) {
-					const nextIds = new Set(next.map((c) => c.id));
+				const persistedNext = isRemoteCampaign
+					? next.filter((character) => character.id !== CAMP_CHEST_ID)
+					: next;
+
+				if (supabase && isRemoteCampaign && campaignId) {
+					const nextIds = new Set(persistedNext.map((c) => c.id));
 					const deletedIds = prev
 						.filter((c) => !nextIds.has(c.id))
 						.map((c) => c.id);
 
-					const changedChars = next.filter((char) => {
+					const changedChars = persistedNext.filter((char) => {
 						const old = prev.find((p) => p.id === char.id);
 						return !old || JSON.stringify(old) !== JSON.stringify(char);
 					});
@@ -225,23 +314,30 @@ export function useCampaignSync(
 								...toDbCharacter(char),
 								campaign_id: campaignId,
 							}));
-							await supabase.from('characters').upsert(payload);
+							const { error } = await supabase
+								.from('characters')
+								.upsert(payload);
+							if (error) throw error;
 						}
 
 						if (deletedIds.length > 0) {
-							await supabase
+							const { error } = await supabase
 								.from('characters')
 								.delete()
 								.in('id', deletedIds)
 								.eq('campaign_id', campaignId);
+							if (error) throw error;
 						}
-					})();
+					})().catch((error: unknown) => {
+						console.error('同步戰役角色失敗：', error);
+						setSyncStatus('error');
+					});
 				}
 
-				return next;
+				return persistedNext;
 			});
 		},
-		[campaignId],
+		[campaignId, isRemoteCampaign],
 	);
 
 	// 封裝 setItems
@@ -249,7 +345,8 @@ export function useCampaignSync(
 		(updater: SetStateAction<InventoryItem[]>) => {
 			setItemsState((prev) => {
 				const next = typeof updater === 'function' ? updater(prev) : updater;
-				if (supabase && campaignId) {
+				if (supabase && isRemoteCampaign && campaignId) {
+					const client = supabase;
 					const nextIds = new Set(next.map((i) => i.id));
 					const deletedIds = prev
 						.filter((p) => !nextIds.has(p.id))
@@ -260,49 +357,76 @@ export function useCampaignSync(
 						return !old || JSON.stringify(old) !== JSON.stringify(item);
 					});
 
-					if (deletedIds.length > 0) {
-						supabase
-							.from('inventory_items')
-							.delete()
-							.in('id', deletedIds)
-							.eq('campaign_id', campaignId)
-							.then();
-					}
+					const syncItems = async () => {
+						if (deletedIds.length > 0) {
+							const { error } = await client
+								.from('inventory_items')
+								.delete()
+								.in('id', deletedIds)
+								.eq('campaign_id', campaignId);
+							if (error) throw error;
+						}
 
-					if (upserted.length > 0) {
-						const payload = upserted.map((item) => ({
-							...toDbItem(item),
-							campaign_id: campaignId,
-						}));
-						supabase.from('inventory_items').upsert(payload).then();
-					}
+						if (upserted.length > 0) {
+							const payload = upserted.map((item) => ({
+								...toDbItem(
+									item.ownerId === CAMP_CHEST_ID
+										? { ...item, isPrivate: false }
+										: item,
+								),
+								campaign_id: campaignId,
+							}));
+							const { error } = await client
+								.from('inventory_items')
+								.upsert(payload);
+							if (error) throw error;
+						}
+					};
+					void syncItems().catch((error: unknown) => {
+						console.error('同步戰役物品失敗：', error);
+						setSyncStatus('error');
+					});
 				}
 				return next;
 			});
 		},
-		[campaignId],
+		[campaignId, isRemoteCampaign],
 	);
+
+	const setCampChestCurrency: Dispatch<SetStateAction<CampaignCurrency>> =
+		useCallback((updater) => {
+			setCampChestCurrencyState(updater);
+		}, []);
 
 	// 封裝 setPermissions
 	const setPermissions = useCallback(
 		(updater: SetStateAction<CharacterPermission[]>) => {
 			setPermissionsState((prev) => {
 				const next = typeof updater === 'function' ? updater(prev) : updater;
-				if (supabase && campaignId) {
+				if (supabase && isRemoteCampaign && campaignId) {
 					const changed = next.filter((p) => {
 						const old = prev.find((o) => o.id === p.id);
 						return !old || JSON.stringify(old) !== JSON.stringify(p);
 					});
 
 					if (changed.length > 0) {
+						const client = supabase;
 						const payload = changed.map((p) => toDbPermission(p));
-						supabase.from('character_permissions').upsert(payload).then();
+						void (async () => {
+							const { error } = await client
+								.from('character_permissions')
+								.upsert(payload);
+							if (error) throw error;
+						})().catch((error: unknown) => {
+								console.error('同步角色權限失敗：', error);
+								setSyncStatus('error');
+							});
 					}
 				}
 				return next;
 			});
 		},
-		[campaignId],
+		[campaignId, isRemoteCampaign],
 	);
 
 	return {
@@ -312,6 +436,8 @@ export function useCampaignSync(
 		setItems,
 		permissions,
 		setPermissions,
+		campChestCurrency,
+		setCampChestCurrency,
 		syncStatus,
 	};
 }

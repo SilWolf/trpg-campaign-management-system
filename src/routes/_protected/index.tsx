@@ -14,13 +14,14 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, toDbItem } from '@/lib/supabase';
 import { INITIAL_CHARACTERS, INITIAL_ITEMS } from '@/data';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Select } from '@/components/ui';
 
 export const Route = createFileRoute('/_protected/')({
 	component: CampaignLobbyPage,
 });
 
 type LobbyDialog = 'create' | 'join' | null;
+type CampaignTemplate = 'sample' | 'blank';
 
 interface Campaign {
 	id: string;
@@ -35,6 +36,8 @@ function CampaignLobbyPage() {
 	const { user, isGuest, signOut } = useAuth();
 	const [dialog, setDialog] = useState<LobbyDialog>(null);
 	const [campaignName, setCampaignName] = useState('');
+	const [campaignTemplate, setCampaignTemplate] =
+		useState<CampaignTemplate>('sample');
 	const [inviteCode, setInviteCode] = useState('');
 	const [notice, setNotice] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -105,28 +108,47 @@ function CampaignLobbyPage() {
 			if (supabase && !isGuest) {
 				if (!user) throw new Error('登入狀態無效，請重新登入後再建立戰役。');
 
-				const seed = {
-					characters: INITIAL_CHARACTERS.filter(
-						(character) => character.id !== 'camp-chest',
-					).map((character) => ({
-						id: character.id,
-						name: character.name,
-						title: character.title,
-						avatar: character.avatar,
-						str: character.str,
-						currencies: character.currencies,
-						private_currencies: character.privateCurrencies,
-					})),
-					items: INITIAL_ITEMS.map(toDbItem),
-					camp_chest_currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-				};
+				const seed =
+					campaignTemplate === 'sample'
+						? {
+								characters: INITIAL_CHARACTERS.filter(
+									(character) => character.id !== 'camp-chest',
+								).map((character) => ({
+									id: character.id,
+									name: character.name,
+									title: character.title,
+									avatar: character.avatar,
+									str: character.str,
+									currencies: character.currencies,
+									private_currencies: character.privateCurrencies,
+								})),
+								items: INITIAL_ITEMS.map(toDbItem),
+								camp_chest_currency: {
+									pp: 0,
+									gp: 0,
+									ep: 0,
+									sp: 0,
+									cp: 0,
+								},
+							}
+						: {
+								characters: [],
+								items: [],
+								camp_chest_currency: {
+									pp: 0,
+									gp: 0,
+									ep: 0,
+									sp: 0,
+									cp: 0,
+								},
+							};
 				const { data, error } = await supabase.functions.invoke<{
 					campaign_id: string;
 					invite_code: string;
 				}>('create-campaign', {
 					body: {
 						name: campaignName.trim(),
-						template: 'sample',
+						template: campaignTemplate,
 						seed,
 					},
 				});
@@ -305,6 +327,7 @@ function CampaignLobbyPage() {
 							variant='secondary'
 							onClick={() => {
 								setDialog('create');
+								setCampaignTemplate('sample');
 								setNotice(null);
 								setErrorMessage(null);
 							}}
@@ -452,8 +475,25 @@ function CampaignLobbyPage() {
 								onChange={(event) => setCampaignName(event.target.value)}
 								placeholder='例如：博德之門：血戰風雲'
 							/>
+							{supabase && user && !isGuest && (
+								<Select
+									data-testid='lobby-campaign-template'
+									label='戰役初始內容'
+									value={campaignTemplate}
+									onChange={(event) =>
+										setCampaignTemplate(
+											event.target.value === 'blank' ? 'blank' : 'sample',
+										)
+									}
+								>
+									<option value='sample'>範例戰役（3 名角色、9 件物品）</option>
+									<option value='blank'>空白戰役（不建立角色與物品）</option>
+								</Select>
+							)}
 							<p className='text-[11px] leading-relaxed text-stone-500'>
-								建立後將建立獨立戰役，並載入三名預設冒險者與範例物品。
+								{campaignTemplate === 'sample'
+									? '建立獨立戰役，載入三名範例冒險者與九件物品；營地儲物箱會獨立保存。'
+									: '建立獨立空白戰役；營地儲物箱仍可使用，角色與物品可稍後新增。'}
 							</p>
 							<div className='flex justify-end gap-2 pt-2'>
 								<Button

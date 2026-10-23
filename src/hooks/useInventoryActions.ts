@@ -4,7 +4,6 @@ import {
 	type FormEvent,
 	type SetStateAction,
 } from 'react';
-import { CAMP_CHEST_DEFAULT } from '@/data';
 import {
 	CAMP_CHEST_ID,
 	canStackItems,
@@ -45,6 +44,8 @@ const DEFAULT_FORM: HomebrewForm = {
 interface UseInventoryActionsProps {
 	characters: Character[];
 	setCharacters: Dispatch<SetStateAction<Character[]>>;
+	campChestCurrency: Record<CurrencyType, number>;
+	setCampChestCurrency: Dispatch<SetStateAction<Record<CurrencyType, number>>>;
 	items: InventoryItem[];
 	setItems: Dispatch<SetStateAction<InventoryItem[]>>;
 	activeCharId: string;
@@ -62,6 +63,8 @@ interface UseInventoryActionsProps {
 export function useInventoryActions({
 	characters,
 	setCharacters,
+	campChestCurrency,
+	setCampChestCurrency,
 	items,
 	setItems,
 	activeCharId,
@@ -328,19 +331,19 @@ export function useInventoryActions({
 		delta: number,
 		walletType: 'public' | 'private' = 'public',
 	) => {
-		setCharacters((prev) => {
-			const exists = prev.some((c) => c.id === activeCharId);
-			const list =
-				!exists && activeCharId === CAMP_CHEST_ID
-					? [...prev, CAMP_CHEST_DEFAULT]
-					: prev;
+		if (activeCharId === CAMP_CHEST_ID) {
+			setCampChestCurrency((wallet) => ({
+				...wallet,
+				[coinType]: Math.max(0, (wallet[coinType] ?? 0) + delta),
+			}));
+			return;
+		}
 
-			return list.map((char) => {
+		setCharacters((prev) =>
+			prev.map((char) => {
 				if (char.id !== activeCharId) return char;
 				const field =
-					walletType === 'private' && char.id !== CAMP_CHEST_ID
-						? 'privateCurrencies'
-						: 'currencies';
+					walletType === 'private' ? 'privateCurrencies' : 'currencies';
 				const currentWallet = char[field] || {
 					pp: 0,
 					gp: 0,
@@ -353,37 +356,42 @@ export function useInventoryActions({
 					...char,
 					[field]: { ...currentWallet, [coinType]: nextVal },
 				};
-			});
-		});
+			}),
+		);
 	};
 
 	const consolidateCoinsToGold = (
 		walletType: 'public' | 'private' = 'public',
 	) => {
-		setCharacters((prev) => {
-			const exists = prev.some((c) => c.id === activeCharId);
-			const list =
-				!exists && activeCharId === CAMP_CHEST_ID
-					? [...prev, CAMP_CHEST_DEFAULT]
-					: prev;
-
-			return list.map((char) => {
-				if (char.id !== activeCharId) return char;
-				const field =
-					walletType === 'private' && char.id !== CAMP_CHEST_ID
-						? 'privateCurrencies'
-						: 'currencies';
-				const wallet = char[field] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
-				const pp = wallet.pp;
-				let { gp, ep, sp, cp } = wallet;
-				sp += Math.floor(cp / 10);
-				cp = cp % 10;
-				gp += Math.floor(sp / 10) + Math.floor(ep / 2);
-				sp = sp % 10;
-				ep = ep % 2;
-				return { ...char, [field]: { pp, gp, ep, sp, cp } };
-			});
-		});
+		const convertWallet = (wallet: Record<CurrencyType, number>) => {
+			const pp = wallet.pp;
+			let { gp, ep, sp, cp } = wallet;
+			sp += Math.floor(cp / 10);
+			cp = cp % 10;
+			gp += Math.floor(sp / 10) + Math.floor(ep / 2);
+			sp = sp % 10;
+			ep = ep % 2;
+			return { ...wallet, pp, gp, ep, sp, cp };
+		};
+		if (activeCharId === CAMP_CHEST_ID) {
+			setCampChestCurrency(convertWallet(campChestCurrency));
+		} else {
+			setCharacters((prev) =>
+				prev.map((char) => {
+					if (char.id !== activeCharId) return char;
+					const field =
+						walletType === 'private' ? 'privateCurrencies' : 'currencies';
+					const wallet = char[field] || {
+						pp: 0,
+						gp: 0,
+						ep: 0,
+						sp: 0,
+						cp: 0,
+					};
+					return { ...char, [field]: convertWallet(wallet) };
+				}),
+			);
+		}
 		showToast('🪙 已自動將銅幣、銀幣與電金幣換算為金幣 (GP)！');
 	};
 
@@ -442,7 +450,11 @@ export function useInventoryActions({
 			fromWallet === 'private' && activeCharId !== CAMP_CHEST_ID
 				? 'privateCurrencies'
 				: 'currencies';
-		const available = activeCharacter[fromField]?.[coinType] ?? 0;
+		const sourceWallet =
+			activeCharId === CAMP_CHEST_ID
+				? campChestCurrency
+				: activeCharacter[fromField];
+		const available = sourceWallet?.[coinType] ?? 0;
 		const actualAmount = Math.min(available, amount);
 
 		if (actualAmount <= 0) {
@@ -455,34 +467,80 @@ export function useInventoryActions({
 				? '🏕️ 營地儲物箱'
 				: characters.find((c) => c.id === targetCharId)?.name;
 
-		setCharacters((prev) => {
-			const list = [...prev];
-			if (!list.some((c) => c.id === CAMP_CHEST_ID)) {
-				list.push(CAMP_CHEST_DEFAULT);
-			}
-			return list.map((char) => {
-				if (char.id === activeCharId) {
-					const src = char[fromField] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+		if (activeCharId === CAMP_CHEST_ID) {
+			setCampChestCurrency((wallet) => ({
+				...wallet,
+				[coinType]: Math.max(0, wallet[coinType] - actualAmount),
+			}));
+			setCharacters((prev) =>
+				prev.map((char) =>
+					char.id === targetCharId
+						? {
+								...char,
+								currencies: {
+									...char.currencies,
+									[coinType]: (char.currencies[coinType] ?? 0) + actualAmount,
+								},
+							}
+						: char,
+				),
+			);
+		} else if (targetCharId === CAMP_CHEST_ID) {
+			setCharacters((prev) =>
+				prev.map((char) => {
+					if (char.id !== activeCharId) return char;
+					const source = char[fromField] || {
+						pp: 0,
+						gp: 0,
+						ep: 0,
+						sp: 0,
+						cp: 0,
+					};
 					return {
 						...char,
 						[fromField]: {
-							...src,
-							[coinType]: (src[coinType] ?? 0) - actualAmount,
+							...source,
+							[coinType]: Math.max(0, source[coinType] - actualAmount),
 						},
 					};
-				}
-				if (char.id === targetCharId) {
-					return {
-						...char,
-						currencies: {
-							...char.currencies,
-							[coinType]: (char.currencies[coinType] ?? 0) + actualAmount,
-						},
-					};
-				}
-				return char;
-			});
-		});
+				}),
+			);
+			setCampChestCurrency((wallet) => ({
+				...wallet,
+				[coinType]: wallet[coinType] + actualAmount,
+			}));
+		} else {
+			setCharacters((prev) =>
+				prev.map((char) => {
+					if (char.id === activeCharId) {
+						const source = char[fromField] || {
+							pp: 0,
+							gp: 0,
+							ep: 0,
+							sp: 0,
+							cp: 0,
+						};
+						return {
+							...char,
+							[fromField]: {
+								...source,
+								[coinType]: Math.max(0, source[coinType] - actualAmount),
+							},
+						};
+					}
+					if (char.id === targetCharId) {
+						return {
+							...char,
+							currencies: {
+								...char.currencies,
+								[coinType]: (char.currencies[coinType] ?? 0) + actualAmount,
+							},
+						};
+					}
+					return char;
+				}),
+			);
+		}
 
 		showToast(
 			`🪙 已將 ${actualAmount} ${coinType.toUpperCase()} 轉入 ${targetName} 的公開錢包！`,
@@ -491,10 +549,12 @@ export function useInventoryActions({
 
 	const splitCampCoinToParty = (coinType: CurrencyType) => {
 		if (activeCharId !== CAMP_CHEST_ID) return;
-		const partyMembers = characters.filter((c) => c.id !== CAMP_CHEST_ID);
+		const partyMembers = characters.filter(
+			(character) => character.id !== CAMP_CHEST_ID,
+		);
 		if (partyMembers.length === 0) return;
 
-		const total = activeCharacter.currencies[coinType];
+		const total = campChestCurrency[coinType];
 		const eachShare = Math.floor(total / partyMembers.length);
 		const remainder = total % partyMembers.length;
 
@@ -505,14 +565,10 @@ export function useInventoryActions({
 			return;
 		}
 
+		setCampChestCurrency((wallet) => ({ ...wallet, [coinType]: remainder }));
 		setCharacters((prev) =>
 			prev.map((char) => {
-				if (char.id === CAMP_CHEST_ID) {
-					return {
-						...char,
-						currencies: { ...char.currencies, [coinType]: remainder },
-					};
-				}
+				if (char.id === CAMP_CHEST_ID) return char;
 				return {
 					...char,
 					currencies: {
@@ -541,65 +597,26 @@ export function useInventoryActions({
 
 	const handleDeleteCharacter = (charId: string) => {
 		if (charId === CAMP_CHEST_ID) return;
-		const realChars = characters.filter((c) => c.id !== CAMP_CHEST_ID);
-		if (realChars.length <= 1) {
+		const realCharacters = characters.filter(
+			(character) => character.id !== CAMP_CHEST_ID,
+		);
+		if (realCharacters.length <= 1) {
 			showToast('⚠️ 戰役中至少需保留一名冒險者角色！');
 			return;
 		}
 		const targetChar = characters.find((c) => c.id === charId);
 		if (!targetChar) return;
 
-		setCharacters((prev) => {
-			const withoutTarget = prev.filter((c) => c.id !== charId);
-			const hasCampChest = withoutTarget.some((c) => c.id === CAMP_CHEST_ID);
-			const pub = targetChar.currencies || {
-				pp: 0,
-				gp: 0,
-				ep: 0,
-				sp: 0,
-				cp: 0,
-			};
-			const priv = targetChar.privateCurrencies || {
-				pp: 0,
-				gp: 0,
-				ep: 0,
-				sp: 0,
-				cp: 0,
-			};
-			const totalCoins = {
-				pp: pub.pp + priv.pp,
-				gp: pub.gp + priv.gp,
-				ep: pub.ep + priv.ep,
-				sp: pub.sp + priv.sp,
-				cp: pub.cp + priv.cp,
-			};
-
-			if (hasCampChest) {
-				return withoutTarget.map((c) =>
-					c.id === CAMP_CHEST_ID
-						? {
-								...c,
-								currencies: {
-									pp: c.currencies.pp + totalCoins.pp,
-									gp: c.currencies.gp + totalCoins.gp,
-									ep: c.currencies.ep + totalCoins.ep,
-									sp: c.currencies.sp + totalCoins.sp,
-									cp: c.currencies.cp + totalCoins.cp,
-								},
-							}
-						: c,
-				);
-			}
-			return [
-				...withoutTarget,
-				{
-					...CAMP_CHEST_DEFAULT,
-					campaignId: targetChar.campaignId,
-					userId: 'dm',
-					currencies: totalCoins,
-				},
-			];
-		});
+		const publicWallet = targetChar.currencies;
+		const privateWallet = targetChar.privateCurrencies;
+		setCampChestCurrency((wallet) => ({
+			pp: wallet.pp + publicWallet.pp + privateWallet.pp,
+			gp: wallet.gp + publicWallet.gp + privateWallet.gp,
+			ep: wallet.ep + publicWallet.ep + privateWallet.ep,
+			sp: wallet.sp + publicWallet.sp + privateWallet.sp,
+			cp: wallet.cp + publicWallet.cp + privateWallet.cp,
+		}));
+		setCharacters((prev) => prev.filter((character) => character.id !== charId));
 
 		setItems((prev) => {
 			const others = prev.filter(
@@ -629,7 +646,8 @@ export function useInventoryActions({
 		});
 
 		const nextCharId =
-			realChars.find((c) => c.id !== charId)?.id || CAMP_CHEST_ID;
+			realCharacters.find((character) => character.id !== charId)?.id ||
+			CAMP_CHEST_ID;
 		if (activeCharId === charId) setActiveCharId(nextCharId);
 		if (viewerCharId === charId) setViewerCharId(nextCharId);
 		showToast(
