@@ -27,3 +27,4 @@ blob-report/
 *.sw?
 repomix-output.xml
 external/*
+outputs/*
