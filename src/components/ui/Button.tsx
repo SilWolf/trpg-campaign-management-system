@@ -1,15 +1,28 @@
-import { forwardRef } from 'react';
+import { cloneElement, forwardRef, isValidElement } from 'react';
+import type { ReactElement } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from './utils';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonStyleProps {
 	variant?: ButtonVariant;
 	size?: ButtonSize;
-	loading?: boolean;
+	className?: string;
 }
+
+export type ButtonProps = ButtonStyleProps &
+	(
+		| ({
+				asChild?: false;
+				loading?: boolean;
+		  } & ButtonHTMLAttributes<HTMLButtonElement>)
+		| {
+				asChild: true;
+				children: ReactElement<{ className?: string }>;
+		  }
+	);
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
@@ -27,46 +40,66 @@ const sizeClasses: Record<ButtonSize, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-	(
-		{
-			children,
-			className,
-			disabled,
-			loading = false,
-			size = 'md',
-			type = 'button',
-			variant = 'primary',
-			...props
-		},
-		ref,
-	) => (
-		<button
-			{...props}
-			ref={ref}
-			type={type}
-			disabled={disabled || loading}
-			aria-busy={loading || undefined}
-			className={cn(
+	(props, ref) => {
+		const getButtonClassName = (
+			variant: ButtonVariant = 'primary',
+			size: ButtonSize = 'md',
+			className?: string,
+		) =>
+			cn(
 				'inline-flex items-center justify-center gap-2 rounded-control font-semibold transition-colors',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-focus focus-visible:ring-offset-2 focus-visible:ring-offset-stone-950',
 				'disabled:pointer-events-none disabled:opacity-50',
 				variantClasses[variant],
 				sizeClasses[size],
 				className,
-			)}
-		>
-			{loading && (
-				<>
-					<span
-						aria-hidden='true'
-						className='size-4 animate-spin rounded-full border-2 border-current border-r-transparent'
-					/>
-					<span className='sr-only'>處理中</span>
-				</>
-			)}
-			{children}
-		</button>
-	),
+			);
+
+		if (props.asChild) {
+			if (!isValidElement<{ className?: string }>(props.children)) {
+				throw new TypeError('Button asChild requires a single element child.');
+			}
+
+			return cloneElement(props.children, {
+				className: cn(
+					getButtonClassName(props.variant, props.size, props.className),
+					props.children.props.className,
+				),
+			});
+		}
+
+		const {
+			children,
+			className,
+			disabled,
+			loading = false,
+			size,
+			variant,
+			...buttonProps
+		} = props;
+
+		return (
+			<button
+				{...buttonProps}
+				ref={ref}
+				type={buttonProps.type ?? 'button'}
+				disabled={disabled || loading}
+				aria-busy={loading || undefined}
+				className={getButtonClassName(variant, size, className)}
+			>
+				{loading && (
+					<>
+						<span
+							aria-hidden='true'
+							className='size-4 animate-spin rounded-full border-2 border-current border-r-transparent'
+						/>
+						<span className='sr-only'>處理中</span>
+					</>
+				)}
+				{children}
+			</button>
+		);
+	},
 );
 
 Button.displayName = 'Button';

@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route。 */
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
 	LogOut,
@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, toDbCharacter, toDbItem } from '@/lib/supabase';
 import { INITIAL_CHARACTERS, INITIAL_ITEMS } from '@/data';
+import { Button, Input } from '@/components/ui';
 
 export const Route = createFileRoute('/_protected/')({
 	component: CampaignLobbyPage,
@@ -39,6 +40,21 @@ function CampaignLobbyPage() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+	const dialogRef = useRef<HTMLDialogElement>(null);
+
+	useEffect(() => {
+		if (dialog && dialogRef.current && !dialogRef.current.open) {
+			dialogRef.current.showModal();
+			dialogRef.current
+				.querySelector<HTMLElement>('[data-autofocus]')
+				?.focus();
+		}
+	}, [dialog]);
+
+	const closeDialog = () => {
+		if (dialogRef.current?.open) dialogRef.current.close();
+		setDialog(null);
+	};
 
 	// 載入使用者的戰役列表
 	useEffect(() => {
@@ -127,7 +143,7 @@ function CampaignLobbyPage() {
 			}
 
 			// 3. 清理狀態並跳轉至新戰役背包
-			setDialog(null);
+			closeDialog();
 			setCampaignName('');
 			await navigate({
 				to: '/campaigns/$campaignId',
@@ -180,7 +196,7 @@ function CampaignLobbyPage() {
 				if (joinError) throw joinError;
 
 				// 3. 成功後跳轉至該戰役
-				setDialog(null);
+				closeDialog();
 				setInviteCode('');
 				await navigate({
 					to: '/campaigns/$campaignId',
@@ -221,21 +237,27 @@ function CampaignLobbyPage() {
 								{isGuest ? '訪客冒險者' : (user?.email ?? '已登入使用者')}
 							</span>
 						</div>
-						<Link
-							to='/settings/profile'
-							className='flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-stone-700 bg-stone-900/80 text-xs text-stone-300 transition hover:border-amber-700 hover:text-amber-200 cursor-pointer'
+						<Button
+							asChild
+							variant='secondary'
+							size='sm'
+							className='gap-1.5 bg-stone-900/80 px-3 py-1.5 text-xs font-normal text-stone-300 hover:border-amber-700 hover:bg-stone-900 hover:text-amber-200'
 						>
-							<UserCog className='w-3.5 h-3.5' />
-							<span>帳號設定</span>
-						</Link>
-						<button
+							<Link data-testid='lobby-profile-link' to='/settings/profile'>
+								<UserCog className='w-3.5 h-3.5' />
+								<span>帳號設定</span>
+							</Link>
+						</Button>
+						<Button
 							type='button'
+							variant='secondary'
+							size='sm'
 							onClick={handleSignOut}
-							className='flex items-center gap-1.5 rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-xs text-stone-300 transition hover:border-red-700 hover:text-red-300 cursor-pointer'
+							className='gap-1.5 border-stone-700 bg-stone-900 px-3 py-2 text-xs font-normal text-stone-300 hover:border-red-700 hover:bg-stone-900 hover:text-red-300'
 						>
 							<LogOut className='h-3.5 w-3.5' />
 							登出
-						</button>
+						</Button>
 					</div>
 				</header>
 
@@ -268,32 +290,34 @@ function CampaignLobbyPage() {
 						</h2>
 					</div>
 					<div className='flex flex-wrap gap-2'>
-						<button
+						<Button
 							data-testid='lobby-create-trigger'
 							type='button'
+							variant='secondary'
 							onClick={() => {
 								setDialog('create');
 								setNotice(null);
 								setErrorMessage(null);
 							}}
-							className='flex items-center gap-2 rounded-md border border-purple-500/60 bg-purple-950/70 px-3 py-2 text-xs font-semibold text-purple-200 transition hover:border-purple-300 hover:bg-purple-950 cursor-pointer shadow'
+							className='gap-2 border-purple-500/60 bg-purple-950/70 px-3 py-2 text-xs text-purple-200 shadow hover:border-purple-300 hover:bg-purple-950'
 						>
 							<Plus className='h-4 w-4' />
 							建立新戰役 (DM)
-						</button>
-						<button
+						</Button>
+						<Button
 							data-testid='lobby-join-trigger'
 							type='button'
+							variant='secondary'
 							onClick={() => {
 								setDialog('join');
 								setNotice(null);
 								setErrorMessage(null);
 							}}
-							className='flex items-center gap-2 rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-xs font-semibold text-stone-300 transition hover:border-amber-700 hover:text-amber-200 cursor-pointer'
+							className='gap-2 px-3 py-2 text-xs'
 						>
 							<Users className='h-4 w-4' />
 							輸入邀請碼加入戰役
-						</button>
+						</Button>
 					</div>
 				</div>
 
@@ -377,103 +401,108 @@ function CampaignLobbyPage() {
 			</div>
 
 			{dialog && (
-				<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm'>
-					<section
-						data-testid='lobby-dialog'
-						role='dialog'
-						aria-modal='true'
-						aria-labelledby='lobby-dialog-title'
-						className='w-full max-w-md rounded-lg border-2 border-amber-700/70 bg-stone-950 p-5 shadow-[0_0_40px_rgba(0,0,0,0.7)]'
-					>
-						<div className='mb-4 flex items-center justify-between border-b border-stone-800 pb-3'>
-							<h2
-								data-testid='lobby-dialog-heading'
-								id='lobby-dialog-title'
-								className='font-serif font-bold text-amber-200'
-							>
-								{dialog === 'create' ? '建立新戰役 (DM)' : '加入戰役'}
-							</h2>
-							<button
-								data-testid='lobby-dialog-close'
-								type='button'
-								onClick={() => setDialog(null)}
-								aria-label='關閉視窗'
-								className='text-stone-500 transition hover:text-stone-200 cursor-pointer'
-							>
-								<X className='h-5 w-5' />
-							</button>
-						</div>
+				<dialog
+					ref={dialogRef}
+					data-testid='lobby-dialog'
+					aria-labelledby='lobby-dialog-title'
+					onCancel={(event) => {
+						event.preventDefault();
+						closeDialog();
+					}}
+					className='m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border-2 border-amber-700/70 bg-stone-950 p-5 text-stone-200 shadow-[0_0_40px_rgba(0,0,0,0.7)] backdrop:bg-black/75 backdrop:backdrop-blur-sm'
+				>
+					<div className='mb-4 flex items-center justify-between border-b border-stone-800 pb-3'>
+						<h2
+							data-testid='lobby-dialog-heading'
+							id='lobby-dialog-title'
+							className='font-serif font-bold text-amber-200'
+						>
+							{dialog === 'create' ? '建立新戰役 (DM)' : '加入戰役'}
+						</h2>
+						<Button
+							data-testid='lobby-dialog-close'
+							type='button'
+							variant='ghost'
+							size='sm'
+							onClick={closeDialog}
+							aria-label='關閉視窗'
+							className='px-2 text-stone-500 hover:text-stone-200'
+						>
+							<X className='h-5 w-5' />
+						</Button>
+					</div>
 
-						{dialog === 'create' ? (
-							<form onSubmit={handleCreateCampaign} className='space-y-4'>
-								<label className='block text-xs text-stone-300'>
-									戰役名稱
-									<input
-										data-testid='lobby-campaign-name'
-										required
-										value={campaignName}
-										onChange={(event) => setCampaignName(event.target.value)}
-										placeholder='例如：博德之門：血戰風雲'
-										className='mt-1.5 w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-500'
-									/>
-								</label>
-								<p className='text-[11px] leading-relaxed text-stone-500'>
-									建立後將自動在資料庫初始化獨立的戰役空間與預設冒險者隊員。
-								</p>
-								<div className='flex justify-end gap-2 pt-2'>
-									<button
-										type='button'
-										onClick={() => setDialog(null)}
-										className='rounded-md border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-900 cursor-pointer'
-									>
-										取消
-									</button>
-									<button
-										data-testid='lobby-create-submit'
-										type='submit'
-										disabled={isSubmitting}
-										className='rounded-md border border-amber-600/70 bg-amber-800 px-4 py-2 text-xs font-semibold text-amber-100 hover:bg-amber-700 disabled:opacity-50 cursor-pointer'
-									>
-										{isSubmitting ? '鑄造中...' : '確認建立戰役'}
-									</button>
-								</div>
-							</form>
-						) : (
-							<form onSubmit={handleJoinCampaign} className='space-y-4'>
-								<label className='block text-xs text-stone-300'>
-									邀請碼
-									<input
-										data-testid='lobby-invite-code'
-										required
-										value={inviteCode}
-										onChange={(event) => setInviteCode(event.target.value)}
-										placeholder='輸入 DM 提供的邀請碼'
-										className='mt-1.5 w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-500'
-									/>
-								</label>
-								<p className='text-[11px] leading-relaxed text-stone-500'>
-									此功能目前為介面預留，邀請碼驗證系統即將推出。
-								</p>
-								<div className='flex justify-end gap-2 pt-2'>
-									<button
-										type='button'
-										onClick={() => setDialog(null)}
-										className='rounded-md border border-stone-700 px-3 py-2 text-xs text-stone-300 hover:bg-stone-900 cursor-pointer'
-									>
-										取消
-									</button>
-									<button
-										data-testid='lobby-join-submit'
-										type='submit'
-										className='rounded-md border border-amber-600/70 bg-amber-800 px-4 py-2 text-xs font-semibold text-amber-100 hover:bg-amber-700 cursor-pointer'
-									>
-										確認加入
-									</button>
-								</div>
-							</form>
-						)}
-					</section>
-				</div>
+					{dialog === 'create' ? (
+						<form onSubmit={handleCreateCampaign} className='space-y-4'>
+							<Input
+								data-testid='lobby-campaign-name'
+								data-autofocus=''
+								label='戰役名稱'
+								required
+								value={campaignName}
+								onChange={(event) => setCampaignName(event.target.value)}
+								placeholder='例如：博德之門：血戰風雲'
+							/>
+							<p className='text-[11px] leading-relaxed text-stone-500'>
+								建立後將自動在資料庫初始化獨立的戰役空間與預設冒險者隊員。
+							</p>
+							<div className='flex justify-end gap-2 pt-2'>
+								<Button
+									type='button'
+									variant='secondary'
+									size='sm'
+									onClick={closeDialog}
+									className='px-3 text-xs'
+								>
+									取消
+								</Button>
+								<Button
+									data-testid='lobby-create-submit'
+									type='submit'
+									loading={isSubmitting}
+									size='sm'
+									className='px-4 text-xs'
+								>
+									{isSubmitting ? '鑄造中...' : '確認建立戰役'}
+								</Button>
+							</div>
+						</form>
+					) : (
+						<form onSubmit={handleJoinCampaign} className='space-y-4'>
+							<Input
+								data-testid='lobby-invite-code'
+								data-autofocus=''
+								label='邀請碼'
+								required
+								value={inviteCode}
+								onChange={(event) => setInviteCode(event.target.value)}
+								placeholder='輸入 DM 提供的邀請碼'
+							/>
+							<p className='text-[11px] leading-relaxed text-stone-500'>
+								此功能目前為介面預留，邀請碼驗證系統即將推出。
+							</p>
+							<div className='flex justify-end gap-2 pt-2'>
+								<Button
+									type='button'
+									variant='secondary'
+									size='sm'
+									onClick={closeDialog}
+									className='px-3 text-xs'
+								>
+									取消
+								</Button>
+								<Button
+									data-testid='lobby-join-submit'
+									type='submit'
+									size='sm'
+									className='px-4 text-xs'
+								>
+									確認加入
+								</Button>
+							</div>
+						</form>
+					)}
+				</dialog>
 			)}
 		</main>
 	);

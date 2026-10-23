@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Swords } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { Button, Input } from '@/components/ui';
 
 export const Route = createFileRoute('/invite/$campaignId/')({
 	component: InviteRegistrationPage,
@@ -118,63 +119,40 @@ function InviteRegistrationPage() {
 					</p>
 				) : (
 					<form onSubmit={handleSubmit} className='space-y-4'>
-						<div>
-							<label
-								htmlFor='invite-email'
-								className='mb-1.5 block text-sm text-stone-300'
-							>
-								電子郵件
-							</label>
-							<input
-								id='invite-email'
-								data-testid='invite-email'
-								type='email'
-								autoComplete='email'
-								readOnly
-								value={email}
-								className='w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2.5 text-sm text-stone-400 outline-none'
-							/>
-						</div>
-						<div>
-							<label
-								htmlFor='invite-password'
-								className='mb-1.5 block text-sm text-stone-300'
-							>
-								設定密碼
-							</label>
-							<input
-								id='invite-password'
-								data-testid='invite-password'
-								type='password'
-								autoComplete='new-password'
-								minLength={6}
-								required
-								value={password}
-								onChange={(event) => setPassword(event.target.value)}
-								placeholder='至少 6 個字元'
-								className='w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2.5 text-sm text-stone-100 outline-none focus:border-amber-500'
-							/>
-						</div>
-						<div>
-							<label
-								htmlFor='invite-confirm-password'
-								className='mb-1.5 block text-sm text-stone-300'
-							>
-								再次輸入密碼
-							</label>
-							<input
-								id='invite-confirm-password'
-								data-testid='invite-confirm-password'
-								type='password'
-								autoComplete='new-password'
-								minLength={6}
-								required
-								value={confirmPassword}
-								onChange={(event) => setConfirmPassword(event.target.value)}
-								placeholder='再次輸入密碼'
-								className='w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2.5 text-sm text-stone-100 outline-none focus:border-amber-500'
-							/>
-						</div>
+						<Input
+							id='invite-email'
+							label='電子郵件'
+							data-testid='invite-email'
+							type='email'
+							autoComplete='email'
+							readOnly
+							value={email}
+							className='border-stone-700 bg-stone-900 py-2.5 text-stone-400'
+						/>
+						<Input
+							id='invite-password'
+							label='設定密碼'
+							data-testid='invite-password'
+							type='password'
+							autoComplete='new-password'
+							minLength={6}
+							required
+							value={password}
+							onChange={(event) => setPassword(event.target.value)}
+							placeholder='至少 6 個字元'
+						/>
+						<Input
+							id='invite-confirm-password'
+							label='再次輸入密碼'
+							data-testid='invite-confirm-password'
+							type='password'
+							autoComplete='new-password'
+							minLength={6}
+							required
+							value={confirmPassword}
+							onChange={(event) => setConfirmPassword(event.target.value)}
+							placeholder='再次輸入密碼'
+						/>
 
 						{errorMessage && (
 							<p
@@ -186,14 +164,14 @@ function InviteRegistrationPage() {
 							</p>
 						)}
 
-						<button
+						<Button
 							data-testid='invite-submit'
 							type='submit'
-							disabled={isSubmitting}
-							className='w-full rounded-md border border-amber-400/70 bg-gradient-to-b from-amber-600 to-amber-800 px-4 py-2.5 font-semibold text-stone-950 transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60'
+							loading={isSubmitting}
+							className='w-full py-2.5 text-stone-950'
 						>
 							{isSubmitting ? '處理中…' : '設定密碼並加入戰役'}
-						</button>
+						</Button>
 					</form>
 				)}
 			</div>

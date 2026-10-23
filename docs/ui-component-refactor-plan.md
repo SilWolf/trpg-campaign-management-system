@@ -123,6 +123,19 @@
 
 **完成條件：** 指定頁面的主要流程與回饋有自動化覆蓋；Playwright 測試通過；不改變登入、註冊、邀請接受、戰役建立／加入及帳號資料更新的既有行為。
 
+#### 執行紀錄（2026-10-23）
+
+Phase 1 已完成；將共用表單與按鈕元件遷移至登入／註冊、Email 邀請註冊、大廳及個人資料設定頁，保留既有資料流、驗證、Auth／Supabase 呼叫與導航行為。
+
+- [`src/routes/login/index.tsx`](../src/routes/login/index.tsx)：遷移 Email／密碼欄位、密碼顯示切換、登入／註冊、模式切換及訪客入口至共用 `Input`／`Button`。
+- [`src/routes/invite/$campaignId/index.tsx`](../src/routes/invite/$campaignId/index.tsx)：遷移邀請 Email、設定密碼與確認密碼欄位及提交按鈕。
+- [`src/routes/_protected/index.tsx`](../src/routes/_protected/index.tsx)：遷移登出、建立／加入入口、建立／加入表單與對話框操作。建立／加入對話框改用原生 modal `<dialog>`，支援 Escape 關閉、開啟時聚焦表單欄位及關閉後焦點返回觸發按鈕；未新增 UI 套件。
+- [`src/routes/_protected/settings/profile/index.tsx`](../src/routes/_protected/settings/profile/index.tsx)：遷移名稱與 Email 欄位及儲存按鈕，並保留原有欄位標籤、成功／錯誤回饋與 API 更新流程。
+- Phase 1 範圍內外觀與按鈕相似的帳號設定／返回大廳導覽連結，使用 [`Button`](../src/components/ui/Button.tsx) 的 `asChild` 模式共用樣式，同時保留 TanStack Router `Link` 語意與導航；新增 E2E 確認連結可往返導覽。
+- 延續既有 `data-testid`，並在 [`tests/e2e/phase-1-baseline.spec.ts`](../tests/e2e/phase-1-baseline.spec.ts) 驗證密碼顯示切換、對話框鍵盤操作／焦點返回及按鈕樣式導覽連結往返；測試案例由 8 項擴充為 10 項。
+- 本 Phase 未修改 Supabase Schema、RLS、權限、業務資料流或既有邀請／戰役處理邏輯。
+- 驗收結果：`npm run test:e2e`（9 項通過）、`npm run typecheck`、`npm run lint`、`npm run build` 及 `git diff --check` 均通過。
+
 ### Phase 2：Campaign 設定頁
 
 **範圍**

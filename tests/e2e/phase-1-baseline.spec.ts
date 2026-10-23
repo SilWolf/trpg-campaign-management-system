@@ -30,6 +30,10 @@ test('登入表單驗證必填欄位並呈現驗證失敗訊息', async ({ page 
 
 	await email.fill('wrong@example.com');
 	await password.fill('incorrect-password');
+	await page.getByTestId('login-password-visibility').click();
+	await expect(password).toHaveAttribute('type', 'text');
+	await page.getByTestId('login-password-visibility').click();
+	await expect(password).toHaveAttribute('type', 'password');
 	await page.getByTestId('login-submit').click();
 	await expect(page.getByTestId('login-error')).toContainText(
 		'Invalid login credentials',
@@ -87,6 +91,24 @@ test('大廳可建立戰役並進入該戰役', async ({ page }) => {
 	expect(requests).toContain('POST /rest/v1/campaigns');
 });
 
+test('大廳對話框可用 Escape 關閉並將焦點還給觸發按鈕', async ({ page }) => {
+	await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+
+	const trigger = page.getByTestId('lobby-create-trigger');
+	await trigger.click();
+
+	const dialog = page.getByTestId('lobby-dialog');
+	const campaignName = page.getByTestId('lobby-campaign-name');
+	await expect(dialog).toBeVisible();
+	await expect(campaignName).toBeFocused();
+	await page.keyboard.press('Escape');
+
+	await expect(dialog).not.toBeVisible();
+	await expect(trigger).toBeFocused();
+});
+
 test('大廳可用邀請碼加入戰役', async ({ page }) => {
 	const { requests } = await mockSupabase(page);
 	await seedAuthenticatedSession(page);
@@ -100,6 +122,20 @@ test('大廳可用邀請碼加入戰役', async ({ page }) => {
 	expect(requests).toContain(
 		'GET /rest/v1/campaigns?select=id%2Cname&invite_code=eq.TESTCODE',
 	);
+});
+
+test('大廳帳號設定與返回大廳連結可導覽', async ({ page }) => {
+	await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+
+	await page.getByTestId('lobby-profile-link').click();
+	await expect(page).toHaveURL(/\/settings\/profile$/);
+	await expect(page.getByTestId('profile-heading')).toBeVisible();
+
+	await page.getByTestId('settings-lobby-link').click();
+	await expect(page).toHaveURL('/');
+	await expect(page.getByTestId('lobby-heading')).toBeVisible();
 });
 
 test('帳號設定可儲存個人資料並顯示成功狀態', async ({ page }) => {

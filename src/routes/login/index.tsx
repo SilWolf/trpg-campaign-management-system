@@ -4,6 +4,7 @@ import { useNavigate, createFileRoute } from '@tanstack/react-router';
 import { Dice6, Eye, EyeOff, Swords } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { Button, Input } from '@/components/ui';
 
 export const Route = createFileRoute('/login/')({
 	component: LoginPage,
@@ -85,36 +86,24 @@ function LoginPage() {
 				</div>
 
 				<form onSubmit={handleSubmit} className='space-y-4'>
-					<div>
-						<label
-							htmlFor='email'
-							className='mb-1.5 block text-sm text-stone-300'
-						>
-							電子郵件
-						</label>
-						<input
-							id='email'
-							data-testid='login-email'
-							type='email'
-							autoComplete='email'
-							required
-							value={email}
-							onChange={(event) => setEmail(event.target.value)}
-							placeholder='adventurer@example.com'
-							className='w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2.5 text-sm text-stone-100 outline-none transition placeholder:text-stone-600 focus:border-amber-500'
-						/>
-					</div>
+					<Input
+						id='email'
+						label='電子郵件'
+						data-testid='login-email'
+						type='email'
+						autoComplete='email'
+						required
+						value={email}
+						onChange={(event) => setEmail(event.target.value)}
+						placeholder='adventurer@example.com'
+						className='border-stone-700 bg-stone-900 py-2.5 placeholder:text-stone-600'
+					/>
 
 					<div>
-						<label
-							htmlFor='password'
-							className='mb-1.5 block text-sm text-stone-300'
-						>
-							密碼
-						</label>
 						<div className='relative'>
-							<input
+							<Input
 								id='password'
+								label='密碼'
 								data-testid='login-password'
 								type={showPassword ? 'text' : 'password'}
 								autoComplete={isSignUp ? 'new-password' : 'current-password'}
@@ -123,20 +112,23 @@ function LoginPage() {
 								value={password}
 								onChange={(event) => setPassword(event.target.value)}
 								placeholder='至少 6 個字元'
-								className='w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2.5 pr-11 text-sm text-stone-100 outline-none transition placeholder:text-stone-600 focus:border-amber-500'
+								className='border-stone-700 bg-stone-900 py-2.5 pr-11 placeholder:text-stone-600'
 							/>
-							<button
+							<Button
+								data-testid='login-password-visibility'
 								type='button'
+								variant='ghost'
+								size='sm'
 								onClick={() => setShowPassword((visible) => !visible)}
 								aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
-								className='absolute inset-y-0 right-0 flex items-center px-3 text-stone-500 hover:text-amber-300'
+								className='absolute inset-y-0 right-0 h-full min-h-0 rounded-none px-3 text-stone-500 hover:text-amber-300'
 							>
 								{showPassword ? (
 									<EyeOff className='h-4 w-4' />
 								) : (
 									<Eye className='h-4 w-4' />
 								)}
-							</button>
+							</Button>
 						</div>
 					</div>
 
@@ -158,28 +150,34 @@ function LoginPage() {
 						</p>
 					)}
 
-					<button
+					<Button
 						data-testid='login-submit'
 						type='submit'
-						disabled={isSubmitting}
-						className='w-full rounded-md border border-amber-400/70 bg-gradient-to-b from-amber-600 to-amber-800 px-4 py-2.5 font-semibold text-stone-950 shadow-[0_0_18px_rgba(245,158,11,0.15)] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60'
+						loading={isSubmitting}
+						className='w-full py-2.5 text-stone-950 shadow-[0_0_18px_rgba(245,158,11,0.15)]'
 					>
-						{isSubmitting ? '處理中...' : isSignUp ? '建立冒險者帳號' : '登入戰役軍械庫'}
-					</button>
+						{isSubmitting
+							? '處理中...'
+							: isSignUp
+								? '建立冒險者帳號'
+								: '登入戰役軍械庫'}
+					</Button>
 				</form>
 
-				<button
+				<Button
 					data-testid='login-toggle-mode'
 					type='button'
+					variant='ghost'
+					size='sm'
 					onClick={() => {
 						setIsSignUp((value) => !value);
 						setMessage(null);
 						setErrorMessage(null);
 					}}
-					className='mt-4 w-full text-center text-xs text-stone-400 transition hover:text-amber-300'
+					className='mt-4 w-full text-center text-xs font-normal text-stone-400 hover:text-amber-300'
 				>
 					{isSignUp ? '已有帳號？返回登入' : '尚未有帳號？立即註冊'}
-				</button>
+				</Button>
 
 				<div className='my-5 flex items-center gap-3'>
 					<div className='h-px flex-1 bg-stone-800' />
@@ -189,14 +187,15 @@ function LoginPage() {
 					<div className='h-px flex-1 bg-stone-800' />
 				</div>
 
-				<button
+				<Button
 					type='button'
+					variant='secondary'
 					onClick={handleGuestLogin}
-					className='flex w-full items-center justify-center gap-2 rounded-md border border-purple-400/70 bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-950 px-4 py-3 text-sm font-bold text-purple-100 shadow-[0_0_20px_rgba(168,85,247,0.22)] transition hover:border-purple-300 hover:brightness-125'
+					className='w-full border-purple-400/70 bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-950 py-3 text-sm font-bold text-purple-100 shadow-[0_0_20px_rgba(168,85,247,0.22)] hover:border-purple-300 hover:brightness-125'
 				>
 					<Dice6 className='h-5 w-5 text-purple-300' />
 					<span>🎲 免登入・以訪客身分體驗測試戰役</span>
-				</button>
+				</Button>
 				<p className='mt-3 text-center text-[11px] leading-relaxed text-stone-500'>
 					訪客模式使用此裝置的本機體驗資料，不需要建立帳號。
 				</p>
