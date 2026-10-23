@@ -4,6 +4,7 @@ import {
 	type Character,
 	type CharacterPermission,
 	type CurrencyType,
+	type BlacksmithTemplate,
 	type InventoryItem,
 } from '@/types';
 
@@ -158,6 +159,94 @@ export const fromDbItem = (row: DbInventoryItem): InventoryItem => ({
 			: row.category === 'Consumable',
 	isImportant: Boolean(row.is_important),
 	affixes: row.affixes ?? [],
+});
+
+export interface DbBlacksmithItem {
+	id: string;
+	owner_id: string;
+	name: string;
+	category: BlacksmithTemplate['category'];
+	sub_type: string;
+	rarity: BlacksmithTemplate['rarity'];
+	icon: string;
+	damage: string | null;
+	mastery: BlacksmithTemplate['mastery'];
+	ac: string | null;
+	weight: number;
+	value_gp: number;
+	requires_attunement: boolean;
+	is_homebrew: boolean;
+	max_charges: number;
+	effects: string;
+	flavor: string;
+	dm_notes: string;
+	is_equippable: boolean;
+	is_consumable: boolean;
+	is_important: boolean;
+	affixes: BlacksmithTemplate['affixes'];
+	is_shared: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export const toDbBlacksmithItem = (
+	item: BlacksmithTemplate,
+): DbBlacksmithItem => ({
+	id: item.id,
+	owner_id: item.ownerId,
+	name: item.name,
+	category: item.category,
+	sub_type: item.subType,
+	rarity: item.rarity,
+	icon: item.icon,
+	damage: item.damage,
+	mastery: item.mastery,
+	ac: item.ac,
+	weight: item.weight,
+	value_gp: item.valueGp,
+	requires_attunement: item.requiresAttunement,
+	is_homebrew: item.isHomebrew,
+	max_charges: item.maxCharges,
+	effects: item.effects,
+	flavor: item.flavor,
+	dm_notes: item.dmNotes,
+	is_equippable: item.isEquippable,
+	is_consumable: item.isConsumable,
+	is_important: item.isImportant,
+	affixes: item.affixes,
+	is_shared: item.isShared,
+	created_at: item.createdAt,
+	updated_at: item.updatedAt,
+});
+
+export const fromDbBlacksmithItem = (
+	row: DbBlacksmithItem,
+): BlacksmithTemplate => ({
+	id: row.id,
+	ownerId: row.owner_id,
+	name: row.name,
+	category: row.category,
+	subType: row.sub_type ?? '',
+	rarity: row.rarity ?? 'Common',
+	icon: row.icon ?? 'Package',
+	damage: row.damage ?? null,
+	mastery: row.mastery ?? 'None',
+	ac: row.ac ?? null,
+	weight: Number(row.weight ?? 0),
+	valueGp: Number(row.value_gp ?? 0),
+	requiresAttunement: Boolean(row.requires_attunement),
+	isHomebrew: row.is_homebrew ?? true,
+	maxCharges: Number(row.max_charges ?? 0),
+	effects: row.effects ?? '',
+	flavor: row.flavor ?? '',
+	dmNotes: row.dm_notes ?? '',
+	isEquippable: Boolean(row.is_equippable),
+	isConsumable: Boolean(row.is_consumable),
+	isImportant: Boolean(row.is_important),
+	affixes: row.affixes ?? [],
+	isShared: Boolean(row.is_shared),
+	createdAt: row.created_at,
+	updatedAt: row.updated_at,
 });
 
 export interface DbCharacter {

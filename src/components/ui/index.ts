@@ -1,5 +1,6 @@
 export { Badge } from './Badge';
 export type { BadgeProps, BadgeVariant } from './Badge';
+export { Breadcrumbs } from './Breadcrumbs';
 export { Button } from './Button';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
 export { Checkbox } from './Checkbox';

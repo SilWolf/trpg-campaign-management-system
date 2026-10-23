@@ -371,21 +371,28 @@ export function getBlacksmithIconUrl(icon: string): string {
 	return `${baseUrl}${icon.slice(2)}`;
 }
 
-export async function loadBlacksmithCatalogs(): Promise<BlacksmithItem[]> {
+export async function loadBlacksmithCatalogDefinitions(): Promise<
+	BlacksmithCatalogDefinition[]
+> {
 	const indexUrl = publicDataUrl('./catalog-index.json');
 	const index = readCatalogIndex(await fetchJson(indexUrl, '規則書目錄索引'));
-	const loadedCatalogs = await Promise.all(
-		index.catalogs.map(async (catalog) => {
-			const [itemFile, lookupFile] = await Promise.all([
-				fetchJson(publicDataUrl(catalog.itemsFile), `「${catalog.title}」物品檔`),
-				fetchJson(publicDataUrl(catalog.lookupFile), `「${catalog.title}」lookup 檔`),
-			]);
-			return adaptCatalogItems(
-				catalog,
-				readItemFile(itemFile, catalog),
-				readLookupFile(lookupFile, catalog),
-			);
-		}),
+	return index.catalogs;
+}
+
+export async function loadBlacksmithCatalogs(
+	catalogId: string,
+): Promise<BlacksmithItem[]> {
+	const catalogs = await loadBlacksmithCatalogDefinitions();
+	const catalog = catalogs.find((entry) => entry.catalogId === catalogId);
+	if (!catalog) throw new Error(`找不到規則書目錄：${catalogId}`);
+
+	const [itemFile, lookupFile] = await Promise.all([
+		fetchJson(publicDataUrl(catalog.itemsFile), `「${catalog.title}」物品檔`),
+		fetchJson(publicDataUrl(catalog.lookupFile), `「${catalog.title}」lookup 檔`),
+	]);
+	return adaptCatalogItems(
+		catalog,
+		readItemFile(itemFile, catalog),
+		readLookupFile(lookupFile, catalog),
 	);
-	return loadedCatalogs.flat();
 }

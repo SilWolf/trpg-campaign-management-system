@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { mockSupabase, seedAuthenticatedSession } from './supabase-mock';
 
-test('規則書目錄可瀏覽、搜尋、篩選並從大廳進入', async ({ page }) => {
+test('鍛造工坊可進入官方規則書並瀏覽、搜尋與篩選物品', async ({ page }) => {
 	await mockSupabase(page);
 	await seedAuthenticatedSession(page);
 	await page.goto('/blacksmith');
@@ -9,6 +9,21 @@ test('規則書目錄可瀏覽、搜尋、篩選並從大廳進入', async ({ pa
 	await expect(
 		page.getByRole('heading', { name: '鍛造工坊' }),
 	).toBeVisible();
+	await expect(page.getByTestId('system-link-campaign')).toBeVisible();
+	await page.getByTestId('system-link-campaign').click();
+	await expect(page).toHaveURL('/');
+	await page.getByTestId('lobby-blacksmith-link').click();
+	await expect(page).toHaveURL(/\/blacksmith$/);
+	await page.getByTestId('blacksmith-officials-link').click();
+	await expect(page).toHaveURL(/\/blacksmith\/officials$/);
+	await expect(page.getByTestId('blacksmith-catalog-list')).toContainText(
+		'D&D 2024 SRD 5.2',
+	);
+	await page.getByTestId('blacksmith-catalog-link').click();
+	await expect(page).toHaveURL(/\/blacksmith\/officials\/dnd-2024-srd-5\.2$/);
+	await expect(page.getByRole('navigation', { name: '麵包屑' })).toContainText(
+		'官方規則書',
+	);
 	await expect(page.getByTestId('blacksmith-result-count')).toContainText('537');
 
 	await page.getByTestId('blacksmith-search').fill('午夜之淚');
@@ -27,13 +42,13 @@ test('規則書目錄可瀏覽、搜尋、篩選並從大廳進入', async ({ pa
 	await page.goto('/');
 	await page.getByTestId('lobby-blacksmith-link').click();
 	await expect(page).toHaveURL(/\/blacksmith$/);
-	await expect(page.getByTestId('blacksmith-result-count')).toContainText('537');
+	await expect(page.getByTestId('blacksmith-officials-link')).toBeVisible();
 });
 
 test('物品目錄支援分頁、列表檢視與稀有度篩選', async ({ page }) => {
 	await mockSupabase(page);
 	await seedAuthenticatedSession(page);
-	await page.goto('/blacksmith');
+	await page.goto('/blacksmith/officials/dnd-2024-srd-5.2');
 
 	const itemCards = page.getByTestId('blacksmith-item-card');
 	await expect(itemCards).toHaveCount(18);
@@ -64,6 +79,73 @@ test('物品目錄支援分頁、列表檢視與稀有度篩選', async ({ page 
 	await expect(itemCards.first()).toContainText('傳奇');
 });
 
+test('鍛造樣板可建立、分享設定、更新及刪除', async ({ page }) => {
+	await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/blacksmith');
+	await page.getByTestId('blacksmith-workshop-link').click();
+
+	await expect(page.getByRole('heading', { name: '我的鍛造與分享' })).toBeVisible();
+	await page.getByRole('button', { name: '鍛造新物品' }).click();
+	await page.getByLabel('物品名稱 *').fill('測試鍛造法杖');
+	await page.getByRole('button', { name: '保存樣板' }).click();
+
+	const itemCard = page.getByRole('listitem').filter({ hasText: '測試鍛造法杖' });
+	await expect(itemCard).toContainText('私人');
+	await itemCard.getByRole('button', { name: '編輯／分享設定' }).click();
+	await page
+		.getByLabel('與其他已登入冒險者分享此樣板')
+		.check();
+	await page.getByRole('button', { name: '保存樣板' }).click();
+	await expect(itemCard).toContainText('已分享');
+
+	await itemCard.getByRole('button', { name: '刪除' }).click();
+	await itemCard.getByRole('button', { name: '再次按下確認刪除' }).click();
+	await expect(page.getByText('尚未鍛造任何物品')).toBeVisible();
+});
+
+test('冒險者分享清單只顯示可讀取的已分享樣板', async ({ page }) => {
+	await mockSupabase(page, {
+		blacksmithSharedItems: [
+			{
+				id: 'community-wand',
+				owner_id: 'another-user-id',
+				name: '社群秘法法杖',
+				category: 'Weapon',
+				sub_type: '法杖',
+				rarity: 'Rare',
+				icon: 'Wand',
+				damage: '1d6',
+				mastery: 'None',
+				ac: null,
+				weight: 2,
+				value_gp: 100,
+				requires_attunement: true,
+				is_homebrew: true,
+				max_charges: 3,
+				effects: '散發微光。',
+				flavor: '',
+				dm_notes: '',
+				is_equippable: true,
+				is_consumable: false,
+				is_important: false,
+				affixes: [],
+				is_shared: true,
+				created_at: '2025-01-01T00:00:00.000Z',
+				updated_at: '2025-01-01T00:00:00.000Z',
+			},
+		],
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto('/blacksmith/workshop');
+	await page.getByRole('button', { name: /冒險者分享/ }).click();
+	await expect(page.getByRole('listitem')).toContainText('社群秘法法杖');
+	await expect(page.getByRole('listitem')).toContainText('散發微光。');
+	await expect(
+		page.getByRole('button', { name: '編輯／分享設定' }),
+	).toHaveCount(0);
+});
+
 test('目錄載入失敗會明確顯示錯誤並可重試', async ({ page }) => {
 	await mockSupabase(page);
 	await seedAuthenticatedSession(page);
@@ -75,6 +157,7 @@ test('目錄載入失敗會明確顯示錯誤並可重試', async ({ page }) => 
 		}),
 	);
 	await page.goto('/blacksmith');
+	await page.getByTestId('blacksmith-officials-link').click();
 
 	await expect(page.getByTestId('blacksmith-error')).toContainText('HTTP 503');
 	await page.getByRole('button', { name: '重新載入' }).click();

@@ -15,8 +15,11 @@ import { Route as ProtectedBlacksmithRouteRouteImport } from './routes/_protecte
 import { Route as ProtectedSettingsRouteRouteImport } from './routes/_protected/settings/route'
 import { Route as LoginIndexRouteImport } from './routes/login/index'
 import { Route as ProtectedBlacksmithIndexRouteImport } from './routes/_protected/blacksmith/index'
+import { Route as ProtectedBlacksmithWorkshopRouteImport } from './routes/_protected/blacksmith/workshop'
 import { Route as ProtectedCampaignsCampaignIdRouteRouteImport } from './routes/_protected/campaigns/$campaignId/route'
 import { Route as InviteCampaignIdIndexRouteImport } from './routes/invite/$campaignId/index'
+import { Route as ProtectedBlacksmithOfficialsIndexRouteImport } from './routes/_protected/blacksmith/officials/index'
+import { Route as ProtectedBlacksmithOfficialsCatelogIdRouteImport } from './routes/_protected/blacksmith/officials/$catelogId'
 import { Route as ProtectedCampaignsCampaignIdIndexRouteImport } from './routes/_protected/campaigns/$campaignId/index'
 import { Route as ProtectedSettingsProfileIndexRouteImport } from './routes/_protected/settings/profile/index'
 import { Route as ProtectedCampaignsCampaignIdSettingsIndexRouteImport } from './routes/_protected/campaigns/$campaignId/settings/index'
@@ -52,6 +55,12 @@ const ProtectedBlacksmithIndexRoute =
     path: '/',
     getParentRoute: () => ProtectedBlacksmithRouteRoute,
   } as any)
+const ProtectedBlacksmithWorkshopRoute =
+  ProtectedBlacksmithWorkshopRouteImport.update({
+    id: '/workshop',
+    path: '/workshop',
+    getParentRoute: () => ProtectedBlacksmithRouteRoute,
+  } as any)
 const ProtectedCampaignsCampaignIdRouteRoute =
   ProtectedCampaignsCampaignIdRouteRouteImport.update({
     id: '/campaigns/$campaignId',
@@ -63,6 +72,18 @@ const InviteCampaignIdIndexRoute = InviteCampaignIdIndexRouteImport.update({
   path: '/invite/$campaignId/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProtectedBlacksmithOfficialsIndexRoute =
+  ProtectedBlacksmithOfficialsIndexRouteImport.update({
+    id: '/officials/',
+    path: '/officials/',
+    getParentRoute: () => ProtectedBlacksmithRouteRoute,
+  } as any)
+const ProtectedBlacksmithOfficialsCatelogIdRoute =
+  ProtectedBlacksmithOfficialsCatelogIdRouteImport.update({
+    id: '/officials/$catelogId',
+    path: '/officials/$catelogId',
+    getParentRoute: () => ProtectedBlacksmithRouteRoute,
+  } as any)
 const ProtectedCampaignsCampaignIdIndexRoute =
   ProtectedCampaignsCampaignIdIndexRouteImport.update({
     id: '/',
@@ -88,8 +109,11 @@ export interface FileRoutesByFullPath {
   '/settings': typeof ProtectedSettingsRouteRouteWithChildren
   '/login/': typeof LoginIndexRoute
   '/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdRouteRouteWithChildren
+  '/blacksmith/workshop': typeof ProtectedBlacksmithWorkshopRoute
   '/blacksmith/': typeof ProtectedBlacksmithIndexRoute
   '/invite/$campaignId/': typeof InviteCampaignIdIndexRoute
+  '/blacksmith/officials/$catelogId': typeof ProtectedBlacksmithOfficialsCatelogIdRoute
+  '/blacksmith/officials/': typeof ProtectedBlacksmithOfficialsIndexRoute
   '/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/settings/profile/': typeof ProtectedSettingsProfileIndexRoute
   '/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
@@ -98,8 +122,11 @@ export interface FileRoutesByTo {
   '/settings': typeof ProtectedSettingsRouteRouteWithChildren
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginIndexRoute
+  '/blacksmith/workshop': typeof ProtectedBlacksmithWorkshopRoute
   '/blacksmith': typeof ProtectedBlacksmithIndexRoute
   '/invite/$campaignId': typeof InviteCampaignIdIndexRoute
+  '/blacksmith/officials/$catelogId': typeof ProtectedBlacksmithOfficialsCatelogIdRoute
+  '/blacksmith/officials': typeof ProtectedBlacksmithOfficialsIndexRoute
   '/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/settings/profile': typeof ProtectedSettingsProfileIndexRoute
   '/campaigns/$campaignId/settings': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
@@ -112,8 +139,11 @@ export interface FileRoutesById {
   '/_protected/': typeof ProtectedIndexRoute
   '/login/': typeof LoginIndexRoute
   '/_protected/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdRouteRouteWithChildren
+  '/_protected/blacksmith/workshop': typeof ProtectedBlacksmithWorkshopRoute
   '/_protected/blacksmith/': typeof ProtectedBlacksmithIndexRoute
   '/invite/$campaignId/': typeof InviteCampaignIdIndexRoute
+  '/_protected/blacksmith/officials/$catelogId': typeof ProtectedBlacksmithOfficialsCatelogIdRoute
+  '/_protected/blacksmith/officials/': typeof ProtectedBlacksmithOfficialsIndexRoute
   '/_protected/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/_protected/settings/profile/': typeof ProtectedSettingsProfileIndexRoute
   '/_protected/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
@@ -126,8 +156,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/login/'
     | '/campaigns/$campaignId'
+    | '/blacksmith/workshop'
     | '/blacksmith/'
     | '/invite/$campaignId/'
+    | '/blacksmith/officials/$catelogId'
+    | '/blacksmith/officials/'
     | '/campaigns/$campaignId/'
     | '/settings/profile/'
     | '/campaigns/$campaignId/settings/'
@@ -136,8 +169,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/'
     | '/login'
+    | '/blacksmith/workshop'
     | '/blacksmith'
     | '/invite/$campaignId'
+    | '/blacksmith/officials/$catelogId'
+    | '/blacksmith/officials'
     | '/campaigns/$campaignId'
     | '/settings/profile'
     | '/campaigns/$campaignId/settings'
@@ -149,8 +185,11 @@ export interface FileRouteTypes {
     | '/_protected/'
     | '/login/'
     | '/_protected/campaigns/$campaignId'
+    | '/_protected/blacksmith/workshop'
     | '/_protected/blacksmith/'
     | '/invite/$campaignId/'
+    | '/_protected/blacksmith/officials/$catelogId'
+    | '/_protected/blacksmith/officials/'
     | '/_protected/campaigns/$campaignId/'
     | '/_protected/settings/profile/'
     | '/_protected/campaigns/$campaignId/settings/'
@@ -206,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedBlacksmithIndexRouteImport
       parentRoute: typeof ProtectedBlacksmithRouteRoute
     }
+    '/_protected/blacksmith/workshop': {
+      id: '/_protected/blacksmith/workshop'
+      path: '/workshop'
+      fullPath: '/blacksmith/workshop'
+      preLoaderRoute: typeof ProtectedBlacksmithWorkshopRouteImport
+      parentRoute: typeof ProtectedBlacksmithRouteRoute
+    }
     '/_protected/campaigns/$campaignId': {
       id: '/_protected/campaigns/$campaignId'
       path: '/campaigns/$campaignId'
@@ -219,6 +265,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/invite/$campaignId/'
       preLoaderRoute: typeof InviteCampaignIdIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_protected/blacksmith/officials/': {
+      id: '/_protected/blacksmith/officials/'
+      path: '/officials'
+      fullPath: '/blacksmith/officials/'
+      preLoaderRoute: typeof ProtectedBlacksmithOfficialsIndexRouteImport
+      parentRoute: typeof ProtectedBlacksmithRouteRoute
+    }
+    '/_protected/blacksmith/officials/$catelogId': {
+      id: '/_protected/blacksmith/officials/$catelogId'
+      path: '/officials/$catelogId'
+      fullPath: '/blacksmith/officials/$catelogId'
+      preLoaderRoute: typeof ProtectedBlacksmithOfficialsCatelogIdRouteImport
+      parentRoute: typeof ProtectedBlacksmithRouteRoute
     }
     '/_protected/campaigns/$campaignId/': {
       id: '/_protected/campaigns/$campaignId/'
@@ -245,12 +305,20 @@ declare module '@tanstack/react-router' {
 }
 
 interface ProtectedBlacksmithRouteRouteChildren {
+  ProtectedBlacksmithWorkshopRoute: typeof ProtectedBlacksmithWorkshopRoute
   ProtectedBlacksmithIndexRoute: typeof ProtectedBlacksmithIndexRoute
+  ProtectedBlacksmithOfficialsCatelogIdRoute: typeof ProtectedBlacksmithOfficialsCatelogIdRoute
+  ProtectedBlacksmithOfficialsIndexRoute: typeof ProtectedBlacksmithOfficialsIndexRoute
 }
 
 const ProtectedBlacksmithRouteRouteChildren: ProtectedBlacksmithRouteRouteChildren =
   {
+    ProtectedBlacksmithWorkshopRoute: ProtectedBlacksmithWorkshopRoute,
     ProtectedBlacksmithIndexRoute: ProtectedBlacksmithIndexRoute,
+    ProtectedBlacksmithOfficialsCatelogIdRoute:
+      ProtectedBlacksmithOfficialsCatelogIdRoute,
+    ProtectedBlacksmithOfficialsIndexRoute:
+      ProtectedBlacksmithOfficialsIndexRoute,
   }
 
 const ProtectedBlacksmithRouteRouteWithChildren =

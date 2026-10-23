@@ -19,7 +19,7 @@
 | `name` | 非空字串 | 來源顯示名稱 |
 | `category` | 非空字串 | 現有值遵循應用程式分類字串；不得由此推斷物品用途分類正確 |
 | `subTypes` | 非空字串陣列 | 來源類型依逗號拆分並去除前後空白 |
-| `rarity` | 非空字串 | 目前值為 `Common` |
+| `rarity` | 非空字串 | 目前涵蓋 `Common`、`Uncommon`、`Rare`、`VeryRare`、`Legendary`、`Artifact` |
 | `icon` | 非空字串 | 目前為 `./images/...` 靜態資產路徑 |
 | `weight` | 有限且不小於 0 的數字 | 可為整數或小數 |
 | `valueGp` | 不小於 0 的整數 | 以 GP 表示 |
@@ -51,7 +51,7 @@
 
 ## 目前資料集核對結果與範圍限制
 
-目前 `dnd-2024-srd-5.2` 有 143 筆物品及 143 筆 lookup；`itemId`、`sourceKey` 均無重複，lookup 的 ID、名稱與來源物品全部相符。其中 91 筆 `Consumable`、40 筆 `Weapon` 與 12 筆 `Armor`。武器資料包含來源提供的 `damage`、`weaponProperties` 與 `weaponMastery`；護甲資料以 `ac` 表示護甲值且不含 `damage`。`aliases` 均為空。
+目前 `dnd-2024-srd-5.2` 有 537 筆物品及 537 筆 lookup；`itemId`、`sourceKey` 均無重複，lookup 的 ID、名稱與來源物品全部相符。其中 147 筆 `Consumable`、63 筆 `Weapon`、32 筆 `Armor` 與 295 筆 `Misc`。武器資料包含來源提供的 `damage`、`weaponProperties` 與 `weaponMastery`；護甲資料以 `ac` 表示護甲值且不含 `damage`。資料包含 214 筆 `Common`、96 筆 `Uncommon`、106 筆 `Rare`、82 筆 `VeryRare`、38 筆 `Legendary`、1 筆 `Artifact`；63 筆有非空 `damage`，32 筆有非空 `ac`。`aliases` 均為空。
 
 目前資料仍沒有可確認為可充能物品或帶附魔詞條的樣本。因開發規劃要求不得自行補寫未提供的規則書內容，這些情境的來源欄位與轉換規則尚未由實際資料驗證。下一批來源資料提供後，須補做欄位核對，再擴充本合約；在此之前不得宣稱已完成上述情境的來源覆蓋。
 

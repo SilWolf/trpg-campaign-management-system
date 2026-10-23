@@ -58,6 +58,34 @@ export type BlacksmithItem = BlacksmithItemBase &
 		  }
 	);
 
+export interface BlacksmithTemplate {
+	id: string;
+	ownerId: string;
+	name: string;
+	category: ItemCategory;
+	subType: string;
+	rarity: Rarity;
+	icon: string;
+	damage: string | null;
+	mastery: WeaponMasteryKey;
+	ac: string | null;
+	weight: number;
+	valueGp: number;
+	requiresAttunement: boolean;
+	isHomebrew: boolean;
+	maxCharges: number;
+	effects: string;
+	flavor: string;
+	dmNotes: string;
+	isEquippable: boolean;
+	isConsumable: boolean;
+	isImportant: boolean;
+	affixes: ItemAffix[];
+	isShared: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export type WeaponMasteryKey =
 	| 'None'
 	| 'Cleave'

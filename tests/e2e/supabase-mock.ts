@@ -40,11 +40,13 @@ export async function mockSupabase(
 		campaignInventoryRole?: CampaignSettingsRole;
 		createCampaignError?: string;
 		blankCampaign?: boolean;
+		blacksmithSharedItems?: Record<string, unknown>[];
 	} = {},
 ) {
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
+	const blacksmithItems = [...(options.blacksmithSharedItems ?? [])];
 	const campaignSettingsRole = options.campaignSettingsRole;
 	const campaignInventoryRole = options.campaignInventoryRole;
 	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
@@ -310,6 +312,83 @@ export async function mockSupabase(
 				json: { id: 'mock-campaign-id', name: '測試戰役' },
 			});
 			return;
+		}
+
+		if (url.pathname === '/rest/v1/blacksmith_items') {
+			const matchesFilter = (row: Record<string, unknown>, key: string) => {
+				const filter = url.searchParams.get(key);
+				if (!filter) return true;
+				const [operator, value] = filter.split('.', 2);
+				if (operator === 'eq') return String(row[key] ?? '') === value;
+				if (operator === 'neq') return String(row[key] ?? '') !== value;
+				return false;
+			};
+			if (method === 'GET') {
+				await route.fulfill({
+					json: blacksmithItems.filter((row) =>
+						['owner_id', 'is_shared'].every((key) => matchesFilter(row, key)),
+					),
+				});
+				return;
+			}
+			if (method === 'POST') {
+				const payload = request.postDataJSON() as Record<string, unknown>;
+				if (typeof payload.id !== 'string' || typeof payload.owner_id !== 'string') {
+					await route.fulfill({
+						status: 400,
+						json: { message: '樣板 ID 與作者 ID 為必要欄位' },
+					});
+					return;
+				}
+				const row = {
+					...payload,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				};
+				blacksmithItems.push(row);
+				await route.fulfill({ status: 201, json: row });
+				return;
+			}
+			if (method === 'PATCH') {
+				const idFilter = url.searchParams.get('id')?.slice('eq.'.length);
+				const ownerFilter = url.searchParams
+					.get('owner_id')
+					?.slice('eq.'.length);
+				const row = blacksmithItems.find(
+					(item) => item.id === idFilter && item.owner_id === ownerFilter,
+				);
+				if (!row) {
+					await route.fulfill({
+						status: 404,
+						json: { message: '找不到鍛造樣板' },
+					});
+					return;
+				}
+				Object.assign(row, request.postDataJSON(), {
+					updated_at: new Date().toISOString(),
+				});
+				await route.fulfill({ json: row });
+				return;
+			}
+			if (method === 'DELETE') {
+				const idFilter = url.searchParams.get('id')?.slice('eq.'.length);
+				const ownerFilter = url.searchParams
+					.get('owner_id')
+					?.slice('eq.'.length);
+				const index = blacksmithItems.findIndex(
+					(item) => item.id === idFilter && item.owner_id === ownerFilter,
+				);
+				if (index < 0) {
+					await route.fulfill({
+						status: 404,
+						json: { message: '找不到鍛造樣板' },
+					});
+					return;
+				}
+				blacksmithItems.splice(index, 1);
+				await route.fulfill({ status: 204 });
+				return;
+			}
 		}
 
 		if (

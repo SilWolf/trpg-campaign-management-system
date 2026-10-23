@@ -86,6 +86,7 @@ test('大廳可建立戰役並進入該戰役', async ({ page }) => {
 	await dialog.getByRole('button', { name: '確認建立戰役' }).click();
 
 	await expect(page).toHaveURL(/\/campaigns\/mock-created-campaign$/);
+	await expect(page.getByTestId('system-link-blacksmith')).toBeVisible();
 	expect(requests).toContain('POST /functions/v1/create-campaign');
 	expect(functionRequests).toHaveLength(1);
 	const payload = functionRequests[0] as {
@@ -191,7 +192,7 @@ test('大廳可用邀請碼加入戰役', async ({ page }) => {
 	expect(requests).toContain('POST /rest/v1/rpc/join_campaign_by_invite_code');
 });
 
-test('大廳帳號設定與返回大廳連結可導覽', async ({ page }) => {
+test('大廳帳號設定與共用系統導覽列可導覽', async ({ page }) => {
 	await mockSupabase(page);
 	await seedAuthenticatedSession(page);
 	await page.goto('/');
@@ -199,8 +200,9 @@ test('大廳帳號設定與返回大廳連結可導覽', async ({ page }) => {
 	await page.getByRole('link', { name: '帳號設定' }).click();
 	await expect(page).toHaveURL(/\/settings\/profile$/);
 	await expect(page.getByRole('heading', { name: '個人資料設定' })).toBeVisible();
+	await expect(page.getByTestId('system-link-blacksmith')).toBeVisible();
 
-	await page.getByRole('link', { name: '返回大廳' }).click();
+	await page.getByTestId('system-link-campaign').click();
 	await expect(page).toHaveURL('/');
 	await expect(page.getByRole('heading', { name: '我的戰役列表' })).toBeVisible();
 });

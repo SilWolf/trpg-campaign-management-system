@@ -14,16 +14,18 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 ## 目前進度與續接資訊
 
-截至 2026-10-23，**階段一已依目前提供的資料完成基礎來源合約鎖定**。成果如下：
+截至 2026-10-24，**階段一至階段三的程式與本機驗收已完成；Supabase migration 部署及真實 RLS 驗收仍待維護者進行**。目前成果如下：
 
 - `public/data/blacksmith/SOURCE-CONTRACT.md`：記錄現有 index、物品 JSON、lookup 格式與欄位型別，並明確界定來源定義與戰役物品實例。
 - `scripts/validate-blacksmith-source.mjs`：驗證目錄索引、資料結構、欄位型別、ID 唯一性及 items／lookup 一對一對照；可執行 `npm run validate:blacksmith-source`。
-- 核對結果：`dnd-2024-srd-5.2` 有 91 筆物品與 91 筆 lookup，ID、名稱與來源鍵對照相符，未發現重複 ID／來源鍵；現有圖示路徑皆有對應檔案。
+- 核對結果：`dnd-2024-srd-5.2` 有 537 筆物品與 537 筆 lookup，ID、名稱與來源鍵對照相符，未發現重複 ID／來源鍵。
 - 已執行並通過 `npm run validate:blacksmith-source`、`npx eslint scripts/validate-blacksmith-source.mjs`、`npm run typecheck` 及 `git diff --check`。
 
-**已知限制：**這 91 筆資料目前全部為 `Consumable`／`Common`，`damage` 都是 `null`，且沒有武器、護甲、可充能或附魔詞條樣本。因此階段一目前只鎖定已收到資料可證實的基礎合約；不得自行補寫規則書資料，也不得宣稱上述缺樣本情境已完成欄位核對。資料的授權名稱、版本與 URL 亦未包含在 JSON 中，發布來源內容前仍須由維護者確認。
+**已知限制：**目前 537 筆包含 147 筆 `Consumable`、63 筆 `Weapon`、32 筆 `Armor`、295 筆 `Misc`；有 63 筆非空 `damage`、32 筆 `ac`，但沒有附魔詞條樣本。資料的授權名稱、版本與 URL 亦未包含在 JSON 中，發布來源內容前仍須由維護者確認。
 
-**階段二已完成。**定義 `BlacksmithItem` 與規則書目錄型別，實作靜態目錄載入、結構／lookup 驗證及唯讀瀏覽 UI。新來源型別只涵蓋目前合約能核實的欄位；未提供的 `mastery`、`ac`、`maxCharges`、`effects`、`flavor`、`affixes` 等欄位沒有被假定或補值。要涵蓋缺少的物品類型，仍須先取得相應 JSON／lookup 再更新來源合約。
+**階段二已完成。**定義官方目錄型別，實作靜態目錄載入、結構／lookup 驗證及唯讀瀏覽 UI。現行路由為 `/blacksmith` 工坊大廳、`/blacksmith/officials` 規則書清單、`/blacksmith/officials/$catelogId` 單本目錄內容；`catelogId` 是既有路由參數拼字，新增功能沿用目前網址，不手動修改自動產生的路由樹。
+
+**階段三已完成程式實作、本機型別與 UI 測試。**已新增獨立 `blacksmith_items` migration、snake_case ↔ camelCase 轉換、雲端 CRUD 服務及 `/blacksmith/workshop` 鍛造／分享頁。migration 尚未在 Supabase 執行，故多帳號 RLS、實際 schema 相容、取消分享後的即時拒絕仍未驗收；不可宣稱此功能已部署或已由真實資料庫驗證。
 
 ## 現有實作依據
 
@@ -31,6 +33,7 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 - 戰役背包由 `inventory_items`、`useCampaignSync` 和 `useInventoryActions` 管理，物品列以 `campaign_id` 隔離。營地儲物箱使用 `owner_id = 'camp-chest'`。
 - 已有的自創物品表單及驗證可參考戰役頁的 `HomebrewModal`；鍛造工坊可沿用欄位與視覺，但要將「製作樣板」和「戰役內物品實例」分開。
 - 登入後的頂層頁面使用 `src/routes/_protected/` 路由群組；戰役大廳在 `src/routes/_protected/index.tsx`，戰役子頁面在 `src/routes/_protected/campaigns/$campaignId/`。
+- 鍛造工坊現有受保護路由共用 `src/routes/_protected/blacksmith/route.tsx` 與 `SystemLinkBar`；大廳、官方目錄清單、單本目錄與自創／分享頁分別位於對應檔案。新增路由需由 TanStack Router 產生路由樹。
 - 現有 migration 使用 RLS、`auth.uid()`、`public.is_campaign_dm(text)` 與 `public.is_campaign_member_or_dm(text)` 等函式；任何新增跨表權限判斷都須避免 RLS 遞迴。
 
 ## 名詞與資料邊界
@@ -38,16 +41,16 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 | 名稱 | 位置 | 用途 | 是否可寫 |
 | --- | --- | --- | --- |
 | 規則書目錄項目 | 版本控制中的 JSON | 官方／程序提供的唯讀內容 | 否 |
-| `BlacksmithItem` | 前端型別與 `blacksmith_items` | 可重用的物品樣板；附作者、分享狀態 | 作者可編輯 |
+| `BlacksmithTemplate` | 前端型別與 `blacksmith_items` | 使用者可重用的物品樣板；附作者、分享狀態 | 作者可編輯 |
 | `InventoryItem` | `inventory_items` | 某戰役中實際持有的物品實例 | 按既有戰役規則修改 |
 
 `BlacksmithItem` 與 `InventoryItem` **不得共用或依賴同一個資料庫 ID**，也不得在 `inventory_items` 建立指向 `blacksmith_items` 的外鍵。匯入應複製可用的物品內容，並為新戰役物品產生全新 ID。匯入後修改戰役物品，不回寫目錄樣板；修改或刪除樣板，也不影響已匯入的物品。
 
 ## 建議的型別與欄位
 
-新增 `BlacksmithItem` 前，先把可重用的「物品定義」和戰役實例欄位分清楚；可保留既有 `InventoryItem` 作為戰役完整型別，避免直接把新型別當作它的子集強制轉型。
+新增樣板型別前，先把可重用的「物品定義」和戰役實例欄位分清楚；`BlacksmithTemplate` 作為使用者鍛造樣板，官方來源使用 `BlacksmithItem`，既有 `InventoryItem` 維持戰役完整型別，避免直接把任一來源型別當成它的子集強制轉型。
 
-### `BlacksmithItem` 建議前端欄位
+### `BlacksmithTemplate` 建議前端欄位
 
 - 物品定義：`name`、`category`、`subType`、`rarity`、`icon`、`damage`、`mastery`、`ac`、`weight`、`valueGp`、`requiresAttunement`、`maxCharges`、`effects`、`flavor`、`dmNotes`、`isEquippable`、`isConsumable`、`isImportant`、`affixes`。
 - 使用者鍛造記錄：`id`、`ownerId`、`isShared`、`createdAt`、`updatedAt`。
@@ -132,7 +135,7 @@ public/data/blacksmith/
 ### 入口與路由
 
 - 在登入後戰役大廳加入「鍛造工坊」入口，與戰役卡片並列；鍛造工坊是頂層頁面，不隸屬任一 `$campaignId`。
-- 建議路由為 `/_protected/blacksmith/`，網址 `/blacksmith`。沿用受保護路由、暗黑石色背景及琥珀金／秘法紫強調色。
+- `/blacksmith` 為工坊大廳；`/blacksmith/officials` 與 `/blacksmith/officials/$catelogId` 提供官方目錄清單及書籍內容；`/blacksmith/workshop` 管理自創樣板與社群分享。沿用受保護路由、暗黑石色背景及琥珀金／秘法紫強調色。
 - 不要手動編輯 `src/routeTree.gen.ts`；依專案既有流程新增路由後產生。
 - 入口應對登入者顯示；只有 DM 才能把目錄物品匯入戰役。玩家可否瀏覽物品庫、是否只看分享項目，若確有需求再另訂產品規則；初版依「用戶（DM）」需求以 DM 使用情境為主。
 
@@ -195,7 +198,8 @@ public/data/blacksmith/
 | 型別 | `src/types.ts`，新增 `BlacksmithItem` 及必要來源型別 |
 | snake_case ↔ camelCase 轉換 | `src/lib/supabase.ts`，新增 `DbBlacksmithItem`、轉換器及目錄正規化 helper（若適合） |
 | Supabase Schema／RLS | 新增 `supabase/migrations/<timestamp>_blacksmith_items.sql` |
-| 頂層路由 | `src/routes/_protected/blacksmith/route.tsx`、`index.tsx` 及必要 `-parts/` |
+| Supabase CRUD | `src/lib/blacksmithItems.ts` |
+| 頂層路由 | `src/routes/_protected/blacksmith/route.tsx`、`index.tsx`、`officials/` 及 `workshop.tsx` |
 | 大廳入口 | `src/routes/_protected/index.tsx` |
 | 自創表單重用 | 評估抽出共用表單，避免複製 `HomebrewModal` 全部欄位與驗證 |
 | 測試 | 目錄 adapter／匯入轉換單元測試、路由互動測試、RLS／migration 手動驗收 |
@@ -209,24 +213,30 @@ public/data/blacksmith/
 - **狀態：已完成（以目前提供的資料為範圍；代表性類型仍有缺口）。**
 - 已核實 `public/data/blacksmith/catalog-index.json`、`catalogs/dnd-2024-srd-5.2.items.json` 與 `catalogs/dnd-2024-srd-5.2.lookup.json` 的頂層結構、欄位型別、null 規則、ID 唯一性及 lookup 對照方式。
 - 已鎖定樣板定義與戰役實例的欄位分界；來源 ID 不可沿用為 `InventoryItem.id`。具體格式見 [`public/data/blacksmith/SOURCE-CONTRACT.md`](../public/data/blacksmith/SOURCE-CONTRACT.md)。
-- 已新增 `npm run validate:blacksmith-source`，目前 91 筆 items／lookup 對照通過。
-- **未完成的資料覆蓋：**目前僅能確認消耗品、Common、無傷害值樣本；缺武器、護甲、可充能物品、附魔詞條及非 null 傷害值樣本。JSON 亦未提供授權名稱／版本／URL。取得補充來源後，應先核對並更新合約，再擴充型別或轉換邏輯。
+- 已新增 `npm run validate:blacksmith-source`；目前 537 筆 items／lookup 對照通過，類別涵蓋 `Consumable`、`Weapon`、`Armor`、`Misc`，並包含 63 筆武器傷害及 32 筆護甲值。
+- **未完成的資料覆蓋：**目前沒有附魔詞條樣本。JSON 亦未提供授權名稱／版本／URL。取得補充來源後，應先核對並更新合約，再擴充型別或轉換邏輯。
 - 不將尚未提供的 SRD 物品內容自行補寫進 repository。
 
 ### 階段二：型別、目錄讀取及瀏覽 UI
 
 - **狀態：已完成（2026-10-23）。**
-- 在 `src/types.ts` 新增 `BlacksmithItem`、目錄索引及 lookup 型別；只包含已核實的來源欄位與來源識別資訊，不將戰役實例欄位混入樣板型別。
+- 在 `src/types.ts` 新增官方 `BlacksmithItem`、目錄索引及 lookup 型別；不將戰役實例欄位混入官方來源定義。
 - 在 `src/lib/blacksmithCatalog.ts` 從 Vite 靜態目錄載入 index、items 與 lookup；驗證 schema 版本、欄位、數值、相對路徑、目錄識別、唯一 ID 及 items／lookup 的名稱與 sourceKey 對照，錯誤會明確回報而不略過資料。
-- 在 `src/routes/_protected/blacksmith/` 建立唯讀瀏覽頁面與受保護路由；支援按名稱、描述、別名及搜尋詞查詢，依規則書／分類篩選，並查看詳情、重量、價值、調諧需求及來源標記。包含載入、讀取錯誤、空目錄及無搜尋結果狀態。
-- 在冒險者大廳新增「鍛造工坊」入口。此階段未加入使用者鍛造、分享、資料庫寫入或戰役匯入。
-- 驗證：`npm run validate:blacksmith-source`、`npm run typecheck`、`npm run build` 與 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts` 通過；新增目錄瀏覽與載入錯誤重試流程的 2 項端對端測試通過。`npm run lint` 無錯誤，僅對受保護路由檔案中專案要求保留的 React Refresh 指示註解提示未使用警告。
+- 目前官方頁面路徑為 `/blacksmith/officials` 清單及 `/blacksmith/officials/$catelogId` 單本書籍頁；搜尋支援名稱、描述、別名與搜尋詞，提供分類／稀有度篩選、詳情及明確的載入與錯誤狀態。
+- 工坊大廳在 `/blacksmith`，戰役大廳有入口，鍛造區和戰役導覽透過 `SystemLinkBar` 切換；本階段不處理戰役匯入。
+- 目前來源驗證為 537 筆 items／lookup 對照通過。測試數量以當前 `tests/e2e/blacksmith.spec.ts` 為準，不沿用較早期的 2 項摘要。
 
 ### 階段三：資料庫、鍛造及分享
 
-- 建立 `blacksmith_items` migration、索引和上述 RLS。
-- 加入 DB ↔ 前端轉換、讀取、建立、更新、刪除；核實多個作者與多個登入 session 的更新結果。
-- 加入私人預設及分享切換，確認取消分享即刻限制他人後續讀取，但不影響既有戰役副本。
+- **狀態：程式實作及 mock 驗收完成；Supabase migration 部署與真實 RLS 驗收待維護者操作。**
+- `supabase/migrations/20261024000000_blacksmith_items.sql` 建立獨立樣板資料表、owner／shared 查詢索引、欄位與附魔 JSONB 結構限制、更新時間 trigger，以及作者 CRUD／已登入者僅讀已分享列的 RLS。作者 ID 為 `uuid` 並 FK 至 `auth.users(id)`；不關聯 campaign 或 inventory。
+- `BlacksmithTemplate` 型別及 `DbBlacksmithItem` 正反轉換位於 `src/types.ts`、`src/lib/supabase.ts`；`src/lib/blacksmithItems.ts` 實作讀取、建立、更新、刪除。建立由前端產生新的 UUID 樣板 ID，作者 ID 取自已登入 session；DB trigger 維護 `updated_at`。
+- `/blacksmith/workshop` 提供「我的樣板」與「冒險者分享」清單、名稱／類型／效果搜尋、建立／編輯／刪除及分享切換。新樣板預設私人；共享樣板為唯讀；取消分享只影響他人後續讀取，不會修改其他戰役中的既有副本。無 Supabase 或訪客模式會明確提示未保存，沒有本機成功假象。
+- 分享會公開完整樣板列，包含鍛造備註與附魔詞條；表單已提示備註會隨分享公開。共享清單目前以「分享樣板」標示，不揭露帳號 UUID 或作者姓名；未建立 profiles 關聯顯示機制。
+- 驗證：`npm run validate:blacksmith-source`、`npm run typecheck`、`npm run build`、受影響檔案 ESLint、`git diff --check`，以及 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts`（5 項）通過。E2E 對 Supabase REST 使用測試替身，只驗證前端行為和 request contract，不等同真實 RLS／多 session 驗收。
+- **待手動驗收：**先核對隔離 Supabase 專案與 migration history，再由維護者部署 migration；使用兩個正式帳號直接測試私人不可見、共享可讀不可寫、偽造 owner 被拒、取消分享後不可再讀及作者刪除後 FK 行為。未完成前不得宣稱上線。
+
+**階段四續接條件：**接續實作 campaign picker 與複製樣板到 `inventory_items` 的流程；在真實環境驗收前，先由維護者確認並部署階段三 migration。匯入時仍須遵守 DM 授權、產生新的 campaign item ID、維持 `camp-chest` 公開，以及既有多列同步非原子性的限制。
 
 ### 階段四：匯入戰役
 
@@ -269,8 +279,8 @@ public/data/blacksmith/
 1. 收到 JSON／lookup 後，依真實資料格式確認上方建議 schema 是否需要欄位 adapter 或多語系欄位。
 2. 首版預設目錄是否只允許 DM 瀏覽，或允許所有已登入成員瀏覽而僅限制 DM 匯入；本規劃按 DM 為核心使用者，入口可先只放在 DM／大廳，授權仍須由資料庫保障。
 3. `charges`、`isIdentified` 等實例狀態的匯入預設及是否提供匯入對話框設定；不得將它們放回樣板資料表來解決。
-4. `blacksmith_items.id` 的產生方式及 `updated_at` 維護方式；無論採用何者，都不得將樣板 ID 當成匯入後的 inventory ID。
-5. 他人分享項目是否允許作者隱藏 `dm_notes`，或只分享完整內容；若需隱藏，需在資料模型與 RLS/API 回應中設計，不可只靠 UI 隱藏欄位。
+4. **已決定：**樣板 ID 由前端 `crypto.randomUUID()` 產生為文字 ID，`updated_at` 由資料庫 trigger 維護；匯入階段仍須另產生全新的 inventory ID。
+5. **已決定（初版）：**分享完整樣板內容，包含 `dm_notes`；UI 告知作者此欄會隨分享公開。未來若需隱藏備註，須改用獨立欄位授權／API，不可僅以 UI 隱藏。
 
 ## 部署及相容性提醒
 
