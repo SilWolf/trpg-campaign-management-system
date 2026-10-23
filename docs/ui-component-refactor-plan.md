@@ -69,6 +69,17 @@
 
 **完成條件：** Playwright 測試能在本機穩定執行；測試資料可隔離與重複建立；Phase 1 基準流程已記錄，並能在 UI 遷移前通過。
 
+#### 執行紀錄（2026-10-23）
+
+準備階段已完成；本階段只新增測試基礎設施、盤點文件與基準測試，未修改產品業務邏輯、Supabase Schema、RLS 或權限規則。
+
+- 已盤點實際路由、互動類型、回饋狀態與窄螢幕版面；`src/**/*.tsx` 原生 JSX 控制項基準為 `<button>` 90 個、`<input>` 41 個、`<select>` 12 個、`<textarea>` 5 個。詳細盤點見 [`docs/ui-component-preparation.md`](./ui-component-preparation.md)。
+- 已引入 `@playwright/test`，新增 `test:e2e` 指令、Chromium 專案與 Vite 本機測試伺服器設定：[`package.json`](../package.json)、[`playwright.config.ts`](../playwright.config.ts)。
+- 已新增 Supabase Auth、PostgREST 與 RPC 的網路替身及虛構測試 session：[`tests/e2e/supabase-mock.ts`](../tests/e2e/supabase-mock.ts)。測試只使用隔離的 `127.0.0.1:54321` URL 和 `example.test` 虛構帳號，不連接正式服務、不使用真實玩家資料，也不寄送 Email。
+- 已新增 Phase 1 基準測試：[`tests/e2e/phase-1-baseline.spec.ts`](../tests/e2e/phase-1-baseline.spec.ts)，共 8 項情境，涵蓋註冊與 Email 驗證提示、登入欄位與錯誤回饋、無效邀請、邀請密碼確認與接受邀請、建立／加入戰役、個人資料更新，以及 375px 下 Phase 1 四頁的水平溢位。
+- 已將 Playwright 報告與測試結果目錄排除於版本控制：[`.gitignore`](../.gitignore)；並在 [`README.md`](../README.md) 記錄瀏覽器安裝及測試執行指令。
+- 驗收結果：`npm run test:e2e`（8 項通過）、`npm run typecheck`、`npm run lint`、`npm run build` 與 `git diff --check` 均通過。
+
 ### 共用元件基礎建置
 
 1. 在既有樣式入口整理共用語意樣式：顏色、邊框、焦點環、圓角、尺寸與層級。
