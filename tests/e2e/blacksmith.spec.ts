@@ -146,6 +146,58 @@ test('冒險者分享清單只顯示可讀取的已分享樣板', async ({ page 
 	).toHaveCount(0);
 });
 
+test('官方目錄物品可選擇 DM 戰役與角色後匯入', async ({ page }) => {
+	const mocks = await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/blacksmith/officials/dnd-2024-srd-5.2');
+	await page.getByTestId('blacksmith-search').fill('午夜之淚');
+
+	await page.getByRole('button', { name: '匯入戰役' }).click();
+	await expect(page.getByRole('heading', { name: '匯入「午夜之淚」' })).toBeVisible();
+	await page.getByLabel('目標戰役').selectOption('dm-campaign');
+	await page.getByLabel('接收目標').selectOption('dm-character');
+	await page.getByLabel('匯入數量').fill('3');
+	await page.getByRole('button', { name: '確認匯入' }).click();
+
+	await expect(page.getByRole('status')).toContainText(
+		'已將 3 個「午夜之淚」匯入「DM 測試戰役」的「接收角色」。',
+	);
+	expect(mocks.blacksmithImportRequests).toEqual([
+		{
+			p_campaign_id: 'dm-campaign',
+			p_owner_id: 'dm-character',
+			p_item: expect.objectContaining({
+				name: '午夜之淚',
+				is_homebrew: false,
+				requires_attunement: false,
+			}),
+			p_quantity: 3,
+		},
+	]);
+	expect(
+		(mocks.blacksmithImportRequests[0] as { p_item: Record<string, unknown> })
+			.p_item,
+	).not.toHaveProperty('id');
+	expect(
+		(mocks.blacksmithImportRequests[0] as { p_item: Record<string, unknown> })
+			.p_item,
+	).toHaveProperty('sub_type');
+});
+
+test('匯入 RPC 失敗時保留視窗並顯示實際錯誤', async ({ page }) => {
+	await mockSupabase(page, { blacksmithImportError: '只有該戰役的 DM 可以匯入物品。' });
+	await seedAuthenticatedSession(page);
+	await page.goto('/blacksmith/officials/dnd-2024-srd-5.2');
+	await page.getByTestId('blacksmith-search').fill('午夜之淚');
+	await page.getByRole('button', { name: '匯入戰役' }).click();
+	await page.getByRole('button', { name: '確認匯入' }).click();
+
+	await expect(page.getByRole('alert')).toContainText(
+		'只有該戰役的 DM 可以匯入物品。',
+	);
+	await expect(page.getByRole('dialog')).toBeVisible();
+});
+
 test('目錄載入失敗會明確顯示錯誤並可重試', async ({ page }) => {
 	await mockSupabase(page);
 	await seedAuthenticatedSession(page);

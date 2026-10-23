@@ -14,7 +14,7 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 ## 目前進度與續接資訊
 
-截至 2026-10-24，**階段一至階段三的程式與本機驗收已完成；Supabase migration 部署及真實 RLS 驗收仍待維護者進行**。目前成果如下：
+截至 2026-10-24，**階段一至階段三的程式與本機驗收已完成；維護者已手動執行階段三 SQL，但真實 RLS 驗收仍待進行**。目前成果如下：
 
 - `public/data/blacksmith/SOURCE-CONTRACT.md`：記錄現有 index、物品 JSON、lookup 格式與欄位型別，並明確界定來源定義與戰役物品實例。
 - `scripts/validate-blacksmith-source.mjs`：驗證目錄索引、資料結構、欄位型別、ID 唯一性及 items／lookup 一對一對照；可執行 `npm run validate:blacksmith-source`。
@@ -228,27 +228,34 @@ public/data/blacksmith/
 
 ### 階段三：資料庫、鍛造及分享
 
-- **狀態：程式實作及 mock 驗收完成；Supabase migration 部署與真實 RLS 驗收待維護者操作。**
+- **狀態：程式實作及 mock 驗收完成；維護者已手動執行 migration，真實 RLS 驗收待完成。**
 - `supabase/migrations/20261024000000_blacksmith_items.sql` 建立獨立樣板資料表、owner／shared 查詢索引、欄位與附魔 JSONB 結構限制、更新時間 trigger，以及作者 CRUD／已登入者僅讀已分享列的 RLS。作者 ID 為 `uuid` 並 FK 至 `auth.users(id)`；不關聯 campaign 或 inventory。
 - `BlacksmithTemplate` 型別及 `DbBlacksmithItem` 正反轉換位於 `src/types.ts`、`src/lib/supabase.ts`；`src/lib/blacksmithItems.ts` 實作讀取、建立、更新、刪除。建立由前端產生新的 UUID 樣板 ID，作者 ID 取自已登入 session；DB trigger 維護 `updated_at`。
 - `/blacksmith/workshop` 提供「我的樣板」與「冒險者分享」清單、名稱／類型／效果搜尋、建立／編輯／刪除及分享切換。新樣板預設私人；共享樣板為唯讀；取消分享只影響他人後續讀取，不會修改其他戰役中的既有副本。無 Supabase 或訪客模式會明確提示未保存，沒有本機成功假象。
 - 分享會公開完整樣板列，包含鍛造備註與附魔詞條；表單已提示備註會隨分享公開。共享清單目前以「分享樣板」標示，不揭露帳號 UUID 或作者姓名；未建立 profiles 關聯顯示機制。
 - 驗證：`npm run validate:blacksmith-source`、`npm run typecheck`、`npm run build`、受影響檔案 ESLint、`git diff --check`，以及 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts`（5 項）通過。E2E 對 Supabase REST 使用測試替身，只驗證前端行為和 request contract，不等同真實 RLS／多 session 驗收。
-- **待手動驗收：**先核對隔離 Supabase 專案與 migration history，再由維護者部署 migration；使用兩個正式帳號直接測試私人不可見、共享可讀不可寫、偽造 owner 被拒、取消分享後不可再讀及作者刪除後 FK 行為。未完成前不得宣稱上線。
+- **SQL 執行紀錄（維護者於本次續接前回報）：**`20261024000000_blacksmith_items.sql` 已手動執行。此紀錄僅代表 SQL 已執行；尚未據此宣稱已完成多帳號 RLS、取消分享即時拒絕或完整 Supabase 驗收。
+- **待手動驗收：**使用兩個正式帳號直接測試私人不可見、共享可讀不可寫、偽造 owner 被拒、取消分享後不可再讀及作者刪除後 FK 行為。未完成前不得宣稱上線。
 
-**階段四續接條件：**接續實作 campaign picker 與複製樣板到 `inventory_items` 的流程；在真實環境驗收前，先由維護者確認並部署階段三 migration。匯入時仍須遵守 DM 授權、產生新的 campaign item ID、維持 `camp-chest` 公開，以及既有多列同步非原子性的限制。
+**階段四續接條件：**階段三 SQL 已由維護者手動執行。新增匯入 RPC migration 仍須在真實環境驗收前由維護者確認目標專案及 migration history 後手動部署。匯入仍須遵守 DM 授權、產生新的 campaign item ID、維持 `camp-chest` 公開，以及既有多列同步非原子性的限制。
 
 ### 階段四：匯入戰役
 
-- 實作 campaign picker，只列出登入者的 DM 戰役及可用接收目標。
-- 完成 inventory 實例映射、新 ID、數量／實例狀態初始化、camp-chest 公開限制及資料庫 DM 授權。
-- 接上現有同步、列表和 Realtime 行為；匯入後可立即在相應背包看到物品。
+- **狀態：前端與資料庫 migration 程式已完成；本機驗收後，新增匯入 RPC migration 仍待維護者手動部署及真實 Supabase 驗收。**
+- `src/components/blacksmith/BlacksmithImportButton.tsx` 提供共用匯入流程，已接在官方目錄物品詳情及鍛造／分享樣板卡片；戰役選擇僅列出 `campaigns.dm_id` 為目前使用者的戰役，接收目標為該戰役角色或虛擬 `camp-chest`。
+- `src/lib/blacksmithImport.ts` 將官方 `BlacksmithItem` 或 `BlacksmithTemplate` 明確轉為匯入定義，不沿用來源 ID、作者 ID 或分享狀態。官方物品初始化為非 homebrew，描述／來源分別映射至效果／風味；樣板則保留其物品定義屬性。
+- 新增 `supabase/migrations/20261024000001_blacksmith_campaign_import.sql`，建立 `SECURITY DEFINER` RPC `public.import_blacksmith_item`。RPC 於單一資料庫交易內驗證登入者、DM 身分、目標角色／戰役歸屬及數量，並以全新 UUID 字串 ID 建立 `inventory_items` 列。實例狀態初始化為未裝備、未調諧、未鑑定及目前充能 0；`camp-chest` 強制公開。RPC 限制僅 `authenticated` 可執行，不依賴前端 picker 作為授權邊界，也不變更現有 inventory 一般寫入 policy。
+- 匯入成功顯示戰役、接收角色及數量；失敗會顯示錯誤並保留匯入視窗。匯入寫入由 RPC 在單一列交易完成，之後由既有戰役初始載入及 inventory Realtime 訂閱顯示；此流程不涉及多列轉帳，不宣稱跨列原子性。
+- 本機驗證：`npm run build`（含 TypeScript typecheck）、受影響檔案 `npx eslint`、`npm run validate:blacksmith-source`、`git diff --check`，以及 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts`（7 項）通過。E2E 使用 Supabase 測試替身，只證明 UI 與 RPC request contract，未驗證真實 RPC、RLS、資料庫 migration 或 Realtime。
+- **既有 inventory policy 邊界：**匯入介面只呼叫上述 DM 驗證 RPC；本階段沒有收窄既有 `inventory_items` 成員寫入 policy，避免破壞依角色 ACL 的日常新增物品、背包編輯及移轉流程。因此不能宣稱一般成員無法以既有直接 inventory REST INSERT 建立內容相同的物品列。若產品要求封鎖這種等效直寫，須另行設計並驗證兼容既有 ACL／新增／移轉的資料庫授權，不可只加 DM-only INSERT policy。
+- **待手動部署／驗收：**`20261024000001_blacksmith_campaign_import.sql` 尚未執行。維護者須先確認目標 Supabase 專案與 migration history，再手動套用。真實測試需驗證 DM 可匯入、非 DM／錯誤 campaign／不存在角色被拒，以及官方、私有自創與分享樣板均能建立獨立副本；營地箱物品須為公開。
 
 ### 階段五：整合與驗收
 
 - 驗證本機未設定 Supabase 時仍能瀏覽靜態目錄；需登入的自創／分享／雲端匯入功能應明確提示不可用，不可假裝已保存。
-- 執行 lint、typecheck、build 及相關測試；隔離 Supabase 專案測試 migration 與 RLS 後再部署。
+- 階段四本機 lint、typecheck、build 及相關測試已通過；階段五仍須在新增 RPC migration 部署後，完成隔離 Supabase 專案端對端驗收。
 - 用多帳號驗證私人樣板不可互見、分享樣板可讀不可改、取消分享後不可讀、非 DM 不可匯入、跨戰役資料不混淆。
+- 確認是否要求防止玩家繞過匯入 RPC、直接呼叫既有 `inventory_items` INSERT 建立等效物品；若要求，先設計不破壞 ACL、正常新增與跨角色移轉的資料庫方案，再補直接 API 測試。
 
 ## 驗收清單
 

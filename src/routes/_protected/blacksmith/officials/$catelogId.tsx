@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button, Input, Select } from '@/components/ui';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { BlacksmithImportButton } from '@/components/blacksmith/BlacksmithImportButton';
 import { RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
 import {
 	getBlacksmithIconUrl,
@@ -664,6 +665,9 @@ function BlacksmithCatalogPage() {
 									<p className='mt-2 whitespace-pre-wrap text-sm leading-relaxed text-stone-200'>
 										{selectedItem.description || '此物品沒有附加描述。'}
 									</p>
+								</div>
+								<div className='mt-4'>
+									<BlacksmithImportButton source={selectedItem} />
 								</div>
 								{selectedItem.source && (
 									<p className='mt-4 border-t border-stone-800 pt-3 text-xs text-stone-500'>

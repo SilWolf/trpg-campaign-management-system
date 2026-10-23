@@ -41,11 +41,15 @@ export async function mockSupabase(
 		createCampaignError?: string;
 		blankCampaign?: boolean;
 		blacksmithSharedItems?: Record<string, unknown>[];
+		blacksmithImportCampaigns?: { id: string; name: string }[];
+		blacksmithImportCharacters?: { id: string; name: string }[];
+		blacksmithImportError?: string;
 	} = {},
 ) {
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
+	const blacksmithImportRequests: unknown[] = [];
 	const blacksmithItems = [...(options.blacksmithSharedItems ?? [])];
 	const campaignSettingsRole = options.campaignSettingsRole;
 	const campaignInventoryRole = options.campaignInventoryRole;
@@ -304,6 +308,50 @@ export async function mockSupabase(
 		}
 
 		if (
+			url.pathname === '/rest/v1/rpc/import_blacksmith_item' &&
+			method === 'POST'
+		) {
+			blacksmithImportRequests.push(request.postDataJSON());
+			if (options.blacksmithImportError) {
+				await route.fulfill({
+					status: 400,
+					json: { message: options.blacksmithImportError },
+				});
+				return;
+			}
+			await route.fulfill({ json: 'new-imported-item-id' });
+			return;
+		}
+
+		if (
+			url.pathname === '/rest/v1/campaigns' &&
+			method === 'GET' &&
+			url.searchParams.get('select') === 'id,name' &&
+			url.searchParams.has('dm_id')
+		) {
+			await route.fulfill({
+				json: options.blacksmithImportCampaigns ?? [
+					{ id: 'dm-campaign', name: 'DM 測試戰役' },
+				],
+			});
+			return;
+		}
+
+		if (
+			url.pathname === '/rest/v1/characters' &&
+			method === 'GET' &&
+			url.searchParams.get('select') === 'id,name' &&
+			url.searchParams.has('campaign_id')
+		) {
+			await route.fulfill({
+				json: options.blacksmithImportCharacters ?? [
+					{ id: 'dm-character', name: '接收角色' },
+				],
+			});
+			return;
+		}
+
+		if (
 			url.pathname === '/rest/v1/campaigns' &&
 			method === 'GET' &&
 			url.searchParams.has('invite_code')
@@ -515,5 +563,10 @@ export async function mockSupabase(
 		});
 	});
 
-	return { requests, functionRequests, campaignUpdates };
+	return {
+		requests,
+		functionRequests,
+		campaignUpdates,
+		blacksmithImportRequests,
+	};
 }

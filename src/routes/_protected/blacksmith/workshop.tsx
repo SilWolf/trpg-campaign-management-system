@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertCircle, Eye, Hammer, Plus, RotateCw, Trash2 } from 'lucide-react';
+import { BlacksmithImportButton } from '@/components/blacksmith/BlacksmithImportButton';
 import { RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -500,6 +501,9 @@ function BlacksmithWorkshopPage() {
 								<p className='mt-3 font-mono text-xs text-stone-500'>
 									重量 {item.weight} lb · 價值 {item.valueGp} GP
 								</p>
+								<div className='mt-4'>
+									<BlacksmithImportButton source={item} />
+								</div>
 								{activeTab === 'mine' && (
 									<div className='mt-4 flex items-center gap-2 border-t border-stone-800 pt-3'>
 										<button
