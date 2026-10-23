@@ -1,4 +1,5 @@
 import { Backpack, Crown, Plus, User, type LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { type Character, type ViewMode } from '@/types';
 import type { SyncStatus } from '@/hooks/useCampaignSync';
 
@@ -42,6 +43,7 @@ export default function AppHeader({
 								D&amp;D 5R (2024)
 							</span>
 							<span
+								data-testid='campaign-sync-status'
 								className={`text-[11px] px-2 py-0.5 rounded border flex items-center gap-1.5 font-medium ${
 									syncStatus === 'synced'
 										? 'bg-emerald-950/80 border-emerald-600/50 text-emerald-300'
@@ -81,21 +83,28 @@ export default function AppHeader({
 				{isDm && (
 					<div className='flex flex-wrap items-center gap-2.5'>
 						{viewMode === 'dm' && (
-							<button
+							<Button
+								type='button'
+								variant='secondary'
+								data-testid='inventory-create-item'
 								onClick={onCreateHomebrew}
 								className='flex items-center gap-2 px-3.5 py-2 rounded bg-gradient-to-b from-purple-700 to-purple-950 border border-purple-400/70 hover:border-purple-300 text-purple-100 text-xs sm:text-sm font-medium shadow-[0_0_15px_rgba(168,85,247,0.35)] hover:brightness-110 transition cursor-pointer'
 							>
 								<Plus className='w-4 h-4 text-purple-300' />
 								<span>鍛造自創道具 (Homebrew)</span>
-							</button>
+							</Button>
 						)}
 
 						<div className='flex bg-stone-900 p-1 rounded-lg border border-amber-800/50'>
 							{(['player', 'dm'] as const).map((mode) => {
 								const Icon = viewIcons[mode];
 								return (
-									<button
+									<Button
 										key={mode}
+										type='button'
+										variant='ghost'
+										data-testid={`inventory-view-mode-${mode}`}
+										aria-pressed={viewMode === mode}
 										onClick={() => setViewMode(mode)}
 										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ${
 											viewMode === mode
@@ -111,7 +120,7 @@ export default function AppHeader({
 										<span>
 											{mode === 'player' ? '玩家視角預覽' : 'DM 上帝視角'}
 										</span>
-									</button>
+									</Button>
 								);
 							})}
 						</div>

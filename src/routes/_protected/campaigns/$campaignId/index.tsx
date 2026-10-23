@@ -81,6 +81,27 @@ function CampaignInventoryPage() {
 		permissions,
 		syncStatus,
 	} = useCampaignSync(campaignId, INITIAL_CHARACTERS, INITIAL_ITEMS);
+	useEffect(() => {
+		if (
+			activeCharId === CAMP_CHEST_ID ||
+			characters.some((character) => character.id === activeCharId)
+		) {
+			return;
+		}
+
+		const nextCharacter =
+			characters.find(
+				(character) =>
+					character.userId === user?.id && character.id !== CAMP_CHEST_ID,
+			) ??
+			characters.find((character) => character.id !== CAMP_CHEST_ID) ??
+			characters[0];
+
+		if (nextCharacter) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect -- 遠端戰役角色載入後需同步修正無效的預設選取。
+			setActiveCharId(nextCharacter.id);
+		}
+	}, [activeCharId, characters, user?.id]);
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');

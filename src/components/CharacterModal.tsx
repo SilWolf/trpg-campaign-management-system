@@ -2,6 +2,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { CAMP_CHEST_ID, type Character } from '@/types';
 import { UserPlus, Save, X, Shield } from 'lucide-react';
+import { Button, Input, Select } from '@/components/ui';
 
 interface CharacterModalProps {
 	isOpen: boolean;
@@ -90,55 +91,81 @@ export default function CharacterModal({
 
 	return (
 		<div className='fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto'>
-			<div className='bg-stone-950 border-2 border-amber-600/70 rounded-lg max-w-md w-full p-5 shadow-[0_0_40px_rgba(217,119,6,0.3)]'>
+			<div
+				role='dialog'
+				aria-modal='true'
+				aria-labelledby='character-modal-heading'
+				className='bg-stone-950 border-2 border-amber-600/70 rounded-lg max-w-md w-full p-5 shadow-[0_0_40px_rgba(217,119,6,0.3)]'
+			>
 				<div className='flex items-center justify-between border-b border-stone-800 pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
 						<UserPlus className='w-5 h-5 text-amber-400' />
-						<h2 className='text-base font-serif font-bold text-amber-200'>
+						<h2
+							id='character-modal-heading'
+							className='text-base font-serif font-bold text-amber-200'
+						>
 							{character ? `編輯角色：${character.name}` : '招募新冒險者隊員'}
 						</h2>
 					</div>
-					<button
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						aria-label='關閉角色編輯'
 						onClick={onClose}
 						className='text-stone-400 hover:text-stone-200 cursor-pointer'
 					>
 						<X className='w-5 h-5' />
-					</button>
+					</Button>
 				</div>
 
-				<form onSubmit={handleSubmit} className='space-y-4 text-xs'>
-					<div>
-						<label className='block text-stone-400 mb-1'>角色名稱 *</label>
-						<input
-							type='text'
+				<form
+					onSubmit={handleSubmit}
+					data-testid='character-form'
+					className='space-y-4 text-xs'
+				>
+					<div className='grid gap-1.5'>
+						<label htmlFor='character-name' className='text-stone-400'>
+							角色名稱 *
+						</label>
+						<Input
+							id='character-name'
 							required
 							disabled={!allowFormEdit}
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder='例如：阿斯代倫 (Astarion)'
+							data-testid='character-name'
 							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 focus:border-amber-500 outline-none disabled:opacity-50'
 						/>
 					</div>
 
-					<div>
-						<label className='block text-stone-400 mb-1'>頭銜 / 職業背景</label>
-						<input
-							type='text'
+					<div className='grid gap-1.5'>
+						<label htmlFor='character-title' className='text-stone-400'>
+							頭銜 / 職業背景
+						</label>
+						<Input
+							id='character-title'
 							disabled={!allowFormEdit}
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder='例如：高等精靈 / 游蕩者'
+							data-testid='character-title'
 							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none disabled:opacity-50'
 						/>
 					</div>
 
 					<div className='grid grid-cols-2 gap-3'>
 						<div>
-							<label className='text-amber-300 mb-1 flex items-center gap-1'>
+							<label
+								htmlFor='character-strength'
+								className='text-amber-300 mb-1 flex items-center gap-1'
+							>
 								<Shield className='w-3.5 h-3.5' />
 								<span>力量屬性 (STR)</span>
 							</label>
-							<input
+							<Input
+								id='character-strength'
 								type='number'
 								min='1'
 								max='30'
@@ -146,6 +173,7 @@ export default function CharacterModal({
 								disabled={!allowFormEdit}
 								value={str}
 								onChange={(e) => setStr(parseInt(e.target.value, 10) || 10)}
+								data-testid='character-strength'
 								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-amber-200 font-mono font-bold outline-none disabled:opacity-50'
 							/>
 							<span className='text-[10px] text-stone-500 mt-0.5 block'>
@@ -155,10 +183,12 @@ export default function CharacterModal({
 
 						<div>
 							<label className='block text-stone-400 mb-1'>選擇頭像符號</label>
-							<select
+							<Select
+								label='選擇頭像符號'
 								disabled={!allowFormEdit}
 								value={avatar}
 								onChange={(e) => setAvatar(e.target.value)}
+								data-testid='character-avatar'
 								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none disabled:opacity-50'
 							>
 								{AVATAR_OPTIONS.map((icon) => (
@@ -166,7 +196,7 @@ export default function CharacterModal({
 										{icon} 符號頭像
 									</option>
 								))}
-							</select>
+							</Select>
 						</div>
 					</div>
 
@@ -175,8 +205,9 @@ export default function CharacterModal({
 						character.id !== CAMP_CHEST_ID &&
 						canDeleteCharacter &&
 						onDelete ? (
-							<button
+							<Button
 								type='button'
+								variant='danger'
 								onClick={() => {
 									if (
 										window.confirm(
@@ -190,27 +221,29 @@ export default function CharacterModal({
 								className='px-3 py-2 rounded bg-red-950/80 hover:bg-red-900 border border-red-700/60 text-red-200 font-medium transition cursor-pointer'
 							>
 								移除角色 (遺物入庫)
-							</button>
+							</Button>
 						) : (
 							<div />
 						)}
 
 						<div className='flex items-center gap-2'>
-							<button
+							<Button
 								type='button'
+								variant='secondary'
 								onClick={onClose}
 								className='px-4 py-2 rounded bg-stone-900 border border-stone-700 text-stone-300 hover:bg-stone-800 cursor-pointer'
 							>
 								取消
-							</button>
+							</Button>
 							{allowFormEdit && (
-								<button
+								<Button
 									type='submit'
+									variant='primary'
 									className='px-5 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold shadow flex items-center gap-1.5 cursor-pointer'
 								>
 									<Save className='w-4 h-4' />
 									<span>儲存角色</span>
-								</button>
+								</Button>
 							)}
 						</div>
 					</div>

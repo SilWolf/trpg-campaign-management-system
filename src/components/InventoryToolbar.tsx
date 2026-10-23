@@ -8,6 +8,7 @@ import {
 	Search,
 } from 'lucide-react';
 import type { InventoryDisplayMode, InventoryItem } from '@/types';
+import { Button, Input } from '@/components/ui';
 
 export interface InventoryToolbarProps {
 	allCharacterItems: InventoryItem[];
@@ -41,7 +42,12 @@ export default function InventoryToolbar({
 	return (
 		<div className='p-3.5 bg-stone-950/90 border-b border-amber-900/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
 			<div className='flex items-center gap-2'>
-				<button
+				<Button
+					type='button'
+					variant='ghost'
+					size='sm'
+					data-testid='inventory-bag-public'
+					aria-pressed={currentBagTab === 'public'}
 					onClick={() => setBagTab('public')}
 					className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
 						currentBagTab === 'public'
@@ -57,10 +63,15 @@ export default function InventoryToolbar({
 							: '🔒'}
 						)
 					</span>
-				</button>
+				</Button>
 
 				{canViewPrivateBag ? (
-					<button
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						data-testid='inventory-bag-private'
+						aria-pressed={currentBagTab === 'private'}
 						onClick={() => setBagTab('private')}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
 							currentBagTab === 'private'
@@ -73,7 +84,7 @@ export default function InventoryToolbar({
 							私人暗袋 (
 							{allCharacterItems.filter((item) => item.isPrivate).length})
 						</span>
-					</button>
+					</Button>
 				) : (
 					<span className='text-[11px] text-stone-500 flex items-center gap-1 px-2'>
 						<Lock className='w-3 h-3' />
@@ -85,17 +96,28 @@ export default function InventoryToolbar({
 			<div className='flex items-center gap-2'>
 				<div className='relative flex-1 sm:w-40'>
 					<Search className='w-3.5 h-3.5 text-stone-500 absolute left-2.5 top-1/2 -translate-y-1/2' />
-					<input
-						type='text'
+					<Input
+						type='search'
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						placeholder='搜尋道具名稱...'
+						aria-label='搜尋道具名稱'
+						data-testid='inventory-search'
 						className='w-full bg-stone-900 border border-stone-700 focus:border-amber-500 rounded pl-8 pr-2.5 py-1.5 text-xs text-stone-200 placeholder:text-stone-500 outline-none'
 					/>
 				</div>
 
-				<div className='flex bg-stone-900 p-0.5 rounded border border-stone-700'>
-					<button
+				<div
+					className='flex bg-stone-900 p-0.5 rounded border border-stone-700'
+					role='group'
+					aria-label='背包檢視模式'
+				>
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						data-testid='inventory-display-grid6'
+						aria-pressed={displayMode === 'grid6'}
 						onClick={() => setDisplayMode('grid6')}
 						title='一列 6 個展示'
 						className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
@@ -106,8 +128,13 @@ export default function InventoryToolbar({
 					>
 						<Grid3x3 className='w-3.5 h-3.5' />
 						<span className='hidden md:inline'>6格</span>
-					</button>
-					<button
+					</Button>
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						data-testid='inventory-display-grid'
+						aria-pressed={displayMode === 'grid'}
 						onClick={() => setDisplayMode('grid')}
 						title='緊湊格字展示'
 						className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
@@ -118,8 +145,13 @@ export default function InventoryToolbar({
 					>
 						<LayoutGrid className='w-3.5 h-3.5' />
 						<span className='hidden md:inline'>格字</span>
-					</button>
-					<button
+					</Button>
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						data-testid='inventory-display-list'
+						aria-pressed={displayMode === 'list'}
 						onClick={() => setDisplayMode('list')}
 						title='詳細列表展示'
 						className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
@@ -130,46 +162,76 @@ export default function InventoryToolbar({
 					>
 						<List className='w-3.5 h-3.5' />
 						<span className='hidden md:inline'>列表</span>
-					</button>
+					</Button>
 				</div>
 
-				<div className='relative group'>
-					<button className='flex items-center gap-1 px-2.5 py-1.5 rounded bg-stone-900 border border-stone-700 hover:border-amber-600/60 text-xs text-stone-300 cursor-pointer'>
+				<details
+					className='relative'
+					data-testid='inventory-sort-menu'
+					onClick={(event) => {
+						if (
+							event.target instanceof Element &&
+							event.target.closest('button')
+						) {
+							event.currentTarget.open = false;
+						}
+					}}
+				>
+					<summary
+						data-testid='inventory-sort-trigger'
+						className='flex list-none items-center gap-1 px-2.5 py-1.5 rounded bg-stone-900 border border-stone-700 hover:border-amber-600/60 text-xs text-stone-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400'
+					>
 						<ArrowUpDown className='w-3.5 h-3.5 text-amber-400' />
 						<span>排序與整理</span>
-					</button>
-					<div className='absolute right-0 mt-1 w-32 bg-stone-900 border border-amber-700/70 rounded shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30 py-1 text-xs'>
-						<button
+					</summary>
+					<div className='absolute right-0 mt-1 w-48 bg-stone-900 border border-amber-700/70 rounded shadow-xl z-30 py-1 text-xs'>
+						<Button
+							type='button'
+							variant='ghost'
+							size='sm'
+							data-testid='inventory-sort-rarity'
+							className='w-full justify-start rounded-none'
 							onClick={() => handleAutoSort('rarity')}
-							className='w-full px-3 py-1.5 text-left hover:bg-amber-900/40 text-stone-200 cursor-pointer'
 						>
 							✨ 依稀有度排序
-						</button>
-						<button
+						</Button>
+						<Button
+							type='button'
+							variant='ghost'
+							size='sm'
+							data-testid='inventory-sort-value'
+							className='w-full justify-start rounded-none'
 							onClick={() => handleAutoSort('value')}
-							className='w-full px-3 py-1.5 text-left hover:bg-amber-900/40 text-stone-200 cursor-pointer'
 						>
 							🪙 依價值排序
-						</button>
-						<button
+						</Button>
+						<Button
+							type='button'
+							variant='ghost'
+							size='sm'
+							data-testid='inventory-sort-weight'
+							className='w-full justify-start rounded-none'
 							onClick={() => handleAutoSort('weight')}
-							className='w-full px-3 py-1.5 text-left hover:bg-amber-900/40 text-stone-200 cursor-pointer'
 						>
 							⚖️ 依重量排序
-						</button>
+						</Button>
 						{canEditCurrentBag && (
 							<>
 								<div className='border-t border-stone-800 my-1' />
-								<button
+								<Button
+									type='button'
+									variant='ghost'
+									size='sm'
+									data-testid='inventory-consolidate-stacks'
+									className='w-full justify-start rounded-none text-emerald-300'
 									onClick={handleConsolidateStacks}
-									className='w-full px-3 py-1.5 text-left hover:bg-emerald-950/60 text-emerald-300 font-medium cursor-pointer flex items-center gap-1'
 								>
 									<span>📦 合併同名同詞條堆疊</span>
-								</button>
+								</Button>
 							</>
 						)}
 					</div>
-				</div>
+				</details>
 			</div>
 		</div>
 	);

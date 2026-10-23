@@ -20,6 +20,7 @@ import {
 	EyeOff,
 	Coins,
 } from 'lucide-react';
+import { Button } from '@/components/ui';
 
 interface InventoryGridProps {
 	items: InventoryItem[];
@@ -199,8 +200,16 @@ export default function InventoryGrid({
 											const { isEquippable } = resolveItemFlags(item);
 
 											return (
-												<div
+												<Button
 													key={item.id}
+													type='button'
+													variant='ghost'
+													aria-label={
+														masked ? '未知魔法物品' : item.name
+													}
+													aria-pressed={isInspected}
+													data-testid={`inventory-item-${item.id}`}
+													data-filter-match={matches}
 													onClick={() => setSelectedItemId(item.id)}
 													onDoubleClick={() => {
 														if (isEquippable && canEditCurrentBag) {
@@ -208,7 +217,7 @@ export default function InventoryGrid({
 														}
 													}}
 													title={masked ? '未知魔法物品' : item.name}
-													className={`aspect-square rounded border ${rStyle.border} ${rStyle.bg} ${rStyle.glow} relative flex items-center justify-center cursor-pointer select-none transition-all duration-150 ${
+													className={`aspect-square p-0 rounded border ${rStyle.border} ${rStyle.bg} ${rStyle.glow} relative flex items-center justify-center cursor-pointer select-none transition-all duration-150 ${
 														isInspected
 															? 'ring-2 ring-amber-400 scale-[1.04] z-10'
 															: 'hover:brightness-125'
@@ -258,7 +267,7 @@ export default function InventoryGrid({
 															{item.quantity}
 														</span>
 													)}
-												</div>
+												</Button>
 											);
 										})}
 									</div>
@@ -275,15 +284,23 @@ export default function InventoryGrid({
 											const { isEquippable } = resolveItemFlags(item);
 
 											return (
-												<div
+												<Button
 													key={item.id}
+													type='button'
+													variant='ghost'
+													aria-label={
+														masked ? '未知魔法物品' : item.name
+													}
+													aria-pressed={isInspected}
+													data-testid={`inventory-item-${item.id}`}
+													data-filter-match={matches}
 													onClick={() => setSelectedItemId(item.id)}
 													onDoubleClick={() => {
 														if (isEquippable && canEditCurrentBag) {
 															toggleEquip(item);
 														}
 													}}
-													className={`px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition ${
+													className={`w-full rounded-none px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition ${
 														isInspected
 															? 'bg-amber-950/35 border-l-2 border-l-amber-400'
 															: 'hover:bg-stone-900/80'
@@ -353,7 +370,7 @@ export default function InventoryGrid({
 																: `${item.valueGp * item.quantity} GP`}
 														</div>
 													</div>
-												</div>
+												</Button>
 											);
 										})}
 									</div>

@@ -184,6 +184,16 @@ Phase 2 已完成；Campaign 設定頁已遷移至共用表單與按鈕元件，
 
 **完成條件：** 背包主要流程和權限情境通過 E2E 測試；公開／私人資訊隔離、重量計算與貨幣／道具操作維持原有行為。
 
+#### 執行紀錄（2026-10-23）
+
+Phase 3 已完成；背包頁主要操作已遷移至共用 UI 元件，保留產品專屬背包格子和道具卡片風格，並維持既有 Supabase 資料流與 ACL 行為，未修改 Schema、RLS 或伺服器端權限。
+
+- [`src/components/InventoryToolbar.tsx`](../src/components/InventoryToolbar.tsx)、[`src/components/InventoryGrid.tsx`](../src/components/InventoryGrid.tsx) 與 [`src/components/ItemTooltip.tsx`](../src/components/ItemTooltip.tsx)：遷移背包切換、搜尋、檢視模式、排序／堆疊整理、道具卡片選取、道具操作、移交、備註與提示等互動；卡片改用可鍵盤操作的按鈕，排序選單可用鍵盤開啟與選取。
+- [`src/components/CharacterStatusBar.tsx`](../src/components/CharacterStatusBar.tsx)、[`src/components/CurrencyPanel.tsx`](../src/components/CurrencyPanel.tsx)、[`src/components/CharacterModal.tsx`](../src/components/CharacterModal.tsx)、[`src/components/HomebrewModal.tsx`](../src/components/HomebrewModal.tsx) 與 [`src/components/AppHeader.tsx`](../src/components/AppHeader.tsx)：遷移角色／錢包／自創道具表單控制項與操作按鈕至共用元件，並補上對話框語意、標籤或輔助文字及穩定測試定位。
+- [`src/routes/_protected/campaigns/$campaignId/index.tsx`](../src/routes/_protected/campaigns/$campaignId/index.tsx)：遠端戰役角色載入後若預設選取不存在，改選登入者角色或第一位可用角色，避免仍選取本機預設角色而將戰役背包誤顯示為空。
+- [`tests/e2e/phase-3-inventory.spec.ts`](../tests/e2e/phase-3-inventory.spec.ts) 與 [`tests/e2e/supabase-mock.ts`](../tests/e2e/supabase-mock.ts)：新增隔離的公開／私人背包與雙錢包 fixture，以及 3 項 E2E 情境，驗證一般成員私人資料隔離與權重計算、DM 切換／搜尋／鍵盤排序／消耗道具／更新貨幣，以及 375px 窄螢幕無水平溢位。
+- 驗收結果：完整 Playwright E2E（19 項）、`npm run typecheck`、`npm run lint`、`npm run build` 及 `git diff --check` 均通過；E2E 僅使用本機 Supabase 替身，不連接正式服務。
+
 ### 收尾：文件化與防止回退
 
 1. 移除已遷移範圍內不再使用的重複 class 與舊元件。

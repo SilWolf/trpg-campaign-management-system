@@ -25,6 +25,7 @@ import {
 	ClipboardPaste,
 	Wand2,
 } from 'lucide-react';
+import { Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
 
 interface HomebrewModalProps {
 	isOpen: boolean;
@@ -134,24 +135,29 @@ export default function HomebrewModal({
 								: `DM 自創道具鍛造工坊 (發放至：${characterName})`}
 						</h2>
 					</div>
-					<button
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						aria-label='關閉自創道具編輯'
 						onClick={onClose}
 						className='text-stone-400 hover:text-stone-200 cursor-pointer'
 					>
 						<X className='w-5 h-5' />
-					</button>
+					</Button>
 				</div>
 
 				<form onSubmit={onSubmit} className='space-y-3.5 text-xs'>
 					<div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
 						<div className='sm:col-span-2'>
 							<label className='block text-stone-400 mb-1'>道具名稱 *</label>
-							<input
-								type='text'
+							<Input
+								aria-label='道具名稱'
 								required
 								value={form.name}
 								onChange={(e) => setForm({ ...form, name: e.target.value })}
 								placeholder='例如：深淵凝視魔戒'
+								data-testid='homebrew-item-name'
 								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 focus:border-purple-400 outline-none'
 							/>
 						</div>
@@ -159,7 +165,8 @@ export default function HomebrewModal({
 							<label className='block text-stone-400 mb-1'>
 								BG3 稀有度光框
 							</label>
-							<select
+							<Select
+								aria-label='BG3 稀有度光框'
 								value={form.rarity}
 								onChange={(e) =>
 									setForm({ ...form, rarity: e.target.value as Rarity })
@@ -172,7 +179,7 @@ export default function HomebrewModal({
 								<option value='VeryRare'>極珍稀 (Very Rare - 紫)</option>
 								<option value='Legendary'>傳奇 (Legendary - 金)</option>
 								<option value='Artifact'>神器 (Artifact - 橘紅)</option>
-							</select>
+							</Select>
 						</div>
 					</div>
 
@@ -189,69 +196,70 @@ export default function HomebrewModal({
 							</span>
 						</div>
 						<div className='grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1'>
-							<label
-								className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
+							<Checkbox
+								label={
+									<>
+										<Sword className='w-3.5 h-3.5 text-amber-400 shrink-0' />
+										<span>可否裝備？</span>
+									</>
+								}
+								checked={form.isEquippable}
+								onChange={(e) =>
+									setForm({ ...form, isEquippable: e.target.checked })
+								}
+								className='accent-amber-500'
+								labelClassName={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
 									form.isEquippable
 										? 'bg-amber-950/50 border-amber-500/70 text-amber-100'
 										: 'bg-stone-950 border-stone-800 text-stone-400'
 								}`}
-							>
-								<input
-									type='checkbox'
-									checked={form.isEquippable}
-									onChange={(e) =>
-										setForm({ ...form, isEquippable: e.target.checked })
-									}
-									className='accent-amber-500'
-								/>
-								<Sword className='w-3.5 h-3.5 text-amber-400 shrink-0' />
-								<span>可否裝備？</span>
-							</label>
+							/>
 
-							<label
-								className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
+							<Checkbox
+								label={
+									<>
+										<FlaskConical className='w-3.5 h-3.5 text-emerald-400 shrink-0' />
+										<span>可否消耗？</span>
+									</>
+								}
+								checked={form.isConsumable}
+								onChange={(e) =>
+									setForm({ ...form, isConsumable: e.target.checked })
+								}
+								className='accent-emerald-500'
+								labelClassName={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
 									form.isConsumable
 										? 'bg-emerald-950/50 border-emerald-500/70 text-emerald-100'
 										: 'bg-stone-950 border-stone-800 text-stone-400'
 								}`}
-							>
-								<input
-									type='checkbox'
-									checked={form.isConsumable}
-									onChange={(e) =>
-										setForm({ ...form, isConsumable: e.target.checked })
-									}
-									className='accent-emerald-500'
-								/>
-								<FlaskConical className='w-3.5 h-3.5 text-emerald-400 shrink-0' />
-								<span>可否消耗？</span>
-							</label>
+							/>
 
-							<label
-								className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
+							<Checkbox
+								label={
+									<>
+										<Star className='w-3.5 h-3.5 text-purple-400 shrink-0' />
+										<span>是否重要物品？</span>
+									</>
+								}
+								checked={form.isImportant}
+								onChange={(e) =>
+									setForm({ ...form, isImportant: e.target.checked })
+								}
+								className='accent-purple-500'
+								labelClassName={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
 									form.isImportant
 										? 'bg-purple-950/50 border-purple-500/70 text-purple-100'
 										: 'bg-stone-950 border-stone-800 text-stone-400'
 								}`}
-							>
-								<input
-									type='checkbox'
-									checked={form.isImportant}
-									onChange={(e) =>
-										setForm({ ...form, isImportant: e.target.checked })
-									}
-									className='accent-purple-500'
-								/>
-								<Star className='w-3.5 h-3.5 text-purple-400 shrink-0' />
-								<span>是否重要物品？</span>
-							</label>
+							/>
 						</div>
 					</div>
 
 					<div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
 						<div>
 							<label className='block text-stone-400 mb-1'>規則子分類</label>
-							<select
+							<Select
+								aria-label='規則子分類'
 								value={form.category}
 								onChange={(e) => {
 									const nextCat = e.target.value as ItemCategory;
@@ -272,12 +280,12 @@ export default function HomebrewModal({
 								<option value='Armor'>護甲 (Armor)</option>
 								<option value='Consumable'>消耗品 (Consumable)</option>
 								<option value='Misc'>奇物/雜物 (Misc)</option>
-							</select>
+							</Select>
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>子類型描述</label>
-							<input
-								type='text'
+							<Input
+								aria-label='子類型描述'
 								value={form.subType}
 								onChange={(e) => setForm({ ...form, subType: e.target.value })}
 								placeholder='如：長劍、奇物、戒指'
@@ -286,7 +294,8 @@ export default function HomebrewModal({
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>圖示樣式</label>
-							<select
+							<Select
+								aria-label='圖示樣式'
 								value={form.icon}
 								onChange={(e) => setForm({ ...form, icon: e.target.value })}
 								className='w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
@@ -296,11 +305,12 @@ export default function HomebrewModal({
 										{ic}
 									</option>
 								))}
-							</select>
+							</Select>
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>每日充能上限</label>
-							<input
+							<Input
+								aria-label='每日充能上限'
 								type='number'
 								min='0'
 								value={form.maxCharges}
@@ -319,8 +329,8 @@ export default function HomebrewModal({
 								<label className='block text-amber-300/90 mb-1'>
 									武器傷害骰與屬性
 								</label>
-								<input
-									type='text'
+								<Input
+									aria-label='武器傷害骰與屬性'
 									value={form.damage}
 									onChange={(e) => setForm({ ...form, damage: e.target.value })}
 									placeholder='例如：2d6+3 揮砍 + 1d4 黯蝕'
@@ -331,7 +341,8 @@ export default function HomebrewModal({
 								<label className='block text-amber-300/90 mb-1'>
 									D&amp;D 5R 武器精通 (Weapon Mastery)
 								</label>
-								<select
+								<Select
+									aria-label='D&D 5R 武器精通'
 									value={form.mastery}
 									onChange={(e) =>
 										setForm({
@@ -346,7 +357,7 @@ export default function HomebrewModal({
 											{v.name}
 										</option>
 									))}
-								</select>
+								</Select>
 							</div>
 						</div>
 					)}
@@ -356,8 +367,8 @@ export default function HomebrewModal({
 							<label className='block text-sky-300 mb-1'>
 								護甲等級 (AC) 描述
 							</label>
-							<input
-								type='text'
+							<Input
+								aria-label='護甲等級描述'
 								value={form.ac}
 								onChange={(e) => setForm({ ...form, ac: e.target.value })}
 								placeholder='例如：18 (重甲，不加敏捷)'
@@ -370,7 +381,8 @@ export default function HomebrewModal({
 					<div className='grid grid-cols-3 gap-3'>
 						<div>
 							<label className='block text-stone-400 mb-1'>單件重量 (lb)</label>
-							<input
+							<Input
+								aria-label='單件重量'
 								type='number'
 								step='0.1'
 								value={form.weight}
@@ -380,7 +392,8 @@ export default function HomebrewModal({
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>單件價值 (GP)</label>
-							<input
+							<Input
+								aria-label='單件價值'
 								type='number'
 								value={form.valueGp}
 								onChange={(e) => setForm({ ...form, valueGp: e.target.value })}
@@ -389,7 +402,8 @@ export default function HomebrewModal({
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>堆疊數量</label>
-							<input
+							<Input
+								aria-label='堆疊數量'
 								type='number'
 								min='1'
 								value={form.quantity}
@@ -405,7 +419,8 @@ export default function HomebrewModal({
 							物品效果與規則描述 (支援 Markdown 語法：`**粗體**`、`-
 							清單`、`&gt; 引用`)
 						</label>
-						<textarea
+						<Textarea
+							aria-label='物品效果與規則描述'
 							rows={4}
 							value={form.effects}
 							onChange={(e) => setForm({ ...form, effects: e.target.value })}
@@ -426,23 +441,27 @@ export default function HomebrewModal({
 
 							<div className='flex items-center gap-1.5'>
 								{copiedAffix && (
-									<button
+									<Button
 										type='button'
+										variant='secondary'
+										size='sm'
 										onClick={pasteAffixToForm}
 										className='px-2 py-1 rounded bg-purple-950 hover:bg-purple-900 border border-purple-500/70 text-purple-200 flex items-center gap-1 cursor-pointer transition'
 									>
 										<ClipboardPaste className='w-3 h-3' />
 										<span>貼上「{copiedAffix.name}」</span>
-									</button>
+									</Button>
 								)}
-								<button
+								<Button
 									type='button'
+									variant='secondary'
+									size='sm'
 									onClick={addEmptyAffix}
 									className='px-2.5 py-1 rounded bg-amber-950/90 hover:bg-amber-900 border border-amber-500/70 text-amber-200 flex items-center gap-1 cursor-pointer transition'
 								>
 									<Plus className='w-3 h-3' />
 									<span>新增詞條</span>
-								</button>
+								</Button>
 							</div>
 						</div>
 
@@ -466,8 +485,8 @@ export default function HomebrewModal({
 												<span className='text-[10px] font-mono text-stone-500 shrink-0'>
 													#{idx + 1}
 												</span>
-												<input
-													type='text'
+												<Input
+													aria-label={`附魔詞條 ${idx + 1} 名稱`}
 													required
 													value={affix.name}
 													onChange={(e) =>
@@ -480,27 +499,33 @@ export default function HomebrewModal({
 
 											{/* 詞條工具列：排序、對玩家隱藏、複製、刪除 */}
 											<div className='flex items-center gap-1 shrink-0'>
-												<button
+												<Button
 													type='button'
+													variant='ghost'
+													size='sm'
 													onClick={() => moveAffixInForm(idx, -1)}
 													disabled={idx === 0}
 													title='上移'
 													className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
 												>
 													<ArrowUp className='w-3.5 h-3.5' />
-												</button>
-												<button
+												</Button>
+												<Button
 													type='button'
+													variant='ghost'
+													size='sm'
 													onClick={() => moveAffixInForm(idx, 1)}
 													disabled={idx === affixes.length - 1}
 													title='下移'
 													className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
 												>
 													<ArrowDown className='w-3.5 h-3.5' />
-												</button>
+												</Button>
 
-												<button
+												<Button
 													type='button'
+													variant='ghost'
+													size='sm'
 													onClick={() =>
 														updateAffixField(idx, { isHidden: !affix.isHidden })
 													}
@@ -526,10 +551,12 @@ export default function HomebrewModal({
 															<span>公開</span>
 														</>
 													)}
-												</button>
+												</Button>
 
-												<button
+												<Button
 													type='button'
+													variant='ghost'
+													size='sm'
 													onClick={() => {
 														if (affix.name.trim()) onCopyAffix(affix);
 													}}
@@ -537,20 +564,23 @@ export default function HomebrewModal({
 													className='p-1 rounded bg-stone-900 hover:bg-amber-950 border border-stone-700 text-stone-300 hover:text-amber-200 cursor-pointer'
 												>
 													<Copy className='w-3.5 h-3.5' />
-												</button>
+												</Button>
 
-												<button
+												<Button
 													type='button'
+													variant='danger'
+													size='sm'
 													onClick={() => removeAffixFromForm(idx)}
 													title='刪除此詞條'
 													className='p-1 rounded bg-red-950/60 hover:bg-red-900 border border-red-800/60 text-red-300 cursor-pointer'
 												>
 													<Trash2 className='w-3.5 h-3.5' />
-												</button>
+												</Button>
 											</div>
 										</div>
 
-										<textarea
+										<Textarea
+											aria-label={`附魔詞條 ${idx + 1} 描述`}
 											rows={2}
 											value={affix.desc}
 											onChange={(e) =>
@@ -570,7 +600,8 @@ export default function HomebrewModal({
 							<label className='block text-stone-400 mb-1'>
 								背景風味文字 (支援 Markdown)
 							</label>
-							<textarea
+							<Textarea
+								aria-label='背景風味文字'
 								rows={2}
 								value={form.flavor}
 								onChange={(e) => setForm({ ...form, flavor: e.target.value })}
@@ -582,7 +613,8 @@ export default function HomebrewModal({
 							<label className='block text-red-400 mb-1'>
 								🔒 DM 隱藏筆記 / 詛咒真相 (支援 Markdown，僅 DM 可見)
 							</label>
-							<textarea
+							<Textarea
+								aria-label='DM 隱藏筆記'
 								rows={2}
 								value={form.dmNotes}
 								onChange={(e) => setForm({ ...form, dmNotes: e.target.value })}
@@ -594,55 +626,59 @@ export default function HomebrewModal({
 
 					{/* 同調、未鑑定與私人背包開關 */}
 					<div className='flex flex-wrap items-center gap-5 pt-1'>
-						<label className='flex items-center gap-2 cursor-pointer text-stone-200'>
-							<input
-								type='checkbox'
+						<Checkbox
+							label='需同調 (Requires Attunement)'
+							labelClassName='cursor-pointer text-stone-200'
+							className='accent-amber-500'
 								checked={form.requiresAttunement}
 								onChange={(e) =>
 									setForm({ ...form, requiresAttunement: e.target.checked })
 								}
-								className='accent-amber-500'
-							/>
-							<span>需同調 (Requires Attunement)</span>
-						</label>
+						/>
 
-						<label className='flex items-center gap-2 cursor-pointer text-purple-300'>
-							<input
-								type='checkbox'
+						<Checkbox
+							label={
+								<>
+									<EyeOff className='w-3.5 h-3.5' />
+									<span>設為「未鑑定狀態」(對玩家隱藏屬性)</span>
+								</>
+							}
+							labelClassName='cursor-pointer text-purple-300'
+							className='accent-purple-500'
 								checked={!form.isIdentified}
 								onChange={(e) =>
 									setForm({ ...form, isIdentified: !e.target.checked })
 								}
-								className='accent-purple-500'
-							/>
-							<EyeOff className='w-3.5 h-3.5' />
-							<span>設為「未鑑定狀態」(對玩家隱藏屬性)</span>
-						</label>
+						/>
 
-						<label className='flex items-center gap-2 cursor-pointer text-emerald-300'>
-							<input
-								type='checkbox'
+						<Checkbox
+							label={
+								<>
+									<Lock className='w-3.5 h-3.5' />
+									<span>放入該角色的「私人暗袋」(其他玩家不可見)</span>
+								</>
+							}
+							labelClassName='cursor-pointer text-emerald-300'
+							className='accent-emerald-500'
 								checked={Boolean(form.isPrivate)}
 								onChange={(e) =>
 									setForm({ ...form, isPrivate: e.target.checked })
 								}
-								className='accent-emerald-500'
-							/>
-							<Lock className='w-3.5 h-3.5' />
-							<span>放入該角色的「私人暗袋」(其他玩家不可見)</span>
-						</label>
+						/>
 					</div>
 
 					<div className='flex justify-end gap-2 pt-3 border-t border-stone-800'>
-						<button
+						<Button
 							type='button'
+							variant='secondary'
 							onClick={onClose}
 							className='px-4 py-2 rounded bg-stone-900 border border-stone-700 text-stone-300 hover:bg-stone-800 cursor-pointer'
 						>
 							取消
-						</button>
-						<button
+						</Button>
+						<Button
 							type='submit'
+							variant='primary'
 							className='px-5 py-2 rounded bg-gradient-to-r from-purple-700 to-amber-700 hover:from-purple-600 hover:to-amber-600 text-white font-semibold shadow-lg flex items-center gap-1.5 cursor-pointer'
 						>
 							{isEditing ? (
@@ -656,7 +692,7 @@ export default function HomebrewModal({
 									<span>鑄造並放入背包</span>
 								</>
 							)}
-						</button>
+						</Button>
 					</div>
 				</form>
 			</div>

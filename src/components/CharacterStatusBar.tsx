@@ -1,4 +1,5 @@
 import { Coins, Lock, Scale, Settings, Tent, UserPlus } from 'lucide-react';
+import { Button, Checkbox } from '@/components/ui';
 import {
 	CAMP_CHEST_ID,
 	type Character,
@@ -76,8 +77,12 @@ export default function CharacterStatusBar({
 									const isMe =
 										viewMode === 'player' && character.id === viewerCharId;
 									return (
-										<button
+										<Button
 											key={character.id}
+											type='button'
+											variant='ghost'
+											data-testid={`inventory-character-${character.id}`}
+											aria-pressed={isSelected}
 											onClick={() => setActiveCharId(character.id)}
 											className={`flex-1 min-w-[110px] flex items-center gap-2 p-2 rounded-md border text-left transition cursor-pointer relative ${
 												isSelected
@@ -101,33 +106,44 @@ export default function CharacterStatusBar({
 													STR {character.str}
 												</div>
 											</div>
-										</button>
+										</Button>
 									);
 								})}
 						</div>
 
 						<div className='flex items-center gap-1.5 shrink-0'>
 							{!isCampChestActive && canEditCharacterModal && (
-								<button
+								<Button
+									type='button'
+									variant='secondary'
+									size='sm'
+									aria-label='編輯目前角色基本資料'
 									onClick={onEditCharacter}
-									title='編輯目前角色基本資料 (名稱、頭銜、力量值)'
 									className='p-2 rounded bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-amber-300 transition cursor-pointer'
 								>
 									<Settings className='w-4 h-4' />
-								</button>
+								</Button>
 							)}
 
-							<button
+							<Button
+								type='button'
+								variant='secondary'
+								size='sm'
+								aria-label='新增冒險者角色'
 								onClick={onAddCharacter}
 								disabled={!canCreateCharacter}
 								title={createCharTooltip}
 								className='p-2 rounded bg-purple-950/90 hover:bg-purple-900 disabled:opacity-35 disabled:cursor-not-allowed border border-purple-500/70 text-purple-200 transition cursor-pointer'
 							>
 								<UserPlus className='w-4 h-4' />
-							</button>
+							</Button>
 						</div>
 
-						<button
+						<Button
+							type='button'
+							variant='ghost'
+							data-testid='inventory-character-camp-chest'
+							aria-pressed={isCampChestActive}
 							onClick={() => setActiveCharId(CAMP_CHEST_ID)}
 							className={`flex-1 min-w-[130px] flex items-center gap-2.5 p-2.5 rounded-md border text-left transition cursor-pointer relative ${
 								isCampChestActive
@@ -154,7 +170,7 @@ export default function CharacterStatusBar({
 									件公物
 								</div>
 							</div>
-						</button>
+						</Button>
 					</div>
 				</div>
 			</section>
@@ -188,6 +204,7 @@ export default function CharacterStatusBar({
 									<span>負重 (力量 {activeCharacter.str})</span>
 								</span>
 								<span
+									data-testid='inventory-encumbrance'
 									className={`font-mono font-semibold ${
 										encumbranceStats.percentage > 85
 											? 'text-red-400'
@@ -232,15 +249,13 @@ export default function CharacterStatusBar({
 								</span>
 							</div>
 
-							<label className='flex items-center gap-1.5 cursor-pointer hover:text-stone-200'>
-								<input
-									type='checkbox'
+							<Checkbox
+								label={`計入硬幣重 (${coinWeight} lb)`}
+								data-testid='inventory-count-coin-weight'
 									checked={countCoinWeight}
 									onChange={(e) => setCountCoinWeight(e.target.checked)}
-									className='accent-amber-500 rounded'
-								/>
-								<span>計入硬幣重 ({coinWeight} lb)</span>
-							</label>
+								labelClassName='gap-1.5 cursor-pointer text-[11px] text-stone-400 hover:text-stone-200'
+							/>
 						</div>
 					</>
 				)}
@@ -263,12 +278,16 @@ export default function CharacterStatusBar({
 							(折合 {canReadDisplayedWallet ? `${totalValueInGp} GP` : '???'})
 						</span>
 					</span>
-					<button
+					<Button
+						type='button'
+						variant='secondary'
+						size='sm'
+						data-testid='inventory-currency-open'
 						onClick={onOpenCurrencyPanel}
 						className='text-[11px] px-2 py-0.5 rounded bg-amber-950/90 hover:bg-amber-900 text-amber-300 border border-amber-600/50 transition cursor-pointer'
 					>
 						管理錢包
-					</button>
+					</Button>
 				</div>
 
 				<div className='grid grid-cols-5 gap-1.5 text-center'>
@@ -299,11 +318,15 @@ export default function CharacterStatusBar({
 							color: 'text-orange-400 border-orange-600/50 bg-orange-950/40',
 						},
 					].map((coin) => (
-						<div
+						<Button
+							type='button'
+							variant='ghost'
+							size='sm'
 							key={coin.key}
+							data-testid={`currency-summary-${coin.key}`}
 							onClick={onOpenCurrencyPanel}
 							className={`px-1 py-1 rounded border ${coin.color} cursor-pointer hover:brightness-125 transition`}
-							title='點擊開啟錢包管理'
+							aria-label={`${coin.label}，點擊開啟錢包管理`}
 						>
 							<div className='text-xs font-mono font-bold'>
 								{canReadDisplayedWallet
@@ -311,7 +334,7 @@ export default function CharacterStatusBar({
 									: '🔒'}
 							</div>
 							<div className='text-[9px] opacity-80'>{coin.label}</div>
-						</div>
+						</Button>
 					))}
 				</div>
 			</div>

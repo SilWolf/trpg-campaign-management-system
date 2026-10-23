@@ -37,6 +37,7 @@ import {
 	ArrowDown,
 	Wand2,
 } from 'lucide-react';
+import { Button, Input, Textarea } from '@/components/ui';
 
 interface ItemTooltipProps {
 	inspectedItem: InventoryItem | null;
@@ -281,18 +282,24 @@ export default function ItemTooltip({
 										</div>
 										{canEditItemBag && (
 											<div className='flex items-center gap-1.5'>
-												<button
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
 													onClick={() => adjustCharges(inspectedItem, -1)}
 													className='px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-xs font-bold text-stone-200 border border-stone-600 cursor-pointer'
 												>
 													消耗 -1
-												</button>
-												<button
+												</Button>
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
 													onClick={() => adjustCharges(inspectedItem, 1)}
 													className='px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-xs font-bold text-cyan-200 border border-cyan-700/60 cursor-pointer'
 												>
 													恢復 +1
-												</button>
+												</Button>
 											</div>
 										)}
 									</div>
@@ -368,14 +375,17 @@ export default function ItemTooltip({
 												</span>
 
 												{viewMode === 'dm' && copiedAffix && (
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
 														onClick={() => onPasteAffix(inspectedItem)}
 														className='text-[11px] px-2 py-0.5 rounded bg-purple-950/90 hover:bg-purple-900 border border-purple-500/60 text-purple-200 flex items-center gap-1 cursor-pointer transition'
 														title={`貼上詞條：${copiedAffix.name}`}
 													>
 														<ClipboardPaste className='w-3 h-3 text-purple-300' />
 														<span>貼上「{copiedAffix.name}」</span>
-													</button>
+													</Button>
 												)}
 											</div>
 
@@ -405,15 +415,21 @@ export default function ItemTooltip({
 
 																{viewMode === 'dm' && (
 																	<div className='flex items-center gap-1 shrink-0'>
-																		<button
+																		<Button
+																			type='button'
+																			variant='ghost'
+																			size='sm'
 																			onClick={() => moveAffix(idx, -1)}
 																			disabled={idx === 0}
 																			title='上移詞條'
 																			className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
 																		>
 																			<ArrowUp className='w-3 h-3' />
-																		</button>
-																		<button
+																		</Button>
+																		<Button
+																			type='button'
+																			variant='ghost'
+																			size='sm'
 																			onClick={() => moveAffix(idx, 1)}
 																			disabled={
 																				idx === visibleAffixes.length - 1
@@ -422,8 +438,11 @@ export default function ItemTooltip({
 																			className='p-1 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-30 text-stone-400 hover:text-stone-200 cursor-pointer'
 																		>
 																			<ArrowDown className='w-3 h-3' />
-																		</button>
-																		<button
+																		</Button>
+																		<Button
+																			type='button'
+																			variant='ghost'
+																			size='sm'
 																			onClick={() =>
 																				toggleAffixHidden(affix.id)
 																			}
@@ -443,14 +462,17 @@ export default function ItemTooltip({
 																			) : (
 																				<EyeOff className='w-3 h-3' />
 																			)}
-																		</button>
-																		<button
+																		</Button>
+																		<Button
+																			type='button'
+																			variant='ghost'
+																			size='sm'
 																			onClick={() => onCopyAffix(affix)}
 																			title='複製此詞條以貼到其他物品'
 																			className='p-1 rounded bg-stone-900 hover:bg-amber-950 border border-stone-700 hover:border-amber-600/60 text-stone-300 hover:text-amber-200 cursor-pointer'
 																		>
 																			<Copy className='w-3 h-3' />
-																		</button>
+																		</Button>
 																	</div>
 																)}
 															</div>
@@ -494,7 +516,10 @@ export default function ItemTooltip({
 										</span>
 										{canEditItemBag &&
 											(!isEditingNote ? (
-												<button
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
 													onClick={() => setIsEditingNote(true)}
 													className='text-[11px] px-2 py-0.5 rounded bg-stone-900 hover:bg-stone-800 text-amber-300 border border-amber-700/50 flex items-center gap-1 cursor-pointer'
 												>
@@ -504,10 +529,13 @@ export default function ItemTooltip({
 															? '編輯備註'
 															: '新增備註'}
 													</span>
-												</button>
+												</Button>
 											) : (
 												<div className='flex items-center gap-1.5'>
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
 														onClick={() => {
 															setIsEditingNote(false);
 															setNoteDraft(inspectedItem.playerNotes || '');
@@ -515,8 +543,11 @@ export default function ItemTooltip({
 														className='text-[11px] px-2 py-0.5 rounded bg-stone-900 text-stone-400 hover:text-stone-200 border border-stone-700 cursor-pointer'
 													>
 														取消
-													</button>
-													<button
+													</Button>
+													<Button
+														type='button'
+														variant='primary'
+														size='sm'
 														onClick={() => {
 															onUpdatePlayerNotes(inspectedItem, noteDraft);
 															setIsEditingNote(false);
@@ -525,13 +556,14 @@ export default function ItemTooltip({
 													>
 														<Check className='w-3 h-3' />
 														<span>儲存</span>
-													</button>
+													</Button>
 												</div>
 											))}
 									</div>
 
 									{isEditingNote ? (
-										<textarea
+										<Textarea
+											aria-label='玩家物品備註'
 											rows={3}
 											value={noteDraft}
 											onChange={(e) => setNoteDraft(e.target.value)}
@@ -600,7 +632,10 @@ export default function ItemTooltip({
 										<>
 											<div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
 												{!isInCampChest && isEquippable && (
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
 														onClick={() => toggleEquip(inspectedItem)}
 														className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
 															inspectedItem.equipped
@@ -609,11 +644,14 @@ export default function ItemTooltip({
 														}`}
 													>
 														{inspectedItem.equipped ? '卸下裝備' : '穿戴裝備'}
-													</button>
+													</Button>
 												)}
 
 												{!isInCampChest && inspectedItem.requiresAttunement && (
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
 														onClick={() => toggleAttune(inspectedItem)}
 														className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
 															inspectedItem.attuned
@@ -622,11 +660,14 @@ export default function ItemTooltip({
 														}`}
 													>
 														{inspectedItem.attuned ? '解除同調' : '✨ 進行同調'}
-													</button>
+													</Button>
 												)}
 
 												{canManagePrivacy && (
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
 														onClick={() => onTogglePrivate(inspectedItem)}
 														className={`px-3 py-1.5 rounded text-xs font-medium border flex items-center justify-center gap-1 transition cursor-pointer ${
 															inspectedItem.isPrivate
@@ -645,22 +686,29 @@ export default function ItemTooltip({
 																<span>藏入私人袋</span>
 															</>
 														)}
-													</button>
+													</Button>
 												)}
 
 												{isConsumable && (
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
+														data-testid='inventory-consume-item'
 														onClick={() =>
 															consumeOrSplitStack(inspectedItem, 'consume')
 														}
 														className='px-3 py-1.5 rounded text-xs font-medium bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/60 text-emerald-200 cursor-pointer'
 													>
 														飲用 / 消耗 (-1)
-													</button>
+													</Button>
 												)}
 
 												{inspectedItem.quantity > 1 && (
-													<button
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
 														onClick={() =>
 															consumeOrSplitStack(inspectedItem, 'split')
 														}
@@ -668,7 +716,7 @@ export default function ItemTooltip({
 													>
 														<Split className='w-3.5 h-3.5' />
 														<span>拆分堆疊</span>
-													</button>
+													</Button>
 												)}
 											</div>
 
@@ -687,16 +735,19 @@ export default function ItemTooltip({
 													{inspectedItem.quantity > 1 && (
 														<div className='flex items-center gap-1 bg-stone-950 border border-stone-700 rounded px-1.5 py-0.5 text-[11px]'>
 															<span className='text-stone-400 mr-1'>數量:</span>
-															<button
+															<Button
 																type='button'
+																variant='ghost'
+																size='sm'
 																onClick={() =>
 																	setTransferQty((q) => Math.max(1, q - 1))
 																}
 																className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
 															>
 																-
-															</button>
-															<input
+															</Button>
+															<Input
+																aria-label='移交道具數量'
 																type='number'
 																min={1}
 																max={inspectedItem.quantity}
@@ -714,8 +765,10 @@ export default function ItemTooltip({
 																}}
 																className='w-10 text-center bg-transparent font-mono font-bold text-amber-300 outline-none'
 															/>
-															<button
+															<Button
 																type='button'
+																variant='ghost'
+																size='sm'
 																onClick={() =>
 																	setTransferQty((q) =>
 																		Math.min(inspectedItem.quantity, q + 1),
@@ -724,23 +777,28 @@ export default function ItemTooltip({
 																className='px-1.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold cursor-pointer'
 															>
 																+
-															</button>
-															<button
+															</Button>
+															<Button
 																type='button'
+																variant='secondary'
+																size='sm'
 																onClick={() =>
 																	setTransferQty(inspectedItem.quantity)
 																}
 																className='ml-1 px-1.5 py-0.2 rounded bg-amber-950 hover:bg-amber-900 text-amber-300 border border-amber-700/50 text-[10px] cursor-pointer'
 															>
 																全部 ({inspectedItem.quantity})
-															</button>
+															</Button>
 														</div>
 													)}
 												</div>
 
 												<div className='flex items-center gap-1.5 flex-wrap'>
 													{!isInCampChest && (
-														<button
+														<Button
+															type='button'
+															variant='secondary'
+															size='sm'
 															onClick={() =>
 																transferItemToCharacter(
 																	inspectedItem,
@@ -754,7 +812,7 @@ export default function ItemTooltip({
 															{inspectedItem.quantity > 1
 																? ` (${transferQty})`
 																: ''}
-														</button>
+														</Button>
 													)}
 
 													{characters
@@ -774,8 +832,11 @@ export default function ItemTooltip({
 																viewMode === 'player' &&
 																target.id === viewerCharId;
 															return (
-																<button
+																<Button
 																	key={target.id}
+																	type='button'
+																	variant='secondary'
+																	size='sm'
 																	onClick={() =>
 																		transferItemToCharacter(
 																			inspectedItem,
@@ -794,7 +855,7 @@ export default function ItemTooltip({
 																		? ` (${transferQty})`
 																		: ''}
 																	{isMe && isInCampChest ? ' 領回' : ''}
-																</button>
+																</Button>
 															);
 														})}
 												</div>
@@ -811,14 +872,20 @@ export default function ItemTooltip({
 									{viewMode === 'dm' && (
 										<div className='pt-2 mt-2 border-t border-red-900/40 flex flex-wrap items-center justify-between gap-2'>
 											<div className='flex items-center gap-2'>
-												<button
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
 													onClick={() => onOpenEditModal(inspectedItem)}
 													className='px-3 py-1.5 rounded text-xs font-medium bg-amber-950/90 hover:bg-amber-900 border border-amber-500/70 text-amber-200 flex items-center gap-1.5 cursor-pointer'
 												>
 													<Edit3 className='w-3.5 h-3.5' />
 													<span>DM 編輯物品</span>
-												</button>
-												<button
+												</Button>
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
 													onClick={() => toggleIdentify(inspectedItem)}
 													className='px-3 py-1.5 rounded text-xs font-medium bg-purple-950/90 hover:bg-purple-900 border border-purple-500/70 text-purple-200 flex items-center gap-1.5 cursor-pointer'
 												>
@@ -833,16 +900,19 @@ export default function ItemTooltip({
 															<span>向玩家揭露鑑定</span>
 														</>
 													)}
-												</button>
+												</Button>
 											</div>
 
-											<button
+											<Button
+												type='button'
+												variant='danger'
+												size='sm'
 												onClick={() => deleteItem(inspectedItem)}
 												className='px-2.5 py-1.5 rounded text-xs bg-red-950/70 hover:bg-red-900 border border-red-700/60 text-red-200 flex items-center gap-1 cursor-pointer'
 											>
 												<Trash2 className='w-3.5 h-3.5' />
 												<span>銷毀</span>
-											</button>
+											</Button>
 										</div>
 									)}
 								</div>

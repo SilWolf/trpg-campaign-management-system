@@ -11,6 +11,7 @@ import {
 	Lock,
 	ArrowLeftRight,
 } from 'lucide-react';
+import { Button, Input, Select } from '@/components/ui';
 
 interface CurrencyPanelProps {
 	isOpen: boolean;
@@ -146,27 +147,43 @@ export default function CurrencyPanel({
 
 	return (
 		<div className='fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto'>
-			<div className='bg-stone-950 border-2 border-amber-600/70 rounded-lg max-w-md w-full p-5 shadow-[0_0_45px_rgba(245,158,11,0.25)] my-8'>
+			<div
+				role='dialog'
+				aria-modal='true'
+				aria-labelledby='currency-panel-heading'
+				data-testid='currency-panel'
+				className='bg-stone-950 border-2 border-amber-600/70 rounded-lg max-w-md w-full p-5 shadow-[0_0_45px_rgba(245,158,11,0.25)] my-8'
+			>
 				<div className='flex items-center justify-between border-b border-stone-800 pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
 						<Coins className='w-5 h-5 text-amber-400' />
-						<h2 className='text-base font-serif font-bold text-amber-200'>
+						<h2
+							id='currency-panel-heading'
+							className='text-base font-serif font-bold text-amber-200'
+						>
 							{activeCharacter.avatar} {activeCharacter.name} — 錢包管理
 						</h2>
 					</div>
-					<button
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						aria-label='關閉錢包管理'
 						onClick={onClose}
 						className='text-stone-400 hover:text-stone-200 cursor-pointer'
 					>
 						<X className='w-5 h-5' />
-					</button>
+					</Button>
 				</div>
 
 				{/* 公開錢包 vs 私人錢包 分頁切換 */}
 				{!isCampChest && (
 					<div className='grid grid-cols-2 gap-2 mb-4'>
-						<button
+						<Button
 							type='button'
+							variant='ghost'
+							data-testid='currency-wallet-public'
+							aria-pressed={walletTab === 'public'}
 							disabled={!canReadPublicWallet}
 							onClick={() => setWalletTab('public')}
 							className={`py-2 px-3 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
@@ -177,10 +194,13 @@ export default function CurrencyPanel({
 						>
 							<Globe className='w-3.5 h-3.5 text-amber-300' />
 							<span>公開錢包 {!canReadPublicWallet && '(無權限)'}</span>
-						</button>
+						</Button>
 
-						<button
+						<Button
 							type='button'
+							variant='ghost'
+							data-testid='currency-wallet-private'
+							aria-pressed={walletTab === 'private'}
 							disabled={!canReadPrivateWallet}
 							onClick={() => setWalletTab('private')}
 							className={`py-2 px-3 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
@@ -191,7 +211,7 @@ export default function CurrencyPanel({
 						>
 							<Lock className='w-3.5 h-3.5 text-emerald-400' />
 							<span>私人錢包 {!canReadPrivateWallet && '(隱藏)'}</span>
-						</button>
+						</Button>
 					</div>
 				)}
 
@@ -224,30 +244,41 @@ export default function CurrencyPanel({
 									<div className='flex items-center gap-1.5'>
 										{canEditCurrent &&
 											[-10, -1].map((delta) => (
-												<button
+												<Button
 													key={delta}
+													type='button'
+													variant='secondary'
+													size='sm'
+													data-testid={`currency-remove-${coin.key}-${Math.abs(delta)}`}
 													onClick={() =>
 														onUpdateCurrency(coin.key, delta, walletTab)
 													}
 													className='px-2 py-1 rounded bg-stone-950/80 hover:bg-stone-900 border border-stone-700 text-[11px] font-mono cursor-pointer'
 												>
 													{delta}
-												</button>
+												</Button>
 											))}
-										<span className='w-14 text-center font-mono font-bold text-sm'>
+										<span
+											data-testid={`currency-balance-${coin.key}`}
+											className='w-14 text-center font-mono font-bold text-sm'
+										>
 											{currentWallet[coin.key] ?? 0}
 										</span>
 										{canEditCurrent &&
 											[1, 10].map((delta) => (
-												<button
+												<Button
 													key={delta}
+													type='button'
+													variant='secondary'
+													size='sm'
+													data-testid={`currency-add-${coin.key}-${delta}`}
 													onClick={() =>
 														onUpdateCurrency(coin.key, delta, walletTab)
 													}
 													className='px-2 py-1 rounded bg-stone-950/80 hover:bg-stone-900 border border-stone-700 text-[11px] font-mono cursor-pointer'
 												>
 													+{delta}
-												</button>
+												</Button>
 											))}
 									</div>
 								</div>
@@ -272,8 +303,9 @@ export default function CurrencyPanel({
 								</div>
 
 								<div className='flex items-center gap-2'>
-									<select
+									<Select
 										value={transferCoin}
+										aria-label='轉出貨幣類型'
 										onChange={(e) =>
 											setTransferCoin(e.target.value as CurrencyType)
 										}
@@ -284,13 +316,14 @@ export default function CurrencyPanel({
 										<option value='ep'>EP 電金幣</option>
 										<option value='sp'>SP 銀幣</option>
 										<option value='cp'>CP 銅幣</option>
-									</select>
+									</Select>
 
-									<input
+									<Input
 										type='number'
 										min={1}
 										max={Math.max(1, maxAvailable)}
 										value={transferAmount}
+										aria-label='轉出貨幣數量'
 										onChange={(e) =>
 											setTransferAmount(
 												Math.max(1, parseInt(e.target.value, 10) || 1),
@@ -299,20 +332,24 @@ export default function CurrencyPanel({
 										className='flex-1 bg-stone-900 border border-stone-700 focus:border-amber-500 rounded px-2.5 py-1.5 font-mono font-bold text-stone-100 outline-none'
 									/>
 
-									<button
+									<Button
 										type='button'
+										variant='secondary'
+										size='sm'
 										onClick={() => setTransferAmount(maxAvailable)}
 										disabled={maxAvailable <= 0}
 										className='px-2.5 py-1.5 rounded bg-stone-900 hover:bg-stone-800 disabled:opacity-40 border border-stone-700 text-amber-300 text-[11px] cursor-pointer'
 									>
 										全部 ({maxAvailable})
-									</button>
+									</Button>
 								</div>
 
 								{/* 自己公開錢包 <-> 私人錢包互轉 */}
 								{canTransferBetweenOwn && (
-									<button
+									<Button
 										type='button'
+										variant='secondary'
+										size='sm'
 										disabled={maxAvailable <= 0}
 										onClick={() =>
 											onTransferBetweenOwnWallets(
@@ -329,14 +366,16 @@ export default function CurrencyPanel({
 												? `🔒 將 ${transferAmount} ${transferCoin.toUpperCase()} 藏入私人錢包`
 												: `🌐 將 ${transferAmount} ${transferCoin.toUpperCase()} 移回公開錢包`}
 										</span>
-									</button>
+									</Button>
 								)}
 
 								{/* 單向轉帳給公庫或任何隊友（無須擁有目標角色的權限） */}
 								<div className='flex items-center gap-1.5 flex-wrap pt-0.5'>
 									{!isCampChest && (
-										<button
+										<Button
 											type='button'
+											variant='secondary'
+											size='sm'
 											disabled={maxAvailable <= 0}
 											onClick={() =>
 												onTransferCurrency(
@@ -349,19 +388,21 @@ export default function CurrencyPanel({
 											className='px-2.5 py-1.5 rounded bg-cyan-950/80 hover:bg-cyan-900 disabled:opacity-40 border border-cyan-500/70 text-cyan-100 text-[11px] font-medium cursor-pointer transition'
 										>
 											🏕️ 存入營地公庫
-										</button>
+										</Button>
 									)}
 
 									{isCampChest && onSplitCampCoinToParty && (
-										<button
+										<Button
 											type='button'
+											variant='secondary'
+											size='sm'
 											disabled={maxAvailable <= 0}
 											onClick={() => onSplitCampCoinToParty(transferCoin)}
 											className='px-2.5 py-1.5 rounded bg-emerald-950/90 hover:bg-emerald-900 disabled:opacity-40 border border-emerald-500/70 text-emerald-100 text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition'
 										>
 											<Users className='w-3.5 h-3.5 text-emerald-400' />
 											<span>平分所有 {transferCoin.toUpperCase()} 給全隊</span>
-										</button>
+										</Button>
 									)}
 
 									{characters
@@ -370,9 +411,11 @@ export default function CurrencyPanel({
 												c.id !== activeCharacter.id && c.id !== CAMP_CHEST_ID,
 										)
 										.map((target) => (
-											<button
+											<Button
 												key={target.id}
 												type='button'
+												variant='secondary'
+												size='sm'
 												disabled={maxAvailable <= 0}
 												onClick={() =>
 													onTransferCurrency(
@@ -385,7 +428,7 @@ export default function CurrencyPanel({
 												className='px-2.5 py-1.5 rounded bg-stone-900 hover:bg-amber-950 disabled:opacity-40 border border-stone-700 hover:border-amber-600/60 text-stone-200 text-[11px] cursor-pointer transition'
 											>
 												轉給 {target.avatar} {target.name.split(' ')[0]}
-											</button>
+											</Button>
 										))}
 								</div>
 							</div>
@@ -394,22 +437,26 @@ export default function CurrencyPanel({
 						{/* 底部一鍵換整金幣按鈕 */}
 						<div className='mt-4 pt-3 border-t border-stone-800 flex items-center justify-between gap-2'>
 							{canEditCurrent ? (
-								<button
+								<Button
+									type='button'
+									variant='primary'
 									onClick={() => onConsolidateCoinsToGold(walletTab)}
 									className='flex-1 py-2 px-3 rounded bg-gradient-to-r from-amber-800 to-amber-700 hover:from-amber-700 hover:to-amber-600 text-amber-50 text-xs font-semibold flex items-center justify-center gap-1.5 shadow cursor-pointer'
 								>
 									<Sparkles className='w-3.5 h-3.5' />
 									<span>一鍵將零錢換整為金幣 (GP)</span>
-								</button>
+								</Button>
 							) : (
 								<div />
 							)}
-							<button
+							<Button
+								type='button'
+								variant='secondary'
 								onClick={onClose}
 								className='py-2 px-4 rounded bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 text-xs cursor-pointer'
 							>
 								關閉
-							</button>
+							</Button>
 						</div>
 					</>
 				)}

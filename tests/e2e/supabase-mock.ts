@@ -35,10 +35,15 @@ export async function seedAuthenticatedSession(page: Page) {
 
 export async function mockSupabase(
 	page: Page,
-	options: { campaignSettingsRole?: CampaignSettingsRole } = {},
+	options: {
+		campaignSettingsRole?: CampaignSettingsRole;
+		campaignInventoryRole?: CampaignSettingsRole;
+	} = {},
 ) {
 	const requests: string[] = [];
 	const campaignSettingsRole = options.campaignSettingsRole;
+	const campaignInventoryRole = options.campaignInventoryRole;
+	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
 	const campaignCharacters = [
 		{
 			id: 'settings-character',
@@ -62,6 +67,96 @@ export async function mockSupabase(
 			campaign_id: 'settings-campaign',
 			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+		},
+	];
+	const inventoryCharacters = [
+		{
+			id: 'inventory-character',
+			name: '測試冒險者',
+			title: '遊俠',
+			str: 10,
+			avatar: '🏹',
+			user_id: 'other-player-id',
+			campaign_id: 'inventory-campaign',
+			currencies: { pp: 0, gp: 20, ep: 0, sp: 0, cp: 0 },
+			private_currencies: { pp: 0, gp: 80, ep: 0, sp: 0, cp: 0 },
+		},
+		{
+			id: 'inventory-target-character',
+			name: '移轉目標',
+			title: '吟遊詩人',
+			str: 10,
+			avatar: '🎻',
+			user_id: 'transfer-player-id',
+			campaign_id: 'inventory-campaign',
+			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+		},
+	];
+	const inventoryItems = [
+		{
+			id: 'inventory-public-potion',
+			owner_id: 'inventory-character',
+			slot: 0,
+			name: '治療藥水',
+			category: 'Consumable',
+			sub_type: '藥水',
+			rarity: 'Common',
+			icon: 'FlaskConical',
+			damage: null,
+			mastery: 'None',
+			ac: null,
+			weight: 0.5,
+			value_gp: 50,
+			quantity: 2,
+			equipped: false,
+			requires_attunement: false,
+			attuned: false,
+			is_homebrew: false,
+			is_identified: true,
+			charges: 0,
+			max_charges: 0,
+			effects: '恢復生命。',
+			flavor: '',
+			dm_notes: '',
+			player_notes: '',
+			is_private: false,
+			is_equippable: false,
+			is_consumable: true,
+			is_important: false,
+			affixes: [],
+		},
+		{
+			id: 'inventory-private-letter',
+			owner_id: 'inventory-character',
+			slot: 1,
+			name: '暗袋密信',
+			category: 'Misc',
+			sub_type: '信件',
+			rarity: 'Rare',
+			icon: 'Scroll',
+			damage: null,
+			mastery: 'None',
+			ac: null,
+			weight: 1.5,
+			value_gp: 10,
+			quantity: 1,
+			equipped: false,
+			requires_attunement: false,
+			attuned: false,
+			is_homebrew: false,
+			is_identified: true,
+			charges: 0,
+			max_charges: 0,
+			effects: '不可公開的內容。',
+			flavor: '',
+			dm_notes: '',
+			player_notes: '',
+			is_private: true,
+			is_equippable: false,
+			is_consumable: false,
+			is_important: false,
+			affixes: [],
 		},
 	];
 	const campaignMembers = [
@@ -181,14 +276,18 @@ export async function mockSupabase(
 		}
 
 		if (
-			campaignSettingsRole &&
+			campaignRole &&
 			url.pathname === '/rest/v1/campaigns' &&
 			method === 'GET'
 		) {
 			await route.fulfill({
 				json: {
-					id: 'settings-campaign',
-					name: '隔離測試戰役',
+					id: campaignInventoryRole
+						? 'inventory-campaign'
+						: 'settings-campaign',
+					name: campaignInventoryRole
+						? '背包隔離測試戰役'
+						: '隔離測試戰役',
 					invite_code: 'TEST42',
 				},
 			});
@@ -196,13 +295,13 @@ export async function mockSupabase(
 		}
 
 		if (
-			campaignSettingsRole &&
+			campaignRole &&
 			url.pathname === '/rest/v1/campaign_members' &&
 			method === 'GET'
 		) {
 			if (url.searchParams.get('select') === 'role') {
 				await route.fulfill({
-					json: { role: campaignSettingsRole },
+					json: { role: campaignRole },
 				});
 				return;
 			}
@@ -212,16 +311,29 @@ export async function mockSupabase(
 		}
 
 		if (
-			campaignSettingsRole &&
+			campaignRole &&
 			url.pathname === '/rest/v1/characters' &&
 			method === 'GET'
 		) {
-			await route.fulfill({ json: campaignCharacters });
+			await route.fulfill({
+				json: campaignInventoryRole
+					? inventoryCharacters
+					: campaignCharacters,
+			});
 			return;
 		}
 
 		if (
-			campaignSettingsRole &&
+			campaignInventoryRole &&
+			url.pathname === '/rest/v1/inventory_items' &&
+			method === 'GET'
+		) {
+			await route.fulfill({ json: inventoryItems });
+			return;
+		}
+
+		if (
+			campaignRole &&
 			url.pathname === '/rest/v1/character_permissions' &&
 			method === 'GET'
 		) {
