@@ -43,6 +43,10 @@
    - 營地箱貨幣唯一遠端來源為 `campaigns.camp_chest_currency`，同步 Hook 訂閱 campaigns Realtime；不得存入虛擬角色的 `currencies`。
    - 角色錢包與營地箱錢包分屬不同資料列，前端移轉目前不是單一資料庫交易；不得宣稱跨列轉帳具原子性。需要跨使用者競爭保護時，先新增並手動部署交易 RPC。
    - 階段三未執行 SQL；Supabase Schema 與 Edge Function 由維護者依部署文件管理。
+7. **移除預設戰役特例（階段四已完成）**：
+   - 戰役大廳只顯示 Supabase 回傳的戰役；不可加入固定示範戰役卡片、以 `default` ID 隱藏戰役或依 ID 授予 DM 權限。
+   - `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 是建立範例戰役及訪客／離線退避的範例資料，不可用來回填遠端空集合。
+   - `camp-chest` 僅為 UI 虛擬角色；不得寫入 `characters`。物品須以目前 `campaign_id` 隔離，貨幣存於 `campaigns.camp_chest_currency`。
 
 ---
 
@@ -51,7 +55,7 @@
 #### 1. 資料庫 Schema 與 Supabase SQL 規範
 
 - **關鍵欄位型別差異（極重要）**：
-  - `campaigns.id`、`campaigns.dm_id`、`characters.id`、`characters.user_id`、`inventory_items.id` 皆為 **`TEXT`** 型別（以相容預設戰役 `'default'`、營地儲物箱 `'camp-chest'` 與訪客 `'guest'`）。
+  - `campaigns.id`、`campaigns.dm_id`、`characters.id`、`characters.user_id`、`inventory_items.id` 皆為 **`TEXT`** 型別；`camp-chest` 是虛擬 owner ID，`guest` 等本機識別值不得誤當 UUID。
   - `profiles.id`、`campaign_members.user_id`、`character_permissions.user_id` 與 `auth.uid()` 皆為 **`UUID`** 型別。
   - **撰寫 SQL / RLS / Trigger 時**：比較 `dm_id` 或 `characters.user_id` 與 `auth.uid()` 時，務必明確轉型為 `auth.uid()::text`；將 `characters.user_id` 轉為 `UUID` 時，必須使用 `EXCEPTION WHEN OTHERS` 捕捉非 UUID 字串（如 `'guest'`、`'dm'`），避免轉型報錯。
 - **防止 RLS 無限遞迴 (Infinite Recursion)**：
@@ -61,7 +65,7 @@
 
 - **命名轉換隔離**：資料庫欄位一律使用 `snake_case`，前端 TypeScript 型別（`src/types.ts`）一律使用 `camelCase`。所有新增欄位都必須在 `src/lib/supabase.ts` 的 `toDb*` 與 `fromDb*` 轉換器中雙向對應，並提供向下相容的 Fallback 預設值。
 - **Optimistic UI + Realtime 雙向同步**：前端狀態修改透過封裝後的 `setCharacters`、`setItems`、`setPermissions`、`setCampChestCurrency` 先行更新本地 State（計算 Diff 後非同步同步至 Supabase），並仰賴 `postgres_changes` WebSocket 頻道接收他人變更。
-- **單機與訪客模式退避 (Graceful Fallback)**：當 `!supabase`（未設定環境變數）、`isGuest` 或 `campaignId === 'default'` 時，所有功能需優雅退回本地端狀態操作，不可直接崩潰。
+- **單機與訪客模式退避 (Graceful Fallback)**：當 `!supabase`（未設定環境變數）或 `isGuest` 時，所有功能需優雅退回本地端狀態操作，不可依賴特殊 campaign ID 才能離線運作。
 
 #### 3. 前端架構、TypeScript 與 UI 風格規範
 

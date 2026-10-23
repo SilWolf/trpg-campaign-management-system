@@ -18,7 +18,7 @@
 | 戰役大廳 | 移除固定示範卡片及 `id === 'default'` 過濾，僅顯示使用者實際建立或加入的戰役。 |
 | 建立戰役 | 以 Edge Function 建團；示範建團載入 3 角色／9 物品，空白建團建立零角色／物品；成功後使用伺服器回傳 ID，失敗明確顯示錯誤且不導向。 |
 | 加入戰役 | campaign row 僅開放成員／DM 讀取後，邀請加入流程須改呼叫 `join_campaign_by_invite_code`，不可直接查 campaign 邀請碼。 |
-| 示範資料 | [src/data.ts](../src/data.ts) 現有 `CAMP_CHEST_DEFAULT`、`INITIAL_CHARACTERS`、`INITIAL_ITEMS`；Edge Function 必須排除虛擬 camp-chest 角色，僅複製三名真正角色和九件物品。 |
+| 示範資料 | [src/data.ts](../src/data.ts) 使用 `CAMP_CHEST_TEMPLATE`、`INITIAL_CHARACTERS`、`INITIAL_ITEMS`；Edge Function 必須排除虛擬 camp-chest 角色，僅複製三名真正角色和九件物品。 |
 | 同步與離線 | 檢查 [useCampaignSync.ts](../src/hooks/useCampaignSync.ts) 等資料流，確保遠端空集合不會自動補入示範資料；保留未設定 Supabase 及訪客模式的退避行為。 |
 | camp-chest UI | 保留目前特殊外觀、公共物品及金錢操作；改以 campaign 欄位與 campaign-scoped 物品資料作來源，不能把虛擬箱當成角色 CRUD。 |
 | 預設戰役特例 | 逐步檢查角色權限、背包、設定、角色設定面板、開發指引及測試中的 `default` 分支；完成後只保留必要相容性，不再依預設戰役識別碼授權。 |
@@ -70,12 +70,15 @@
 - 同步失敗會記錄錯誤並將狀態列標示為「同步異常」。本階段未新增或執行 SQL，使用既有階段二 Schema／Edge Function。
 - 跨角色與 campaign 錢包目前仍由前端分別寫入角色列與 campaign 列，並非資料庫單一交易；跨客戶端同時轉帳的原子性須在階段五特別驗證，若不能接受短暫或競爭狀態，需另增資料庫轉帳 RPC 並由維護者手動部署。
 
-### 階段四：移除預設戰役特例 — 待執行
+### 階段四：移除預設戰役特例 — 完成
 
-- 移除大廳固定示範戰役卡片與預設戰役專用過濾。
-- 檢查角色權限 Hook、背包頁、設定頁、角色設定面板、同步 Hook 和 `.github/copilot-instructions.md`。
-- 移除 `default` 專用假資料、操作限制及自動回填；保留通用訪客／離線退避。
-- 在不再依賴 `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 做客戶端回填後，評估如何保留或移除前端展示 seed。Edge Function 需繼續使用相同資料來源或一份唯一權威種子。
+- 已移除大廳固定示範戰役卡片與 `default` ID 過濾，列表僅呈現 Supabase 回傳的戰役。
+- 已移除角色身分 Hook、背包頁、設定頁及角色設定面板內的 `default` 權限／操作分支；DM 身分只依 `campaign_members.role` 判定。
+- 已移除設定頁綁定預設戰役的展示假資料與特殊操作限制；未設定 Supabase 時不發起遠端請求，通用訪客／離線模式仍可使用本地背包 seed。
+- 保留 `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 作為建立範例戰役的唯一 seed 來源及離線退避資料；將 seed 的 campaign 標記改為 `template`，不再引用 `default`。
+- 角色移除改將雙錢包併入 `campaigns.camp_chest_currency`，並將物品移至 `owner_id = 'camp-chest'`；不再建立或更新 `camp-chest` 角色資料列。
+- 已更新 `.github/copilot-instructions.md`，明確記錄不得以特殊 campaign ID 授權或切換離線行為。
+- 本階段未新增或執行 SQL；遠端角色移除的跨列操作仍非單一資料庫交易，維護者部署後須在階段五驗收失敗情境與競爭狀態。
 
 ### 階段五：隔離環境驗收及手動上線 — 待執行
 

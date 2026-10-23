@@ -20,7 +20,6 @@ interface CharacterPermissions {
 interface CampaignSettingsViewProps {
 	activeTab: string;
 	setActiveTab: (tab: string) => void;
-	campaignId: string;
 	isDm: boolean;
 	notice: string | null;
 	campaignName: string;
@@ -66,7 +65,6 @@ interface CampaignSettingsViewProps {
 export function CampaignSettingsView({
 	activeTab,
 	setActiveTab,
-	campaignId,
 	isDm,
 	notice,
 	campaignName,
@@ -248,7 +246,6 @@ export function CampaignSettingsView({
 				/>
 
 				<CharacterSettingsPanel
-					campaignId={campaignId}
 					isDm={isDm}
 					currentSelectedChar={currentSelectedChar}
 					currentOwnerName={currentOwnerName}

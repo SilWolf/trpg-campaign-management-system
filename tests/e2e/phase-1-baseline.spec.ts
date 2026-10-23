@@ -76,6 +76,9 @@ test('大廳可建立戰役並進入該戰役', async ({ page }) => {
 	await page.goto('/');
 
 	await expect(page.getByRole('heading', { name: '我的戰役列表' })).toBeVisible();
+	await expect(
+		page.getByText('博德之門：腦噬者危機 (預設戰役)', { exact: true }),
+	).toHaveCount(0);
 	await page.getByRole('button', { name: '建立新戰役 (DM)' }).click();
 	const dialog = page.getByRole('dialog', { name: '建立新戰役 (DM)' });
 	await expect(dialog).toBeVisible();

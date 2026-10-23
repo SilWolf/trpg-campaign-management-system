@@ -21,7 +21,6 @@ interface CharacterPermissions {
 }
 
 interface CharacterSettingsPanelProps {
-	campaignId: string;
 	isDm: boolean;
 	currentSelectedChar?: Character;
 	currentOwnerName?: string;
@@ -66,7 +65,6 @@ const AVATAR_OPTIONS = [
 ];
 
 export function CharacterSettingsPanel({
-	campaignId,
 	isDm,
 	currentSelectedChar,
 	currentOwnerName,
@@ -459,14 +457,13 @@ export function CharacterSettingsPanel({
 					</div>
 
 					{/* 區塊 3：角色危險操作區 (can_delete_character) */}
-					{(myPermForSelectedChar.canDeleteCharacter ||
-						(isDm && campaignId !== 'default')) && (
+					{(myPermForSelectedChar.canDeleteCharacter || isDm) && (
 						<div className='bg-red-950/30 border border-red-900/60 rounded-lg p-5 space-y-3'>
 							<div className='flex items-center gap-2 text-red-300 font-serif font-bold text-sm'>
 								<ShieldAlert className='w-4 h-4' />
 								<span>角色危險操作區 — {currentSelectedChar.name}</span>
 							</div>
-							{isDm && campaignId !== 'default' && (
+							{isDm && (
 								<section className='rounded-lg border border-cyan-900/70 bg-stone-950/70 p-4 space-y-4'>
 									<div className='flex items-center gap-2 border-b border-stone-800 pb-3'>
 										<ArrowRightLeft className='w-4 h-4 text-cyan-300' />

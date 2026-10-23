@@ -18,16 +18,7 @@ export function useUserCampaignRole(campaignId: string) {
 				return;
 			}
 
-			// 1. 如果是預設戰役，直接視為 DM 方便測試體驗
-			if (campaignId === 'default') {
-				if (isMounted) {
-					setRole('dm');
-					setLoading(false);
-				}
-				return;
-			}
-
-			// 2. 如果是訪客模式，預設給予 player 身分
+			// 訪客模式或未設定 Supabase 時，預設給予 player 身分。
 			if (isGuest || !supabase) {
 				if (isMounted) {
 					setRole('player');
@@ -46,7 +37,7 @@ export function useUserCampaignRole(campaignId: string) {
 					return;
 				}
 
-				// 3. 以 campaign_members.role 判斷戰役成員身分，支援多名 DM
+				// 以 campaign_members.role 判斷戰役成員身分，支援多名 DM。
 				const { data: memberData, error: memberError } = await supabase
 					.from('campaign_members')
 					.select('role')
@@ -62,7 +53,7 @@ export function useUserCampaignRole(campaignId: string) {
 					return;
 				}
 
-				// 4. 若非戰役成員，預設為一般玩家
+				// 若非戰役成員，預設為一般玩家。
 				if (isMounted) {
 					setRole('player');
 					setLoading(false);

@@ -116,14 +116,14 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 // ==========================================
 // 預設角色與初始背包資料
 // ==========================================
-export const CAMP_CHEST_DEFAULT: Character = {
+export const CAMP_CHEST_TEMPLATE: Character = {
 	id: CAMP_CHEST_ID,
 	name: '營地儲物箱',
 	title: '團隊共用行囊與公庫',
 	str: 999,
 	avatar: '🏕️',
-	userId: 'dm',
-	campaignId: 'default',
+	userId: '',
+	campaignId: 'template',
 	currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 	privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 };
@@ -135,8 +135,8 @@ export const INITIAL_CHARACTERS: Character[] = [
 		title: 'Lv.8 復仇誓言聖武士',
 		str: 18,
 		avatar: '🛡️',
-		userId: 'default-owner',
-		campaignId: 'default',
+		userId: 'template-owner',
+		campaignId: 'template',
 		currencies: { pp: 2, gp: 485, ep: 0, sp: 34, cp: 80 },
 		privateCurrencies: { pp: 0, gp: 50, ep: 0, sp: 0, cp: 0 },
 	},
@@ -146,8 +146,8 @@ export const INITIAL_CHARACTERS: Character[] = [
 		title: 'Lv.8 詭術領域牧師',
 		str: 12,
 		avatar: '🌙',
-		userId: 'default-owner',
-		campaignId: 'default',
+		userId: 'template-owner',
+		campaignId: 'template',
 		currencies: { pp: 0, gp: 210, ep: 15, sp: 60, cp: 20 },
 		privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 	},
@@ -157,12 +157,12 @@ export const INITIAL_CHARACTERS: Character[] = [
 		title: 'Lv.8 塑能學派法師',
 		str: 9,
 		avatar: '🔮',
-		userId: 'default-owner',
-		campaignId: 'default',
+		userId: 'template-owner',
+		campaignId: 'template',
 		currencies: { pp: 5, gp: 120, ep: 0, sp: 12, cp: 5 },
 		privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 	},
-	CAMP_CHEST_DEFAULT,
+	CAMP_CHEST_TEMPLATE,
 ];
 
 export const INITIAL_ITEMS: InventoryItem[] = [

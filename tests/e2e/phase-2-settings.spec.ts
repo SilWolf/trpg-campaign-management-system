@@ -150,6 +150,36 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 	expect(requests.some((request) => request.startsWith('DELETE '))).toBe(false);
 });
 
+test('移除角色時將錢幣併入戰役營地箱且不建立虛擬角色列', async ({
+	page,
+}) => {
+	const { requests, campaignUpdates } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(campaignSettingsUrl);
+
+	await page.getByTestId('campaign-settings-tab-settings-character').click();
+	page.once('dialog', (dialog) => dialog.accept());
+	await page.getByTestId('character-delete').click();
+
+	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
+		'已移除角色',
+	);
+	expect(
+		requests.some((request) => request.startsWith('PATCH /rest/v1/campaigns')),
+	).toBe(true);
+	expect(
+		requests.some((request) => request.startsWith('DELETE /rest/v1/characters')),
+	).toBe(true);
+	expect(
+		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
+	).toBe(false);
+	expect(campaignUpdates).toContainEqual({
+		camp_chest_currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+	});
+});
+
 test('永久刪除戰役前會要求確認，取消後停留在設定頁', async ({ page }) => {
 	await mockSupabase(page, { campaignSettingsRole: 'dm' });
 	await seedAuthenticatedSession(page);

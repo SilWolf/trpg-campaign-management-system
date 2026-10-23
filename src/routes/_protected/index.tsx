@@ -4,7 +4,6 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
 	LogOut,
 	Plus,
-	ScrollText,
 	Swords,
 	Users,
 	X,
@@ -357,78 +356,45 @@ function CampaignLobbyPage() {
 					aria-label='我的戰役列表'
 					className='grid gap-4 md:grid-cols-2'
 				>
-					{/* 預設示範戰役 */}
-					<Link
-						to='/campaigns/$campaignId'
-						params={{ campaignId: 'default' }}
-						className='group relative overflow-hidden rounded-xl border border-amber-700/60 bg-gradient-to-br from-stone-900 via-stone-950 to-[#160f0b] p-5 shadow-[0_10px_35px_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 hover:border-amber-400/80 hover:shadow-[0_0_28px_rgba(217,119,6,0.16)]'
-					>
-						<div className='absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-10 rounded-full bg-amber-600/10 blur-2xl transition group-hover:bg-amber-500/20' />
-						<div className='relative flex items-start justify-between gap-4'>
-							<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-amber-700/60 bg-amber-950/60'>
-								<ScrollText className='h-6 w-6 text-amber-300' />
+					{/* 顯示使用者建立或加入的戰役 */}
+					{campaigns.map((camp) => (
+						<Link
+							key={camp.id}
+							to='/campaigns/$campaignId'
+							params={{ campaignId: camp.id }}
+							className='group relative overflow-hidden rounded-xl border border-purple-700/60 bg-gradient-to-br from-stone-900 via-stone-950 to-[#1a0f1c] p-5 shadow-[0_10px_35px_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 hover:border-purple-400/80 hover:shadow-[0_0_28px_rgba(168,85,247,0.2)]'
+						>
+							<div className='absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-10 rounded-full bg-purple-600/10 blur-2xl transition group-hover:bg-purple-500/20' />
+							<div className='relative flex items-start justify-between gap-4'>
+								<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-purple-700/60 bg-purple-950/60'>
+									<Swords className='h-6 w-6 text-purple-300' />
+								</div>
+								<span className='rounded-full border border-purple-700/60 bg-purple-950/60 px-2.5 py-1 text-[10px] font-semibold text-purple-300'>
+									自建戰役
+								</span>
 							</div>
-							<span className='rounded-full border border-emerald-700/60 bg-emerald-950/60 px-2.5 py-1 text-[10px] font-semibold text-emerald-300'>
-								預設示範
-							</span>
-						</div>
-						<div className='relative mt-5'>
-							<h3 className='font-serif text-lg font-bold text-amber-100'>
-								博德之門：腦噬者危機 (預設戰役)
-							</h3>
-							<p className='mt-2 text-xs leading-relaxed text-stone-400'>
-								管理冒險者裝備、共享公庫與戰利品，準備迎接下一場冒險。
-							</p>
-						</div>
-						<div className='relative mt-5 flex items-center justify-between border-t border-stone-800 pt-3 text-[11px] text-stone-500'>
-							<span>點擊進入戰役背包</span>
-							<span className='text-amber-400 transition group-hover:translate-x-1'>
-								→
-							</span>
-						</div>
-					</Link>
-
-					{/* 動態渲染使用者在資料庫建立的戰役 */}
-					{campaigns
-						.filter((c) => c.id !== 'default')
-						.map((camp) => (
-							<Link
-								key={camp.id}
-								to='/campaigns/$campaignId'
-								params={{ campaignId: camp.id }}
-								className='group relative overflow-hidden rounded-xl border border-purple-700/60 bg-gradient-to-br from-stone-900 via-stone-950 to-[#1a0f1c] p-5 shadow-[0_10px_35px_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 hover:border-purple-400/80 hover:shadow-[0_0_28px_rgba(168,85,247,0.2)]'
-							>
-								<div className='absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-10 rounded-full bg-purple-600/10 blur-2xl transition group-hover:bg-purple-500/20' />
-								<div className='relative flex items-start justify-between gap-4'>
-									<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-purple-700/60 bg-purple-950/60'>
-										<Swords className='h-6 w-6 text-purple-300' />
-									</div>
-									<span className='rounded-full border border-purple-700/60 bg-purple-950/60 px-2.5 py-1 text-[10px] font-semibold text-purple-300'>
-										自建戰役
-									</span>
-								</div>
-								<div className='relative mt-5'>
-									<h3 className='font-serif text-lg font-bold text-purple-100 truncate'>
-										{camp.name}
-									</h3>
-									<p className='mt-2 text-xs leading-relaxed text-stone-400'>
-										ID: {camp.id} • DM 專屬管理世界
-									</p>
-									<p className='mt-1 text-xs text-stone-400'>
-										邀請碼:{' '}
-										<strong className='text-amber-300 font-mono'>
-											{camp.invite_code || '無'}
-										</strong>
-									</p>
-								</div>
-								<div className='relative mt-5 flex items-center justify-between border-t border-stone-800 pt-3 text-[11px] text-stone-500'>
-									<span>點擊進入自建戰役背包</span>
-									<span className='text-purple-400 transition group-hover:translate-x-1'>
-										→
-									</span>
-								</div>
-							</Link>
-						))}
+							<div className='relative mt-5'>
+								<h3 className='font-serif text-lg font-bold text-purple-100 truncate'>
+									{camp.name}
+								</h3>
+								<p className='mt-2 text-xs leading-relaxed text-stone-400'>
+									ID: {camp.id} • DM 專屬管理世界
+								</p>
+								<p className='mt-1 text-xs text-stone-400'>
+									邀請碼:{' '}
+									<strong className='text-amber-300 font-mono'>
+										{camp.invite_code || '無'}
+									</strong>
+								</p>
+							</div>
+							<div className='relative mt-5 flex items-center justify-between border-t border-stone-800 pt-3 text-[11px] text-stone-500'>
+								<span>點擊進入自建戰役背包</span>
+								<span className='text-purple-400 transition group-hover:translate-x-1'>
+									→
+								</span>
+							</div>
+						</Link>
+					))}
 				</section>
 			</div>
 

@@ -60,7 +60,7 @@ function CampaignInventoryPage() {
 	// 讀取當前玩家在此戰役的個人角色創建上限 (campaign_members.max_characters)
 	useEffect(() => {
 		async function fetchMyCharacterLimit() {
-			if (!supabase || campaignId === 'default' || !user?.id) return;
+			if (!supabase || !user?.id) return;
 			const { data } = await supabase
 				.from('campaign_members')
 				.select('max_characters')
@@ -87,7 +87,7 @@ function CampaignInventoryPage() {
 		campaignId,
 		INITIAL_CHARACTERS,
 		INITIAL_ITEMS,
-		!isGuest && Boolean(user?.id) && campaignId !== 'default',
+		!isGuest && Boolean(user?.id),
 	);
 	useEffect(() => {
 		if (

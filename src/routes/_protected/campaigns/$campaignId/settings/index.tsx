@@ -3,13 +3,14 @@ import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
 	supabase,
+	fromDbCampaignCurrency,
 	fromDbItem,
 	fromDbPermission,
+	toDbCampaignCurrency,
 	toDbItem,
 	type DbInventoryItem,
 } from '@/lib/supabase';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
-import { CAMP_CHEST_DEFAULT } from '@/data';
 import {
 	CAMP_CHEST_ID,
 	canStackItems,
@@ -54,45 +55,7 @@ function CampaignSettingsPage() {
 
 	useEffect(() => {
 		async function fetchSettingsData() {
-			if (!supabase || campaignId === 'default') {
-				setCampaignName('博德之門：腦噬者危機 (預設戰役)');
-				setInviteCode('DEFAULT');
-				setAllMembers([
-					{
-						id: 'dm-1',
-						identifier: '預設 DM (admin@example.com)',
-						type: 'dm',
-						roleText: '地下城主 (DM)',
-					},
-					{
-						id: 'player-1',
-						identifier: '塔夫 Tav',
-						type: 'player',
-						roleText: '玩家',
-						maxCharacters: 1,
-					},
-					{
-						id: 'pending-1',
-						identifier: 'pending_player@example.com',
-						type: 'pending',
-						roleText: '等待接受邀請',
-					},
-				]);
-				setCampaignCharacters([
-					{
-						id: 'tav',
-						name: '塔夫 (Tav)',
-						title: 'Lv.8 復仇誓言聖武士',
-						str: 18,
-						avatar: '🛡️',
-						userId: 'player-1',
-						campaignId: 'default',
-						currencies: { pp: 2, gp: 485, ep: 0, sp: 34, cp: 80 },
-						privateCurrencies: { pp: 0, gp: 50, ep: 0, sp: 0, cp: 0 },
-					},
-				]);
-				return;
-			}
+			if (!supabase) return;
 
 			const { data: campData } = await supabase
 				.from('campaigns')
@@ -264,8 +227,12 @@ function CampaignSettingsPage() {
 
 	const handleSaveGeneralSettings = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!isDm || !supabase || campaignId === 'default') {
-			setNotice('預設戰役或非 DM 無法修改戰役設定。');
+		if (!isDm) {
+			setNotice('只有 DM 可以修改戰役設定。');
+			return;
+		}
+		if (!supabase) {
+			setNotice('離線模式無法儲存戰役設定。');
 			return;
 		}
 
@@ -296,7 +263,7 @@ function CampaignSettingsPage() {
 			),
 		);
 
-		if (supabase && campaignId !== 'default') {
+		if (supabase) {
 			const { error } = await supabase
 				.from('campaign_members')
 				.update({ max_characters: cleanMax })
@@ -314,8 +281,12 @@ function CampaignSettingsPage() {
 
 	const handleSendEmailInvite = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!inviteEmail.trim() || campaignId === 'default' || !supabase) {
-			setNotice('預設戰役無法發送邀請。');
+		if (!inviteEmail.trim() || !supabase) {
+			setNotice(
+				!inviteEmail.trim()
+					? '請輸入要邀請的電子郵件地址。'
+					: '離線模式無法發送邀請。',
+			);
 			return;
 		}
 
@@ -352,10 +323,6 @@ function CampaignSettingsPage() {
 	};
 
 	const handleDeleteCampaign = async () => {
-		if (campaignId === 'default') {
-			alert('預設示範戰役無法刪除！');
-			return;
-		}
 		const confirmed = window.confirm(
 			'⚠️ 警告：確定要永久刪除此戰役嗎？\n此動作將會一併刪除該戰役底下的所有冒險者角色、背包物品與公庫資料，且無法復原！',
 		);
@@ -394,7 +361,7 @@ function CampaignSettingsPage() {
 			prev.map((c) => (c.id === updatedChar.id ? updatedChar : c)),
 		);
 
-		if (supabase && campaignId !== 'default') {
+		if (supabase) {
 			const { error } = await supabase
 				.from('characters')
 				.update({
@@ -417,7 +384,7 @@ function CampaignSettingsPage() {
 	};
 
 	const handleTransferCharacter = async (char: Character, targetUserId: string) => {
-		if (!isDm || !supabase || campaignId === 'default') {
+		if (!isDm || !supabase) {
 			setNotice('只有線上戰役的 DM 可以轉移角色擁有權。');
 			return;
 		}
@@ -599,7 +566,7 @@ function CampaignSettingsPage() {
 				: [...prev, nextPerm];
 		});
 
-		if (supabase && campaignId !== 'default') {
+		if (supabase) {
 			const { error } = await supabase.from('character_permissions').upsert(
 				{
 					campaign_id: campaignId,
@@ -636,104 +603,103 @@ function CampaignSettingsPage() {
 		if (!confirmed) return;
 
 		try {
-			if (supabase && campaignId !== 'default') {
-				const existingChest = campaignCharacters.find(
-					(c) => c.id === CAMP_CHEST_ID,
-				) || {
-					...CAMP_CHEST_DEFAULT,
-					campaignId,
-					userId: 'dm',
-				};
-
-				const mergedCurrencies = {
-					pp:
-						(existingChest.currencies?.pp ?? 0) +
-						(char.currencies?.pp ?? 0) +
-						(char.privateCurrencies?.pp ?? 0),
-					gp:
-						(existingChest.currencies?.gp ?? 0) +
-						(char.currencies?.gp ?? 0) +
-						(char.privateCurrencies?.gp ?? 0),
-					ep:
-						(existingChest.currencies?.ep ?? 0) +
-						(char.currencies?.ep ?? 0) +
-						(char.privateCurrencies?.ep ?? 0),
-					sp:
-						(existingChest.currencies?.sp ?? 0) +
-						(char.currencies?.sp ?? 0) +
-						(char.privateCurrencies?.sp ?? 0),
-					cp:
-						(existingChest.currencies?.cp ?? 0) +
-						(char.currencies?.cp ?? 0) +
-						(char.privateCurrencies?.cp ?? 0),
-				};
-
-				await supabase.from('characters').upsert({
-					id: CAMP_CHEST_ID,
-					name: existingChest.name,
-					title: existingChest.title,
-					avatar: existingChest.avatar,
-					str: existingChest.str,
-					user_id: existingChest.userId || 'dm',
-					campaign_id: campaignId,
-					currencies: mergedCurrencies,
-					private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-				});
-
-				const { data: itemRows } = await supabase
+			if (supabase) {
+				const { data: itemRows, error: itemError } = await supabase
 					.from('inventory_items')
 					.select('*')
 					.eq('campaign_id', campaignId);
 
-				if (itemRows) {
-					const allItems = (itemRows as DbInventoryItem[]).map(fromDbItem);
-					const campItems = allItems
-						.filter((i) => i.ownerId === CAMP_CHEST_ID)
-						.map((i) => ({ ...i }));
-					const charItems = allItems.filter((i) => i.ownerId === char.id);
-					const itemsToDelete: string[] = [];
-
-					charItems.forEach((item) => {
-						const movedItem: InventoryItem = {
-							...item,
-							ownerId: CAMP_CHEST_ID,
-							equipped: false,
-							attuned: false,
-							isPrivate: false,
-						};
-						const existingStack = campItems.find((target) =>
-							canStackItems(target, movedItem),
-						);
-						if (existingStack) {
-							existingStack.quantity += movedItem.quantity;
-							itemsToDelete.push(item.id);
-						} else {
-							campItems.push(movedItem);
-						}
-					});
-
-					if (campItems.length > 0) {
-						await supabase.from('inventory_items').upsert(
-							campItems.map((i) => ({
-								...toDbItem(i),
-								campaign_id: campaignId,
-							})),
-						);
-					}
-					if (itemsToDelete.length > 0) {
-						await supabase
-							.from('inventory_items')
-							.delete()
-							.in('id', itemsToDelete)
-							.eq('campaign_id', campaignId);
-					}
+				if (itemError) throw itemError;
+				if (!itemRows) {
+					throw new Error('無法載入角色物品，未執行角色移除。');
 				}
 
-				await supabase
+				const allItems = (itemRows as DbInventoryItem[]).map(fromDbItem);
+				const campItems = allItems
+					.filter((i) => i.ownerId === CAMP_CHEST_ID)
+					.map((i) => ({ ...i }));
+				const charItems = allItems.filter((i) => i.ownerId === char.id);
+				const itemsToDelete: string[] = [];
+
+				charItems.forEach((item) => {
+					const movedItem: InventoryItem = {
+						...item,
+						ownerId: CAMP_CHEST_ID,
+						equipped: false,
+						attuned: false,
+						isPrivate: false,
+					};
+					const existingStack = campItems.find((target) =>
+						canStackItems(target, movedItem),
+					);
+					if (existingStack) {
+						existingStack.quantity += movedItem.quantity;
+						itemsToDelete.push(item.id);
+					} else {
+						campItems.push(movedItem);
+					}
+				});
+
+				if (campItems.length > 0) {
+					const { error } = await supabase.from('inventory_items').upsert(
+						campItems.map((i) => ({
+							...toDbItem(i),
+							campaign_id: campaignId,
+						})),
+					);
+					if (error) throw error;
+				}
+				if (itemsToDelete.length > 0) {
+					const { error } = await supabase
+						.from('inventory_items')
+						.delete()
+						.in('id', itemsToDelete)
+						.eq('campaign_id', campaignId);
+					if (error) throw error;
+				}
+
+				const { data: campaignRow, error: campaignError } = await supabase
+					.from('campaigns')
+					.select('camp_chest_currency')
+					.eq('id', campaignId)
+					.single();
+				if (campaignError) throw campaignError;
+
+				const campChestCurrency = fromDbCampaignCurrency(campaignRow);
+				const mergedCurrencies = {
+					pp:
+						campChestCurrency.pp +
+						(char.currencies?.pp ?? 0) +
+						(char.privateCurrencies?.pp ?? 0),
+					gp:
+						campChestCurrency.gp +
+						(char.currencies?.gp ?? 0) +
+						(char.privateCurrencies?.gp ?? 0),
+					ep:
+						campChestCurrency.ep +
+						(char.currencies?.ep ?? 0) +
+						(char.privateCurrencies?.ep ?? 0),
+					sp:
+						campChestCurrency.sp +
+						(char.currencies?.sp ?? 0) +
+						(char.privateCurrencies?.sp ?? 0),
+					cp:
+						campChestCurrency.cp +
+						(char.currencies?.cp ?? 0) +
+						(char.privateCurrencies?.cp ?? 0),
+				};
+				const { error: currencyError } = await supabase
+					.from('campaigns')
+					.update(toDbCampaignCurrency(mergedCurrencies))
+					.eq('id', campaignId);
+				if (currencyError) throw currencyError;
+
+				const { error: characterError } = await supabase
 					.from('characters')
 					.delete()
 					.eq('id', char.id)
 					.eq('campaign_id', campaignId);
+				if (characterError) throw characterError;
 			}
 
 			setCampaignCharacters((prev) => prev.filter((c) => c.id !== char.id));
@@ -753,7 +719,6 @@ function CampaignSettingsPage() {
 		<CampaignSettingsView
 			activeTab={activeTab}
 			setActiveTab={setActiveTab}
-			campaignId={campaignId}
 			isDm={isDm}
 			notice={notice}
 			campaignName={campaignName}
