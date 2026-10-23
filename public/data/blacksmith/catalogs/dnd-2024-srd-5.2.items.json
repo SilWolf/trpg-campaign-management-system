@@ -2537,6 +2537,1063 @@
 			"description": "穿戴者在敏捷（隱匿）檢定上具有劣勢。",
 			"source": "PHB'24",
 			"ac": "AC 14 + 敏捷 (最大 2)"
+		},
+		{
+			"itemId": "item-ec8ed1a9892c1a24",
+			"name": "乘用鞍座",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ec8ed1a9892c1a24.webp",
+			"category": "Misc",
+			"subTypes": [
+				"鞍具和挽具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 25,
+			"valueGp": 10,
+			"description": "鞍座包括嚼子、韁繩、籠頭以及其他鞍座所需的裝備。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-05d77ad8b9be843b",
+			"name": "書法工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-05d77ad8b9be843b.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 10,
+			"description": "屬性： 敏捷\n\n操作： 以華麗的字跡撰寫文字防止造假（DC 15）\n\n製造： 墨水, 法術卷軸\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-13a5c24fe169ab8f",
+			"name": "優質紅酒（瓶裝）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-13a5c24fe169ab8f.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"食物和飲品"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 10,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-78f16824c780acc2",
+			"name": "修補工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-78f16824c780acc2.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 10,
+			"valueGp": 50,
+			"description": "屬性： 敏捷\n\n操作： 用廢料組裝出一個微型物品，這個物品會在一分鐘後散架。（DC 20）\n\n製造： 滑膛槍, 手槍, 鈴鐺, 牛眼提燈, 扁瓶, 附蓋提燈, 捕獵陷阱, 鎖, 鐐銬, 鏡子, 鏟子, 信號笛, 火絨盒\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-e53a0bc79eb8ef52",
+			"name": "軍用鞍座",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e53a0bc79eb8ef52.webp",
+			"category": "Misc",
+			"subTypes": [
+				"鞍具和挽具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 30,
+			"valueGp": 20,
+			"description": "鞍座包括嚼子、韁繩、籠頭以及其他鞍座所需的裝備。軍用鞍座可以在你為維持騎乘所作的一切屬性檢定上提供優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-48a78a7e56170d48",
+			"name": "製圖工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-48a78a7e56170d48.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 6,
+			"valueGp": 15,
+			"description": "屬性： 感知\n\n操作： 為一小片區域繪製地圖（DC 15）\n\n製造： 地圖\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-7a8cd014887bf5be",
+			"name": "廚師工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-7a8cd014887bf5be.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 8,
+			"valueGp": 1,
+			"description": "屬性： 感知\n\n操作： 改善食物風味（DC 10），檢查食物是否腐壞或有毒（DC 15）\n\n製造： 口糧\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-dd554834d3e839f3",
+			"name": "號角",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-dd554834d3e839f3.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 3,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-f28037ba6e468cb4",
+			"name": "吹矢（50）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f28037ba6e468cb4.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 1,
+			"description": "吹箭針是與具有彈藥屬性的武器一起使用的，用於進行遠程攻擊。每次你用武器攻擊時，都會消耗一枚彈藥。從箭袋、盒子或其他容器中取出彈藥是攻擊的一部分（你需要一個空閒的手來裝填單手武器）。戰鬥結束後，你可以花一分鐘在戰場上搜尋，回收你消耗的一半彈藥。\n\n針通常存放在小包 中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-921d9d0a9512bf34",
+			"name": "聖物匣",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-921d9d0a9512bf34.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 5,
+			"description": "為了使聖物匣成為一個有效的聖徽，它必須被手持。\n\n聖徽是一種利用寶石或圖畫來引導神聖魔法的物品，它會以下列聖徽列表中的一種形式存在。牧師和聖武士可以用聖徽作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-65345a184e6395eb",
+			"name": "奶酪（一角）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-65345a184e6395eb.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"食物和飲品"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-7e758c5dc011438a",
+			"name": "弩矢",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-7e758c5dc011438a.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0.075,
+			"valueGp": 0,
+			"description": "弩箭是與具有彈藥屬性的武器一起使用的，用於進行遠程攻擊。每次你用武器攻擊時，都會消耗一枚彈藥。從箭袋、盒子或其他容器中取出彈藥是攻擊的一部分（你需要一個空閒的手來裝填單手武器）。戰鬥結束後，你可以花一分鐘在戰場上搜尋，回收你消耗的一半彈藥。\n\n弩矢通常存放在 弩矢匣 中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-588094a6891bd270",
+			"name": "弩矢（20支）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-588094a6891bd270.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1.5,
+			"valueGp": 1,
+			"description": "弩箭是與具有彈藥屬性的武器一起使用的，用於進行遠程攻擊。每次你用武器攻擊時，都會消耗一枚彈藥。從箭袋、盒子或其他容器中取出彈藥是攻擊的一部分（你需要一個空閒的手來裝填單手武器）。戰鬥結束後，你可以花一分鐘在戰場上搜尋，回收你消耗的一半彈藥。\n\n弩矢通常存放在 弩矢匣 中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-5e76ce76f01cd879",
+			"name": "揚琴",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-5e76ce76f01cd879.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 10,
+			"valueGp": 25,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-0d95e83c2aa8b9e9",
+			"name": "投石索子彈(20)",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0d95e83c2aa8b9e9.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1.5,
+			"valueGp": 0,
+			"description": "投石索子彈是與具有彈藥屬性的武器一起使用的，用於進行遠程攻擊。每次你用武器攻擊時，都會消耗一枚彈藥。從箭袋、盒子或其他容器中取出彈藥是攻擊的一部分（你需要一個空閒的手來裝填單手武器）。戰鬥結束後，你可以花一分鐘在戰場上搜尋，回收你消耗的一半彈藥。\n\n投石索子彈通常存放在小包 中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-ee7d761d6c2ad751",
+			"name": "護符",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ee7d761d6c2ad751.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 5,
+			"description": "為了讓護符成為一個有效的聖徽，它必須被佩戴或手持。\n\n聖徽是一種利用寶石或圖畫來引導神聖魔法的物品，它會以下列聖徽列表中的一種形式存在。牧師和聖武士可以用聖徽作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-7451ab933b1d066d",
+			"name": "排簫",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-7451ab933b1d066d.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 12,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-0ef9952e57a684d9",
+			"name": "提琴",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0ef9952e57a684d9.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 30,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-9927e9ad1574d460",
+			"name": "整副三龍牌",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9927e9ad1574d460.webp",
+			"category": "Misc",
+			"subTypes": [
+				"賭具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 1,
+			"description": "屬性： 感知\n\n操作： 判斷某人是否作弊（DC 10），或贏得遊戲（DC 20）\n\n工具（賭具） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-620f3355e090fd80",
+			"name": "文書偽造工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-620f3355e090fd80.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 15,
+			"description": "屬性： 敏捷\n\n操作： 模仿其他人的筆跡，至多10個單詞（DC 15），或偽造一份火漆（DC 20）\n\n工具 Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-eb4e38e56a3795ac",
+			"name": "易容工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-eb4e38e56a3795ac.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 3,
+			"valueGp": 25,
+			"description": "屬性： 魅力\n\n操作： 化妝（DC 10）\n\n製造： 戲服\n\n工具 Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-96e13cfdbf50fd42",
+			"name": "普通葡萄酒（瓶裝）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-96e13cfdbf50fd42.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"食物和飲品"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-21efe99d6efd58f8",
+			"name": "木匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-21efe99d6efd58f8.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 6,
+			"valueGp": 8,
+			"description": "屬性： 力量\n\n操作： 封死或撬開一扇門或一個容器（DC 20）\n\n製造： 短棒, 巨棒, 長棍, 木桶, 箱子, 梯子, 長杆, 便攜式攻城錘, 火把\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-05a2f92d3fdcf1c2",
+			"name": "木雕工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-05a2f92d3fdcf1c2.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 1,
+			"description": "屬性： 敏捷\n\n操作： 在木頭上雕刻圖案（DC 10）\n\n製造： 短棒, 巨棒, 長棍, 遠程武器（除手槍, 滑膛槍, 和投石索外）, 奧術法器, 箭矢, 弩箭, 德魯伊法器, 墨水筆, 針刺\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-4de40f6e9cd8df9b",
+			"name": "權杖",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-4de40f6e9cd8df9b.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 10,
+			"description": "奧術法器是一種利用寶石或是雕刻來引導奧術魔法的物品，它會以下列奧術法器列表中的一種形式存在。術士、魔契師和法師可以使用這種物品作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-77e2d73ca669fbd1",
+			"name": "槍械子彈",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-77e2d73ca669fbd1.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0.2,
+			"valueGp": 0,
+			"description": "槍械子彈在現代槍械中使用後會被摧毀。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-7d3b356ab50fbc96",
+			"name": "槍械子彈 (10)",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-7d3b356ab50fbc96.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 3,
+			"description": "槍械子彈在現代槍械中使用後會被摧毀。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-68ed98a3819d06c8",
+			"name": "槲寄生枝條",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-68ed98a3819d06c8.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 1,
+			"description": "德魯伊法器是一種利用刻紋、綁帶或圖畫來引導原初魔法的物品，它會以下列德魯伊法器列表中的一種形式存在。德魯伊和遊俠可以使用這種物品作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-b35a8e5aa9ca382b",
+			"name": "毒藥工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b35a8e5aa9ca382b.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 50,
+			"description": "屬性： 智力\n\n操作： 偵測有毒物件（DC 10）\n\n製造： 基礎毒藥\n\n工具 Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-d825c6b82197e410",
+			"name": "水晶",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d825c6b82197e410.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 10,
+			"description": "奧術法器是一種利用寶石或是雕刻來引導奧術魔法的物品，它會以下列奧術法器列表中的一種形式存在。術士、魔契師和法師可以使用這種物品作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-80673f5ace6bbfa0",
+			"name": "法球",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-80673f5ace6bbfa0.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 3,
+			"valueGp": 20,
+			"description": "奧術法器是一種利用寶石或是雕刻來引導奧術魔法的物品，它會以下列奧術法器列表中的一種形式存在。術士、魔契師和法師可以使用這種物品作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-c1a49b6f396c2ee9",
+			"name": "鍊金工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c1a49b6f396c2ee9.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 8,
+			"valueGp": 50,
+			"description": "屬性： 智力\n\n操作： 辨析一種物質（DC 15），或生起一場火（DC 15）\n\n製造： 強酸, 熾火膠, 材料包, 燃油, 紙張, 香水\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-f002c4cbe24dc494",
+			"name": "特種鞍座",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f002c4cbe24dc494.webp",
+			"category": "Misc",
+			"subTypes": [
+				"鞍具和挽具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 40,
+			"valueGp": 60,
+			"description": "鞍座包括嚼子、韁繩、籠頭以及其他鞍座所需的裝備。騎乘水生或飛行坐騎需要使用特種鞍座。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-d4018487fa3f7dbb",
+			"name": "玻璃匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d4018487fa3f7dbb.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 30,
+			"description": "屬性： 智力\n\n操作： 判斷一個玻璃物件在過去24小時內盛過什麼內容物（DC 15）\n\n製造： 玻璃瓶, 放大鏡, 望遠鏡, 小瓶\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-72a63771f0495b92",
+			"name": "珠寶匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-72a63771f0495b92.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 25,
+			"description": "屬性： 智力\n\n操作： 判斷珠寶價值（DC 15）\n\n製造： 奧術法器, 聖徽\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-abc0f447ea10aa23",
+			"name": "畫家工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-abc0f447ea10aa23.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 10,
+			"description": "屬性： 感知\n\n操作： 畫出你所見過的某個事物的可辨圖像（DC 10）\n\n製造： 德魯伊法器, 聖徽\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-ba1b9daff97f3d2e",
+			"name": "皮匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ba1b9daff97f3d2e.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 5,
+			"description": "屬性： 敏捷\n\n操作： 對一個皮製品進行圖案設計 (DC 10)\n\n製造： 投石索, 鞭子, 獸皮甲, 皮甲, 鑲釘皮甲, 背包, 弩矢匣, 地圖或卷軸匣, 羊皮紙, 小包, 箭袋, 水袋\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-33a00012dc5d7d29",
+			"name": "盜賊工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-33a00012dc5d7d29.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 25,
+			"description": "屬性： 敏捷\n\n操作： 開鎖（DC 15），或解除陷阱（DC 15）\n\n工具 Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-474755c5e96fe6e5",
+			"name": "盾牌",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-474755c5e96fe6e5.webp",
+			"category": "Armor",
+			"subTypes": [
+				"護甲 (盾牌)",
+				"盾牌"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 6,
+			"valueGp": 10,
+			"description": "",
+			"source": "PHB'24",
+			"ac": "AC +2"
+		},
+		{
+			"itemId": "item-193111cb065545ad",
+			"name": "石匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-193111cb065545ad.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 8,
+			"valueGp": 10,
+			"description": "屬性： 力量\n\n操作： 在石頭上鑿出一個符號標誌或一個洞（DC 10）\n\n製造： 滑輪組\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-de9368a19c35d1b1",
+			"name": "箭",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-de9368a19c35d1b1.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0.05,
+			"valueGp": 0,
+			"description": "箭是與具有彈藥特性的武器一起使用來進行遠程攻擊的。每次使用該武器攻擊時，你都會消耗一件彈藥。從箭袋、箭盒或其他容器中取出彈藥是攻擊動作的一部分（你需要一隻空閒的手來裝填單手武器）。在戰鬥結束時，你可以通過花一分鐘時間搜索戰場來回收你消耗的一半彈藥。\n\n箭矢通常存放在箭袋中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-8f13bc23515eed50",
+			"name": "箭矢 (20)",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8f13bc23515eed50.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 1,
+			"description": "箭是與具有彈藥特性的武器一起使用來進行遠程攻擊的。每次使用該武器攻擊時，你都會消耗一件彈藥。從箭袋、箭盒或其他容器中取出彈藥是攻擊動作的一部分（你需要一隻空閒的手來裝填單手武器）。在戰鬥結束時，你可以通過花一分鐘時間搜索戰場來回收你消耗的一半彈藥。\n\n箭矢通常存放在箭袋中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-8d8bcaf6b9f54d14",
+			"name": "紫杉魔杖",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8d8bcaf6b9f54d14.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 10,
+			"description": "德魯伊法器是一種利用刻紋、綁帶或圖畫來引導原初魔法的物品，它會以下列德魯伊法器列表中的一種形式存在。德魯伊和遊俠可以使用這種物品作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-558408ea3285a176",
+			"name": "紙牌",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-558408ea3285a176.webp",
+			"category": "Misc",
+			"subTypes": [
+				"賭具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "屬性： 感知\n\n操作： 判斷某人是否作弊（DC 10），或贏得遊戲（DC 20）\n\n工具（賭具） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-29fe825232c3fe96",
+			"name": "紋章",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-29fe825232c3fe96.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 5,
+			"description": "為了使紋章成為一個有效的聖徽，它必須被掛在到織物上（比如外衣或旗幟）或者是一個盾牌上。\n\n聖徽是一種利用寶石或圖畫來引導神聖魔法的物品，它會以下列聖徽列表中的一種形式存在。牧師和聖武士可以用聖徽作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-b831696990a83ea7",
+			"name": "織布工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b831696990a83ea7.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 1,
+			"description": "屬性： 敏捷\n\n操作： 修補衣服上的破口（DC 10），或是縫製一個微型圖案（DC 10）\n\n製造： 布甲, 籃子, 鋪蓋, 毯子, 高檔服裝, 捕網, 法袍, 繩索, 麻袋, 細線, 帳篷, 旅行服裝\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-3cd67686ddc860bc",
+			"name": "蘆笛",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-3cd67686ddc860bc.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 2,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-106f94cf2e191a10",
+			"name": "草藥工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-106f94cf2e191a10.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 3,
+			"valueGp": 5,
+			"description": "屬性： 智力\n\n操作： 辨認植物（DC 10）\n\n製造： 抗毒劑, 蠟燭, 醫療包, 治療藥水\n\n工具 Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-8eafab904337f92f",
+			"name": "釀酒工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8eafab904337f92f.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 9,
+			"valueGp": 20,
+			"description": "屬性： 智力\n\n操作： 檢測飲品是否下毒（DC 15），或辨識酒精（DC 10）\n\n製造： 抗毒劑\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-af12936b5a08f1fc",
+			"name": "里拉琴",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-af12936b5a08f1fc.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 30,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-0735d62777a7f56e",
+			"name": "針",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0735d62777a7f56e.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"彈藥"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0.02,
+			"valueGp": 0,
+			"description": "吹箭針是與具有彈藥屬性的武器一起使用的，用於進行遠程攻擊。每次你用武器攻擊時，都會消耗一枚彈藥。從箭袋、盒子或其他容器中取出彈藥是攻擊的一部分（你需要一個空閒的手來裝填單手武器）。戰鬥結束後，你可以花一分鐘在戰場上搜尋，回收你消耗的一半彈藥。\n\n針通常存放在小包 中（需單獨購買）。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-6238def7a2d0c672",
+			"name": "鐵匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-6238def7a2d0c672.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 8,
+			"valueGp": 20,
+			"description": "屬性： 力量\n\n操作： 撬開一扇門或容器（DC 20）\n\n製造： 任意近戰武器（除了短棒，巨棒，長棍和鞭子）、中甲（除了獸皮甲）、重甲、滾珠、吊桶、鐵蒺藜、鏈條、撬棍、槍械子彈、爪鉤、鐵壺、鐵釘(組)、投石索子彈\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-9efa638c1d4d9326",
+			"name": "長笛",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9efa638c1d4d9326.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 2,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-e14ad8834c2fa16b",
+			"name": "陶匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e14ad8834c2fa16b.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 3,
+			"valueGp": 10,
+			"description": "屬性： 智力\n\n操作： 判斷一個陶瓷物件在過去 24 小時內盛過什麼內容物（DC 15）\n\n製造： 壺, 油燈\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-41ee4652e9379b37",
+			"name": "麵包（一塊）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-41ee4652e9379b37.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"食物和飲品"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-53ef51d28a30811c",
+			"name": "鞋匠工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-53ef51d28a30811c.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工匠工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 5,
+			"valueGp": 5,
+			"description": "屬性： 敏捷\n\n操作： 改造足具來為穿戴者的下一次敏捷（特技）檢定提供優勢（DC 10）\n\n製造： 攀爬工具\n\n工匠工具 Artisan's Tool. 工匠工具專注於製作物品和從事貿易。每種類型的工匠工具都需要單獨的熟練度。\n\n如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-4a52c878820b4232",
+			"name": "領航工具",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-4a52c878820b4232.webp",
+			"category": "Misc",
+			"subTypes": [
+				"工具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 25,
+			"description": "屬性： 感知\n\n操作： 計劃路線（DC 10），或通過觀星判斷位置（DC 15）\n\n工具 Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-c729d76d2e22f2f4",
+			"name": "風笛",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c729d76d2e22f2f4.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 6,
+			"valueGp": 30,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-b08f12f01ab16cb7",
+			"name": "飼料（每日）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b08f12f01ab16cb7.webp",
+			"category": "Misc",
+			"subTypes": [
+				"鞍具和挽具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 10,
+			"valueGp": 0,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-9ba5be23bca64ba0",
+			"name": "馬廄(每日)",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9ba5be23bca64ba0.webp",
+			"category": "Misc",
+			"subTypes": [
+				"鞍具和挽具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-eeef63d62004ca1f",
+			"name": "骰子組",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-eeef63d62004ca1f.webp",
+			"category": "Misc",
+			"subTypes": [
+				"賭具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "屬性： 感知\n\n操作： 判斷某人是否作弊（DC 10），或贏得遊戲（DC 20）\n\n工具（賭具） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-ff419837f5e7636f",
+			"name": "魔杖",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ff419837f5e7636f.webp",
+			"category": "Misc",
+			"subTypes": [
+				"法器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 1,
+			"valueGp": 10,
+			"description": "奧術法器是一種利用寶石或是雕刻來引導奧術魔法的物品，它會以下列奧術法器列表中的一種形式存在。術士、魔契師和法師可以使用這種物品作為法器。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-a0193e7b6e1222b9",
+			"name": "魯特琴",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a0193e7b6e1222b9.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 2,
+			"valueGp": 35,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-39924549a159ac65",
+			"name": "麥酒（馬克杯）",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-39924549a159ac65.webp",
+			"category": "Consumable",
+			"subTypes": [
+				"食物和飲品"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 0,
+			"description": "",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-35166042baa0b8b9",
+			"name": "鼓",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-35166042baa0b8b9.webp",
+			"category": "Misc",
+			"subTypes": [
+				"樂器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 3,
+			"valueGp": 6,
+			"description": "屬性： 魅力\n\n操作： 演奏一首已知曲目（DC 10），或即興創作一首歌曲（DC 15）\n\n工具（樂器） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
+		},
+		{
+			"itemId": "item-0ae495e2ef41ddd7",
+			"name": "龍棋組",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0ae495e2ef41ddd7.webp",
+			"category": "Misc",
+			"subTypes": [
+				"賭具"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"weight": 0,
+			"valueGp": 1,
+			"description": "屬性： 感知\n\n操作： 判斷某人是否作弊（DC 10），或贏得遊戲（DC 20）\n\n工具（賭具） Tool. 如果你對某項工具熟練，在使用該工具進行任何屬性檢定時，加上你的熟練加值。如果你在進行該檢定時使用的技能也熟練，那麼你在該檢定上也有優勢。",
+			"source": "PHB'24",
+			"damage": null
 		}
 	]
 }

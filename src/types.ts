@@ -21,20 +21,15 @@ export interface BlacksmithLookupEntry {
 	searchTerms: string[];
 }
 
-export interface BlacksmithItem {
+interface BlacksmithItemBase {
 	catalogId: string;
 	catalogTitle: string;
 	itemId: string;
 	sourceKey: string;
 	name: string;
-	category: ItemCategory;
 	subTypes: string[];
-	weaponProperties?: string[];
-	weaponMastery?: string;
 	rarity: Rarity;
 	icon: string;
-	damage?: string | null;
-	ac?: string | null;
 	weight: number;
 	valueGp: number;
 	requiresAttunement: boolean;
@@ -43,6 +38,25 @@ export interface BlacksmithItem {
 	aliases: string[];
 	searchTerms: string[];
 }
+
+export type BlacksmithItem = BlacksmithItemBase &
+	(
+		| { category: 'Armor'; ac: string | null; damage?: never }
+		| {
+				category: 'Weapon';
+				damage: string | null;
+				ac?: never;
+				weaponProperties?: string[];
+				weaponMastery?: string;
+		  }
+		| {
+				category: 'Consumable' | 'Misc';
+				damage: string | null;
+				ac?: never;
+				weaponProperties?: never;
+				weaponMastery?: never;
+		  }
+	);
 
 export type WeaponMasteryKey =
 	| 'None'

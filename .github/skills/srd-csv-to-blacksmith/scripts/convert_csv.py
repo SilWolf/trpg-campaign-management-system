@@ -39,8 +39,8 @@ VALUE_PATTERN = re.compile(
     rf"^\s*({NUMBER_PATTERN})\s*(CP|SP|EP|GP|PP)\s*$", re.IGNORECASE
 )
 WEIGHT_PATTERN = re.compile(
-    rf"^\s*(?:(?P<number>{NUMBER_PATTERN})\s*)?(?P<fraction>[½¼¾])?"
-    r"(?:\s*(?:磅|lb|lbs|pound|pounds))?"
+    rf"^\s*(?:(?P<number>{NUMBER_PATTERN})\s*)?(?P<fraction>[½¼¾⅕])?"
+    r"(?:\s*(?P<unit>磅|盎司|lb|lbs|pound|pounds|oz|ounce|ounces))?"
     r"(?:\s*[（(][^（）()]*[）)])?\s*$",
     re.IGNORECASE,
 )
@@ -65,8 +65,7 @@ def parse_args():
     parser.add_argument(
         "--category",
         choices=sorted(VALID_CATEGORIES),
-        required=True,
-        help="本批項目的 InventoryItem category",
+        help="覆寫由每筆資料「类型」推斷的 InventoryItem category",
     )
     parser.add_argument(
         "--output-root",
@@ -128,9 +127,14 @@ def parse_weight(value):
     if not match or not (match.group("number") or match.group("fraction")):
         raise ValueError(f"無法解析重量：{value!r}")
     weight = Decimal((match.group("number") or "0").replace(",", ""))
-    weight += {"½": Decimal("0.5"), "¼": Decimal("0.25"), "¾": Decimal("0.75")}.get(
-        match.group("fraction"), Decimal("0")
-    )
+    weight += {
+        "½": Decimal("0.5"),
+        "¼": Decimal("0.25"),
+        "¾": Decimal("0.75"),
+        "⅕": Decimal("0.2"),
+    }.get(match.group("fraction"), Decimal("0"))
+    if (match.group("unit") or "").casefold() in {"盎司", "oz", "ounce", "ounces"}:
+        weight /= Decimal("16")
     if weight < 0:
         raise ValueError(f"重量不可為負數：{value!r}")
     return as_json_number(weight)
@@ -188,6 +192,23 @@ def get_value(row, columns, key):
     return value.strip() if isinstance(value, str) else ""
 
 
+def infer_category(type_value):
+    normalized = type_value.casefold()
+    if "盾牌" in normalized or any(
+        armor_type in normalized
+        for armor_type in ("轻甲", "中甲", "重甲", "輕甲", "護甲", "护甲")
+    ):
+        return "Armor"
+    if "武器" in normalized:
+        return "Weapon"
+    if any(
+        consumable_type in normalized
+        for consumable_type in ("食物和饮品", "食物和飲品", "弹药", "彈藥")
+    ):
+        return "Consumable"
+    return "Misc"
+
+
 def make_item(row, columns, catalog_id, category, row_number):
     name = get_value(row, columns, "name")
     description = get_value(row, columns, "description")
@@ -200,6 +221,9 @@ def make_item(row, columns, catalog_id, category, row_number):
     item_id = "item-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
     type_value = get_value(row, columns, "types")
     subtypes = [part.strip() for part in type_value.split(",") if part.strip()]
+    category = category or infer_category(type_value)
+    if "盾牌" in type_value and "盾牌" not in subtypes:
+        subtypes.append("盾牌")
     if category == "Weapon":
         subtypes = [subtype for subtype in subtypes if subtype != "武器"]
     damage = get_value(row, columns, "damage")
@@ -311,7 +335,7 @@ def write_catalog(args, items, lookup_items):
         json.dumps(
             {"schemaVersion": 3, "catalogId": catalog_id, "items": items},
             ensure_ascii=False,
-            indent=2,
+            indent="\t",
         )
         + "\n",
         encoding="utf-8",
@@ -320,7 +344,7 @@ def write_catalog(args, items, lookup_items):
         json.dumps(
             {"schemaVersion": 3, "catalogId": catalog_id, "items": lookup_items},
             ensure_ascii=False,
-            indent=2,
+            indent="\t",
         )
         + "\n",
         encoding="utf-8",

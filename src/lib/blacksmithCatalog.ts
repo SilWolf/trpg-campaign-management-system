@@ -309,53 +309,53 @@ function adaptCatalogItems(
 		) {
 			throw new Error(`${label} icon 必須是安全的 ./images/ 相對路徑。`);
 		}
-		const damage =
-			category === 'Armor'
-				? undefined
-				: record.damage === null
-					? null
-					: readString(record.damage, `${label} damage`);
-		const ac =
-			category === 'Armor'
-				? record.ac === null
-					? null
-					: readString(record.ac, `${label} ac`)
-				: undefined;
-		const weaponFields =
-			category === 'Weapon'
-				? {
-						weaponProperties: readStringArray(
-							record.weaponProperties,
-							`${label} weaponProperties`,
-						),
-						weaponMastery: readNonEmptyString(
-							record.weaponMastery,
-							`${label} weaponMastery`,
-						),
-					}
-				: {};
-
-		return {
+		const baseItem = {
 			catalogId: catalog.catalogId,
 			catalogTitle: catalog.title,
 			itemId,
 			sourceKey: lookup.sourceKey,
 			name,
-			category,
 			subTypes: readNonEmptyStringArray(record.subTypes, `${label} subTypes`),
 			rarity,
 			icon,
-			...(damage !== undefined ? { damage } : {}),
-			...(ac !== undefined ? { ac } : {}),
 			weight,
 			valueGp,
 			requiresAttunement: record.requiresAttunement,
 			description: readString(record.description, `${label} description`),
 			source: readString(record.source, `${label} source`),
-			...weaponFields,
 			aliases: lookup.aliases,
 			searchTerms: lookup.searchTerms,
 		};
+		if (category === 'Armor') {
+			return {
+				...baseItem,
+				category,
+				ac:
+					record.ac === null
+						? null
+						: readString(record.ac, `${label} ac`),
+			};
+		}
+		const damage =
+			record.damage === null
+				? null
+				: readString(record.damage, `${label} damage`);
+		if (category === 'Weapon') {
+			return {
+				...baseItem,
+				category,
+				damage,
+				weaponProperties: readStringArray(
+					record.weaponProperties,
+					`${label} weaponProperties`,
+				),
+				weaponMastery: readNonEmptyString(
+					record.weaponMastery,
+					`${label} weaponMastery`,
+				),
+			};
+		}
+		return { ...baseItem, category, damage };
 	});
 
 	if (lookupById.size !== itemIds.size) {

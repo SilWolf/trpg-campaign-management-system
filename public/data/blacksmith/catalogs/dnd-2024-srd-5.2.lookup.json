@@ -1490,6 +1490,667 @@
 				"中甲",
 				"PHB'24"
 			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ec8ed1a9892c1a24",
+			"itemId": "item-ec8ed1a9892c1a24",
+			"name": "乘用鞍座",
+			"aliases": [],
+			"searchTerms": [
+				"鞍具和挽具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-05d77ad8b9be843b",
+			"itemId": "item-05d77ad8b9be843b",
+			"name": "書法工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-13a5c24fe169ab8f",
+			"itemId": "item-13a5c24fe169ab8f",
+			"name": "優質紅酒（瓶裝）",
+			"aliases": [],
+			"searchTerms": [
+				"食物和飲品",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-78f16824c780acc2",
+			"itemId": "item-78f16824c780acc2",
+			"name": "修補工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e53a0bc79eb8ef52",
+			"itemId": "item-e53a0bc79eb8ef52",
+			"name": "軍用鞍座",
+			"aliases": [],
+			"searchTerms": [
+				"鞍具和挽具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-48a78a7e56170d48",
+			"itemId": "item-48a78a7e56170d48",
+			"name": "製圖工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7a8cd014887bf5be",
+			"itemId": "item-7a8cd014887bf5be",
+			"name": "廚師工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-dd554834d3e839f3",
+			"itemId": "item-dd554834d3e839f3",
+			"name": "號角",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f28037ba6e468cb4",
+			"itemId": "item-f28037ba6e468cb4",
+			"name": "吹矢（50）",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-921d9d0a9512bf34",
+			"itemId": "item-921d9d0a9512bf34",
+			"name": "聖物匣",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-65345a184e6395eb",
+			"itemId": "item-65345a184e6395eb",
+			"name": "奶酪（一角）",
+			"aliases": [],
+			"searchTerms": [
+				"食物和飲品",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7e758c5dc011438a",
+			"itemId": "item-7e758c5dc011438a",
+			"name": "弩矢",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-588094a6891bd270",
+			"itemId": "item-588094a6891bd270",
+			"name": "弩矢（20支）",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5e76ce76f01cd879",
+			"itemId": "item-5e76ce76f01cd879",
+			"name": "揚琴",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0d95e83c2aa8b9e9",
+			"itemId": "item-0d95e83c2aa8b9e9",
+			"name": "投石索子彈(20)",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ee7d761d6c2ad751",
+			"itemId": "item-ee7d761d6c2ad751",
+			"name": "護符",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7451ab933b1d066d",
+			"itemId": "item-7451ab933b1d066d",
+			"name": "排簫",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0ef9952e57a684d9",
+			"itemId": "item-0ef9952e57a684d9",
+			"name": "提琴",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9927e9ad1574d460",
+			"itemId": "item-9927e9ad1574d460",
+			"name": "整副三龍牌",
+			"aliases": [],
+			"searchTerms": [
+				"賭具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-620f3355e090fd80",
+			"itemId": "item-620f3355e090fd80",
+			"name": "文書偽造工具",
+			"aliases": [],
+			"searchTerms": [
+				"工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-eb4e38e56a3795ac",
+			"itemId": "item-eb4e38e56a3795ac",
+			"name": "易容工具",
+			"aliases": [],
+			"searchTerms": [
+				"工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-96e13cfdbf50fd42",
+			"itemId": "item-96e13cfdbf50fd42",
+			"name": "普通葡萄酒（瓶裝）",
+			"aliases": [],
+			"searchTerms": [
+				"食物和飲品",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-21efe99d6efd58f8",
+			"itemId": "item-21efe99d6efd58f8",
+			"name": "木匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-05a2f92d3fdcf1c2",
+			"itemId": "item-05a2f92d3fdcf1c2",
+			"name": "木雕工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4de40f6e9cd8df9b",
+			"itemId": "item-4de40f6e9cd8df9b",
+			"name": "權杖",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-77e2d73ca669fbd1",
+			"itemId": "item-77e2d73ca669fbd1",
+			"name": "槍械子彈",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7d3b356ab50fbc96",
+			"itemId": "item-7d3b356ab50fbc96",
+			"name": "槍械子彈 (10)",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-68ed98a3819d06c8",
+			"itemId": "item-68ed98a3819d06c8",
+			"name": "槲寄生枝條",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b35a8e5aa9ca382b",
+			"itemId": "item-b35a8e5aa9ca382b",
+			"name": "毒藥工具",
+			"aliases": [],
+			"searchTerms": [
+				"工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d825c6b82197e410",
+			"itemId": "item-d825c6b82197e410",
+			"name": "水晶",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-80673f5ace6bbfa0",
+			"itemId": "item-80673f5ace6bbfa0",
+			"name": "法球",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c1a49b6f396c2ee9",
+			"itemId": "item-c1a49b6f396c2ee9",
+			"name": "鍊金工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f002c4cbe24dc494",
+			"itemId": "item-f002c4cbe24dc494",
+			"name": "特種鞍座",
+			"aliases": [],
+			"searchTerms": [
+				"鞍具和挽具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d4018487fa3f7dbb",
+			"itemId": "item-d4018487fa3f7dbb",
+			"name": "玻璃匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-72a63771f0495b92",
+			"itemId": "item-72a63771f0495b92",
+			"name": "珠寶匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-abc0f447ea10aa23",
+			"itemId": "item-abc0f447ea10aa23",
+			"name": "畫家工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ba1b9daff97f3d2e",
+			"itemId": "item-ba1b9daff97f3d2e",
+			"name": "皮匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-33a00012dc5d7d29",
+			"itemId": "item-33a00012dc5d7d29",
+			"name": "盜賊工具",
+			"aliases": [],
+			"searchTerms": [
+				"工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-474755c5e96fe6e5",
+			"itemId": "item-474755c5e96fe6e5",
+			"name": "盾牌",
+			"aliases": [],
+			"searchTerms": [
+				"護甲 (盾牌)",
+				"盾牌",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-193111cb065545ad",
+			"itemId": "item-193111cb065545ad",
+			"name": "石匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-de9368a19c35d1b1",
+			"itemId": "item-de9368a19c35d1b1",
+			"name": "箭",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8f13bc23515eed50",
+			"itemId": "item-8f13bc23515eed50",
+			"name": "箭矢 (20)",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8d8bcaf6b9f54d14",
+			"itemId": "item-8d8bcaf6b9f54d14",
+			"name": "紫杉魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-558408ea3285a176",
+			"itemId": "item-558408ea3285a176",
+			"name": "紙牌",
+			"aliases": [],
+			"searchTerms": [
+				"賭具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-29fe825232c3fe96",
+			"itemId": "item-29fe825232c3fe96",
+			"name": "紋章",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b831696990a83ea7",
+			"itemId": "item-b831696990a83ea7",
+			"name": "織布工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3cd67686ddc860bc",
+			"itemId": "item-3cd67686ddc860bc",
+			"name": "蘆笛",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-106f94cf2e191a10",
+			"itemId": "item-106f94cf2e191a10",
+			"name": "草藥工具",
+			"aliases": [],
+			"searchTerms": [
+				"工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8eafab904337f92f",
+			"itemId": "item-8eafab904337f92f",
+			"name": "釀酒工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-af12936b5a08f1fc",
+			"itemId": "item-af12936b5a08f1fc",
+			"name": "里拉琴",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0735d62777a7f56e",
+			"itemId": "item-0735d62777a7f56e",
+			"name": "針",
+			"aliases": [],
+			"searchTerms": [
+				"彈藥",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6238def7a2d0c672",
+			"itemId": "item-6238def7a2d0c672",
+			"name": "鐵匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9efa638c1d4d9326",
+			"itemId": "item-9efa638c1d4d9326",
+			"name": "長笛",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e14ad8834c2fa16b",
+			"itemId": "item-e14ad8834c2fa16b",
+			"name": "陶匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-41ee4652e9379b37",
+			"itemId": "item-41ee4652e9379b37",
+			"name": "麵包（一塊）",
+			"aliases": [],
+			"searchTerms": [
+				"食物和飲品",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-53ef51d28a30811c",
+			"itemId": "item-53ef51d28a30811c",
+			"name": "鞋匠工具",
+			"aliases": [],
+			"searchTerms": [
+				"工匠工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4a52c878820b4232",
+			"itemId": "item-4a52c878820b4232",
+			"name": "領航工具",
+			"aliases": [],
+			"searchTerms": [
+				"工具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c729d76d2e22f2f4",
+			"itemId": "item-c729d76d2e22f2f4",
+			"name": "風笛",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b08f12f01ab16cb7",
+			"itemId": "item-b08f12f01ab16cb7",
+			"name": "飼料（每日）",
+			"aliases": [],
+			"searchTerms": [
+				"鞍具和挽具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9ba5be23bca64ba0",
+			"itemId": "item-9ba5be23bca64ba0",
+			"name": "馬廄(每日)",
+			"aliases": [],
+			"searchTerms": [
+				"鞍具和挽具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-eeef63d62004ca1f",
+			"itemId": "item-eeef63d62004ca1f",
+			"name": "骰子組",
+			"aliases": [],
+			"searchTerms": [
+				"賭具",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ff419837f5e7636f",
+			"itemId": "item-ff419837f5e7636f",
+			"name": "魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"法器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a0193e7b6e1222b9",
+			"itemId": "item-a0193e7b6e1222b9",
+			"name": "魯特琴",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-39924549a159ac65",
+			"itemId": "item-39924549a159ac65",
+			"name": "麥酒（馬克杯）",
+			"aliases": [],
+			"searchTerms": [
+				"食物和飲品",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-35166042baa0b8b9",
+			"itemId": "item-35166042baa0b8b9",
+			"name": "鼓",
+			"aliases": [],
+			"searchTerms": [
+				"樂器",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0ae495e2ef41ddd7",
+			"itemId": "item-0ae495e2ef41ddd7",
+			"name": "龍棋組",
+			"aliases": [],
+			"searchTerms": [
+				"賭具",
+				"PHB'24"
+			]
 		}
 	]
 }
