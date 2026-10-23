@@ -26,6 +26,15 @@ npm run lint
 
 應用程式入口與 React 元件使用 TypeScript (`.ts` / `.tsx`)，嚴格型別檢查已納入正式建置流程。
 
+## Playwright E2E 基準測試
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+E2E 使用本機隔離的 Supabase 網路替身與虛構測試資料，不連接實際專案或寄送 Email。路由盤點、測試涵蓋與資料策略記錄於 [docs/ui-component-preparation.md](./docs/ui-component-preparation.md)。
+
 ## 程式碼結構
 
 - `src/App.tsx`：應用程式狀態與功能協調。

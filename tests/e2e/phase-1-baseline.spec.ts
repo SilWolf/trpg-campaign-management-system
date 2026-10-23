@@ -1,0 +1,149 @@
+import { expect, test } from '@playwright/test';
+import { mockSupabase, seedAuthenticatedSession } from './supabase-mock';
+
+test('登入頁可完成註冊並顯示電子郵件驗證提示', async ({ page }) => {
+	const { requests } = await mockSupabase(page);
+	await page.goto('/login');
+
+	await page.getByRole('button', { name: '尚未有帳號？立即註冊' }).click();
+	await page.getByLabel('電子郵件').fill('new-adventurer@example.test');
+	await page.getByRole('textbox', { name: '密碼' }).fill('safe-test-password');
+	await page.getByRole('button', { name: '建立冒險者帳號' }).click();
+
+	await expect(
+		page.getByText('註冊成功！請先至電子郵件收取驗證信，再返回登入。'),
+	).toBeVisible();
+	expect(requests).toContain('POST /auth/v1/signup');
+});
+
+test('登入表單驗證必填欄位並呈現驗證失敗訊息', async ({ page }) => {
+	await mockSupabase(page);
+	await page.goto('/login');
+
+	const email = page.getByLabel('電子郵件');
+	const password = page.getByRole('textbox', { name: '密碼' });
+	await expect(email).toBeVisible();
+	await page.keyboard.press('Tab');
+	await expect(email).toBeFocused();
+	await page.getByRole('button', { name: '登入戰役軍械庫' }).click();
+	await expect(email).toBeFocused();
+
+	await email.fill('wrong@example.com');
+	await password.fill('incorrect-password');
+	await page.getByRole('button', { name: '登入戰役軍械庫' }).click();
+	await expect(page.getByRole('alert')).toContainText(
+		'Invalid login credentials',
+	);
+});
+
+test('無效邀請連結會顯示可理解的錯誤', async ({ page }) => {
+	await mockSupabase(page);
+	await page.goto('/invite/mock-campaign-id');
+
+	await expect(page.getByRole('alert')).toContainText(
+		'邀請連結無效或已過期',
+	);
+});
+
+test('邀請註冊可檢查密碼一致並接受邀請', async ({ page }) => {
+	const { requests } = await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/invite/mock-campaign-id');
+
+	await expect(page.getByLabel('電子郵件')).toHaveValue(
+		'adventurer@example.test',
+	);
+	await page.getByLabel('設定密碼').fill('safe-test-password');
+	await page.getByLabel('再次輸入密碼').fill('different-password');
+	await page.getByRole('button', { name: '設定密碼並加入戰役' }).click();
+	await expect(page.getByRole('alert')).toHaveText('兩次輸入的密碼不一致。');
+
+	await page.getByLabel('再次輸入密碼').fill('safe-test-password');
+	await page.getByRole('button', { name: '設定密碼並加入戰役' }).click();
+	await expect(page).toHaveURL(/\/campaigns\/mock-campaign-id$/);
+	expect(requests).toContain('POST /rest/v1/rpc/accept_campaign_invite');
+});
+
+test('大廳可建立戰役並進入該戰役', async ({ page }) => {
+	const { requests } = await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+
+	await expect(
+		page.getByRole('heading', { name: '我的戰役列表' }),
+	).toBeVisible();
+	await page.getByRole('button', { name: '建立新戰役 (DM)' }).click();
+	await expect(page.getByRole('dialog')).toBeVisible();
+	await page.getByLabel('戰役名稱').fill('Playwright 隔離測試戰役');
+	await page.getByRole('button', { name: '確認建立戰役' }).click();
+
+	await expect(page).toHaveURL(/\/campaigns\/campaign-\d+$/);
+	expect(requests).toContain('POST /rest/v1/campaigns');
+});
+
+test('大廳可用邀請碼加入戰役', async ({ page }) => {
+	const { requests } = await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+
+	await page.getByRole('button', { name: '輸入邀請碼加入戰役' }).click();
+	await page.getByLabel('邀請碼').fill('testcode');
+	await page.getByRole('button', { name: '確認加入' }).click();
+
+	await expect(page).toHaveURL(/\/campaigns\/mock-campaign-id$/);
+	expect(requests).toContain(
+		'GET /rest/v1/campaigns?select=id%2Cname&invite_code=eq.TESTCODE',
+	);
+});
+
+test('帳號設定可儲存個人資料並顯示成功狀態', async ({ page }) => {
+	const { requests } = await mockSupabase(page);
+	await seedAuthenticatedSession(page);
+	await page.goto('/settings/profile');
+
+	await page
+		.getByPlaceholder('例如：塔夫 (Tav)')
+		.fill('Playwright 測試冒險者');
+	await page.getByRole('button', { name: '儲存變更' }).click();
+
+	await expect(page.getByText('個人資料已成功更新！')).toBeVisible();
+	expect(requests).toContain('PUT /auth/v1/user');
+	expect(requests).toContain('POST /rest/v1/profiles');
+});
+
+test('Phase 1 頁面在窄螢幕沒有水平溢出', async ({ page }) => {
+	await page.setViewportSize({ width: 375, height: 812 });
+	await mockSupabase(page);
+
+	const expectNoHorizontalOverflow = async () => {
+		const hasHorizontalOverflow = await page.evaluate(
+			() => document.documentElement.scrollWidth > window.innerWidth,
+		);
+		expect(hasHorizontalOverflow).toBe(false);
+	};
+
+	await page.goto('/login');
+	await expect(
+		page.getByRole('heading', { name: '博德之門戰役軍械庫' }),
+	).toBeVisible();
+	await expectNoHorizontalOverflow();
+
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+	await expect(
+		page.getByRole('heading', { name: '我的戰役列表' }),
+	).toBeVisible();
+	await expectNoHorizontalOverflow();
+
+	await page.goto('/settings/profile');
+	await expect(
+		page.getByRole('heading', { name: '個人資料設定' }),
+	).toBeVisible();
+	await expectNoHorizontalOverflow();
+
+	await page.goto('/invite/mock-campaign-id');
+	await expect(
+		page.getByRole('heading', { name: '完成冒險者帳號註冊' }),
+	).toBeVisible();
+	await expectNoHorizontalOverflow();
+});
