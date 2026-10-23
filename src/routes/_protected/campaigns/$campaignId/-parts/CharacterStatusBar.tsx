@@ -1,4 +1,4 @@
-import { Coins, Lock, Scale, Settings, Tent, UserPlus } from 'lucide-react';
+import { Coins, Lock, Scale, Tent } from 'lucide-react';
 import { Button, Checkbox } from '@/components/ui';
 import {
 	CAMP_CHEST_ID,
@@ -30,12 +30,7 @@ export interface CharacterStatusBarProps {
 	displayedCurrencies: Record<CurrencyType, number>;
 	isDisplayingPrivateWallet: boolean;
 	canReadDisplayedWallet: boolean;
-	canEditCharacterModal: boolean;
-	canCreateCharacter: boolean;
-	createCharTooltip: string;
 	onOpenCurrencyPanel: () => void;
-	onEditCharacter: () => void;
-	onAddCharacter: () => void;
 }
 
 export default function CharacterStatusBar({
@@ -57,12 +52,7 @@ export default function CharacterStatusBar({
 	displayedCurrencies,
 	isDisplayingPrivateWallet,
 	canReadDisplayedWallet,
-	canEditCharacterModal,
-	canCreateCharacter,
-	createCharTooltip,
 	onOpenCurrencyPanel,
-	onEditCharacter,
-	onAddCharacter,
 }: CharacterStatusBarProps) {
 	if (placement === 'characters') {
 		return (
@@ -111,41 +101,13 @@ export default function CharacterStatusBar({
 								})}
 						</div>
 
-						<div className='flex items-center gap-1.5 shrink-0'>
-							{!isCampChestActive && canEditCharacterModal && (
-								<Button
-									type='button'
-									variant='secondary'
-									size='sm'
-									aria-label='編輯目前角色基本資料'
-									onClick={onEditCharacter}
-									className='p-2 rounded bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 hover:text-amber-300 transition cursor-pointer'
-								>
-									<Settings className='w-4 h-4' />
-								</Button>
-							)}
-
-							<Button
-								type='button'
-								variant='secondary'
-								size='sm'
-								aria-label='新增冒險者角色'
-								onClick={onAddCharacter}
-								disabled={!canCreateCharacter}
-								title={createCharTooltip}
-								className='p-2 rounded bg-purple-950/90 hover:bg-purple-900 disabled:opacity-35 disabled:cursor-not-allowed border border-purple-500/70 text-purple-200 transition cursor-pointer'
-							>
-								<UserPlus className='w-4 h-4' />
-							</Button>
-						</div>
-
 						<Button
 							type='button'
 							variant='ghost'
 							data-testid='inventory-character-camp-chest'
 							aria-pressed={isCampChestActive}
 							onClick={() => setActiveCharId(CAMP_CHEST_ID)}
-							className={`flex-1 min-w-[130px] flex items-center gap-2.5 p-2.5 rounded-md border text-left transition cursor-pointer relative ${
+							className={`min-w-[130px] flex items-center gap-2.5 p-2.5 rounded-md border text-left transition cursor-pointer relative ${
 								isCampChestActive
 									? 'bg-gradient-to-b from-cyan-950/90 to-stone-900 border-cyan-400/80 shadow-[0_0_12px_rgba(34,211,238,0.25)]'
 									: 'bg-stone-900/60 border-stone-800 hover:border-cyan-800/50 opacity-80 hover:opacity-100'
@@ -252,8 +214,8 @@ export default function CharacterStatusBar({
 							<Checkbox
 								label={`計入硬幣重 (${coinWeight} lb)`}
 								data-testid='inventory-count-coin-weight'
-									checked={countCoinWeight}
-									onChange={(e) => setCountCoinWeight(e.target.checked)}
+								checked={countCoinWeight}
+								onChange={(e) => setCountCoinWeight(e.target.checked)}
 								labelClassName='gap-1.5 cursor-pointer text-[11px] text-stone-400 hover:text-stone-200'
 							/>
 						</div>

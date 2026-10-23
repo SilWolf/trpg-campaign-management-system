@@ -4,9 +4,11 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
 	supabase,
 	fromDbCampaignCurrency,
+	fromDbCharacter,
 	fromDbItem,
 	fromDbPermission,
 	toDbCampaignCurrency,
+	toDbCharacter,
 	toDbItem,
 	type DbInventoryItem,
 } from '@/lib/supabase';
@@ -21,6 +23,7 @@ import {
 } from '@/types';
 import { CampaignSettingsView } from './-parts/CampaignSettingsView';
 import type { DisplayMember } from './-parts/types';
+import CharacterModal from '../-parts/CharacterModal';
 
 export const Route = createFileRoute(
 	'/_protected/campaigns/$campaignId/settings/',
@@ -33,7 +36,10 @@ function CampaignSettingsPage() {
 	const { campaignId } = Route.useParams();
 	const { user, isDm } = useUserCampaignRole(campaignId);
 
-	const [activeTab, setActiveTab] = useState<'general' | string>('general');
+	const [activeTab, setActiveTab] = useState('general');
+	const [activeCharacterId, setActiveCharacterId] = useState('');
+	const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
+	const [isSavingNewCharacter, setIsSavingNewCharacter] = useState(false);
 
 	const [campaignName, setCampaignName] = useState('');
 	const [inviteCode, setInviteCode] = useState('');
@@ -119,24 +125,27 @@ function CampaignSettingsPage() {
 			]);
 
 			if (charData) {
-				setCampaignCharacters(
-					charData.map((c) => ({
-						id: c.id,
-						name: c.name,
-						title: c.title,
-						str: c.str,
-						avatar: c.avatar,
-						userId: c.user_id,
-						campaignId: c.campaign_id,
-						currencies: c.currencies || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-						privateCurrencies: c.private_currencies || {
-							pp: 0,
-							gp: 0,
-							ep: 0,
-							sp: 0,
-							cp: 0,
-						},
-					})),
+				const characters = charData.map((c) => ({
+					id: c.id,
+					name: c.name,
+					title: c.title,
+					str: c.str,
+					avatar: c.avatar,
+					userId: c.user_id,
+					campaignId: c.campaign_id,
+					currencies: c.currencies || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+					privateCurrencies: c.private_currencies || {
+						pp: 0,
+						gp: 0,
+						ep: 0,
+						sp: 0,
+						cp: 0,
+					},
+				}));
+				setCampaignCharacters(characters);
+				setActiveCharacterId(
+					characters.find((character) => character.id !== CAMP_CHEST_ID)?.id ??
+						'',
 				);
 			}
 
@@ -161,8 +170,25 @@ function CampaignSettingsPage() {
 		fetchSettingsData();
 	}, [campaignId]);
 
+	const myCreatedCharacterCount = campaignCharacters.filter(
+		(character) =>
+			character.id !== CAMP_CHEST_ID && character.userId === user?.id,
+	).length;
+	const myCharacterLimit =
+		allMembers.find((member) => member.id === user?.id)?.maxCharacters ?? 1;
+	const canCreateCharacter =
+		Boolean(user?.id) &&
+		(isDm || myCreatedCharacterCount < myCharacterLimit);
+	const createCharacterTooltip = isDm
+		? 'DM 新增冒險者隊員 (無數量限制)'
+		: myCharacterLimit <= 0
+			? '本戰役目前設定禁止玩家自行創建角色'
+			: canCreateCharacter
+				? `創建新冒險者角色 (目前已創建 ${myCreatedCharacterCount}/${myCharacterLimit})`
+				: `已達本戰役玩家可創建角色數量上限 (${myCreatedCharacterCount}/${myCharacterLimit})`;
+
 	const currentSelectedChar = campaignCharacters.find(
-		(c) => c.id === activeTab,
+		(c) => c.id === activeCharacterId,
 	);
 	const transferCandidates = allMembers.filter(
 		(member) => member.type === 'player',
@@ -703,7 +729,13 @@ function CampaignSettingsPage() {
 			}
 
 			setCampaignCharacters((prev) => prev.filter((c) => c.id !== char.id));
-			setActiveTab('general');
+			setActiveTab('characters');
+			setActiveCharacterId(
+				campaignCharacters.find(
+					(character) =>
+						character.id !== char.id && character.id !== CAMP_CHEST_ID,
+				)?.id ?? '',
+			);
 			setNotice(
 				`🏕️ 已移除角色「${char.name}」，其裝備與雙錢包已全數移入營地儲物箱！`,
 			);
@@ -715,45 +747,100 @@ function CampaignSettingsPage() {
 		}
 	};
 
+	const handleCreateCharacter = async (character: Character) => {
+		if (!canCreateCharacter || !user?.id) {
+			setNotice(createCharacterTooltip);
+			return;
+		}
+		if (!supabase) {
+			setCampaignCharacters((previous) => [...previous, character]);
+			setActiveTab('characters');
+			setActiveCharacterId(character.id);
+			setNotice(`✨ 已在本機頁面暫存新增角色「${character.name}」；離開頁面後不會保留。`);
+			return;
+		}
+
+		setIsSavingNewCharacter(true);
+		try {
+			const { data, error } = await supabase
+				.from('characters')
+				.insert(toDbCharacter(character))
+				.select('*')
+				.single();
+			if (error) throw error;
+
+			const createdCharacter = fromDbCharacter(data);
+			setCampaignCharacters((previous) => [...previous, createdCharacter]);
+			setActiveTab('characters');
+			setActiveCharacterId(createdCharacter.id);
+			setNotice(`✨ 已新增角色「${createdCharacter.name}」！`);
+			setTimeout(() => setNotice(null), 3000);
+		} catch (error) {
+			setNotice(
+				'新增角色失敗：' +
+					(error instanceof Error ? error.message : '未知錯誤'),
+			);
+		} finally {
+			setIsSavingNewCharacter(false);
+		}
+	};
+
 	return (
-		<CampaignSettingsView
-			activeTab={activeTab}
-			setActiveTab={setActiveTab}
-			isDm={isDm}
-			notice={notice}
-			campaignName={campaignName}
-			setCampaignName={setCampaignName}
-			inviteCode={inviteCode}
-			copied={copied}
-			setCopied={setCopied}
-			allMembers={allMembers}
-			campaignCharacters={campaignCharacters}
-			inviteEmail={inviteEmail}
-			setInviteEmail={setInviteEmail}
-			currentSelectedChar={currentSelectedChar}
-			currentOwnerName={currentOwnerName}
-			transferCandidates={transferCandidates}
-			selectedTransferTarget={selectedTransferTarget}
-			setTransferTargetUserId={setTransferTargetUserId}
-			myPermForSelectedChar={myPermForSelectedChar}
-			editCharName={editCharName}
-			setEditCharName={setEditCharName}
-			editCharTitle={editCharTitle}
-			setEditCharTitle={setEditCharTitle}
-			editCharStr={editCharStr}
-			setEditCharStr={setEditCharStr}
-			editCharAvatar={editCharAvatar}
-			setEditCharAvatar={setEditCharAvatar}
-			allPermissions={allPermissions}
-			userId={user?.id}
-			onSaveGeneralSettings={handleSaveGeneralSettings}
-			onUpdateMemberMaxChars={handleUpdateMemberMaxChars}
-			onSendEmailInvite={handleSendEmailInvite}
-			onDeleteCampaign={handleDeleteCampaign}
-			onSaveCharacterProfile={handleSaveCharacterProfile}
-			onUpdatePermission={handleUpdatePermission}
-			onTransferCharacter={handleTransferCharacter}
-			onDeleteCharacter={handleDeleteCharacterInSettings}
-		/>
+		<>
+			<CampaignSettingsView
+				activeTab={activeTab}
+				setActiveTab={setActiveTab}
+				activeCharacterId={activeCharacterId}
+				setActiveCharacterId={setActiveCharacterId}
+				isDm={isDm}
+				notice={notice}
+				campaignName={campaignName}
+				setCampaignName={setCampaignName}
+				inviteCode={inviteCode}
+				copied={copied}
+				setCopied={setCopied}
+				allMembers={allMembers}
+				campaignCharacters={campaignCharacters}
+				inviteEmail={inviteEmail}
+				setInviteEmail={setInviteEmail}
+				currentSelectedChar={currentSelectedChar}
+				currentOwnerName={currentOwnerName}
+				transferCandidates={transferCandidates}
+				selectedTransferTarget={selectedTransferTarget}
+				setTransferTargetUserId={setTransferTargetUserId}
+				myPermForSelectedChar={myPermForSelectedChar}
+				editCharName={editCharName}
+				setEditCharName={setEditCharName}
+				editCharTitle={editCharTitle}
+				setEditCharTitle={setEditCharTitle}
+				editCharStr={editCharStr}
+				setEditCharStr={setEditCharStr}
+				editCharAvatar={editCharAvatar}
+				setEditCharAvatar={setEditCharAvatar}
+				allPermissions={allPermissions}
+				userId={user?.id}
+				onSaveGeneralSettings={handleSaveGeneralSettings}
+				onUpdateMemberMaxChars={handleUpdateMemberMaxChars}
+				onSendEmailInvite={handleSendEmailInvite}
+				onDeleteCampaign={handleDeleteCampaign}
+				onSaveCharacterProfile={handleSaveCharacterProfile}
+				onUpdatePermission={handleUpdatePermission}
+				onTransferCharacter={handleTransferCharacter}
+				onDeleteCharacter={handleDeleteCharacterInSettings}
+				canCreateCharacter={canCreateCharacter && !isSavingNewCharacter}
+				createCharTooltip={
+					isSavingNewCharacter ? '正在新增角色…' : createCharacterTooltip
+				}
+				onAddCharacter={() => setIsCharacterModalOpen(true)}
+			/>
+			<CharacterModal
+				isOpen={isCharacterModalOpen}
+				campaignId={campaignId}
+				userId={user?.id ?? ''}
+				character={null}
+				onClose={() => setIsCharacterModalOpen(false)}
+				onSave={handleCreateCharacter}
+			/>
+		</>
 	);
 }

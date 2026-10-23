@@ -308,7 +308,7 @@ export default function InventoryGrid({
 												>
 													<div className='flex items-center gap-2.5 min-w-0 flex-1'>
 														<div
-															className={`w-8 h-8 rounded border ${rStyle.border} ${rStyle.bg} flex items-center justify-center shrink-0`}
+															className={`relative w-8 h-8 rounded border ${rStyle.border} ${rStyle.bg} flex items-center justify-center shrink-0`}
 														>
 															{masked ? (
 																<HelpCircle className='w-4 h-4 text-purple-400' />

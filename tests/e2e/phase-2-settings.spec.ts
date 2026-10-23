@@ -60,6 +60,7 @@ test('一般成員只能檢視 Campaign 設定，且不能修改自己的權限�
 		page.getByTestId('campaign-member-quota-other-player-id'),
 	).toHaveCount(0);
 
+	await page.getByTestId('campaign-settings-tab-characters').click();
 	const characterTab = page.getByRole('tab', { name: /測試冒險者/ });
 	await characterTab.click();
 	await expect(
@@ -84,8 +85,11 @@ test('Campaign 設定頁籤支援鍵盤操作，角色移轉確認可取消', as
 	await generalTab.press('ArrowRight');
 
 	const characterTab = page.getByRole('tab', { name: /測試冒險者/ });
-	await expect(characterTab).toBeFocused();
-	await expect(characterTab).toHaveAttribute('aria-selected', 'true');
+	const charactersTab = page.getByTestId('campaign-settings-tab-characters');
+	await expect(charactersTab).toBeFocused();
+	await expect(charactersTab).toHaveAttribute('aria-selected', 'true');
+	await charactersTab.click();
+	await characterTab.click();
 	await expect(page.getByTestId('campaign-settings-panel')).toBeVisible();
 
 	page.once('dialog', (dialog) => dialog.dismiss());
@@ -118,6 +122,7 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 		requests.some((request) => request.startsWith('PATCH /rest/v1/campaigns')),
 	).toBe(false);
 
+	await page.getByTestId('campaign-settings-tab-characters').click();
 	await page.getByTestId('campaign-settings-tab-settings-character').click();
 	const characterName = page.getByLabel('角色名稱 *');
 	await characterName.fill('更新後的角色');
@@ -150,6 +155,28 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 	expect(requests.some((request) => request.startsWith('DELETE '))).toBe(false);
 });
 
+test('DM 可在角色分頁新增冒險者角色', async ({ page }) => {
+	const { requests } = await mockSupabase(page, { campaignSettingsRole: 'dm' });
+	await seedAuthenticatedSession(page);
+	await page.goto(campaignSettingsUrl);
+
+	await page.getByTestId('campaign-settings-tab-characters').click();
+	await page.getByTestId('character-add').click();
+	const characterForm = page.getByTestId('character-form');
+	await characterForm.getByLabel('角色名稱 *').fill('新建立的冒險者');
+	await characterForm.getByRole('button', { name: '儲存角色' }).click();
+
+	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
+		'已新增角色「新建立的冒險者」',
+	);
+	expect(
+		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
+	).toBe(true);
+	await expect(
+		page.getByRole('tab', { name: /新建立的冒險者/ }),
+	).toBeVisible();
+});
+
 test('移除角色時將錢幣併入戰役營地箱且不建立虛擬角色列', async ({
 	page,
 }) => {
@@ -159,6 +186,7 @@ test('移除角色時將錢幣併入戰役營地箱且不建立虛擬角色列',
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
+	await page.getByTestId('campaign-settings-tab-characters').click();
 	await page.getByTestId('campaign-settings-tab-settings-character').click();
 	page.once('dialog', (dialog) => dialog.accept());
 	await page.getByTestId('character-delete').click();

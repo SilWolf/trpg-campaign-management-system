@@ -15,6 +15,7 @@ import {
 	type ItemAffix,
 	type Rarity,
 } from '@/types';
+import { getItemImageUrl, ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 
 const DEFAULT_FORM: HomebrewForm = {
 	name: '',
@@ -697,6 +698,13 @@ export function useInventoryActions({
 	const handleSaveHomebrewOrEditItem = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!newItemForm.name.trim()) return;
+		if (
+			newItemForm.icon.startsWith(ITEM_IMAGE_ICON_PREFIX) &&
+			!getItemImageUrl(newItemForm.icon)
+		) {
+			showToast('圖片網址必須使用 HTTPS。');
+			return;
+		}
 
 		if (editingItemId) {
 			const maxChg = parseInt(newItemForm.maxCharges, 10) || 0;

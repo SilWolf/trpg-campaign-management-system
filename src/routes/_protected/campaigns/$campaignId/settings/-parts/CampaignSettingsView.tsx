@@ -1,25 +1,23 @@
 import type { FormEvent, KeyboardEvent } from 'react';
-import { Settings, Shield } from 'lucide-react';
+import { Settings, Shield, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui';
 import {
-	CAMP_CHEST_ID,
 	type AccessLevel,
 	type Character,
 	type CharacterPermission,
 } from '@/types';
-import { CharacterSettingsPanel } from './CharacterSettingsPanel';
+import {
+	AllCharactersSettingsdPanel,
+	type CharacterPermissions,
+} from './AllCharactersSettingsdPanel';
 import { GeneralSettingsPanel } from './GeneralSettingsPanel';
 import type { DisplayMember } from './types';
-
-interface CharacterPermissions {
-	canEditProfile: boolean;
-	canDeleteCharacter: boolean;
-	canManagePermissions: boolean;
-}
 
 interface CampaignSettingsViewProps {
 	activeTab: string;
 	setActiveTab: (tab: string) => void;
+	activeCharacterId: string;
+	setActiveCharacterId: (characterId: string) => void;
 	isDm: boolean;
 	notice: string | null;
 	campaignName: string;
@@ -60,11 +58,16 @@ interface CampaignSettingsViewProps {
 	) => void;
 	onTransferCharacter: (character: Character, targetUserId: string) => void;
 	onDeleteCharacter: (character: Character) => void;
+	canCreateCharacter: boolean;
+	createCharTooltip: string;
+	onAddCharacter: () => void;
 }
 
 export function CampaignSettingsView({
 	activeTab,
 	setActiveTab,
+	activeCharacterId,
+	setActiveCharacterId,
 	isDm,
 	notice,
 	campaignName,
@@ -100,8 +103,15 @@ export function CampaignSettingsView({
 	onUpdatePermission,
 	onTransferCharacter,
 	onDeleteCharacter,
+	canCreateCharacter,
+	createCharTooltip,
+	onAddCharacter,
 }: CampaignSettingsViewProps) {
-	const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+	const handleTabKeyDown = (
+		event: KeyboardEvent<HTMLDivElement>,
+		onChange: (tab: string) => void,
+		fallbackTab: string,
+	) => {
 		if (
 			event.key !== 'ArrowRight' &&
 			event.key !== 'ArrowLeft' &&
@@ -129,7 +139,7 @@ export function CampaignSettingsView({
 						tabs.length;
 		const nextTab = tabs[nextIndex];
 		nextTab.focus();
-		setActiveTab(nextTab.dataset.tabValue ?? 'general');
+		onChange(nextTab.dataset.tabValue ?? fallbackTab);
 	};
 
 	return (
@@ -164,7 +174,7 @@ export function CampaignSettingsView({
 			<div
 				role='tablist'
 				aria-label='戰役與角色設定'
-				onKeyDown={handleTabKeyDown}
+				onKeyDown={(event) => handleTabKeyDown(event, setActiveTab, 'general')}
 				className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-800'
 			>
 				<Button
@@ -189,35 +199,27 @@ export function CampaignSettingsView({
 					<span>⚙️ 戰役常規設定與成員配額</span>
 				</Button>
 
-				{campaignCharacters
-					.filter((c) => c.id !== CAMP_CHEST_ID)
-					.map((char) => {
-						const isActive = activeTab === char.id;
-						return (
-							<Button
-								key={char.id}
-								id={`campaign-settings-tab-${char.id}`}
-								data-testid={`campaign-settings-tab-${char.id}`}
-								data-tab-value={char.id}
-								role='tab'
-								aria-selected={isActive}
-								aria-controls='campaign-settings-panel'
-								tabIndex={isActive ? 0 : -1}
-								type='button'
-								onClick={() => setActiveTab(char.id)}
-								variant='ghost'
-								size='sm'
-								className={`shrink-0 ${
-									isActive
-										? 'bg-purple-900 text-purple-100 border border-purple-500/70 shadow'
-										: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
-								}`}
-							>
-								<span>{char.avatar}</span>
-								<span>{char.name}</span>
-							</Button>
-						);
-					})}
+				<Button
+					id='campaign-settings-tab-characters'
+					data-testid='campaign-settings-tab-characters'
+					data-tab-value='characters'
+					role='tab'
+					aria-selected={activeTab === 'characters'}
+					aria-controls='campaign-settings-panel'
+					tabIndex={activeTab === 'characters' ? 0 : -1}
+					type='button'
+					onClick={() => setActiveTab('characters')}
+					variant='ghost'
+					size='sm'
+					className={`shrink-0 ${
+						activeTab === 'characters'
+							? 'bg-purple-900 text-purple-100 border border-purple-500/70 shadow'
+							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+					}`}
+				>
+					<UserRound className='w-3.5 h-3.5 text-purple-300' />
+					<span>角色</span>
+				</Button>
 			</div>
 
 			<section
@@ -245,30 +247,38 @@ export function CampaignSettingsView({
 					onDeleteCampaign={onDeleteCampaign}
 				/>
 
-				<CharacterSettingsPanel
-					isDm={isDm}
-					currentSelectedChar={currentSelectedChar}
-					currentOwnerName={currentOwnerName}
-					transferCandidates={transferCandidates}
-					selectedTransferTarget={selectedTransferTarget}
-					setTransferTargetUserId={setTransferTargetUserId}
-					myPermForSelectedChar={myPermForSelectedChar}
-					editCharName={editCharName}
-					setEditCharName={setEditCharName}
-					editCharTitle={editCharTitle}
-					setEditCharTitle={setEditCharTitle}
-					editCharStr={editCharStr}
-					setEditCharStr={setEditCharStr}
-					editCharAvatar={editCharAvatar}
-					setEditCharAvatar={setEditCharAvatar}
-					allMembers={allMembers}
-					allPermissions={allPermissions}
-					userId={userId}
-					onSaveCharacterProfile={onSaveCharacterProfile}
-					onUpdatePermission={onUpdatePermission}
-					onTransferCharacter={onTransferCharacter}
-					onDeleteCharacter={onDeleteCharacter}
-				/>
+				{activeTab === 'characters' && (
+					<AllCharactersSettingsdPanel
+						activeCharacterId={activeCharacterId}
+						setActiveCharacterId={setActiveCharacterId}
+						isDm={isDm}
+						campaignCharacters={campaignCharacters}
+						currentSelectedChar={currentSelectedChar}
+						currentOwnerName={currentOwnerName}
+						transferCandidates={transferCandidates}
+						selectedTransferTarget={selectedTransferTarget}
+						setTransferTargetUserId={setTransferTargetUserId}
+						myPermForSelectedChar={myPermForSelectedChar}
+						editCharName={editCharName}
+						setEditCharName={setEditCharName}
+						editCharTitle={editCharTitle}
+						setEditCharTitle={setEditCharTitle}
+						editCharStr={editCharStr}
+						setEditCharStr={setEditCharStr}
+						editCharAvatar={editCharAvatar}
+						setEditCharAvatar={setEditCharAvatar}
+						allMembers={allMembers}
+						allPermissions={allPermissions}
+						userId={userId}
+						onSaveCharacterProfile={onSaveCharacterProfile}
+						onUpdatePermission={onUpdatePermission}
+						onTransferCharacter={onTransferCharacter}
+						onDeleteCharacter={onDeleteCharacter}
+						canCreateCharacter={canCreateCharacter}
+						createCharTooltip={createCharTooltip}
+						onAddCharacter={onAddCharacter}
+					/>
+				)}
 			</section>
 		</main>
 	);

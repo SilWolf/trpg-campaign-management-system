@@ -371,6 +371,18 @@ export async function mockSupabase(
 		}
 
 		if (
+			campaignRole &&
+			url.pathname === '/rest/v1/characters' &&
+			method === 'POST'
+		) {
+			await route.fulfill({
+				status: 201,
+				json: request.postDataJSON(),
+			});
+			return;
+		}
+
+		if (
 			campaignInventoryRole &&
 			url.pathname === '/rest/v1/inventory_items' &&
 			method === 'GET'

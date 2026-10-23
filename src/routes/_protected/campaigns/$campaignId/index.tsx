@@ -6,7 +6,6 @@ import { Sparkles, X } from 'lucide-react';
 
 import AppHeader from './-parts/AppHeader';
 import CharacterStatusBar from './-parts/CharacterStatusBar';
-import CharacterModal from './-parts/CharacterModal';
 import CurrencyPanel from './-parts/CurrencyPanel';
 import HomebrewModal from './-parts/HomebrewModal';
 import InventoryGrid from './-parts/InventoryGrid';
@@ -16,7 +15,6 @@ import { useCampaignSync } from '@/hooks/useCampaignSync';
 import { useInventoryActions } from '@/hooks/useInventoryActions';
 import { useCharacterPermissions } from '@/hooks/useCharacterPermissions';
 import { checkIsAuthenticated, useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import {
 	INITIAL_CHARACTERS,
 	INITIAL_ITEMS,
@@ -25,7 +23,6 @@ import {
 } from '@/data';
 import {
 	CAMP_CHEST_ID,
-	type Character,
 	type InventoryDisplayMode,
 	type InventoryItem,
 	type ViewMode,
@@ -49,30 +46,12 @@ function CampaignInventoryPage() {
 	const [activeCharId, setActiveCharId] = useState<string>('tav');
 	const [bagTab, setBagTab] = useState<'public' | 'private'>('public');
 	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
-	const [maxCharsPerPlayer, setMaxCharsPerPlayer] = useState<number>(1);
 
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		if (isDm) setViewMode('dm');
 		else setViewMode('player');
 	}, [isDm]);
-
-	// 讀取當前玩家在此戰役的個人角色創建上限 (campaign_members.max_characters)
-	useEffect(() => {
-		async function fetchMyCharacterLimit() {
-			if (!supabase || !user?.id) return;
-			const { data } = await supabase
-				.from('campaign_members')
-				.select('max_characters')
-				.eq('campaign_id', campaignId)
-				.eq('user_id', user.id)
-				.single();
-			if (data && typeof data.max_characters === 'number') {
-				setMaxCharsPerPlayer(data.max_characters);
-			}
-		}
-		fetchMyCharacterLimit();
-	}, [campaignId, user?.id]);
 
 	const {
 		characters,
@@ -117,10 +96,6 @@ function CampaignInventoryPage() {
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [countCoinWeight, setCountCoinWeight] = useState(true);
-	const [isCharModalOpen, setIsCharModalOpen] = useState(false);
-	const [editingCharacter, setEditingCharacter] = useState<Character | null>(
-		null,
-	);
 	const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
 	const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -167,25 +142,6 @@ function CampaignInventoryPage() {
 		currentBagTab === 'private'
 			? charPerms.canEditPrivateBag
 			: charPerms.canEditPublicBag;
-
-	// 計算當前玩家已創建的角色數，檢查是否可創建新角色
-	const myCreatedCharCount = useMemo(() => {
-		if (!user?.id) return 0;
-		return characters.filter(
-			(c) => c.id !== CAMP_CHEST_ID && c.userId === user.id,
-		).length;
-	}, [characters, user]);
-
-	const canCreateCharacter =
-		(isDm && viewMode === 'dm') || myCreatedCharCount < maxCharsPerPlayer;
-	const createCharTooltip =
-		isDm && viewMode === 'dm'
-			? 'DM 新增冒險者隊員 (無數量限制)'
-			: maxCharsPerPlayer <= 0
-				? '本戰役目前設定禁止玩家自行創建角色'
-				: canCreateCharacter
-					? `創建新冒險者角色 (目前已創建 ${myCreatedCharCount}/${maxCharsPerPlayer})`
-					: `已達本戰役玩家可創建角色數量上限 (${myCreatedCharCount}/${maxCharsPerPlayer})`;
 
 	const allCharacterItems = useMemo(
 		() => items.filter((item) => item.ownerId === activeCharId),
@@ -408,24 +364,7 @@ function CampaignInventoryPage() {
 				displayedCurrencies={displayedCurrencies}
 				isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 				canReadDisplayedWallet={canReadDisplayedWallet}
-				canEditCharacterModal={
-					charPerms.canEditProfile || charPerms.canDeleteCharacter
-				}
-				canCreateCharacter={canCreateCharacter}
-				createCharTooltip={createCharTooltip}
 				onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
-				onEditCharacter={() => {
-					setEditingCharacter(activeCharacter);
-					setIsCharModalOpen(true);
-				}}
-				onAddCharacter={() => {
-					if (!canCreateCharacter) {
-						showToast(`⚠️ ${createCharTooltip}`);
-						return;
-					}
-					setEditingCharacter(null);
-					setIsCharModalOpen(true);
-				}}
 			/>
 
 			<main className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-5 flex flex-col lg:flex-row lg:items-start gap-6'>
@@ -449,24 +388,7 @@ function CampaignInventoryPage() {
 						displayedCurrencies={displayedCurrencies}
 						isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 						canReadDisplayedWallet={canReadDisplayedWallet}
-						canEditCharacterModal={
-							charPerms.canEditProfile || charPerms.canDeleteCharacter
-						}
-						canCreateCharacter={canCreateCharacter}
-						createCharTooltip={createCharTooltip}
 						onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
-						onEditCharacter={() => {
-							setEditingCharacter(activeCharacter);
-							setIsCharModalOpen(true);
-						}}
-						onAddCharacter={() => {
-							if (!canCreateCharacter) {
-								showToast(`⚠️ ${createCharTooltip}`);
-								return;
-							}
-							setEditingCharacter(null);
-							setIsCharModalOpen(true);
-						}}
 					/>
 
 					<InventoryToolbar
@@ -630,17 +552,6 @@ function CampaignInventoryPage() {
 				onSplitCampCoinToParty={actions.splitCampCoinToParty}
 			/>
 
-			<CharacterModal
-				isOpen={isCharModalOpen}
-				character={editingCharacter}
-				campaignId={campaignId}
-				userId={user?.id ?? 'guest'}
-				canEditProfile={charPerms.canEditProfile}
-				canDeleteCharacter={charPerms.canDeleteCharacter}
-				onClose={() => setIsCharModalOpen(false)}
-				onSave={actions.handleSaveCharacter}
-				onDelete={actions.handleDeleteCharacter}
-			/>
 		</div>
 	);
 }

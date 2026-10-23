@@ -26,6 +26,8 @@ import {
 	Wand2,
 } from 'lucide-react';
 import { Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
+import ItemIcon from './ItemIcon';
+import { ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 
 interface HomebrewModalProps {
 	isOpen: boolean;
@@ -67,6 +69,10 @@ export default function HomebrewModal({
 }: HomebrewModalProps) {
 	if (!isOpen) return null;
 	const affixes = form.affixes || [];
+	const isImageIcon = form.icon.startsWith(ITEM_IMAGE_ICON_PREFIX);
+	const imageUrl = isImageIcon
+		? form.icon.slice(ITEM_IMAGE_ICON_PREFIX.length)
+		: '';
 
 	// 新增空白詞條
 	const addEmptyAffix = () => {
@@ -292,20 +298,67 @@ export default function HomebrewModal({
 								className='w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 							/>
 						</div>
-						<div>
-							<label className='block text-stone-400 mb-1'>圖示樣式</label>
+						<div className='sm:col-span-3'>
+							<label className='block text-stone-400 mb-1'>物品圖示</label>
 							<Select
-								aria-label='圖示樣式'
-								value={form.icon}
-								onChange={(e) => setForm({ ...form, icon: e.target.value })}
+								aria-label='物品圖示來源'
+								value={isImageIcon ? 'image' : 'icon'}
+								onChange={(e) =>
+									setForm({
+										...form,
+										icon:
+											e.target.value === 'image'
+												? `${ITEM_IMAGE_ICON_PREFIX}${imageUrl}`
+												: isImageIcon
+													? 'Sword'
+													: form.icon,
+									})
+								}
 								className='w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 							>
-								{ICON_OPTIONS.map((ic) => (
-									<option key={ic} value={ic}>
-										{ic}
-									</option>
-								))}
+								<option value='icon'>使用 Lucide 圖示</option>
+								<option value='image'>使用圖片網址</option>
 							</Select>
+							{isImageIcon ? (
+								<div className='mt-2 flex items-center gap-3'>
+									<Input
+										aria-label='物品圖片網址'
+										type='url'
+										required
+										value={imageUrl}
+										onChange={(e) =>
+											setForm({
+												...form,
+												icon: `${ITEM_IMAGE_ICON_PREFIX}${e.target.value}`,
+											})
+										}
+										placeholder='https://example.com/item-image'
+										className='min-w-0 flex-1 bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none'
+									/>
+									<div className='relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded border border-stone-700 bg-stone-950'>
+										<ItemIcon
+											iconName={form.icon}
+											className='h-full w-full text-stone-500'
+										/>
+									</div>
+								</div>
+							) : (
+								<Select
+									aria-label='Lucide 圖示樣式'
+									value={form.icon}
+									onChange={(e) => setForm({ ...form, icon: e.target.value })}
+									className='mt-2 w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
+								>
+									{ICON_OPTIONS.map((ic) => (
+										<option key={ic} value={ic}>
+											{ic}
+										</option>
+									))}
+								</Select>
+							)}
+							<p className='mt-1 text-[10px] text-stone-500'>
+								圖片網址須使用 HTTPS，建議使用正方形圖片。
+							</p>
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>每日充能上限</label>

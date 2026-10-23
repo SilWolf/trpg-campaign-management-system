@@ -12,6 +12,7 @@ import {
 	Zap,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { getItemImageUrl } from '@/lib/itemIcon';
 
 type ItemIconProps = {
 	iconName: string;
@@ -19,6 +20,21 @@ type ItemIconProps = {
 };
 
 const ItemIcon = ({ iconName, className = 'w-7 h-7' }: ItemIconProps) => {
+	const imageUrl = getItemImageUrl(iconName);
+	if (imageUrl) {
+		return (
+			<img
+				src={imageUrl}
+				alt=''
+				className='absolute inset-0 h-full w-full rounded-[inherit] object-cover'
+				loading='lazy'
+				decoding='async'
+				referrerPolicy='no-referrer'
+				draggable={false}
+			/>
+		);
+	}
+
 	const icons: Record<string, ReactNode> = {
 		Sword: <Sword className={className} />,
 		Shield: <Shield className={className} />,
