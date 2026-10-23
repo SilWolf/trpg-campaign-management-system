@@ -80,11 +80,13 @@
 - 已更新 `.github/copilot-instructions.md`，明確記錄不得以特殊 campaign ID 授權或切換離線行為。
 - 本階段未新增或執行 SQL；遠端角色移除的跨列操作仍非單一資料庫交易，維護者部署後須在階段五驗收失敗情境與競爭狀態。
 
-### 階段五：隔離環境驗收及手動上線 — 待執行
+### 階段五：隔離環境驗收及手動上線 — 本機驗收完成，Supabase 隔離驗收／手動上線待維護者執行
 
 - 維護者在隔離 Supabase 專案核對 Schema、套用 migration、部署 Edge Function 並驗證 Secrets；此階段不由程式碼任務自動部署。
 - 執行建團成功／失敗回滾、service-role 權限、邀請加入、RLS、Realtime、跨戰役物品／錢包隔離驗收。
 - 執行 `npm run typecheck`、`npm run lint`、相關 E2E 與 `npm run build`；端對端測試應 mock Edge Function，不接真實 Supabase。
+- 本機驗收已完成：`npm run typecheck`、`npm run lint`、`npm run test:e2e`（23 項通過）及 `npm run build` 均通過。Playwright 的 Supabase Auth、REST、RPC 與 Edge Function 均使用測試替身，未連線真實 Supabase。
+- 隔離 Supabase 的 migration／Function 部署、Secrets、資料庫交易回滾、RLS、Realtime 與跨客戶端競爭狀態尚未驗證；因本工作階段未取得維護者指定的 Supabase 專案與手動部署結果，不得視為已完成隔離環境驗收或上線。請依 [database-template-migration.md](./database-template-migration.md) 由維護者手動執行並記錄結果。
 
 ## 驗收清單
 

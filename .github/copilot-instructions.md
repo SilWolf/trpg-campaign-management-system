@@ -47,6 +47,10 @@
    - 戰役大廳只顯示 Supabase 回傳的戰役；不可加入固定示範戰役卡片、以 `default` ID 隱藏戰役或依 ID 授予 DM 權限。
    - `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 是建立範例戰役及訪客／離線退避的範例資料，不可用來回填遠端空集合。
    - `camp-chest` 僅為 UI 虛擬角色；不得寫入 `characters`。物品須以目前 `campaign_id` 隔離，貨幣存於 `campaigns.camp_chest_currency`。
+8. **隔離環境驗收及手動上線（本機驗收完成，Supabase 驗收待維護者執行）**：
+   - 本機 `npm run typecheck`、`npm run lint`、`npm run test:e2e`（23 項通過）及 `npm run build` 均已通過。
+   - Playwright E2E 對 Auth、REST、RPC 與 Edge Function 使用測試替身；這些結果只證明前端流程與 mock 合約，不代表真實資料庫、RLS、Realtime 或交易回滾已驗收。
+   - 未經維護者確認目標專案與 migration history，不可連線或執行 SQL、部署 Edge Function 或變更 Secrets。隔離專案的 Schema／migration、Function／Secrets、service-role 權限、建團回滾、邀請加入、RLS、Realtime、跨戰役隔離及併發轉帳仍須依 `docs/database-template-migration.md` 手動驗收；驗收完成前不可宣稱已上線。
 
 ---
 
