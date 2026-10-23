@@ -25,14 +25,82 @@ const testSession = {
 	user: testUser,
 };
 
+type CampaignSettingsRole = 'dm' | 'player';
+
 export async function seedAuthenticatedSession(page: Page) {
 	await page.addInitScript((session) => {
 		localStorage.setItem('sb-127-auth-token', JSON.stringify(session));
 	}, testSession);
 }
 
-export async function mockSupabase(page: Page) {
+export async function mockSupabase(
+	page: Page,
+	options: { campaignSettingsRole?: CampaignSettingsRole } = {},
+) {
 	const requests: string[] = [];
+	const campaignSettingsRole = options.campaignSettingsRole;
+	const campaignCharacters = [
+		{
+			id: 'settings-character',
+			name: '測試冒險者',
+			title: '遊俠',
+			str: 14,
+			avatar: '🏹',
+			user_id:
+				campaignSettingsRole === 'player' ? testUser.id : 'other-player-id',
+			campaign_id: 'settings-campaign',
+			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+		},
+		{
+			id: 'second-settings-character',
+			name: '第二位冒險者',
+			title: '吟遊詩人',
+			str: 10,
+			avatar: '🎻',
+			user_id: 'other-player-id',
+			campaign_id: 'settings-campaign',
+			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+		},
+	];
+	const campaignMembers = [
+		{
+			user_id: 'settings-dm-id',
+			role: 'dm',
+			max_characters: 1,
+			invited_at: null,
+			accepted_at: '2025-01-01T00:00:00.000Z',
+			profiles: { full_name: '測試地下城主', email: 'dm@example.test' },
+		},
+		{
+			user_id: testUser.id,
+			role: campaignSettingsRole,
+			max_characters: 1,
+			invited_at: null,
+			accepted_at: '2025-01-01T00:00:00.000Z',
+			profiles: {
+				full_name: '測試冒險者',
+				email: testUser.email,
+			},
+		},
+		{
+			user_id: 'other-player-id',
+			role: 'player',
+			max_characters: 1,
+			invited_at: null,
+			accepted_at: '2025-01-01T00:00:00.000Z',
+			profiles: { full_name: '其他玩家', email: 'other@example.test' },
+		},
+		{
+			user_id: 'transfer-player-id',
+			role: 'player',
+			max_characters: 1,
+			invited_at: null,
+			accepted_at: '2025-01-01T00:00:00.000Z',
+			profiles: { full_name: '移轉目標', email: 'transfer@example.test' },
+		},
+	];
 
 	await page.route('http://127.0.0.1:54321/**', async (route) => {
 		const request = route.request();
@@ -109,6 +177,63 @@ export async function mockSupabase(page: Page) {
 			await route.fulfill({
 				json: { id: 'mock-campaign-id', name: '測試戰役' },
 			});
+			return;
+		}
+
+		if (
+			campaignSettingsRole &&
+			url.pathname === '/rest/v1/campaigns' &&
+			method === 'GET'
+		) {
+			await route.fulfill({
+				json: {
+					id: 'settings-campaign',
+					name: '隔離測試戰役',
+					invite_code: 'TEST42',
+				},
+			});
+			return;
+		}
+
+		if (
+			campaignSettingsRole &&
+			url.pathname === '/rest/v1/campaign_members' &&
+			method === 'GET'
+		) {
+			if (url.searchParams.get('select') === 'role') {
+				await route.fulfill({
+					json: { role: campaignSettingsRole },
+				});
+				return;
+			}
+
+			await route.fulfill({ json: campaignMembers });
+			return;
+		}
+
+		if (
+			campaignSettingsRole &&
+			url.pathname === '/rest/v1/characters' &&
+			method === 'GET'
+		) {
+			await route.fulfill({ json: campaignCharacters });
+			return;
+		}
+
+		if (
+			campaignSettingsRole &&
+			url.pathname === '/rest/v1/character_permissions' &&
+			method === 'GET'
+		) {
+			await route.fulfill({ json: [] });
+			return;
+		}
+
+		if (
+			url.pathname === '/functions/v1/invite-player' &&
+			method === 'POST'
+		) {
+			await route.fulfill({ status: 200, json: { success: true } });
 			return;
 		}
 

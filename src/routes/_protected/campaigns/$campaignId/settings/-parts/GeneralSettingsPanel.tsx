@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react';
 import { Check, Copy, Save, ShieldAlert, Users } from 'lucide-react';
+import { Button, Input } from '@/components/ui';
 import { CAMP_CHEST_ID, type Character } from '@/types';
 import type { DisplayMember } from './types';
 
@@ -60,38 +61,40 @@ export function GeneralSettingsPanel({
 							)}
 						</div>
 
-						<div>
-							<label className='block text-xs font-semibold text-stone-300 mb-1.5'>
-								戰役名稱
-							</label>
-							<input
-								type='text'
-								disabled={!isDm}
-								value={campaignName}
-								onChange={(e) => setCampaignName(e.target.value)}
-								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-500 disabled:opacity-60'
-							/>
-						</div>
+						<Input
+							data-testid='campaign-name'
+							label='戰役名稱'
+							labelClassName='text-xs font-semibold text-stone-300'
+							type='text'
+							required
+							disabled={!isDm}
+							value={campaignName}
+							onChange={(e) => setCampaignName(e.target.value)}
+							className='bg-stone-900'
+						/>
 
 						<div>
-							<label className='block text-xs font-semibold text-stone-300 mb-1.5'>
+							<p className='text-xs font-semibold text-stone-300 mb-1.5'>
 								戰役邀請碼 (Invite Code)
-							</label>
+							</p>
 							<div className='flex items-center gap-2'>
-								<input
+								<Input
 									type='text'
 									readOnly
+									aria-label='戰役邀請碼'
 									value={inviteCode}
-									className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm font-mono text-amber-300 outline-none'
+									className='bg-stone-900 font-mono text-amber-300'
 								/>
-								<button
+								<Button
 									type='button'
+									variant='secondary'
+									size='sm'
 									onClick={() => {
 										navigator.clipboard.writeText(inviteCode);
 										setCopied(true);
 										setTimeout(() => setCopied(false), 2000);
 									}}
-									className='px-3 py-2 rounded bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 text-xs flex items-center gap-1.5 shrink-0 cursor-pointer'
+									className='shrink-0'
 								>
 									{copied ? (
 										<Check className='w-4 h-4 text-emerald-400' />
@@ -99,7 +102,7 @@ export function GeneralSettingsPanel({
 										<Copy className='w-4 h-4' />
 									)}
 									<span>{copied ? '已複製' : '複製邀請碼'}</span>
-								</button>
+								</Button>
 							</div>
 							<p className='text-[11px] text-stone-500 mt-1'>
 								其他冒險者可在大廳輸入此邀請碼加入本戰役。
@@ -108,13 +111,15 @@ export function GeneralSettingsPanel({
 
 						{isDm && (
 							<div className='flex justify-end pt-3 border-t border-stone-800'>
-								<button
+								<Button
+									data-testid='campaign-save'
 									type='submit'
-									className='px-4 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow'
+									size='sm'
+									className='shadow'
 								>
 									<Save className='w-4 h-4' />
 									<span>儲存變更</span>
-								</button>
+								</Button>
 							</div>
 						)}
 					</form>
@@ -209,10 +214,12 @@ export function GeneralSettingsPanel({
 															角色配額 (已建 {createdCount} 名 / 上限:
 														</span>
 														{isDm ? (
-															<input
+															<Input
+																data-testid={`campaign-member-quota-${member.id}`}
 																type='number'
 																min={0}
 																max={20}
+																aria-label={`玩家 ${member.identifier} 的角色創建上限`}
 																value={member.maxCharacters ?? 1}
 																onChange={(e) =>
 																	onUpdateMemberMaxChars(
@@ -220,7 +227,7 @@ export function GeneralSettingsPanel({
 																		parseInt(e.target.value, 10) || 0,
 																	)
 																}
-																className='w-12 bg-stone-900 border border-amber-600/60 focus:border-amber-400 rounded px-1.5 py-0.5 text-center font-mono font-bold text-amber-300 outline-none'
+																className='w-12 rounded px-1.5 py-0.5 text-center font-mono font-bold text-amber-300 border-amber-600/60 bg-stone-900 focus-visible:border-amber-400'
 															/>
 														) : (
 															<span className='font-mono font-bold text-amber-300'>
@@ -248,23 +255,28 @@ export function GeneralSettingsPanel({
 									輸入玩家的電子郵件，將其納入本戰役的受邀名單中。
 								</p>
 								<form
+									data-testid='campaign-invite-form'
 									onSubmit={onSendEmailInvite}
 									className='flex items-center gap-2'
 								>
-									<input
+									<Input
+										data-testid='campaign-invite-email'
 										type='email'
 										required
+										aria-label='受邀玩家電子郵件'
 										value={inviteEmail}
 										onChange={(e) => setInviteEmail(e.target.value)}
 										placeholder='player@example.com'
-										className='flex-1 bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-500'
+										className='flex-1 bg-stone-900'
 									/>
-									<button
+									<Button
+										data-testid='campaign-email-invite'
 										type='submit'
-										className='px-4 py-2 rounded bg-purple-900 hover:bg-purple-800 border border-purple-600 text-purple-100 font-semibold text-xs shrink-0 cursor-pointer shadow'
+										variant='secondary'
+										className='shrink-0 border-purple-600 bg-purple-900 text-purple-100 hover:bg-purple-800'
 									>
 										發送邀請
-									</button>
+									</Button>
 								</form>
 							</div>
 						)}
@@ -280,13 +292,16 @@ export function GeneralSettingsPanel({
 							<p className='text-xs text-stone-400 leading-relaxed'>
 								刪除戰役將會永久移除該戰役底下的所有角色、背包物品與公庫資料，此動作無法復原。
 							</p>
-							<button
+							<Button
+								data-testid='campaign-delete'
 								type='button'
 								onClick={onDeleteCampaign}
-								className='px-3.5 py-2 rounded bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-semibold cursor-pointer transition shadow'
+								variant='danger'
+								size='sm'
+								className='shadow'
 							>
 								永久刪除此戰役
-							</button>
+							</Button>
 						</div>
 					)}
 				</div>

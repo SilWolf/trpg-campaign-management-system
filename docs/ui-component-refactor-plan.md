@@ -154,6 +154,17 @@ Phase 1 已完成；將共用表單與按鈕元件遷移至登入／註冊、Ema
 
 **完成條件：** DM／玩家視角的主要情境均有對應 E2E 覆蓋；設定與權限操作行為保持不變；鍵盤可操作頁籤、選單與對話框。
 
+#### 執行紀錄（2026-10-23）
+
+Phase 2 已完成；Campaign 設定頁已遷移至共用表單與按鈕元件，保留現有 Supabase 資料流、角色／戰役操作及權限邊界，未修改 Schema、RLS 或伺服器端權限。
+
+- [`src/components/ui/Select.tsx`](../src/components/ui/Select.tsx) 與 [`src/components/ui/Checkbox.tsx`](../src/components/ui/Checkbox.tsx)：新增具標籤關聯、原生屬性與鍵盤焦點樣式的共用選項與核取方塊元件，並由 [`src/components/ui/index.ts`](../src/components/ui/index.ts) 匯出。
+- [`src/routes/_protected/campaigns/$campaignId/settings/-parts/GeneralSettingsPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/GeneralSettingsPanel.tsx)：遷移戰役名稱、邀請碼、玩家角色配額、Email 邀請與戰役刪除操作至共用元件；戰役名稱加入必填驗證，未放寬 DM 限制。
+- [`src/routes/_protected/campaigns/$campaignId/settings/-parts/CharacterSettingsPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/CharacterSettingsPanel.tsx)：遷移角色資料、頭像選擇、權限矩陣、擁有權移轉及刪除操作；延續既有個人權限與玩家自鎖防護，危險操作仍由瀏覽器確認對話框保護。
+- [`src/routes/_protected/campaigns/$campaignId/settings/-parts/CampaignSettingsView.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/CampaignSettingsView.tsx)：頁籤改為具 `tablist`／`tab`／`tabpanel` 語意的鍵盤可操作元件，支援左右方向鍵、Home、End、焦點指示及語意色。
+- [`tests/e2e/phase-2-settings.spec.ts`](../tests/e2e/phase-2-settings.spec.ts) 與 [`tests/e2e/supabase-mock.ts`](../tests/e2e/supabase-mock.ts)：新增隔離的 DM／一般玩家測試資料與 6 項 E2E 情境，涵蓋設定／配額更新、Email 邀請回饋、玩家唯讀與自有權限列、必填驗證、角色資料／權限更新、鍵盤頁籤、移轉／刪除確認取消及 375px 窄螢幕。
+- 驗收結果：Phase 2 E2E（6 項）、`npm run typecheck`、`npm run lint`、`npm run build` 與 `git diff --check` 均通過；E2E 僅使用本機 Supabase 替身，不發送實際 Email 或連接正式服務。
+
 ### Phase 3：Campaign 背包頁
 
 **範圍**

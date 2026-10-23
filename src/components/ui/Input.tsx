@@ -7,6 +7,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 	description?: string;
 	error?: string;
 	containerClassName?: string;
+	labelClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -20,6 +21,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 			error,
 			id,
 			label,
+			labelClassName,
 			...props
 		},
 		ref,
@@ -37,7 +39,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 				{label && (
 					<label
 						htmlFor={inputId}
-						className='text-sm font-medium text-stone-200'
+						className={cn(
+							'text-sm font-medium text-stone-200',
+							labelClassName,
+						)}
 					>
 						{label}
 					</label>

@@ -1,5 +1,6 @@
-import type { FormEvent } from 'react';
+import type { FormEvent, KeyboardEvent } from 'react';
 import { Settings, Shield } from 'lucide-react';
+import { Button } from '@/components/ui';
 import {
 	CAMP_CHEST_ID,
 	type AccessLevel,
@@ -102,6 +103,37 @@ export function CampaignSettingsView({
 	onTransferCharacter,
 	onDeleteCharacter,
 }: CampaignSettingsViewProps) {
+	const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+		if (
+			event.key !== 'ArrowRight' &&
+			event.key !== 'ArrowLeft' &&
+			event.key !== 'Home' &&
+			event.key !== 'End'
+		) {
+			return;
+		}
+
+		const tabs = Array.from(
+			event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]'),
+		);
+		const currentIndex = tabs.indexOf(event.target as HTMLButtonElement);
+		if (currentIndex < 0 || tabs.length === 0) return;
+
+		event.preventDefault();
+		const nextIndex =
+			event.key === 'Home'
+				? 0
+				: event.key === 'End'
+					? tabs.length - 1
+					: (currentIndex +
+							(event.key === 'ArrowRight' ? 1 : -1) +
+							tabs.length) %
+						tabs.length;
+		const nextTab = tabs[nextIndex];
+		nextTab.focus();
+		setActiveTab(nextTab.dataset.tabValue ?? 'general');
+	};
+
 	return (
 		<main className='max-w-5xl mx-auto px-4 py-8 space-y-6'>
 			<div className='flex items-center gap-3 border-b border-amber-900/50 pb-4'>
@@ -109,7 +141,10 @@ export function CampaignSettingsView({
 					<Settings className='w-6 h-6' />
 				</div>
 				<div>
-					<h1 className='text-xl font-serif font-bold text-amber-100'>
+					<h1
+						data-testid='campaign-settings-heading'
+						className='text-xl font-serif font-bold text-amber-100'
+					>
 						戰役與角色控制權限中心
 					</h1>
 					<p className='text-xs text-stone-400'>
@@ -119,17 +154,34 @@ export function CampaignSettingsView({
 			</div>
 
 			{notice && (
-				<div className='p-3 rounded bg-amber-950/60 border border-amber-600/60 text-amber-200 text-xs'>
+				<div
+					data-testid='campaign-settings-notice'
+					className='p-3 rounded bg-amber-950/60 border border-amber-600/60 text-amber-200 text-xs'
+				>
 					{notice}
 				</div>
 			)}
 
 			{/* 分頁導覽列 */}
-			<div className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-800'>
-				<button
+			<div
+				role='tablist'
+				aria-label='戰役與角色設定'
+				onKeyDown={handleTabKeyDown}
+				className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-800'
+			>
+				<Button
+					id='campaign-settings-tab-general'
+					data-testid='campaign-settings-tab-general'
+					data-tab-value='general'
+					role='tab'
+					aria-selected={activeTab === 'general'}
+					aria-controls='campaign-settings-panel'
+					tabIndex={activeTab === 'general' ? 0 : -1}
 					type='button'
 					onClick={() => setActiveTab('general')}
-					className={`px-4 py-2 rounded-md text-xs font-semibold shrink-0 transition cursor-pointer flex items-center gap-1.5 ${
+					variant='ghost'
+					size='sm'
+					className={`shrink-0 ${
 						activeTab === 'general'
 							? 'bg-amber-800 text-amber-100 border border-amber-500/70 shadow'
 							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
@@ -137,18 +189,27 @@ export function CampaignSettingsView({
 				>
 					<Shield className='w-3.5 h-3.5 text-amber-400' />
 					<span>⚙️ 戰役常規設定與成員配額</span>
-				</button>
+				</Button>
 
 				{campaignCharacters
 					.filter((c) => c.id !== CAMP_CHEST_ID)
 					.map((char) => {
 						const isActive = activeTab === char.id;
 						return (
-							<button
+							<Button
 								key={char.id}
+								id={`campaign-settings-tab-${char.id}`}
+								data-testid={`campaign-settings-tab-${char.id}`}
+								data-tab-value={char.id}
+								role='tab'
+								aria-selected={isActive}
+								aria-controls='campaign-settings-panel'
+								tabIndex={isActive ? 0 : -1}
 								type='button'
 								onClick={() => setActiveTab(char.id)}
-								className={`px-3.5 py-2 rounded-md text-xs font-semibold shrink-0 transition cursor-pointer flex items-center gap-1.5 ${
+								variant='ghost'
+								size='sm'
+								className={`shrink-0 ${
 									isActive
 										? 'bg-purple-900 text-purple-100 border border-purple-500/70 shadow'
 										: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
@@ -156,54 +217,62 @@ export function CampaignSettingsView({
 							>
 								<span>{char.avatar}</span>
 								<span>{char.name}</span>
-							</button>
+							</Button>
 						);
 					})}
 			</div>
 
-			<GeneralSettingsPanel
-				activeTab={activeTab}
-				isDm={isDm}
-				campaignName={campaignName}
-				setCampaignName={setCampaignName}
-				inviteCode={inviteCode}
-				copied={copied}
-				setCopied={setCopied}
-				allMembers={allMembers}
-				campaignCharacters={campaignCharacters}
-				inviteEmail={inviteEmail}
-				setInviteEmail={setInviteEmail}
-				onSaveGeneralSettings={onSaveGeneralSettings}
-				onUpdateMemberMaxChars={onUpdateMemberMaxChars}
-				onSendEmailInvite={onSendEmailInvite}
-				onDeleteCampaign={onDeleteCampaign}
-			/>
+			<section
+				id='campaign-settings-panel'
+				data-testid='campaign-settings-panel'
+				role='tabpanel'
+				aria-labelledby={`campaign-settings-tab-${activeTab}`}
+				tabIndex={0}
+			>
+				<GeneralSettingsPanel
+					activeTab={activeTab}
+					isDm={isDm}
+					campaignName={campaignName}
+					setCampaignName={setCampaignName}
+					inviteCode={inviteCode}
+					copied={copied}
+					setCopied={setCopied}
+					allMembers={allMembers}
+					campaignCharacters={campaignCharacters}
+					inviteEmail={inviteEmail}
+					setInviteEmail={setInviteEmail}
+					onSaveGeneralSettings={onSaveGeneralSettings}
+					onUpdateMemberMaxChars={onUpdateMemberMaxChars}
+					onSendEmailInvite={onSendEmailInvite}
+					onDeleteCampaign={onDeleteCampaign}
+				/>
 
-			<CharacterSettingsPanel
-				campaignId={campaignId}
-				isDm={isDm}
-				currentSelectedChar={currentSelectedChar}
-				currentOwnerName={currentOwnerName}
-				transferCandidates={transferCandidates}
-				selectedTransferTarget={selectedTransferTarget}
-				setTransferTargetUserId={setTransferTargetUserId}
-				myPermForSelectedChar={myPermForSelectedChar}
-				editCharName={editCharName}
-				setEditCharName={setEditCharName}
-				editCharTitle={editCharTitle}
-				setEditCharTitle={setEditCharTitle}
-				editCharStr={editCharStr}
-				setEditCharStr={setEditCharStr}
-				editCharAvatar={editCharAvatar}
-				setEditCharAvatar={setEditCharAvatar}
-				allMembers={allMembers}
-				allPermissions={allPermissions}
-				userId={userId}
-				onSaveCharacterProfile={onSaveCharacterProfile}
-				onUpdatePermission={onUpdatePermission}
-				onTransferCharacter={onTransferCharacter}
-				onDeleteCharacter={onDeleteCharacter}
-			/>
+				<CharacterSettingsPanel
+					campaignId={campaignId}
+					isDm={isDm}
+					currentSelectedChar={currentSelectedChar}
+					currentOwnerName={currentOwnerName}
+					transferCandidates={transferCandidates}
+					selectedTransferTarget={selectedTransferTarget}
+					setTransferTargetUserId={setTransferTargetUserId}
+					myPermForSelectedChar={myPermForSelectedChar}
+					editCharName={editCharName}
+					setEditCharName={setEditCharName}
+					editCharTitle={editCharTitle}
+					setEditCharTitle={setEditCharTitle}
+					editCharStr={editCharStr}
+					setEditCharStr={setEditCharStr}
+					editCharAvatar={editCharAvatar}
+					setEditCharAvatar={setEditCharAvatar}
+					allMembers={allMembers}
+					allPermissions={allPermissions}
+					userId={userId}
+					onSaveCharacterProfile={onSaveCharacterProfile}
+					onUpdatePermission={onUpdatePermission}
+					onTransferCharacter={onTransferCharacter}
+					onDeleteCharacter={onDeleteCharacter}
+				/>
+			</section>
 		</main>
 	);
 }

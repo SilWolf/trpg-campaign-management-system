@@ -6,6 +6,7 @@ import {
 	Trash2,
 	User,
 } from 'lucide-react';
+import { Button, Checkbox, Input, Select } from '@/components/ui';
 import type {
 	AccessLevel,
 	Character,
@@ -116,75 +117,73 @@ export function CharacterSettingsPanel({
 						</div>
 
 						<div className='grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs'>
-							<div>
-								<label className='block text-stone-400 mb-1'>角色名稱 *</label>
-								<input
-									type='text'
-									required
-									disabled={!myPermForSelectedChar.canEditProfile}
-									value={editCharName}
-									onChange={(e) => setEditCharName(e.target.value)}
-									className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-2 text-stone-100 outline-none focus:border-amber-500 disabled:opacity-60'
-								/>
-							</div>
+							<Input
+								data-testid='character-name'
+								label='角色名稱 *'
+								labelClassName='text-xs text-stone-400'
+								type='text'
+								required
+								disabled={!myPermForSelectedChar.canEditProfile}
+								value={editCharName}
+								onChange={(e) => setEditCharName(e.target.value)}
+								className='bg-stone-900'
+							/>
 
-							<div>
-								<label className='block text-stone-400 mb-1'>
-									頭銜 / 職業背景
-								</label>
-								<input
-									type='text'
-									disabled={!myPermForSelectedChar.canEditProfile}
-									value={editCharTitle}
-									onChange={(e) => setEditCharTitle(e.target.value)}
-									className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-2 text-stone-100 outline-none focus:border-amber-500 disabled:opacity-60'
-								/>
-							</div>
+							<Input
+								data-testid='character-title'
+								label='頭銜 / 職業背景'
+								labelClassName='text-xs text-stone-400'
+								type='text'
+								disabled={!myPermForSelectedChar.canEditProfile}
+								value={editCharTitle}
+								onChange={(e) => setEditCharTitle(e.target.value)}
+								className='bg-stone-900'
+							/>
 
-							<div>
-								<label className='block text-amber-300 mb-1'>
-									力量屬性 (STR)
-								</label>
-								<input
-									type='number'
-									min={1}
-									max={30}
-									required
-									disabled={!myPermForSelectedChar.canEditProfile}
-									value={editCharStr}
-									onChange={(e) =>
-										setEditCharStr(parseInt(e.target.value, 10) || 10)
-									}
-									className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-2 text-amber-200 font-mono font-bold outline-none focus:border-amber-500 disabled:opacity-60'
-								/>
-							</div>
+							<Input
+								data-testid='character-strength'
+								label='力量屬性 (STR)'
+								labelClassName='text-xs text-amber-300'
+								type='number'
+								min={1}
+								max={30}
+								required
+								disabled={!myPermForSelectedChar.canEditProfile}
+								value={editCharStr}
+								onChange={(e) =>
+									setEditCharStr(parseInt(e.target.value, 10) || 10)
+								}
+								className='bg-stone-900 font-mono font-bold text-amber-200'
+							/>
 
-							<div>
-								<label className='block text-stone-400 mb-1'>頭像符號</label>
-								<select
-									disabled={!myPermForSelectedChar.canEditProfile}
-									value={editCharAvatar}
-									onChange={(e) => setEditCharAvatar(e.target.value)}
-									className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-2 text-stone-100 outline-none disabled:opacity-60'
-								>
-									{AVATAR_OPTIONS.map((icon) => (
-										<option key={icon} value={icon}>
-											{icon} 頭像
-										</option>
-									))}
-								</select>
-							</div>
+							<Select
+								data-testid='character-avatar'
+								label='頭像符號'
+								labelClassName='text-xs text-stone-400'
+								disabled={!myPermForSelectedChar.canEditProfile}
+								value={editCharAvatar}
+								onChange={(e) => setEditCharAvatar(e.target.value)}
+								className='bg-stone-900'
+							>
+								{AVATAR_OPTIONS.map((icon) => (
+									<option key={icon} value={icon}>
+										{icon} 頭像
+									</option>
+								))}
+							</Select>
 						</div>
 
 						{myPermForSelectedChar.canEditProfile && (
 							<div className='flex justify-end pt-3 border-t border-stone-800'>
-								<button
+								<Button
+									data-testid='character-save'
 									type='submit'
-									className='px-4 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-semibold text-xs flex items-center gap-1.5 cursor-pointer shadow'
+									size='sm'
+									className='shadow'
 								>
 									<Save className='w-4 h-4' />
 									<span>儲存角色基本資料</span>
-								</button>
+								</Button>
 							</div>
 						)}
 					</form>
@@ -289,10 +288,11 @@ export function CharacterSettingsPanel({
 											<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs'>
 												{/* 公開背包權限 */}
 												<div>
-													<label className='block text-stone-400 mb-1'>
-														🎒 公開背包權限
-													</label>
-													<select
+													<Select
+														data-testid={`character-permission-public-bag-${currentSelectedChar.id}-${member.id}`}
+														label='🎒 公開背包權限'
+														labelClassName='block text-stone-400 mb-1'
+														containerClassName='gap-0'
 														disabled={rowDisabled}
 														value={pubBag}
 														onChange={(e) =>
@@ -303,20 +303,21 @@ export function CharacterSettingsPanel({
 																parseInt(e.target.value, 10) as AccessLevel,
 															)
 														}
-														className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-amber-200 outline-none disabled:opacity-50 disabled:cursor-not-allowed'
+														className='bg-stone-950 px-2.5 py-1.5 text-amber-200'
 													>
 														<option value={0}>0 - 無權限 (隱藏)</option>
 														<option value={1}>1 - 僅閱讀</option>
 														<option value={2}>2 - 閱讀 + 修改</option>
-													</select>
+													</Select>
 												</div>
 
 												{/* 私人背包權限 */}
 												<div>
-													<label className='block text-stone-400 mb-1'>
-														🔒 私人暗袋權限
-													</label>
-													<select
+													<Select
+														data-testid={`character-permission-private-bag-${currentSelectedChar.id}-${member.id}`}
+														label='🔒 私人暗袋權限'
+														labelClassName='block text-stone-400 mb-1'
+														containerClassName='gap-0'
 														disabled={rowDisabled}
 														value={privBag}
 														onChange={(e) =>
@@ -327,20 +328,21 @@ export function CharacterSettingsPanel({
 																parseInt(e.target.value, 10) as AccessLevel,
 															)
 														}
-														className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-emerald-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed'
+														className='bg-stone-950 px-2.5 py-1.5 text-emerald-300'
 													>
 														<option value={0}>0 - 無權限 (隱藏)</option>
 														<option value={1}>1 - 僅閱讀</option>
 														<option value={2}>2 - 閱讀 + 修改</option>
-													</select>
+													</Select>
 												</div>
 
 												{/* 公開錢包權限 */}
 												<div>
-													<label className='block text-stone-400 mb-1'>
-														🪙 公開錢包權限
-													</label>
-													<select
+													<Select
+														data-testid={`character-permission-public-wallet-${currentSelectedChar.id}-${member.id}`}
+														label='🪙 公開錢包權限'
+														labelClassName='block text-stone-400 mb-1'
+														containerClassName='gap-0'
 														disabled={rowDisabled}
 														value={pubWallet}
 														onChange={(e) =>
@@ -351,20 +353,21 @@ export function CharacterSettingsPanel({
 																parseInt(e.target.value, 10) as AccessLevel,
 															)
 														}
-														className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-amber-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed'
+														className='bg-stone-950 px-2.5 py-1.5 text-amber-300'
 													>
 														<option value={0}>0 - 無權限 (隱藏餘額)</option>
 														<option value={1}>1 - 僅閱讀餘額</option>
 														<option value={2}>2 - 閱讀 + 修改/轉出</option>
-													</select>
+													</Select>
 												</div>
 
 												{/* 私人錢包權限 */}
 												<div>
-													<label className='block text-stone-400 mb-1'>
-														💰 私人錢包權限
-													</label>
-													<select
+													<Select
+														data-testid={`character-permission-private-wallet-${currentSelectedChar.id}-${member.id}`}
+														label='💰 私人錢包權限'
+														labelClassName='block text-stone-400 mb-1'
+														containerClassName='gap-0'
 														disabled={rowDisabled}
 														value={privWallet}
 														onChange={(e) =>
@@ -375,90 +378,79 @@ export function CharacterSettingsPanel({
 																parseInt(e.target.value, 10) as AccessLevel,
 															)
 														}
-														className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-cyan-300 outline-none disabled:opacity-50 disabled:cursor-not-allowed'
+														className='bg-stone-950 px-2.5 py-1.5 text-cyan-300'
 													>
 														<option value={0}>0 - 無權限 (隱藏餘額)</option>
 														<option value={1}>1 - 僅閱讀餘額</option>
 														<option value={2}>2 - 閱讀 + 修改/轉出</option>
-													</select>
+													</Select>
 												</div>
 											</div>
 
 											{/* 3 項布林權限勾選 */}
 											<div className='flex flex-wrap items-center gap-5 pt-2 border-t border-stone-800/60 text-xs'>
-												<label
-													className={`flex items-center gap-2 text-stone-300 ${
+												<Checkbox
+													data-testid={`character-permission-edit-profile-${currentSelectedChar.id}-${member.id}`}
+													label='基本資料修改權 (`can_edit_profile`)'
+													labelClassName={`${
 														rowDisabled
 															? 'opacity-50 cursor-not-allowed'
 															: 'cursor-pointer'
 													}`}
-												>
-													<input
-														type='checkbox'
-														disabled={rowDisabled}
-														checked={editProfile}
-														onChange={(e) =>
-															onUpdatePermission(
-																currentSelectedChar,
-																member.id,
-																'canEditProfile',
-																e.target.checked,
-															)
-														}
-														className='accent-amber-500'
-													/>
-													<span>基本資料修改權 (`can_edit_profile`)</span>
-												</label>
+													disabled={rowDisabled}
+													checked={editProfile}
+													onChange={(e) =>
+														onUpdatePermission(
+															currentSelectedChar,
+															member.id,
+															'canEditProfile',
+															e.target.checked,
+														)
+													}
+													className='accent-amber-500'
+												/>
 
-												<label
-													className={`flex items-center gap-2 text-stone-300 ${
+												<Checkbox
+													data-testid={`character-permission-delete-${currentSelectedChar.id}-${member.id}`}
+													label='角色刪除權 (`can_delete_character`)'
+													labelClassName={`${
 														rowDisabled
 															? 'opacity-50 cursor-not-allowed'
 															: 'cursor-pointer'
 													}`}
-												>
-													<input
-														type='checkbox'
-														disabled={rowDisabled}
-														checked={delChar}
-														onChange={(e) =>
-															onUpdatePermission(
-																currentSelectedChar,
-																member.id,
-																'canDeleteCharacter',
-																e.target.checked,
-															)
-														}
-														className='accent-red-500'
-													/>
-													<span>角色刪除權 (`can_delete_character`)</span>
-												</label>
+													disabled={rowDisabled}
+													checked={delChar}
+													onChange={(e) =>
+														onUpdatePermission(
+															currentSelectedChar,
+															member.id,
+															'canDeleteCharacter',
+															e.target.checked,
+														)
+													}
+													className='accent-red-500'
+												/>
 
-												<label
-													className={`flex items-center gap-2 text-stone-300 ${
+												<Checkbox
+													data-testid={`character-permission-manage-${currentSelectedChar.id}-${member.id}`}
+													label='修改控制權的控制權 (`can_manage_permissions`)'
+													labelClassName={`${
 														rowDisabled
 															? 'opacity-50 cursor-not-allowed'
 															: 'cursor-pointer'
 													}`}
-												>
-													<input
-														type='checkbox'
-														disabled={rowDisabled}
-														checked={managePerm}
-														onChange={(e) =>
-															onUpdatePermission(
-																currentSelectedChar,
-																member.id,
-																'canManagePermissions',
-																e.target.checked,
-															)
-														}
-														className='accent-purple-500'
-													/>
-													<span>
-														修改控制權的控制權 (`can_manage_permissions`)
-													</span>
-												</label>
+													disabled={rowDisabled}
+													checked={managePerm}
+													onChange={(e) =>
+														onUpdatePermission(
+															currentSelectedChar,
+															member.id,
+															'canManagePermissions',
+															e.target.checked,
+														)
+													}
+													className='accent-purple-500'
+												/>
 											</div>
 										</div>
 									);
@@ -496,12 +488,14 @@ export function CharacterSettingsPanel({
 										</p>
 									) : (
 										<div className='flex flex-col sm:flex-row gap-2'>
-											<select
+											<Select
+												data-testid='character-transfer-target'
+												aria-label='角色移轉目標'
 												value={selectedTransferTarget?.id ?? ''}
 												onChange={(event) =>
 													setTransferTargetUserId(event.target.value)
 												}
-												className='flex-1 bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm text-stone-100 outline-none focus:border-cyan-500'
+												className='flex-1 bg-stone-900 focus-visible:border-cyan-500'
 											>
 												{transferCandidates.map((member) => (
 													<option
@@ -515,8 +509,9 @@ export function CharacterSettingsPanel({
 															: ''}
 													</option>
 												))}
-											</select>
-											<button
+											</Select>
+											<Button
+												data-testid='character-transfer'
 												type='button'
 												disabled={!selectedTransferTarget}
 												onClick={() => {
@@ -527,11 +522,12 @@ export function CharacterSettingsPanel({
 														);
 													}
 												}}
-												className='px-4 py-2 rounded bg-cyan-900 hover:bg-cyan-800 border border-cyan-700 text-cyan-100 font-semibold text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed'
+												variant='secondary'
+												className='shrink-0 border-cyan-700 bg-cyan-900 text-cyan-100 hover:bg-cyan-800'
 											>
 												<ArrowRightLeft className='w-4 h-4' />
 												轉移擁有權
-											</button>
+											</Button>
 										</div>
 									)}
 								</section>
@@ -542,18 +538,21 @@ export function CharacterSettingsPanel({
 										移除此角色後，該角色公開與私人背包內的所有物品、以及公開與私人錢包的所有貨幣，將自動全數轉入「🏕️
 										營地儲物箱」。
 									</p>
-									<button
+									<Button
+										data-testid='character-delete'
 										type='button'
 										onClick={() =>
 											onDeleteCharacter(currentSelectedChar)
 										}
-										className='px-4 py-2 rounded bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition shadow'
+										variant='danger'
+										size='sm'
+										className='shadow'
 									>
 										<Trash2 className='w-4 h-4' />
 										<span>
 											移除角色「{currentSelectedChar.name}」(遺物入公庫)
 										</span>
-									</button>
+									</Button>
 								</>
 							)}
 						</div>
