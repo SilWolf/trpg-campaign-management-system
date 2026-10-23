@@ -1,4 +1,4 @@
-import ItemIcon from '@/components/ItemIcon';
+import ItemIcon from './ItemIcon';
 import {
 	getItemSection,
 	resolveItemFlags,

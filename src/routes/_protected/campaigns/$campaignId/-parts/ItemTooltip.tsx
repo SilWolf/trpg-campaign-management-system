@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import ItemIcon from '@/components/ItemIcon';
+import ItemIcon from './ItemIcon';
 import {
 	CAMP_CHEST_ID,
 	resolveItemFlags,
