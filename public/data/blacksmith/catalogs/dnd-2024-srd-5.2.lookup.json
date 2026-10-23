@@ -1,0 +1,643 @@
+{
+	"schemaVersion": 1,
+	"catalogId": "dnd-2024-srd-5.2",
+	"items": [
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c8494aecf5bc9b72",
+			"itemId": "item-c8494aecf5bc9b72",
+			"name": "乙醚精",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (吸入)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-305b7e34a70ca2a7",
+			"itemId": "item-305b7e34a70ca2a7",
+			"name": "書籍",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9804cba393c5fc93",
+			"itemId": "item-9804cba393c5fc93",
+			"name": "便攜式攻城錘",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7a6a9cc804a4c97b",
+			"itemId": "item-7a6a9cc804a4c97b",
+			"name": "信號笛",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-346d60bd33f5a221",
+			"itemId": "item-346d60bd33f5a221",
+			"name": "刺客之血",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (服用)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ad36df259e42b7d2",
+			"itemId": "item-ad36df259e42b7d2",
+			"name": "醫療包",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e6bf339877fc508b",
+			"itemId": "item-e6bf339877fc508b",
+			"name": "午夜之淚",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (服用)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-75c682678b50a970",
+			"itemId": "item-75c682678b50a970",
+			"name": "口糧",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-28f6129acddd7bcc",
+			"itemId": "item-28f6129acddd7bcc",
+			"name": "吊桶",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f9c76317bd6221e3",
+			"itemId": "item-f9c76317bd6221e3",
+			"name": "吐真劑",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (服用)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4cbdf4ecc222840f",
+			"itemId": "item-4cbdf4ecc222840f",
+			"name": "聖水",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f08a574c7f2aa8d6",
+			"itemId": "item-f08a574c7f2aa8d6",
+			"name": "地圖",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-35d7e74ed50d8793",
+			"itemId": "item-35d7e74ed50d8793",
+			"name": "地圖或卷軸匣",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3f49387c67f8ff2a",
+			"itemId": "item-3f49387c67f8ff2a",
+			"name": "地城套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-240bebc75ab52114",
+			"itemId": "item-240bebc75ab52114",
+			"name": "基礎毒藥",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-06f3339e2a2c8bbf",
+			"itemId": "item-06f3339e2a2c8bbf",
+			"name": "墨水",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8a099a1e1882ec24",
+			"itemId": "item-8a099a1e1882ec24",
+			"name": "墨水筆",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ccca640c4d989233",
+			"itemId": "item-ccca640c4d989233",
+			"name": "壺",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-888d036c63254e1e",
+			"itemId": "item-888d036c63254e1e",
+			"name": "外交套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8db1789c881c2836",
+			"itemId": "item-8db1789c881c2836",
+			"name": "學者套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e84d4fadb3f98c65",
+			"itemId": "item-e84d4fadb3f98c65",
+			"name": "小包",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-734362ecdeaa8c2c",
+			"itemId": "item-734362ecdeaa8c2c",
+			"name": "小瓶",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-399b6c4711eda40b",
+			"itemId": "item-399b6c4711eda40b",
+			"name": "帳篷",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bfaab92767d3b72d",
+			"itemId": "item-bfaab92767d3b72d",
+			"name": "弩矢匣",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2bb32dd7727d2f98",
+			"itemId": "item-2bb32dd7727d2f98",
+			"name": "強酸",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b4264e135c8a2248",
+			"itemId": "item-b4264e135c8a2248",
+			"name": "怨恨",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (吸入)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a5c84511457aac54",
+			"itemId": "item-a5c84511457aac54",
+			"name": "戲服",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8bcd46afcd2300fa",
+			"itemId": "item-8bcd46afcd2300fa",
+			"name": "扁瓶",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f6994e45cf10d909",
+			"itemId": "item-f6994e45cf10d909",
+			"name": "抗毒劑",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-175a6f3788f36bce",
+			"itemId": "item-175a6f3788f36bce",
+			"name": "捕獵陷阱",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c7d54e4653b85a10",
+			"itemId": "item-c7d54e4653b85a10",
+			"name": "捕網",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-adcb1525fc35e9ae",
+			"itemId": "item-adcb1525fc35e9ae",
+			"name": "探索套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-09a5726593d89daa",
+			"itemId": "item-09a5726593d89daa",
+			"name": "撬棍",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-90b1d266334772e6",
+			"itemId": "item-90b1d266334772e6",
+			"name": "攀爬工具",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-00dd64f066f23e90",
+			"itemId": "item-00dd64f066f23e90",
+			"name": "放大鏡",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d163de3ec4e1dafb",
+			"itemId": "item-d163de3ec4e1dafb",
+			"name": "旅行服裝",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-03d1973297ee3aef",
+			"itemId": "item-03d1973297ee3aef",
+			"name": "望遠鏡",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bdf28ae0f6fd42bb",
+			"itemId": "item-bdf28ae0f6fd42bb",
+			"name": "木桶",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9f0499d797a959c4",
+			"itemId": "item-9f0499d797a959c4",
+			"name": "材料包",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-667fd1d6ece6dc05",
+			"itemId": "item-667fd1d6ece6dc05",
+			"name": "梯子",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fd2ebb2c80af2ac7",
+			"itemId": "item-fd2ebb2c80af2ac7",
+			"name": "毯子",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b2ef4b43a18b68fc",
+			"itemId": "item-b2ef4b43a18b68fc",
+			"name": "水袋",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-00021214075c3f32",
+			"itemId": "item-00021214075c3f32",
+			"name": "油燈",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1a85c269b91fb729",
+			"itemId": "item-1a85c269b91fb729",
+			"name": "法袍",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d52b5a47ccf2509a",
+			"itemId": "item-d52b5a47ccf2509a",
+			"name": "滑輪組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-14b0b86877d05c0b",
+			"itemId": "item-14b0b86877d05c0b",
+			"name": "滾珠",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f301683285b9b52c",
+			"itemId": "item-f301683285b9b52c",
+			"name": "火把",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-138326789a0ceb2f",
+			"itemId": "item-138326789a0ceb2f",
+			"name": "火絨盒",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3a275f28979dd486",
+			"itemId": "item-3a275f28979dd486",
+			"name": "熾火膠",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-18e2d0f2ef32ff02",
+			"itemId": "item-18e2d0f2ef32ff02",
+			"name": "焦引薰煙",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (吸入)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b6d73fa67eb099ed",
+			"itemId": "item-b6d73fa67eb099ed",
+			"name": "燃油",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-662edad08988f4da",
+			"itemId": "item-662edad08988f4da",
+			"name": "爪鉤",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ad932dbb44bbf4c9",
+			"itemId": "item-ad932dbb44bbf4c9",
+			"name": "牛眼提燈",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f058bbdb620d66c0",
+			"itemId": "item-f058bbdb620d66c0",
+			"name": "玻璃瓶",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-39aaa10254c78015",
+			"itemId": "item-39aaa10254c78015",
+			"name": "祭司套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1f1cd9b5f019c5ca",
+			"itemId": "item-1f1cd9b5f019c5ca",
+			"name": "竊賊套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-270a3d104c5dd965",
+			"itemId": "item-270a3d104c5dd965",
+			"name": "箭袋",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6ae3b8ed65c4bd28",
+			"itemId": "item-6ae3b8ed65c4bd28",
+			"name": "箱子",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8c06a0b9d47972e8",
+			"itemId": "item-8c06a0b9d47972e8",
+			"name": "籃子",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3dbb74ea6697cacf",
+			"itemId": "item-3dbb74ea6697cacf",
+			"name": "紫蟲毒液",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (傷害)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e54df8acc4966609",
+			"itemId": "item-e54df8acc4966609",
+			"name": "紙張",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b83bf9350fdb653f",
+			"itemId": "item-b83bf9350fdb653f",
+			"name": "細線",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a5ca8f34305244a2",
+			"itemId": "item-a5ca8f34305244a2",
+			"name": "繩索",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-aa121e5e93b264cc",
+			"itemId": "item-aa121e5e93b264cc",
+			"name": "羅絲之吻",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (傷害)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8c189baf8874e28d",
+			"itemId": "item-8c189baf8874e28d",
+			"name": "羊皮紙",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7b0c89311a8594c7",
+			"itemId": "item-7b0c89311a8594c7",
+			"name": "揹包",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f69d584cd365372a",
+			"itemId": "item-f69d584cd365372a",
+			"name": "腐精之油",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (接觸)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fa4501d756af7dff",
+			"itemId": "item-fa4501d756af7dff",
+			"name": "藝人套組",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-270284d5c6738d40",
+			"itemId": "item-270284d5c6738d40",
+			"name": "蒼白酊劑",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (服用)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3b9f06e7ffb7f0c2",
+			"itemId": "item-3b9f06e7ffb7f0c2",
+			"name": "蒙汗藥",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (服用)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-28c544f3a8961317",
+			"itemId": "item-28c544f3a8961317",
+			"name": "蛇毒",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (傷害)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e0e480ad42050862",
+			"itemId": "item-e0e480ad42050862",
+			"name": "蠟燭",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-44f6fc81f4424c7c",
+			"itemId": "item-44f6fc81f4424c7c",
+			"name": "鐵壺",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-427f9259079634e0",
+			"itemId": "item-427f9259079634e0",
+			"name": "鐵蒺藜",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f0333ebd4db9c220",
+			"itemId": "item-f0333ebd4db9c220",
+			"name": "鐵釘",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-45c1143b0ced2fba",
+			"itemId": "item-45c1143b0ced2fba",
+			"name": "鐵釘(組)",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9ea7d6af261d9f06",
+			"itemId": "item-9ea7d6af261d9f06",
+			"name": "鈴鐺",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-871f2dbef785ef77",
+			"itemId": "item-871f2dbef785ef77",
+			"name": "鏟子",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a2606373a31227ae",
+			"itemId": "item-a2606373a31227ae",
+			"name": "鋪蓋",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bccf586f298acf9c",
+			"itemId": "item-bccf586f298acf9c",
+			"name": "鏈條",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1af4b06b86cc47f3",
+			"itemId": "item-1af4b06b86cc47f3",
+			"name": "鎖",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6c36c4bfe3fa835a",
+			"itemId": "item-6c36c4bfe3fa835a",
+			"name": "鏡子",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4134c2e38a9c1a44",
+			"itemId": "item-4134c2e38a9c1a44",
+			"name": "鐐銬",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a84527d0be219dba",
+			"itemId": "item-a84527d0be219dba",
+			"name": "長杆",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9045454d8b0c5960",
+			"itemId": "item-9045454d8b0c5960",
+			"name": "附蓋提燈",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0188cc3f09e510a2",
+			"itemId": "item-0188cc3f09e510a2",
+			"name": "飛龍毒液",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (傷害)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-67548221eb77b87d",
+			"itemId": "item-67548221eb77b87d",
+			"name": "食腐蟲粘液",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "毒藥 (接觸)", "DMG'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6ff81d5c2123845e",
+			"itemId": "item-6ff81d5c2123845e",
+			"name": "飾品",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ebfc68b2807dd6a8",
+			"itemId": "item-ebfc68b2807dd6a8",
+			"name": "香水",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1ab17e08139af3f9",
+			"itemId": "item-1ab17e08139af3f9",
+			"name": "高檔服裝",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d3e9e8e2dc5c164d",
+			"itemId": "item-d3e9e8e2dc5c164d",
+			"name": "麻袋",
+			"aliases": [],
+			"searchTerms": ["冒險用品", "PHB'24"]
+		}
+	]
+}
