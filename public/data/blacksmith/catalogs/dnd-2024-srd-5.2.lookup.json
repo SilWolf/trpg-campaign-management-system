@@ -2151,6 +2151,3344 @@
 				"賭具",
 				"PHB'24"
 			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3750e6ec7fa3c07e",
+			"itemId": "item-3750e6ec7fa3c07e",
+			"name": "+1 戰法師魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0334dda54aa27d42",
+			"itemId": "item-0334dda54aa27d42",
+			"name": "+2 戰法師魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0f7dd05073db2c1b",
+			"itemId": "item-0f7dd05073db2c1b",
+			"name": "+3 戰法師魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3572a5f8e21f5017",
+			"itemId": "item-3572a5f8e21f5017",
+			"name": "X射線戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-50ef64345384fe0f",
+			"itemId": "item-50ef64345384fe0f",
+			"name": "萬法無常帽",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"法器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0480d01138f00a7b",
+			"itemId": "item-0480d01138f00a7b",
+			"name": "萬溶劑",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-475f2e83bef0941a",
+			"itemId": "item-475f2e83bef0941a",
+			"name": "永珍無常牌",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bf464a15b99c8f2f",
+			"itemId": "item-bf464a15b99c8f2f",
+			"name": "三願戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a86dffc3d9216207",
+			"itemId": "item-a86dffc3d9216207",
+			"name": "不動權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-24ce940ebdc3b3cb",
+			"itemId": "item-24ce940ebdc3b3cb",
+			"name": "叢林法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a1eeb9d321ee375f",
+			"itemId": "item-a1eeb9d321ee375f",
+			"name": "雲巨人之力腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-aaa9e1429da98ecf",
+			"itemId": "item-aaa9e1429da98ecf",
+			"name": "雲巨人之力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-770ad31d5c267dad",
+			"itemId": "item-770ad31d5c267dad",
+			"name": "以太化之油",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5535ca9693ac6e4b",
+			"itemId": "item-5535ca9693ac6e4b",
+			"name": "傳送頭盔",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d748a7e5b8245b40",
+			"itemId": "item-d748a7e5b8245b40",
+			"name": "位面護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b7d233bd11d0c806",
+			"itemId": "item-b7d233bd11d0c806",
+			"name": "保健護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4a8b316470701fd4",
+			"itemId": "item-4a8b316470701fd4",
+			"name": "健體手冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c4c85a12911a5cbe",
+			"itemId": "item-c4c85a12911a5cbe",
+			"name": "健康護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6aacdff1153ff447",
+			"itemId": "item-6aacdff1153ff447",
+			"name": "健康靈藥",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1b7545f23aa72121",
+			"itemId": "item-1b7545f23aa72121",
+			"name": "儲法戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e8fe3a08eb6702a7",
+			"itemId": "item-e8fe3a08eb6702a7",
+			"name": "元素寶石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ef91365e3a1f3977",
+			"itemId": "item-ef91365e3a1f3977",
+			"name": "元素寶石，紅剛玉",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ed4ec26821c88886",
+			"itemId": "item-ed4ec26821c88886",
+			"name": "元素寶石，翡翠",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c72a9cc7fcd02e91",
+			"itemId": "item-c72a9cc7fcd02e91",
+			"name": "元素寶石，藍寶石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c65e2b853866aad3",
+			"itemId": "item-c65e2b853866aad3",
+			"name": "元素寶石，黃鑽石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-eed9234158ce55bd",
+			"itemId": "item-eed9234158ce55bd",
+			"name": "光彩奪目寶石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-034975309d917ee2",
+			"itemId": "item-034975309d917ee2",
+			"name": "光耀抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8f7cf918eaf3be73",
+			"itemId": "item-8f7cf918eaf3be73",
+			"name": "光耀抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-60a701629f32adbf",
+			"itemId": "item-60a701629f32adbf",
+			"name": "光輝頭盔",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3d422ea6bda8eb08",
+			"itemId": "item-3d422ea6bda8eb08",
+			"name": "公羊戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e0e196fd3fbe9ddf",
+			"itemId": "item-e0e196fd3fbe9ddf",
+			"name": "再生戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-87058459a0dc2280",
+			"itemId": "item-87058459a0dc2280",
+			"name": "冰霜法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2690616d4cadb3a9",
+			"itemId": "item-2690616d4cadb3a9",
+			"name": "凋零法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-58405a590d3d83e0",
+			"itemId": "item-58405a590d3d83e0",
+			"name": "劇毒藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b63fbc7f2da23ad9",
+			"itemId": "item-b63fbc7f2da23ad9",
+			"name": "力場抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bf5d610260a2d219",
+			"itemId": "item-bf5d610260a2d219",
+			"name": "力場抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b853c6dc55d4e962",
+			"itemId": "item-b853c6dc55d4e962",
+			"name": "力場珠",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-63f035b23bfb29f8",
+			"itemId": "item-63f035b23bfb29f8",
+			"name": "力場魔方",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-503c814bec34857a",
+			"itemId": "item-503c814bec34857a",
+			"name": "加速藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-15e15b7654ce5c1c",
+			"itemId": "item-15e15b7654ce5c1c",
+			"name": "加速馬蹄鐵",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-99cc23fe1be22719",
+			"itemId": "item-99cc23fe1be22719",
+			"name": "化獸為友藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7ee111486b2d2497",
+			"itemId": "item-7ee111486b2d2497",
+			"name": "反偵護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5d231b7e223272be",
+			"itemId": "item-5d231b7e223272be",
+			"name": "反射閃避戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7ead5ab128787420",
+			"itemId": "item-7ead5ab128787420",
+			"name": "變形魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-50306e5cc4639059",
+			"itemId": "item-50306e5cc4639059",
+			"name": "召喚氣巨靈戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d77da50eab0d08ac",
+			"itemId": "item-d77da50eab0d08ac",
+			"name": "吉運之石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-82922d91ae7035a2",
+			"itemId": "item-82922d91ae7035a2",
+			"name": "吞噬袋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-dce162f7703cea4c",
+			"itemId": "item-dce162f7703cea4c",
+			"name": "吸收權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d6a8721721dc981e",
+			"itemId": "item-d6a8721721dc981e",
+			"name": "吸矢盾",
+			"aliases": [],
+			"searchTerms": [
+				"盾牌 (盾牌)",
+				"盾牌",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-dee3a313aa043d8a",
+			"itemId": "item-dee3a313aa043d8a",
+			"name": "命令元素戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-eeca557e6fcb8fbf",
+			"itemId": "item-eeca557e6fcb8fbf",
+			"name": "命令元素戒指（土）",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0c108ba300b062ea",
+			"itemId": "item-0c108ba300b062ea",
+			"name": "命令元素戒指（氣）",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e0e7a594adc3eaf3",
+			"itemId": "item-e0e7a594adc3eaf3",
+			"name": "命令元素戒指（水）",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8f28d2d7adb05e8c",
+			"itemId": "item-8f28d2d7adb05e8c",
+			"name": "命令元素戒指（火）",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b67f78d515848b79",
+			"itemId": "item-b67f78d515848b79",
+			"name": "命令土元素石核",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-05818f3df0bd46da",
+			"itemId": "item-05818f3df0bd46da",
+			"name": "命令氣元素香爐",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-50dcd96131cf60c1",
+			"itemId": "item-50dcd96131cf60c1",
+			"name": "命令水元素水缽",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ade45ba40dd4a3b3",
+			"itemId": "item-ade45ba40dd4a3b3",
+			"name": "命令火元素火盆",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-262cd936241c5d57",
+			"itemId": "item-262cd936241c5d57",
+			"name": "喚魚三叉戟",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (三叉戟)",
+				"軍用武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-31a0468c87a17ccc",
+			"itemId": "item-31a0468c87a17ccc",
+			"name": "喚鼠樂笙",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-087670639aae1eaf",
+			"itemId": "item-087670639aae1eaf",
+			"name": "善泳戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-73303feb3ed8baac",
+			"itemId": "item-73303feb3ed8baac",
+			"name": "噴嚏粉",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-76389a687a90f138",
+			"itemId": "item-76389a687a90f138",
+			"name": "堅不可摧護甲",
+			"aliases": [],
+			"searchTerms": [
+				"重甲 (板甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f13f22f8e99653dc",
+			"itemId": "item-f13f22f8e99653dc",
+			"name": "堅不可摧藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-13a498664daf1821",
+			"itemId": "item-13a498664daf1821",
+			"name": "復生權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-dcbdf5f25f22f5e3",
+			"itemId": "item-dcbdf5f25f22f5e3",
+			"name": "夜視鏡",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-771062fe765e4e6a",
+			"itemId": "item-771062fe765e4e6a",
+			"name": "大法師法袍",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0e06e6482da92ebf",
+			"itemId": "item-0e06e6482da92ebf",
+			"name": "誇力許裝置",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f8c6fd38aedcb22e",
+			"itemId": "item-f8c6fd38aedcb22e",
+			"name": "夸爾羽符，天鵝船",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5c751c8072b7c17f",
+			"itemId": "item-5c751c8072b7c17f",
+			"name": "夸爾羽符，扇",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b29d3117adda43cf",
+			"itemId": "item-b29d3117adda43cf",
+			"name": "夸爾羽符，樹",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bf1cf3b63fe7c948",
+			"itemId": "item-bf1cf3b63fe7c948",
+			"name": "夸爾羽符，錨",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a8fc62b43cf42baa",
+			"itemId": "item-a8fc62b43cf42baa",
+			"name": "夸爾羽符，鞭",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5cdc0d7a8f4a94d4",
+			"itemId": "item-5cdc0d7a8f4a94d4",
+			"name": "夸爾羽符，鳥",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d5fa918e225bb327",
+			"itemId": "item-d5fa918e225bb327",
+			"name": "威力法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1fb081eeeb797421",
+			"itemId": "item-1fb081eeeb797421",
+			"name": "定身魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6eb1a4230b34afd0",
+			"itemId": "item-6eb1a4230b34afd0",
+			"name": "寒冷抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2fe9d4bd618b8370",
+			"itemId": "item-2fe9d4bd618b8370",
+			"name": "寒冷抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-37838050c186f266",
+			"itemId": "item-37838050c186f266",
+			"name": "射手護腕",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-281e3073b2860c67",
+			"itemId": "item-281e3073b2860c67",
+			"name": "山丘巨人之力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a2bd142f159c3487",
+			"itemId": "item-a2bd142f159c3487",
+			"name": "山丘巨人力量腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2202fd58d80eea1f",
+			"itemId": "item-2202fd58d80eea1f",
+			"name": "巨蟒法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fa8020639b24505c",
+			"itemId": "item-fa8020639b24505c",
+			"name": "乾燥粉",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8bf67a55e07458ed",
+			"itemId": "item-8bf67a55e07458ed",
+			"name": "幻惑鑲釘皮甲",
+			"aliases": [],
+			"searchTerms": [
+				"輕甲 (鑲釘皮甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-44c3f34ae03943af",
+			"itemId": "item-44c3f34ae03943af",
+			"name": "幻象牌組",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-03c263ec454d574b",
+			"itemId": "item-03c263ec454d574b",
+			"name": "庇護權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5fc1bb0b23cfb7ea",
+			"itemId": "item-5fc1bb0b23cfb7ea",
+			"name": "延壽藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5714b44f553a0874",
+			"itemId": "item-5714b44f553a0874",
+			"name": "開門鐘琴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-02bfd146d8562471",
+			"itemId": "item-02bfd146d8562471",
+			"name": "異界之門魔方",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3eccd209568abcea",
+			"itemId": "item-3eccd209568abcea",
+			"name": "異能塑像, 白銀渡鴉",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b13fb1b0c0154fae",
+			"itemId": "item-b13fb1b0c0154fae",
+			"name": "異能塑像，大理石象",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cb11c7db70b4f415",
+			"itemId": "item-cb11c7db70b4f415",
+			"name": "異能塑像，瑪瑙狗狗",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-801c65e717746462",
+			"itemId": "item-801c65e717746462",
+			"name": "異能塑像，蛇紋石鴞",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7309b7566cf6f4fe",
+			"itemId": "item-7309b7566cf6f4fe",
+			"name": "異能塑像，象牙山羊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-41fa659a6e54f0a2",
+			"itemId": "item-41fa659a6e54f0a2",
+			"name": "異能塑像，青銅獅鷲",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bb9543bfe5149284",
+			"itemId": "item-bb9543bfe5149284",
+			"name": "異能塑像，黃金獅子",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fa16e1ed2880ae36",
+			"itemId": "item-fa16e1ed2880ae36",
+			"name": "異能塑像，黑曜石駒",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8ab54ed3264febe7",
+			"itemId": "item-8ab54ed3264febe7",
+			"name": "異能塑像，黑檀蒼蠅",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-48670e7ca084748b",
+			"itemId": "item-48670e7ca084748b",
+			"name": "引彈盾",
+			"aliases": [],
+			"searchTerms": [
+				"盾牌 (盾牌)",
+				"盾牌",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5acfcf16d584e91b",
+			"itemId": "item-5acfcf16d584e91b",
+			"name": "強效治療藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8cc7dad4ce37394e",
+			"itemId": "item-8cc7dad4ce37394e",
+			"name": "強襲法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8f9eb6c4e4b0253e",
+			"itemId": "item-8f9eb6c4e4b0253e",
+			"name": "強身手冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5762c5672c327808",
+			"itemId": "item-5762c5672c327808",
+			"name": "強酸抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-983cd8e1ea2701e7",
+			"itemId": "item-983cd8e1ea2701e7",
+			"name": "強酸抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a3268d7b72a93e84",
+			"itemId": "item-a3268d7b72a93e84",
+			"name": "影響動物戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6098e60021c40723",
+			"itemId": "item-6098e60021c40723",
+			"name": "微視鏡片",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4557d3d52dad6a88",
+			"itemId": "item-4557d3d52dad6a88",
+			"name": "心靈感應頭盔",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7cefac37861f2793",
+			"itemId": "item-7cefac37861f2793",
+			"name": "心靈感應水晶球",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-016fb5f6665c3f3f",
+			"itemId": "item-016fb5f6665c3f3f",
+			"name": "心靈抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c2ae1a4edf403301",
+			"itemId": "item-c2ae1a4edf403301",
+			"name": "心靈抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-52003ebfcc770732",
+			"itemId": "item-52003ebfcc770732",
+			"name": "心靈護盾戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2feeff3c9315142e",
+			"itemId": "item-2feeff3c9315142e",
+			"name": "心靈遙控戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bc35452dce9e8b19",
+			"itemId": "item-bc35452dce9e8b19",
+			"name": "念珠項鍊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9582430daf007d5d",
+			"itemId": "item-9582430daf007d5d",
+			"name": "急速彎刀",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (彎刀)",
+				"軍用武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-10937d4d106cc40c",
+			"itemId": "item-10937d4d106cc40c",
+			"name": "恐懼之錘",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (硬頭錘)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-508bcf65c7079895",
+			"itemId": "item-508bcf65c7079895",
+			"name": "恐懼魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-78ab5bd3be0ad01b",
+			"itemId": "item-78ab5bd3be0ad01b",
+			"name": "驚異魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4ff28ee5ec2a762a",
+			"itemId": "item-4ff28ee5ec2a762a",
+			"name": "癒合護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0a8b5d6a203615af",
+			"itemId": "item-0a8b5d6a203615af",
+			"name": "成長藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3ada2496a5f35dbf",
+			"itemId": "item-3ada2496a5f35dbf",
+			"name": "打擊之錘",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (硬頭錘)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7da1152295e97819",
+			"itemId": "item-7da1152295e97819",
+			"name": "抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fa4fb7e494860da9",
+			"itemId": "item-fa4fb7e494860da9",
+			"name": "抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8e3ba5355198ee27",
+			"itemId": "item-8e3ba5355198ee27",
+			"name": "抗法盾",
+			"aliases": [],
+			"searchTerms": [
+				"盾牌 (盾牌)",
+				"盾牌",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9892cb4e2f924850",
+			"itemId": "item-9892cb4e2f924850",
+			"name": "摺疊船",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f365670a3e683bb1",
+			"itemId": "item-f365670a3e683bb1",
+			"name": "護盾胸針",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1fa89408c0185758",
+			"itemId": "item-1fa89408c0185758",
+			"name": "探秘魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8fd93df8166f9387",
+			"itemId": "item-8fd93df8166f9387",
+			"name": "搜敵魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a6b00cc234a1fdd0",
+			"itemId": "item-a6b00cc234a1fdd0",
+			"name": "搜魔魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c7ae9e6b45753402",
+			"itemId": "item-c7ae9e6b45753402",
+			"name": "攝心鏡",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7d610ae5f850e8b6",
+			"itemId": "item-7d610ae5f850e8b6",
+			"name": "攀泳手套",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3ddd7b93fa2a490b",
+			"itemId": "item-3ddd7b93fa2a490b",
+			"name": "攀爬繩",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-67c8961d65806f36",
+			"itemId": "item-67c8961d65806f36",
+			"name": "攀爬藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a3418b176b54d916",
+			"itemId": "item-a3418b176b54d916",
+			"name": "收妖瓶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c6c82ff241b64e74",
+			"itemId": "item-c6c82ff241b64e74",
+			"name": "無盡水瓶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f1aec42ca9f187df",
+			"itemId": "item-f1aec42ca9f187df",
+			"name": "無盡煙壺",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e6fc2c55cb7dc5fb",
+			"itemId": "item-e6fc2c55cb7dc5fb",
+			"name": "無蹤粉",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1685b8574a743cf2",
+			"itemId": "item-1685b8574a743cf2",
+			"name": "易容帽",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-94d0255df43d192a",
+			"itemId": "item-94d0255df43d192a",
+			"name": "星辰法袍",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-16e51eed65b9dd1d",
+			"itemId": "item-16e51eed65b9dd1d",
+			"name": "顯像提燈",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7ee78838a4ccee3a",
+			"itemId": "item-7ee78838a4ccee3a",
+			"name": "智力頭帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0d505eacc6128acd",
+			"itemId": "item-0d505eacc6128acd",
+			"name": "暗蝕抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f7242babcd2b14ed",
+			"itemId": "item-f7242babcd2b14ed",
+			"name": "暗蝕抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1f51c82398b3d5ee",
+			"itemId": "item-1f51c82398b3d5ee",
+			"name": "雜技長棍",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (長棍)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-66df8814ca36f936",
+			"itemId": "item-66df8814ca36f936",
+			"name": "雜貨法袍",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-06a6ca6a8485d882",
+			"itemId": "item-06a6ca6a8485d882",
+			"name": "極效治療藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-60429f5b27c98a75",
+			"itemId": "item-60429f5b27c98a75",
+			"name": "次元洞",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d1f1b4d7291ddc4d",
+			"itemId": "item-d1f1b4d7291ddc4d",
+			"name": "次元袋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-83b263939ce9153d",
+			"itemId": "item-83b263939ce9153d",
+			"name": "次元鐐銬",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9938730fbe2a2d4c",
+			"itemId": "item-9938730fbe2a2d4c",
+			"name": "毒素抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-102db67896e0fd2d",
+			"itemId": "item-102db67896e0fd2d",
+			"name": "毒素抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4a1d024deddbea1d",
+			"itemId": "item-4a1d024deddbea1d",
+			"name": "比拉羅的鐵索",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-584c8628ad1d70b4",
+			"itemId": "item-584c8628ad1d70b4",
+			"name": "氣化形體藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f1c00a782994a056",
+			"itemId": "item-f1c00a782994a056",
+			"name": "水上行走戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d8029add77233cc1",
+			"itemId": "item-d8029add77233cc1",
+			"name": "水下呼吸藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4de90dfc5fd13a92",
+			"itemId": "item-4de90dfc5fd13a92",
+			"name": "水晶球",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cba15b2b85db87e6",
+			"itemId": "item-cba15b2b85db87e6",
+			"name": "江湖騙子披風",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-905f98eea7958ba9",
+			"itemId": "item-905f98eea7958ba9",
+			"name": "治癒法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b8a78e9463c5fc10",
+			"itemId": "item-b8a78e9463c5fc10",
+			"name": "治療藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-afc2861aff90af1a",
+			"itemId": "item-afc2861aff90af1a",
+			"name": "法力再生珍珠",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e7fd542cf3df7d85",
+			"itemId": "item-e7fd542cf3df7d85",
+			"name": "法術卷軸 (戲法)",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-dc3280db802d5bea",
+			"itemId": "item-dc3280db802d5bea",
+			"name": "法術卷軸（一環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-63f00b64fd2cc3f8",
+			"itemId": "item-63f00b64fd2cc3f8",
+			"name": "法術卷軸（七環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-78ccdcf36872aa6e",
+			"itemId": "item-78ccdcf36872aa6e",
+			"name": "法術卷軸（三環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4c5999ca3cfbe970",
+			"itemId": "item-4c5999ca3cfbe970",
+			"name": "法術卷軸（九環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-880e223fcc51271a",
+			"itemId": "item-880e223fcc51271a",
+			"name": "法術卷軸（二環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2e4c9275e6d33709",
+			"itemId": "item-2e4c9275e6d33709",
+			"name": "法術卷軸（五環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a494d46b4b060776",
+			"itemId": "item-a494d46b4b060776",
+			"name": "法術卷軸（八環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0d7a2ed3745cd7e6",
+			"itemId": "item-0d7a2ed3745cd7e6",
+			"name": "法術卷軸（六環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-22f680a51faf6a57",
+			"itemId": "item-22f680a51faf6a57",
+			"name": "法術卷軸（四環）",
+			"aliases": [],
+			"searchTerms": [
+				"卷軸",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e908ffd31cfa88df",
+			"itemId": "item-e908ffd31cfa88df",
+			"name": "法術反轉戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9e822d7f37c539b8",
+			"itemId": "item-9e822d7f37c539b8",
+			"name": "法術抗性斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-44c83c54cfd95b78",
+			"itemId": "item-44c83c54cfd95b78",
+			"name": "法球護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-10dbb51c0679add9",
+			"itemId": "item-10dbb51c0679add9",
+			"name": "活力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-edaea82fd3ee4f35",
+			"itemId": "item-edaea82fd3ee4f35",
+			"name": "活化盾",
+			"aliases": [],
+			"searchTerms": [
+				"盾牌 (盾牌)",
+				"盾牌",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a86f393f3255ea2c",
+			"itemId": "item-a86f393f3255ea2c",
+			"name": "流星戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a32ef41d04763d42",
+			"itemId": "item-a32ef41d04763d42",
+			"name": "浮空之靴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8965a2b05261dcb4",
+			"itemId": "item-8965a2b05261dcb4",
+			"name": "淬毒匕首",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (匕首)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8da3e38f6ccf498d",
+			"itemId": "item-8da3e38f6ccf498d",
+			"name": "溫暖戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2a8c4128ccef9b04",
+			"itemId": "item-2a8c4128ccef9b04",
+			"name": "湮滅法球",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0e52efd053f3c37f",
+			"itemId": "item-0e52efd053f3c37f",
+			"name": "滑溜之油",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-174b2ec81567a343",
+			"itemId": "item-174b2ec81567a343",
+			"name": "火巨人之力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-6182e468e0d2d06a",
+			"itemId": "item-6182e468e0d2d06a",
+			"name": "火巨人力量腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ed4a4a398884a8fa",
+			"itemId": "item-ed4a4a398884a8fa",
+			"name": "火巨靈囚瓶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-976767ba85a7a457",
+			"itemId": "item-976767ba85a7a457",
+			"name": "火焰抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f4e9d4fe82273c66",
+			"itemId": "item-f4e9d4fe82273c66",
+			"name": "火焰抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9490a0cc840a652b",
+			"itemId": "item-9490a0cc840a652b",
+			"name": "火焰法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c8cf59279f06c5f2",
+			"itemId": "item-c8cf59279f06c5f2",
+			"name": "火球項鍊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4826a397764a01c0",
+			"itemId": "item-4826a397764a01c0",
+			"name": "火球魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-27586033e3800ff6",
+			"itemId": "item-27586033e3800ff6",
+			"name": "靈巧手冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-221fd01d721aba7d",
+			"itemId": "item-221fd01d721aba7d",
+			"name": "爆裂頭飾",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3505fe7ba4cc9aad",
+			"itemId": "item-3505fe7ba4cc9aad",
+			"name": "王者權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a0d835066023fd8f",
+			"itemId": "item-a0d835066023fd8f",
+			"name": "瓦爾哈拉號角，白銀",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"樂器 (號角)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-59bf2c0fa77e398c",
+			"itemId": "item-59bf2c0fa77e398c",
+			"name": "瓦爾哈拉號角，青銅",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"樂器 (號角)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-701593c3a861428c",
+			"itemId": "item-701593c3a861428c",
+			"name": "瓦爾哈拉號角，黃銅",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"樂器 (號角)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c4f396f9c2dcf5c2",
+			"itemId": "item-c4f396f9c2dcf5c2",
+			"name": "瓦爾哈拉號角，黑鐵",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"樂器 (號角)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e5d4fefb7e1b69df",
+			"itemId": "item-e5d4fefb7e1b69df",
+			"name": "瓦解之錘",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (硬頭錘)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d4563cf3bf4f27d1",
+			"itemId": "item-d4563cf3bf4f27d1",
+			"name": "白龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-37b44fad15235426",
+			"itemId": "item-37b44fad15235426",
+			"name": "百眼法袍",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7d17dd848cf03d39",
+			"itemId": "item-7d17dd848cf03d39",
+			"name": "真知水晶球",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1f50c638e2d7b17f",
+			"itemId": "item-1f50c638e2d7b17f",
+			"name": "真視寶石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f94bd388e6f13121",
+			"itemId": "item-f94bd388e6f13121",
+			"name": "短訊石",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-970fd51bc45ff752",
+			"itemId": "item-970fd51bc45ff752",
+			"name": "矮人腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c1b36db03195836e",
+			"itemId": "item-c1b36db03195836e",
+			"name": "矮人飛錘",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (戰錘)",
+				"軍用武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-20371de2a8a69eef",
+			"itemId": "item-20371de2a8a69eef",
+			"name": "石巨人之力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-992da23fe8017453",
+			"itemId": "item-992da23fe8017453",
+			"name": "石巨人力量腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-72fbc6df65fd8c8b",
+			"itemId": "item-72fbc6df65fd8c8b",
+			"name": "石魔像之書",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5f17e0a63c24a97d",
+			"itemId": "item-5f17e0a63c24a97d",
+			"name": "祈神蠟燭",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-099e8f07889acf0d",
+			"itemId": "item-099e8f07889acf0d",
+			"name": "移位斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-829ed88e213b69b7",
+			"itemId": "item-829ed88e213b69b7",
+			"name": "竊賊手套",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-38cfc6d7fde2408d",
+			"itemId": "item-38cfc6d7fde2408d",
+			"name": "粘土魔像之書",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3680a38fd6d4ffa3",
+			"itemId": "item-3680a38fd6d4ffa3",
+			"name": "精靈之靴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a271fa7a55728e5a",
+			"itemId": "item-a271fa7a55728e5a",
+			"name": "精靈斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-44ff89d093cf7de3",
+			"itemId": "item-44ff89d093cf7de3",
+			"name": "糾纏繩",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c91b9bc0053be6d3",
+			"itemId": "item-c91b9bc0053be6d3",
+			"name": "紅龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e2c202d323e4e0df",
+			"itemId": "item-e2c202d323e4e0df",
+			"name": "純善護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7bc06626b768ec13",
+			"itemId": "item-7bc06626b768ec13",
+			"name": "統御卷冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c35bb4e758063403",
+			"itemId": "item-c35bb4e758063403",
+			"name": "統御權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fb2f0a6906317874",
+			"itemId": "item-fb2f0a6906317874",
+			"name": "綠龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3c95441f95cff703",
+			"itemId": "item-3c95441f95cff703",
+			"name": "縮小藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4867e2b4b78e27b1",
+			"itemId": "item-4867e2b4b78e27b1",
+			"name": "羽落戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e742e3495a711c0e",
+			"itemId": "item-e742e3495a711c0e",
+			"name": "自由行動戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1bf2bea5834e9e3a",
+			"itemId": "item-1bf2bea5834e9e3a",
+			"name": "至尊膠",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-337f580b1a5efacc",
+			"itemId": "item-337f580b1a5efacc",
+			"name": "至惡護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-20c653f6b91eacdb",
+			"itemId": "item-20c653f6b91eacdb",
+			"name": "艾恩石, 儲法",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-64329b3c23bbebb2",
+			"itemId": "item-64329b3c23bbebb2",
+			"name": "艾恩石, 再生",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2fbff2ea385c75d5",
+			"itemId": "item-2fbff2ea385c75d5",
+			"name": "艾恩石, 力量",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8ee7b80b420226c7",
+			"itemId": "item-8ee7b80b420226c7",
+			"name": "艾恩石, 吸收",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-13ba495fac8cfdd4",
+			"itemId": "item-13ba495fac8cfdd4",
+			"name": "艾恩石, 堅韌",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-aedb91ff20e934bf",
+			"itemId": "item-aedb91ff20e934bf",
+			"name": "艾恩石, 才智",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1c33e6fe0819e256",
+			"itemId": "item-1c33e6fe0819e256",
+			"name": "艾恩石, 機敏",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-088fba7e0ad48fb8",
+			"itemId": "item-088fba7e0ad48fb8",
+			"name": "艾恩石, 洞悉",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9c4966a7d8ba42ea",
+			"itemId": "item-9c4966a7d8ba42ea",
+			"name": "艾恩石, 精通",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-00bb1492eaf7bcb8",
+			"itemId": "item-00bb1492eaf7bcb8",
+			"name": "艾恩石, 統御",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2b96abd566266bfb",
+			"itemId": "item-2b96abd566266bfb",
+			"name": "艾恩石, 維生",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-124a997c0bdd296a",
+			"itemId": "item-124a997c0bdd296a",
+			"name": "艾恩石, 警覺",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a9256d17148dcd90",
+			"itemId": "item-a9256d17148dcd90",
+			"name": "艾恩石, 防護",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e79bd242ccfb52d3",
+			"itemId": "item-e79bd242ccfb52d3",
+			"name": "艾恩石, 高等吸收",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3cb962a2f61ffd93",
+			"itemId": "item-3cb962a2f61ffd93",
+			"name": "艾羅娜的箭袋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4bf5abb7b3ae6a92",
+			"itemId": "item-4bf5abb7b3ae6a92",
+			"name": "節肢斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-ea955d83a7cd0779",
+			"itemId": "item-ea955d83a7cd0779",
+			"name": "英勇藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-44df97427ad7be57",
+			"itemId": "item-44df97427ad7be57",
+			"name": "營養珠",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-114514b91c27acb9",
+			"itemId": "item-114514b91c27acb9",
+			"name": "藍龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-271722532934f5b4",
+			"itemId": "item-271722532934f5b4",
+			"name": "蟲群法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e2ec7d1b96b8b1f3",
+			"itemId": "item-e2ec7d1b96b8b1f3",
+			"name": "虹光法袍",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a9e2045c67bd540d",
+			"itemId": "item-a9e2045c67bd540d",
+			"name": "蛛網魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1bda712ce286682e",
+			"itemId": "item-1bda712ce286682e",
+			"name": "蛛行便鞋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fe5303a21d1f738f",
+			"itemId": "item-fe5303a21d1f738f",
+			"name": "蝙蝠斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1b4d751ec074c56f",
+			"itemId": "item-1b4d751ec074c56f",
+			"name": "蝠鱝斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-55be8cba56cfef06",
+			"itemId": "item-55be8cba56cfef06",
+			"name": "血肉魔像之書",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f700b7cee03d8cf3",
+			"itemId": "item-f700b7cee03d8cf3",
+			"name": "西風馬蹄鐵",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5b0f28cde560dd11",
+			"itemId": "item-5b0f28cde560dd11",
+			"name": "警戒之盾",
+			"aliases": [],
+			"searchTerms": [
+				"盾牌 (盾牌)",
+				"盾牌",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f9845dbb696065d7",
+			"itemId": "item-f9845dbb696065d7",
+			"name": "警示權杖",
+			"aliases": [],
+			"searchTerms": [
+				"權杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-98decd2f475faf43",
+			"itemId": "item-98decd2f475faf43",
+			"name": "諸界之井",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-456a9e76c618356d",
+			"itemId": "item-456a9e76c618356d",
+			"name": "諾澤爾的驚奇顏料",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-da23038f27355453",
+			"itemId": "item-da23038f27355453",
+			"name": "讀心勳章",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0578cabff1b980ec",
+			"itemId": "item-0578cabff1b980ec",
+			"name": "讀心水晶球",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bbe3a58d521e9d71",
+			"itemId": "item-bbe3a58d521e9d71",
+			"name": "讀心藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3901765176b3af5a",
+			"itemId": "item-3901765176b3af5a",
+			"name": "賢者法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-aca6d70ba481f4e3",
+			"itemId": "item-aca6d70ba481f4e3",
+			"name": "赤銅龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7f02fc90b646757e",
+			"itemId": "item-7f02fc90b646757e",
+			"name": "跑跳之靴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-aa56a85554f9a0a8",
+			"itemId": "item-aa56a85554f9a0a8",
+			"name": "跳躍戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-76ebd7106235376e",
+			"itemId": "item-76ebd7106235376e",
+			"name": "闢毒護符",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-64db3081b6fc50d5",
+			"itemId": "item-64db3081b6fc50d5",
+			"name": "闢矢奪箭手套",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5e3ccecaf169fc2c",
+			"itemId": "item-5e3ccecaf169fc2c",
+			"name": "迪恩的摺疊要塞",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0628e7c25065a70c",
+			"itemId": "item-0628e7c25065a70c",
+			"name": "迷情媚藥",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-32732f419c1108e3",
+			"itemId": "item-32732f419c1108e3",
+			"name": "適應項鍊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d11a66e164f6b004",
+			"itemId": "item-d11a66e164f6b004",
+			"name": "通曉卷冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-50e95f87e742107c",
+			"itemId": "item-50e95f87e742107c",
+			"name": "通曉語言頭盔",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-72da91c4aeda361b",
+			"itemId": "item-72da91c4aeda361b",
+			"name": "速度之靴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2939ffce800280f0",
+			"itemId": "item-2939ffce800280f0",
+			"name": "造風之扇",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-422e94231bb56373",
+			"itemId": "item-422e94231bb56373",
+			"name": "金龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f7645327352a3397",
+			"itemId": "item-f7645327352a3397",
+			"name": "鐵魔像之書",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-214558c87a17e6de",
+			"itemId": "item-214558c87a17e6de",
+			"name": "銀龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-45207cec6052c368",
+			"itemId": "item-45207cec6052c368",
+			"name": "銳鋒之油",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1f8710e5c19ba4d9",
+			"itemId": "item-1f8710e5c19ba4d9",
+			"name": "閃電抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-2afe29bcd77d9a91",
+			"itemId": "item-2afe29bcd77d9a91",
+			"name": "閃電抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-668c0dcc5ceacece",
+			"itemId": "item-668c0dcc5ceacece",
+			"name": "閃電束魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3f5d128e6b047b54",
+			"itemId": "item-3f5d128e6b047b54",
+			"name": "閃電標槍",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (標槍)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-9aa3752b24547b6a",
+			"itemId": "item-9aa3752b24547b6a",
+			"name": "防禦護腕",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-48d1fa8c9da331c1",
+			"itemId": "item-48d1fa8c9da331c1",
+			"name": "防護聖甲蟲",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4c383699a5e1c5b1",
+			"itemId": "item-4c383699a5e1c5b1",
+			"name": "防護戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-50fdb75a8cbd7b5a",
+			"itemId": "item-50fdb75a8cbd7b5a",
+			"name": "防護斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-57344107ff1b7b35",
+			"itemId": "item-57344107ff1b7b35",
+			"name": "陽炎劍",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (長劍)",
+				"軍用武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cd575e8a4ce13198",
+			"itemId": "item-cd575e8a4ce13198",
+			"name": "隱形斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-bddc564220a5080d",
+			"itemId": "item-bddc564220a5080d",
+			"name": "隱形藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-27e19e33f0f24e9b",
+			"itemId": "item-27e19e33f0f24e9b",
+			"name": "隱身戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5f0e2b3d3c2af3fc",
+			"itemId": "item-5f0e2b3d3c2af3fc",
+			"name": "雪地之靴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e5729788f3a0d8c8",
+			"itemId": "item-e5729788f3a0d8c8",
+			"name": "雷霆巨棒",
+			"aliases": [],
+			"searchTerms": [
+				"武器 (巨棒)",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cb9cd63dad14c96e",
+			"itemId": "item-cb9cd63dad14c96e",
+			"name": "雷霆法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d3be0258b0069fbd",
+			"itemId": "item-d3be0258b0069fbd",
+			"name": "雷鳴抗性戒指",
+			"aliases": [],
+			"searchTerms": [
+				"戒指",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cc1a8f707614bea0",
+			"itemId": "item-cc1a8f707614bea0",
+			"name": "雷鳴抗性藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-78471e7914ba1637",
+			"itemId": "item-78471e7914ba1637",
+			"name": "霍華德便利袋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f659beeb5deb45d3",
+			"itemId": "item-f659beeb5deb45d3",
+			"name": "霜巨人之力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-0caf230961421c2b",
+			"itemId": "item-0caf230961421c2b",
+			"name": "霜巨人力量腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-3e16af088d61ac11",
+			"itemId": "item-3e16af088d61ac11",
+			"name": "青銅龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1d314a5d6e0be88d",
+			"itemId": "item-1d314a5d6e0be88d",
+			"name": "靜思卷冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-73d3bab93d637dd5",
+			"itemId": "item-73d3bab93d637dd5",
+			"name": "音爆號角",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"樂器 (號角)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f3525de0dae916c2",
+			"itemId": "item-f3525de0dae916c2",
+			"name": "顫慄樂笙",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-313c72b88766ddf7",
+			"itemId": "item-313c72b88766ddf7",
+			"name": "風暴巨人之力藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f084d96c79de5ee7",
+			"itemId": "item-f084d96c79de5ee7",
+			"name": "風暴巨人力量腰帶",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c541a816c7395b8b",
+			"itemId": "item-c541a816c7395b8b",
+			"name": "飛天掃帚",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-194bb1d7669399c9",
+			"itemId": "item-194bb1d7669399c9",
+			"name": "飛天魔毯，4尺x6尺",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-d84350a49b6e609a",
+			"itemId": "item-d84350a49b6e609a",
+			"name": "飛天魔毯，5尺x7尺",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-30209a675f015e9b",
+			"itemId": "item-30209a675f015e9b",
+			"name": "飛天魔毯，6尺x9尺",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cea00c1c8e2e767a",
+			"itemId": "item-cea00c1c8e2e767a",
+			"name": "飛毯",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-388d5ab4fed0d120",
+			"itemId": "item-388d5ab4fed0d120",
+			"name": "飛毯（3尺×5尺）",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-762cb2abff63f056",
+			"itemId": "item-762cb2abff63f056",
+			"name": "飛翼之靴",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-46577b77f50d95eb",
+			"itemId": "item-46577b77f50d95eb",
+			"name": "飛翼斗篷",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-57861b704c2554ed",
+			"itemId": "item-57861b704c2554ed",
+			"name": "飛行藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-05879890bc856380",
+			"itemId": "item-05879890bc856380",
+			"name": "食人魔力量護手",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-eb60d356458901bb",
+			"itemId": "item-eb60d356458901bb",
+			"name": "騎士之盾",
+			"aliases": [],
+			"searchTerms": [
+				"盾牌 (盾牌)",
+				"盾牌",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1cf2cf2814a98319",
+			"itemId": "item-1cf2cf2814a98319",
+			"name": "高等治療藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-681cc1bb54bc67ba",
+			"itemId": "item-681cc1bb54bc67ba",
+			"name": "魅惑法杖",
+			"aliases": [],
+			"searchTerms": [
+				"法杖",
+				"簡易武器",
+				"近戰武器",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8c7ad9c5b8cdd170",
+			"itemId": "item-8c7ad9c5b8cdd170",
+			"name": "魅惑鏡片",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-7870a9f61dfd19f5",
+			"itemId": "item-7870a9f61dfd19f5",
+			"name": "魔像手冊",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-a11eeba81cc1f1db",
+			"itemId": "item-a11eeba81cc1f1db",
+			"name": "魔術袋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-22fb8b3a20086377",
+			"itemId": "item-22fb8b3a20086377",
+			"name": "魔術袋，棕褐色",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-08a6b0f4e66a9746",
+			"itemId": "item-08a6b0f4e66a9746",
+			"name": "魔術袋，灰色",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-e4d4b110ed318cf1",
+			"itemId": "item-e4d4b110ed318cf1",
+			"name": "魔術袋，鐵鏽色",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-1d5a7e05ddcbe2a6",
+			"itemId": "item-1d5a7e05ddcbe2a6",
+			"name": "魔法飛彈魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-4069dad8101f2ac5",
+			"itemId": "item-4069dad8101f2ac5",
+			"name": "魔豆之袋",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5eafe2e117feb4ea",
+			"itemId": "item-5eafe2e117feb4ea",
+			"name": "鷹眼術藥水",
+			"aliases": [],
+			"searchTerms": [
+				"藥水",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f40db1aa12f97cd2",
+			"itemId": "item-f40db1aa12f97cd2",
+			"name": "鷹眼鏡片",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8a5bd4e9f6f83282",
+			"itemId": "item-8a5bd4e9f6f83282",
+			"name": "麻痺魔杖",
+			"aliases": [],
+			"searchTerms": [
+				"魔杖",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-19b793411af86b1b",
+			"itemId": "item-19b793411af86b1b",
+			"name": "黃銅龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-74f36d93357307bd",
+			"itemId": "item-74f36d93357307bd",
+			"name": "黑龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-5b85d5da01ee7b91",
+			"itemId": "item-5b85d5da01ee7b91",
+			"name": "龍珠",
+			"aliases": [],
+			"searchTerms": [
+				"奇物",
+				"DMG'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-daff0d2c2bb70dc5",
+			"itemId": "item-daff0d2c2bb70dc5",
+			"name": "龍鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲 (鱗甲)",
+				"DMG'24"
+			]
 		}
 	]
 }

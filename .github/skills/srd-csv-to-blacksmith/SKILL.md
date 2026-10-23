@@ -45,16 +45,17 @@ lookup 每筆項目使用：
    - 來源 → `source`
    - 稀有度 → `rarity`（空值或 `none` 轉成 `Common`）
    - 類型 → 以逗號分隔後拆分為 `subTypes` 字串陣列
-   - 來源 CSV 的「类型」負責逐筆判定 `category`：包含「食物和饮品／食物和飲品」或「弹药／彈藥」時設為 `Consumable`；包含「盾牌」或輕甲、中甲、重甲標籤（來源可能使用簡體「轻甲／中甲／重甲」）時設為 `Armor`；包含「武器」時設為 `Weapon`；其他類型設為 `Misc`。護甲判斷優先於武器與消耗品。不要將細分類型值直接當成 `category`。
+   - 來源 CSV 的「类型」負責逐筆判定 `category`：包含「药水／藥水」、「食物和饮品／食物和飲品」或「弹药／彈藥」時設為 `Consumable`；包含「盾牌」或輕甲、中甲、重甲標籤（來源可能使用簡體「轻甲／中甲／重甲」）時設為 `Armor`；包含「武器」時設為 `Weapon`；其他類型設為 `Misc`。護甲判斷優先於武器與消耗品。不要將細分類型值直接當成 `category`。
    - 此 CSV 的「伤害」欄位由武器與護甲共用，必須依「类型」判斷其意義：武器類型視為武器傷害，寫入 `damage`；護甲類型視為護甲值，寫入 `ac`，不可寫入 `damage`。不可單憑欄位名稱或非空值判斷為傷害。
    - 若 `category` 是 `Weapon`，來源「类型」應包含「武器」；從 `subTypes` 移除完整相符的「武器」標籤，並把「属性」以逗號拆分為 `weaponProperties`；「武器精通」原值寫入 `weaponMastery`
    - 若 `category` 是 `Armor`，來源「类型」應包含護甲類型或「盾牌」；以「类型」拆分結果作為 `subTypes`，盾牌項目另確保 `subTypes` 含有完整的「盾牌」值，並將「伤害」欄位的護甲值寫入 `ac`（空白時為 `null`）；護甲項目不包含 `damage` 欄位，且不移除護甲類型標籤
-   - 同調 → `requiresAttunement` 布林值
+   - 同調 → `requiresAttunement` 布林值；欄位有任何非空內容（包括「需要由施法者同調」等限制）設為 `true`，空白設為 `false`。
    - 「伤害」欄位依上述類型規則寫入武器 `damage` 或護甲 `ac`；對應欄位空白時為 `null`
    - 重量 → 磅數值（空白為 `0`；支援 `¼`、`½`、`¾`、`⅕`，並將盎司換算為磅；略過單位／括號註記）
    - 價值 → GP 數值（空白或低於 1 GP 為 `0`；CP、SP、EP、GP、PP 先換算為 GP）
    - 文本 → `description`
-5. 輸出文字一律使用繁體中文；若來源為簡體中文，轉換 JSON 文字值（如名稱、類型、武器屬性、精通、描述及 lookup 搜尋詞）為繁體中文，並確認專有名詞與規則用語。不得改寫唯讀來源 CSV；來源標記、ID、JSON 欄位名稱及原始 CSV 欄名維持原樣。
+5. 輸出文字一律使用繁體中文；若來源為簡體中文，執行時加上 `--traditional`，將 JSON 文字值（如名稱、類型、武器屬性、精通及描述）轉為繁體中文，並確認專有名詞與規則用語。此選項需要 `opencc-python-reimplemented`（`python3 -m pip install opencc-python-reimplemented`）。lookup 名稱與搜尋詞會使用轉換後的文字。不得改寫唯讀來源 CSV；來源標記、ID、JSON 欄位名稱及原始 CSV 欄名維持原樣。
+   - 若稀有度是 `varies` 或其他不能映射至 `InventoryItem['rarity']` 的值，不得將其寫入 JSON 或猜一個稀有度；先與使用者確認要排除、拆分變體或指定其他處理方式。使用者明確選擇排除時，使用 `--exclude-rarity varies`，並在摘要列出排除筆數。
 6. 同一本書已有目錄且要加入新類別資料時，使用 `--append`；轉換器保留原有物品並拒絕重複 ID。`--replace` 僅限使用者明確要求重建整本目錄時使用。
 7. 檢查轉換器輸出訊息，確認本次新增項目數量和來源相符。轉換器遇到缺少必要欄位、不能解析的稀有度／數值、重複 ID 或既有檔案時會停止並顯示錯誤；不要略過錯誤列或把失敗偽裝成成功。
 8. 驗證三個 JSON 均可解析；確認 index 路徑存在、附加後 items 數量等於原有加上本次 CSV 資料列數、每個 lookup `itemId` 恰好連到一筆 item、`sourceKey` 唯一且名稱相符，所有 `icon` 都符合指定的 catalog/item 路徑格式，並抽查空值、¼／½／¾ 磅、低於 1 GP 及高價物品。
@@ -67,9 +68,10 @@ python3 .github/skills/srd-csv-to-blacksmith/scripts/convert_csv.py \
   --input /path/to/items.csv \
   --catalog-id dnd-2024-srd-5.2 \
   --title "D&D 2024 SRD 5.2" \
+  --traditional \
   --append
 ```
 
-轉換器依每筆「类型」自動判斷 `category`；只有需要明確覆寫整批分類時才使用選用的 `--category`。欄名不同時可明確覆寫，例如 `--column name=Name --column description=Description`。支援的欄位鍵為 `name`、`source`、`page`、`rarity`、`types`、`requiresAttunement`、`damage`、`weaponProperties`、`weaponMastery`、`weight`、`value`、`description`。
+轉換器依每筆「类型」自動判斷 `category`；只有需要明確覆寫整批分類時才使用選用的 `--category`。明確獲准排除無法對應的稀有度時，可重複使用 `--exclude-rarity`；欄名不同時可明確覆寫，例如 `--column name=Name --column description=Description`。支援的欄位鍵為 `name`、`source`、`page`、`rarity`、`types`、`requiresAttunement`、`damage`、`weaponProperties`、`weaponMastery`、`weight`、`value`、`description`。
 
 如果輸出 items 或 lookup 檔已存在，預設拒絕覆寫。只有使用者明確要求新增資料時才使用 `--append`；只有使用者明確要求整本重建時才使用 `--force`（亦可用別名 `--replace`）。

@@ -28,11 +28,11 @@ interface BlacksmithItemBase {
 	sourceKey: string;
 	name: string;
 	subTypes: string[];
-	rarity: Rarity;
+	rarity: InventoryItem['rarity'];
 	icon: string;
 	weight: number;
 	valueGp: number;
-	requiresAttunement: boolean;
+	requiresAttunement: InventoryItem['requiresAttunement'];
 	description: string;
 	source: string;
 	aliases: string[];

@@ -51,10 +51,6 @@ UNIT_TO_GP = {
     "GP": Decimal("1"),
     "PP": Decimal("10"),
 }
-TRUE_VALUES = {"true", "yes", "y", "1", "是", "需要"}
-FALSE_VALUES = {"false", "no", "n", "0", "否", "不需要"}
-
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description="將規則書物品 CSV 轉成 Blacksmith items、lookup 與 catalog index JSON。"
@@ -79,6 +75,18 @@ def parse_args():
         default=[],
         metavar="FIELD=HEADER",
         help="覆寫 CSV 欄名，可重複指定",
+    )
+    parser.add_argument(
+        "--exclude-rarity",
+        action="append",
+        default=[],
+        metavar="RARITY",
+        help="略過稀有度欄符合指定值的資料列；可重複指定",
+    )
+    parser.add_argument(
+        "--traditional",
+        action="store_true",
+        help="使用 OpenCC s2twp 將物品文字轉為繁體中文",
     )
     output_mode = parser.add_mutually_exclusive_group()
     output_mode.add_argument(
@@ -160,14 +168,11 @@ def as_json_number(value):
 
 
 def parse_attunement(value):
-    normalized = (value or "").strip().casefold()
-    if not normalized:
-        return False
-    if normalized in TRUE_VALUES:
-        return True
-    if normalized in FALSE_VALUES:
-        return False
-    raise ValueError(f"無法解析同調欄位：{value!r}")
+    return bool((value or "").strip())
+
+
+def convert_text(value, converter):
+    return converter.convert(value) if converter else value
 
 
 def read_rows(path, columns):
@@ -203,30 +208,40 @@ def infer_category(type_value):
         return "Weapon"
     if any(
         consumable_type in normalized
-        for consumable_type in ("食物和饮品", "食物和飲品", "弹药", "彈藥")
+        for consumable_type in (
+            "药水",
+            "藥水",
+            "食物和饮品",
+            "食物和飲品",
+            "弹药",
+            "彈藥",
+        )
     ):
         return "Consumable"
     return "Misc"
 
 
-def make_item(row, columns, catalog_id, category, row_number):
-    name = get_value(row, columns, "name")
-    description = get_value(row, columns, "description")
+def make_item(row, columns, catalog_id, category, row_number, converter):
+    raw_name = get_value(row, columns, "name")
+    name = convert_text(raw_name, converter)
+    description = convert_text(
+        get_value(row, columns, "description"), converter
+    )
     if not name:
         raise ValueError(f"第 {row_number} 筆資料名稱為空")
 
     source = get_value(row, columns, "source")
     page = get_value(row, columns, "page")
-    identity = "\0".join((catalog_id, source, page, name))
+    identity = "\0".join((catalog_id, source, page, raw_name))
     item_id = "item-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
-    type_value = get_value(row, columns, "types")
+    type_value = convert_text(get_value(row, columns, "types"), converter)
     subtypes = [part.strip() for part in type_value.split(",") if part.strip()]
     category = category or infer_category(type_value)
     if "盾牌" in type_value and "盾牌" not in subtypes:
         subtypes.append("盾牌")
     if category == "Weapon":
         subtypes = [subtype for subtype in subtypes if subtype != "武器"]
-    damage = get_value(row, columns, "damage")
+    damage = convert_text(get_value(row, columns, "damage"), converter)
 
     item = {
         "itemId": item_id,
@@ -244,11 +259,14 @@ def make_item(row, columns, catalog_id, category, row_number):
         "source": source,
     }
     if category == "Weapon":
-        weapon_mastery = get_value(row, columns, "weaponMastery")
+        item["damage"] = damage or None
+        weapon_mastery = convert_text(
+            get_value(row, columns, "weaponMastery"), converter
+        )
         if not weapon_mastery:
             raise ValueError(f"第 {row_number} 筆武器缺少武器精通")
         item["weaponProperties"] = [
-            part.strip()
+            convert_text(part.strip(), converter)
             for part in get_value(row, columns, "weaponProperties").split(",")
             if part.strip()
         ]
@@ -373,14 +391,38 @@ def main():
         headers, rows = read_rows(args.input, columns)
         if not rows:
             raise ValueError("CSV 沒有物品資料")
+        converter = None
+        if args.traditional:
+            try:
+                from opencc import OpenCC
+            except ImportError as error:
+                raise ValueError(
+                    "繁體中文轉換需要 OpenCC；請執行 "
+                    "`python3 -m pip install opencc-python-reimplemented`。"
+                ) from error
+            converter = OpenCC("s2twp")
+
+        excluded_rarities = {value.casefold() for value in args.exclude_rarity}
         items = []
         lookups = []
+        excluded_count = 0
         for row_number, row in enumerate(rows, start=2):
+            rarity = get_value(row, columns, "rarity")
+            if rarity.casefold() in excluded_rarities:
+                excluded_count += 1
+                continue
             item, lookup = make_item(
-                row, columns, args.catalog_id, args.category, row_number
+                row,
+                columns,
+                args.catalog_id,
+                args.category,
+                row_number,
+                converter,
             )
             items.append(item)
             lookups.append(lookup)
+        if not items:
+            raise ValueError("排除指定稀有度後沒有可轉換的物品")
         output_paths = write_catalog(args, items, lookups)
     except (OSError, ValueError, json.JSONDecodeError, csv.Error) as error:
         print(f"轉換失敗：{error}", file=sys.stderr)
@@ -388,6 +430,8 @@ def main():
 
     print(f"CSV 欄位：{', '.join(headers)}")
     print(f"轉換完成：{len(items)} 筆")
+    if excluded_count:
+        print(f"依稀有度排除：{excluded_count} 筆")
     for output_path in output_paths:
         print(output_path)
     return 0
