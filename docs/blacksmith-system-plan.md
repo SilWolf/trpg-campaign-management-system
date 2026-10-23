@@ -12,6 +12,19 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 本功能不改造現有角色權限、錢包、物品移轉或戰役設定，也不要求預設規則書物品先寫進 Supabase。初版只涵蓋瀏覽、搜尋、檢視、自創物品保存／分享，以及匯入戰役。
 
+## 目前進度與續接資訊
+
+截至 2026-10-23，**階段一已依目前提供的資料完成基礎來源合約鎖定**。成果如下：
+
+- `public/data/blacksmith/SOURCE-CONTRACT.md`：記錄現有 index、物品 JSON、lookup 格式與欄位型別，並明確界定來源定義與戰役物品實例。
+- `scripts/validate-blacksmith-source.mjs`：驗證目錄索引、資料結構、欄位型別、ID 唯一性及 items／lookup 一對一對照；可執行 `npm run validate:blacksmith-source`。
+- 核對結果：`dnd-2024-srd-5.2` 有 91 筆物品與 91 筆 lookup，ID、名稱與來源鍵對照相符，未發現重複 ID／來源鍵；現有圖示路徑皆有對應檔案。
+- 已執行並通過 `npm run validate:blacksmith-source`、`npx eslint scripts/validate-blacksmith-source.mjs`、`npm run typecheck` 及 `git diff --check`。
+
+**已知限制：**這 91 筆資料目前全部為 `Consumable`／`Common`，`damage` 都是 `null`，且沒有武器、護甲、可充能或附魔詞條樣本。因此階段一目前只鎖定已收到資料可證實的基礎合約；不得自行補寫規則書資料，也不得宣稱上述缺樣本情境已完成欄位核對。資料的授權名稱、版本與 URL 亦未包含在 JSON 中，發布來源內容前仍須由維護者確認。
+
+**階段二已完成。**定義 `BlacksmithItem` 與規則書目錄型別，實作靜態目錄載入、結構／lookup 驗證及唯讀瀏覽 UI。新來源型別只涵蓋目前合約能核實的欄位；未提供的 `mastery`、`ac`、`maxCharges`、`effects`、`flavor`、`affixes` 等欄位沒有被假定或補值。要涵蓋缺少的物品類型，仍須先取得相應 JSON／lookup 再更新來源合約。
+
 ## 現有實作依據
 
 - `InventoryItem` 及物品分類、詞條型別位於 `src/types.ts`；目前戰役物品的 snake_case ↔ camelCase 轉換器在 `src/lib/supabase.ts`。
@@ -66,17 +79,17 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 ## 預設規則書 JSON 與 lookup 建議
 
-維護者會提供一個或多個物品 JSON，以及相應 lookup 檔。建議採用「每本規則書各自一份 JSON、一份 lookup；另有一個目錄索引」的佈局，例如：
+現有檔案已採用「每本規則書各自一份 JSON、一份 lookup；另有一個目錄索引」的佈局，實際位於 `public/data/blacksmith/`（Vite 靜態資產路徑），例如：
 
 ```text
-src/data/blacksmith/
+public/data/blacksmith/
   catalog-index.json
   catalogs/
     dnd-2024-srd-5.2.items.json
     dnd-2024-srd-5.2.lookup.json
 ```
 
-`catalog-index.json` 建議只描述可載入的書籍，不複製物品資料：
+`catalog-index.json` 只描述可載入的書籍，不複製物品資料：
 
 ```json
 {
@@ -112,7 +125,7 @@ src/data/blacksmith/
 
 `itemId` 僅供 lookup 對回同一本書的物品 JSON；應用程式的唯一來源識別至少使用 `catalogId + itemId`，避免不同書籍的 `InventoryItem.id` 重複。可用 `name`、`aliases`、`searchTerms` 支援中文名稱、英文名稱及同義詞搜尋。若維護者提供的 lookup 已有等價欄位，優先建立 adapter 對應，不要求重做資料。
 
-資料讀取時須報告不合法 JSON、重複來源鍵、lookup 找不到物品、物品缺必要欄位等錯誤；不得靜默略過或在錯誤時回傳空目錄。預設資料不寫入 `blacksmith_items`，也不提供修改／分享控制。
+目前鎖定的詳細欄位、型別、null 規則、來源範圍與驗證方式以 [`public/data/blacksmith/SOURCE-CONTRACT.md`](../public/data/blacksmith/SOURCE-CONTRACT.md) 為準。資料讀取時須報告不合法 JSON、重複來源鍵、lookup 找不到物品、物品缺必要欄位等錯誤；不得靜默略過或在錯誤時回傳空目錄。現有資料可用 `npm run validate:blacksmith-source` 驗證。預設資料不寫入 `blacksmith_items`，也不提供修改／分享控制。
 
 ## 頁面與互動規劃
 
@@ -178,7 +191,7 @@ src/data/blacksmith/
 
 | 範圍 | 建議位置 |
 | --- | --- |
-| 資料來源 | `src/data/blacksmith/catalog-index.json`、`src/data/blacksmith/catalogs/*` |
+| 資料來源 | `public/data/blacksmith/catalog-index.json`、`public/data/blacksmith/catalogs/*`（由 `src/lib/blacksmithCatalog.ts` 讀取及驗證） |
 | 型別 | `src/types.ts`，新增 `BlacksmithItem` 及必要來源型別 |
 | snake_case ↔ camelCase 轉換 | `src/lib/supabase.ts`，新增 `DbBlacksmithItem`、轉換器及目錄正規化 helper（若適合） |
 | Supabase Schema／RLS | 新增 `supabase/migrations/<timestamp>_blacksmith_items.sql` |
@@ -193,16 +206,21 @@ src/data/blacksmith/
 
 ### 階段一：鎖定來源資料合約
 
-- 取得至少一份規則書物品 JSON 和對應 lookup。
-- 核實 JSON 頂層結構、欄位型別、null 規則、`id` 唯一性、lookup 對照方式及資料授權／來源標示。
-- 確認樣板欄位與戰役實例欄位的分界，完成具代表性的物品涵蓋：武器、護甲、消耗品、可充能物品、附魔詞條、無傷害欄位物品。
+- **狀態：已完成（以目前提供的資料為範圍；代表性類型仍有缺口）。**
+- 已核實 `public/data/blacksmith/catalog-index.json`、`catalogs/dnd-2024-srd-5.2.items.json` 與 `catalogs/dnd-2024-srd-5.2.lookup.json` 的頂層結構、欄位型別、null 規則、ID 唯一性及 lookup 對照方式。
+- 已鎖定樣板定義與戰役實例的欄位分界；來源 ID 不可沿用為 `InventoryItem.id`。具體格式見 [`public/data/blacksmith/SOURCE-CONTRACT.md`](../public/data/blacksmith/SOURCE-CONTRACT.md)。
+- 已新增 `npm run validate:blacksmith-source`，目前 91 筆 items／lookup 對照通過。
+- **未完成的資料覆蓋：**目前僅能確認消耗品、Common、無傷害值樣本；缺武器、護甲、可充能物品、附魔詞條及非 null 傷害值樣本。JSON 亦未提供授權名稱／版本／URL。取得補充來源後，應先核對並更新合約，再擴充型別或轉換邏輯。
 - 不將尚未提供的 SRD 物品內容自行補寫進 repository。
 
 ### 階段二：型別、目錄讀取及瀏覽 UI
 
-- 定義 `BlacksmithItem`／規則書來源型別，建立校驗、正規化和 lookup adapter。
-- 先以本機 JSON 顯示唯讀規則書目錄，完成搜尋、分類、詳情、錯誤及空狀態。
-- 加入大廳入口與頂層受保護路由。
+- **狀態：已完成（2026-10-23）。**
+- 在 `src/types.ts` 新增 `BlacksmithItem`、目錄索引及 lookup 型別；只包含已核實的來源欄位與來源識別資訊，不將戰役實例欄位混入樣板型別。
+- 在 `src/lib/blacksmithCatalog.ts` 從 Vite 靜態目錄載入 index、items 與 lookup；驗證 schema 版本、欄位、數值、相對路徑、目錄識別、唯一 ID 及 items／lookup 的名稱與 sourceKey 對照，錯誤會明確回報而不略過資料。
+- 在 `src/routes/_protected/blacksmith/` 建立唯讀瀏覽頁面與受保護路由；支援按名稱、描述、別名及搜尋詞查詢，依規則書／分類篩選，並查看詳情、重量、價值、調諧需求及來源標記。包含載入、讀取錯誤、空目錄及無搜尋結果狀態。
+- 在冒險者大廳新增「鍛造工坊」入口。此階段未加入使用者鍛造、分享、資料庫寫入或戰役匯入。
+- 驗證：`npm run validate:blacksmith-source`、`npm run typecheck`、`npm run build` 與 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts` 通過；新增目錄瀏覽與載入錯誤重試流程的 2 項端對端測試通過。`npm run lint` 無錯誤，僅對受保護路由檔案中專案要求保留的 React Refresh 指示註解提示未使用警告。
 
 ### 階段三：資料庫、鍛造及分享
 

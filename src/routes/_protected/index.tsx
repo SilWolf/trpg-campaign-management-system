@@ -9,6 +9,7 @@ import {
 	X,
 	Sparkles,
 	UserCog,
+	Hammer,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, toDbItem } from '@/lib/supabase';
@@ -267,6 +268,17 @@ function CampaignLobbyPage() {
 								{isGuest ? '訪客冒險者' : (user?.email ?? '已登入使用者')}
 							</span>
 						</div>
+						<Button
+							asChild
+							variant='secondary'
+							size='sm'
+							className='gap-1.5 border-amber-800/70 bg-stone-900/80 px-3 py-1.5 text-xs font-normal text-amber-200 hover:border-amber-500 hover:bg-stone-900'
+						>
+							<Link data-testid='lobby-blacksmith-link' to='/blacksmith'>
+								<Hammer className='h-3.5 w-3.5' />
+								<span>鍛造工坊</span>
+							</Link>
+						</Button>
 						<Button
 							asChild
 							variant='secondary'

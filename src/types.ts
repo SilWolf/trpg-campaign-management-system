@@ -1,6 +1,46 @@
 export type Rarity =
 	'Common' | 'Uncommon' | 'Rare' | 'VeryRare' | 'Legendary' | 'Artifact';
 export type ItemCategory = 'Weapon' | 'Armor' | 'Consumable' | 'Misc';
+export interface BlacksmithCatalogDefinition {
+	catalogId: string;
+	title: string;
+	itemsFile: string;
+	lookupFile: string;
+}
+
+export interface BlacksmithCatalogIndex {
+	schemaVersion: number;
+	catalogs: BlacksmithCatalogDefinition[];
+}
+
+export interface BlacksmithLookupEntry {
+	sourceKey: string;
+	itemId: string;
+	name: string;
+	aliases: string[];
+	searchTerms: string[];
+}
+
+export interface BlacksmithItem {
+	catalogId: string;
+	catalogTitle: string;
+	itemId: string;
+	sourceKey: string;
+	name: string;
+	category: ItemCategory;
+	subType: string;
+	rarity: Rarity;
+	icon: string;
+	damage: string | null;
+	weight: number;
+	valueGp: number;
+	requiresAttunement: boolean;
+	description: string;
+	dmNotes: string;
+	aliases: string[];
+	searchTerms: string[];
+}
+
 export type WeaponMasteryKey =
 	| 'None'
 	| 'Cleave'
