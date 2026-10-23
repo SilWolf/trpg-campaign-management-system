@@ -247,6 +247,7 @@ function CampaignLobbyPage() {
 				)}
 				{errorMessage && (
 					<div
+						data-testid='lobby-error'
 						role='alert'
 						className='mb-5 rounded-md border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-300'
 					>
@@ -259,12 +260,16 @@ function CampaignLobbyPage() {
 						<p className='mb-1 text-xs font-semibold tracking-[0.15em] text-amber-600'>
 							你的冒險即將展開
 						</p>
-						<h2 className='font-serif text-xl font-bold text-stone-100'>
+						<h2
+							data-testid='lobby-heading'
+							className='font-serif text-xl font-bold text-stone-100'
+						>
 							我的戰役列表
 						</h2>
 					</div>
 					<div className='flex flex-wrap gap-2'>
 						<button
+							data-testid='lobby-create-trigger'
 							type='button'
 							onClick={() => {
 								setDialog('create');
@@ -277,6 +282,7 @@ function CampaignLobbyPage() {
 							建立新戰役 (DM)
 						</button>
 						<button
+							data-testid='lobby-join-trigger'
 							type='button'
 							onClick={() => {
 								setDialog('join');
@@ -373,6 +379,7 @@ function CampaignLobbyPage() {
 			{dialog && (
 				<div className='fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm'>
 					<section
+						data-testid='lobby-dialog'
 						role='dialog'
 						aria-modal='true'
 						aria-labelledby='lobby-dialog-title'
@@ -380,12 +387,14 @@ function CampaignLobbyPage() {
 					>
 						<div className='mb-4 flex items-center justify-between border-b border-stone-800 pb-3'>
 							<h2
+								data-testid='lobby-dialog-heading'
 								id='lobby-dialog-title'
 								className='font-serif font-bold text-amber-200'
 							>
 								{dialog === 'create' ? '建立新戰役 (DM)' : '加入戰役'}
 							</h2>
 							<button
+								data-testid='lobby-dialog-close'
 								type='button'
 								onClick={() => setDialog(null)}
 								aria-label='關閉視窗'
@@ -400,6 +409,7 @@ function CampaignLobbyPage() {
 								<label className='block text-xs text-stone-300'>
 									戰役名稱
 									<input
+										data-testid='lobby-campaign-name'
 										required
 										value={campaignName}
 										onChange={(event) => setCampaignName(event.target.value)}
@@ -419,6 +429,7 @@ function CampaignLobbyPage() {
 										取消
 									</button>
 									<button
+										data-testid='lobby-create-submit'
 										type='submit'
 										disabled={isSubmitting}
 										className='rounded-md border border-amber-600/70 bg-amber-800 px-4 py-2 text-xs font-semibold text-amber-100 hover:bg-amber-700 disabled:opacity-50 cursor-pointer'
@@ -432,6 +443,7 @@ function CampaignLobbyPage() {
 								<label className='block text-xs text-stone-300'>
 									邀請碼
 									<input
+										data-testid='lobby-invite-code'
 										required
 										value={inviteCode}
 										onChange={(event) => setInviteCode(event.target.value)}
@@ -451,6 +463,7 @@ function CampaignLobbyPage() {
 										取消
 									</button>
 									<button
+										data-testid='lobby-join-submit'
 										type='submit'
 										className='rounded-md border border-amber-600/70 bg-amber-800 px-4 py-2 text-xs font-semibold text-amber-100 hover:bg-amber-700 cursor-pointer'
 									>

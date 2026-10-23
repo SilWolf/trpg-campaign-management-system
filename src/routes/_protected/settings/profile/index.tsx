@@ -64,7 +64,10 @@ function UserProfilePage() {
 	return (
 		<main className='max-w-2xl mx-auto px-4 py-8 text-stone-200'>
 			<div className='mb-6 border-b border-amber-900/50 pb-4'>
-				<h1 className='font-serif text-xl font-bold text-amber-100 flex items-center gap-2'>
+				<h1
+					data-testid='profile-heading'
+					className='font-serif text-xl font-bold text-amber-100 flex items-center gap-2'
+				>
 					<User className='w-5 h-5 text-amber-400' />
 					<span>個人資料設定</span>
 				</h1>
@@ -74,7 +77,10 @@ function UserProfilePage() {
 			</div>
 
 			{message && (
-				<div className='mb-5 rounded-md border border-emerald-800/70 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300 flex items-center gap-2'>
+				<div
+					data-testid='profile-success'
+					className='mb-5 rounded-md border border-emerald-800/70 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300 flex items-center gap-2'
+				>
 					<Sparkles className='w-4 h-4 text-emerald-400 shrink-0' />
 					<span>{message}</span>
 				</div>
@@ -82,6 +88,7 @@ function UserProfilePage() {
 
 			{errorMessage && (
 				<div
+					data-testid='profile-error'
 					role='alert'
 					className='mb-5 rounded-md border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-300 flex items-center gap-2'
 				>
@@ -100,6 +107,7 @@ function UserProfilePage() {
 						<span>顯示名字 (Full Name)</span>
 					</label>
 					<input
+						data-testid='profile-full-name'
 						type='text'
 						required
 						value={fullName}
@@ -115,6 +123,7 @@ function UserProfilePage() {
 						<span>電子郵件 (Email)</span>
 					</label>
 					<input
+						data-testid='profile-email'
 						type='email'
 						required
 						value={email}
@@ -129,6 +138,7 @@ function UserProfilePage() {
 
 				<div className='flex justify-end pt-4 border-t border-stone-800'>
 					<button
+						data-testid='profile-submit'
 						type='submit'
 						disabled={loading}
 						className='flex items-center gap-2 rounded-md border border-amber-500/70 bg-gradient-to-r from-amber-700 to-amber-900 px-5 py-2.5 text-xs font-semibold text-stone-100 shadow hover:brightness-110 transition disabled:opacity-50 cursor-pointer'

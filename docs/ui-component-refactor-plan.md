@@ -64,10 +64,10 @@
 2. 分類共通表單／操作、複雜互動元件與產品專屬展示元件；記錄主要操作、錯誤狀態及窄螢幕版面。
 3. 引入 Playwright，建立 E2E 設定、測試指令和最小可維護的測試目錄結構；設定本機開發伺服器啟動方式。
 4. 決定可重複使用的測試登入與資料策略。優先使用隔離的測試環境或可重置的 fixture，不使用真實玩家資料，不依賴真實 Email 寄送或外部信箱收件。
-5. 先為 Phase 1 涵蓋的頁面建立改造前基準 E2E 測試；若流程涉及外部 Email／OAuth 等外部服務，透過測試環境或受控替身驗證應用程式可控的流程。
+5. 先為 Phase 1 涵蓋的頁面建立改造前基準 E2E 測試；測試透過穩定且具語意的 `data-testid` 定位互動元件與狀態，使用者可見訊息仍需斷言其內容；若流程涉及外部 Email／OAuth 等外部服務，透過測試環境或受控替身驗證應用程式可控的流程。
 6. 確認 Playwright 與目前 Vite、React、TypeScript 設定相容；避免在建立測試基礎設施時改動業務邏輯、Supabase Schema、RLS 或權限規則。
 
-**完成條件：** Playwright 測試能在本機穩定執行；測試資料可隔離與重複建立；Phase 1 基準流程已記錄，並能在 UI 遷移前通過。
+**完成條件：** Playwright 測試能在本機穩定執行；測試資料可隔離與重複建立；互動元素以穩定的 `data-testid` 定位而非樣式或文案選擇器；Phase 1 基準流程已記錄，並能在 UI 遷移前通過。
 
 #### 執行紀錄（2026-10-23）
 
@@ -77,6 +77,7 @@
 - 已引入 `@playwright/test`，新增 `test:e2e` 指令、Chromium 專案與 Vite 本機測試伺服器設定：[`package.json`](../package.json)、[`playwright.config.ts`](../playwright.config.ts)。
 - 已新增 Supabase Auth、PostgREST 與 RPC 的網路替身及虛構測試 session：[`tests/e2e/supabase-mock.ts`](../tests/e2e/supabase-mock.ts)。測試只使用隔離的 `127.0.0.1:54321` URL 和 `example.test` 虛構帳號，不連接正式服務、不使用真實玩家資料，也不寄送 Email。
 - 已新增 Phase 1 基準測試：[`tests/e2e/phase-1-baseline.spec.ts`](../tests/e2e/phase-1-baseline.spec.ts)，共 8 項情境，涵蓋註冊與 Email 驗證提示、登入欄位與錯誤回饋、無效邀請、邀請密碼確認與接受邀請、建立／加入戰役、個人資料更新，以及 375px 下 Phase 1 四頁的水平溢位。
+- 後續依測試維護要求，Phase 1 E2E 互動元素改以 `data-testid` 定位；畫面可見文字仍以對應 test id 元素斷言，避免測試定位耦合於文案、樣式或 DOM 結構。
 - 已將 Playwright 報告與測試結果目錄排除於版本控制：[`.gitignore`](../.gitignore)；並在 [`README.md`](../README.md) 記錄瀏覽器安裝及測試執行指令。
 - 驗收結果：`npm run test:e2e`（8 項通過）、`npm run typecheck`、`npm run lint`、`npm run build` 與 `git diff --check` 均通過。
 

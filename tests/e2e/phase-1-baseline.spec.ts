@@ -5,14 +5,14 @@ test('登入頁可完成註冊並顯示電子郵件驗證提示', async ({ page 
 	const { requests } = await mockSupabase(page);
 	await page.goto('/login');
 
-	await page.getByRole('button', { name: '尚未有帳號？立即註冊' }).click();
-	await page.getByLabel('電子郵件').fill('new-adventurer@example.test');
-	await page.getByRole('textbox', { name: '密碼' }).fill('safe-test-password');
-	await page.getByRole('button', { name: '建立冒險者帳號' }).click();
+	await page.getByTestId('login-toggle-mode').click();
+	await page.getByTestId('login-email').fill('new-adventurer@example.test');
+	await page.getByTestId('login-password').fill('safe-test-password');
+	await page.getByTestId('login-submit').click();
 
-	await expect(
-		page.getByText('註冊成功！請先至電子郵件收取驗證信，再返回登入。'),
-	).toBeVisible();
+	await expect(page.getByTestId('login-success')).toContainText(
+		'註冊成功！請先至電子郵件收取驗證信，再返回登入。',
+	);
 	expect(requests).toContain('POST /auth/v1/signup');
 });
 
@@ -20,18 +20,18 @@ test('登入表單驗證必填欄位並呈現驗證失敗訊息', async ({ page 
 	await mockSupabase(page);
 	await page.goto('/login');
 
-	const email = page.getByLabel('電子郵件');
-	const password = page.getByRole('textbox', { name: '密碼' });
+	const email = page.getByTestId('login-email');
+	const password = page.getByTestId('login-password');
 	await expect(email).toBeVisible();
 	await page.keyboard.press('Tab');
 	await expect(email).toBeFocused();
-	await page.getByRole('button', { name: '登入戰役軍械庫' }).click();
+	await page.getByTestId('login-submit').click();
 	await expect(email).toBeFocused();
 
 	await email.fill('wrong@example.com');
 	await password.fill('incorrect-password');
-	await page.getByRole('button', { name: '登入戰役軍械庫' }).click();
-	await expect(page.getByRole('alert')).toContainText(
+	await page.getByTestId('login-submit').click();
+	await expect(page.getByTestId('login-error')).toContainText(
 		'Invalid login credentials',
 	);
 });
@@ -40,7 +40,7 @@ test('無效邀請連結會顯示可理解的錯誤', async ({ page }) => {
 	await mockSupabase(page);
 	await page.goto('/invite/mock-campaign-id');
 
-	await expect(page.getByRole('alert')).toContainText(
+	await expect(page.getByTestId('invite-error')).toContainText(
 		'邀請連結無效或已過期',
 	);
 });
@@ -50,16 +50,22 @@ test('邀請註冊可檢查密碼一致並接受邀請', async ({ page }) => {
 	await seedAuthenticatedSession(page);
 	await page.goto('/invite/mock-campaign-id');
 
-	await expect(page.getByLabel('電子郵件')).toHaveValue(
+	await expect(page.getByTestId('invite-email')).toHaveValue(
 		'adventurer@example.test',
 	);
-	await page.getByLabel('設定密碼').fill('safe-test-password');
-	await page.getByLabel('再次輸入密碼').fill('different-password');
-	await page.getByRole('button', { name: '設定密碼並加入戰役' }).click();
-	await expect(page.getByRole('alert')).toHaveText('兩次輸入的密碼不一致。');
+	await page.getByTestId('invite-password').fill('safe-test-password');
+	await page
+		.getByTestId('invite-confirm-password')
+		.fill('different-password');
+	await page.getByTestId('invite-submit').click();
+	await expect(page.getByTestId('invite-error')).toHaveText(
+		'兩次輸入的密碼不一致。',
+	);
 
-	await page.getByLabel('再次輸入密碼').fill('safe-test-password');
-	await page.getByRole('button', { name: '設定密碼並加入戰役' }).click();
+	await page
+		.getByTestId('invite-confirm-password')
+		.fill('safe-test-password');
+	await page.getByTestId('invite-submit').click();
 	await expect(page).toHaveURL(/\/campaigns\/mock-campaign-id$/);
 	expect(requests).toContain('POST /rest/v1/rpc/accept_campaign_invite');
 });
@@ -69,13 +75,13 @@ test('大廳可建立戰役並進入該戰役', async ({ page }) => {
 	await seedAuthenticatedSession(page);
 	await page.goto('/');
 
-	await expect(
-		page.getByRole('heading', { name: '我的戰役列表' }),
-	).toBeVisible();
-	await page.getByRole('button', { name: '建立新戰役 (DM)' }).click();
-	await expect(page.getByRole('dialog')).toBeVisible();
-	await page.getByLabel('戰役名稱').fill('Playwright 隔離測試戰役');
-	await page.getByRole('button', { name: '確認建立戰役' }).click();
+	await expect(page.getByTestId('lobby-heading')).toContainText('我的戰役列表');
+	await page.getByTestId('lobby-create-trigger').click();
+	await expect(page.getByTestId('lobby-dialog')).toBeVisible();
+	await page
+		.getByTestId('lobby-campaign-name')
+		.fill('Playwright 隔離測試戰役');
+	await page.getByTestId('lobby-create-submit').click();
 
 	await expect(page).toHaveURL(/\/campaigns\/campaign-\d+$/);
 	expect(requests).toContain('POST /rest/v1/campaigns');
@@ -86,9 +92,9 @@ test('大廳可用邀請碼加入戰役', async ({ page }) => {
 	await seedAuthenticatedSession(page);
 	await page.goto('/');
 
-	await page.getByRole('button', { name: '輸入邀請碼加入戰役' }).click();
-	await page.getByLabel('邀請碼').fill('testcode');
-	await page.getByRole('button', { name: '確認加入' }).click();
+	await page.getByTestId('lobby-join-trigger').click();
+	await page.getByTestId('lobby-invite-code').fill('testcode');
+	await page.getByTestId('lobby-join-submit').click();
 
 	await expect(page).toHaveURL(/\/campaigns\/mock-campaign-id$/);
 	expect(requests).toContain(
@@ -102,11 +108,13 @@ test('帳號設定可儲存個人資料並顯示成功狀態', async ({ page }) 
 	await page.goto('/settings/profile');
 
 	await page
-		.getByPlaceholder('例如：塔夫 (Tav)')
+		.getByTestId('profile-full-name')
 		.fill('Playwright 測試冒險者');
-	await page.getByRole('button', { name: '儲存變更' }).click();
+	await page.getByTestId('profile-submit').click();
 
-	await expect(page.getByText('個人資料已成功更新！')).toBeVisible();
+	await expect(page.getByTestId('profile-success')).toContainText(
+		'個人資料已成功更新！',
+	);
 	expect(requests).toContain('PUT /auth/v1/user');
 	expect(requests).toContain('POST /rest/v1/profiles');
 });
@@ -123,27 +131,19 @@ test('Phase 1 頁面在窄螢幕沒有水平溢出', async ({ page }) => {
 	};
 
 	await page.goto('/login');
-	await expect(
-		page.getByRole('heading', { name: '博德之門戰役軍械庫' }),
-	).toBeVisible();
+	await expect(page.getByTestId('login-heading')).toBeVisible();
 	await expectNoHorizontalOverflow();
 
 	await seedAuthenticatedSession(page);
 	await page.goto('/');
-	await expect(
-		page.getByRole('heading', { name: '我的戰役列表' }),
-	).toBeVisible();
+	await expect(page.getByTestId('lobby-heading')).toBeVisible();
 	await expectNoHorizontalOverflow();
 
 	await page.goto('/settings/profile');
-	await expect(
-		page.getByRole('heading', { name: '個人資料設定' }),
-	).toBeVisible();
+	await expect(page.getByTestId('profile-heading')).toBeVisible();
 	await expectNoHorizontalOverflow();
 
 	await page.goto('/invite/mock-campaign-id');
-	await expect(
-		page.getByRole('heading', { name: '完成冒險者帳號註冊' }),
-	).toBeVisible();
+	await expect(page.getByTestId('invite-heading')).toBeVisible();
 	await expectNoHorizontalOverflow();
 });

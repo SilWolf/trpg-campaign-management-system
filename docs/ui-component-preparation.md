@@ -40,6 +40,13 @@
 - 註冊由 Auth 替身直接回覆驗證信提示，不寄送 Email；邀請接受使用受控 session 與 RPC 替身，不依賴信箱、OAuth 或外部服務。
 - 若新增需要跨流程狀態的測試，應擴充 fixture 並確保每次測試可重複初始化；不可改用開發者 `.env.local` 內的服務。
 
+## E2E 元素定位規範
+
+- Phase 1 E2E 的頁面互動目標（輸入欄位、按鈕、對話框、錯誤／成功狀態與標題）一律使用明確的 `data-testid` 搭配 `page.getByTestId()` 定位。
+- `data-testid` 使用穩定且具語意的名稱，不依賴 Tailwind class、DOM 階層或容易修改的 UI 文案。
+- 測試仍須驗證使用者可見的訊息與標題；以已定位的 test id 元素斷言文字和值，不以 `getByText`、`getByRole`、`getByLabel` 或 placeholder 作為元素定位器。
+- 導入共用元件或遷移頁面時，保留這些測試 ID，或在同一變更中同步更新對應 E2E 測試。
+
 ## Phase 1 基準情境
 
 `tests/e2e/phase-1-baseline.spec.ts` 覆蓋：

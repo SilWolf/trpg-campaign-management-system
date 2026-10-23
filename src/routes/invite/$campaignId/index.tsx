@@ -93,7 +93,10 @@ function InviteRegistrationPage() {
 					<div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-500/60 bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950'>
 						<Swords className='h-7 w-7 text-amber-300' />
 					</div>
-					<h1 className='font-serif text-2xl font-bold tracking-wide text-amber-100'>
+					<h1
+						data-testid='invite-heading'
+						className='font-serif text-2xl font-bold tracking-wide text-amber-100'
+					>
 						完成冒險者帳號註冊
 					</h1>
 					<p className='mt-2 text-sm text-stone-400'>
@@ -102,9 +105,12 @@ function InviteRegistrationPage() {
 				</div>
 
 				{isLoading ? (
-					<p className='text-center text-sm text-stone-400'>正在驗證邀請連結…</p>
+					<p data-testid='invite-loading' className='text-center text-sm text-stone-400'>
+						正在驗證邀請連結…
+					</p>
 				) : errorMessage && !email ? (
 					<p
+						data-testid='invite-error'
 						role='alert'
 						className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'
 					>
@@ -121,6 +127,7 @@ function InviteRegistrationPage() {
 							</label>
 							<input
 								id='invite-email'
+								data-testid='invite-email'
 								type='email'
 								autoComplete='email'
 								readOnly
@@ -137,6 +144,7 @@ function InviteRegistrationPage() {
 							</label>
 							<input
 								id='invite-password'
+								data-testid='invite-password'
 								type='password'
 								autoComplete='new-password'
 								minLength={6}
@@ -156,6 +164,7 @@ function InviteRegistrationPage() {
 							</label>
 							<input
 								id='invite-confirm-password'
+								data-testid='invite-confirm-password'
 								type='password'
 								autoComplete='new-password'
 								minLength={6}
@@ -169,6 +178,7 @@ function InviteRegistrationPage() {
 
 						{errorMessage && (
 							<p
+								data-testid='invite-error'
 								role='alert'
 								className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'
 							>
@@ -177,6 +187,7 @@ function InviteRegistrationPage() {
 						)}
 
 						<button
+							data-testid='invite-submit'
 							type='submit'
 							disabled={isSubmitting}
 							className='w-full rounded-md border border-amber-400/70 bg-gradient-to-b from-amber-600 to-amber-800 px-4 py-2.5 font-semibold text-stone-950 transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60'

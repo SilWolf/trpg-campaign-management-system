@@ -73,7 +73,10 @@ function LoginPage() {
 					<p className='mb-1 text-xs font-semibold tracking-[0.25em] text-amber-500'>
 						D&amp;D 5R・2024
 					</p>
-					<h1 className='font-serif text-2xl font-bold tracking-wide text-amber-100'>
+					<h1
+						data-testid='login-heading'
+						className='font-serif text-2xl font-bold tracking-wide text-amber-100'
+					>
 						博德之門戰役軍械庫
 					</h1>
 					<p className='mt-2 text-sm text-stone-400'>
@@ -91,6 +94,7 @@ function LoginPage() {
 						</label>
 						<input
 							id='email'
+							data-testid='login-email'
 							type='email'
 							autoComplete='email'
 							required
@@ -111,6 +115,7 @@ function LoginPage() {
 						<div className='relative'>
 							<input
 								id='password'
+								data-testid='login-password'
 								type={showPassword ? 'text' : 'password'}
 								autoComplete={isSignUp ? 'new-password' : 'current-password'}
 								minLength={6}
@@ -136,17 +141,25 @@ function LoginPage() {
 					</div>
 
 					{message && (
-						<p className='rounded border border-emerald-800/70 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-300'>
+						<p
+							data-testid='login-success'
+							className='rounded border border-emerald-800/70 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-300'
+						>
 							{message}
 						</p>
 					)}
 					{errorMessage && (
-						<p role='alert' className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'>
+						<p
+							data-testid='login-error'
+							role='alert'
+							className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'
+						>
 							{errorMessage}
 						</p>
 					)}
 
 					<button
+						data-testid='login-submit'
 						type='submit'
 						disabled={isSubmitting}
 						className='w-full rounded-md border border-amber-400/70 bg-gradient-to-b from-amber-600 to-amber-800 px-4 py-2.5 font-semibold text-stone-950 shadow-[0_0_18px_rgba(245,158,11,0.15)] transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60'
@@ -156,6 +169,7 @@ function LoginPage() {
 				</form>
 
 				<button
+					data-testid='login-toggle-mode'
 					type='button'
 					onClick={() => {
 						setIsSignUp((value) => !value);
