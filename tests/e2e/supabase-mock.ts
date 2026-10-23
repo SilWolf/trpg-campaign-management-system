@@ -38,9 +38,11 @@ export async function mockSupabase(
 	options: {
 		campaignSettingsRole?: CampaignSettingsRole;
 		campaignInventoryRole?: CampaignSettingsRole;
+		createCampaignError?: string;
 	} = {},
 ) {
 	const requests: string[] = [];
+	const functionRequests: unknown[] = [];
 	const campaignSettingsRole = options.campaignSettingsRole;
 	const campaignInventoryRole = options.campaignInventoryRole;
 	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
@@ -265,6 +267,39 @@ export async function mockSupabase(
 		}
 
 		if (
+			url.pathname === '/functions/v1/create-campaign' &&
+			method === 'POST'
+		) {
+			functionRequests.push(request.postDataJSON());
+			if (options.createCampaignError) {
+				await route.fulfill({
+					status: 500,
+					json: { error: options.createCampaignError },
+				});
+				return;
+			}
+			await route.fulfill({
+				status: 201,
+				json: {
+					campaign_id: 'mock-created-campaign',
+					invite_code: 'SAMPLE1',
+					character_id_map: {},
+				},
+			});
+			return;
+		}
+
+		if (
+			url.pathname === '/rest/v1/rpc/join_campaign_by_invite_code' &&
+			method === 'POST'
+		) {
+			await route.fulfill({
+				json: { campaign_id: 'mock-campaign-id', name: '測試戰役' },
+			});
+			return;
+		}
+
+		if (
 			url.pathname === '/rest/v1/campaigns' &&
 			method === 'GET' &&
 			url.searchParams.has('invite_code')
@@ -369,5 +404,5 @@ export async function mockSupabase(
 		});
 	});
 
-	return { requests };
+	return { requests, functionRequests };
 }

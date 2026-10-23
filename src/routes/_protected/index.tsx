@@ -12,7 +12,7 @@ import {
 	UserCog,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, toDbCharacter, toDbItem } from '@/lib/supabase';
+import { supabase, toDbItem } from '@/lib/supabase';
 import { INITIAL_CHARACTERS, INITIAL_ITEMS } from '@/data';
 import { Button, Input } from '@/components/ui';
 
@@ -60,7 +60,7 @@ function CampaignLobbyPage() {
 	useEffect(() => {
 		let isMounted = true;
 		async function fetchCampaigns() {
-			if (!supabase) return;
+			if (!supabase || isGuest) return;
 			try {
 				const { data, error } = await supabase
 					.from('campaigns')
@@ -79,7 +79,7 @@ function CampaignLobbyPage() {
 		return () => {
 			isMounted = false;
 		};
-	}, []);
+	}, [isGuest]);
 
 	const handleSignOut = async () => {
 		try {
@@ -101,45 +101,66 @@ function CampaignLobbyPage() {
 		setErrorMessage(null);
 
 		try {
-			const newCampaignId = `campaign-${Date.now()}`;
-			const dmId = user?.id ?? 'guest-dm';
-			const inviteCodeGenerated = Math.random()
-				.toString(36)
-				.substring(2, 8)
-				.toUpperCase();
+			let newCampaignId = `campaign-${Date.now()}`;
+			if (supabase && !isGuest) {
+				if (!user) throw new Error('登入狀態無效，請重新登入後再建立戰役。');
 
-			if (supabase) {
-				// 1. 寫入 campaigns 主表
-				const { error: campaignError } = await supabase
-					.from('campaigns')
-					.insert({
-						id: newCampaignId,
+				const seed = {
+					characters: INITIAL_CHARACTERS.filter(
+						(character) => character.id !== 'camp-chest',
+					).map((character) => ({
+						id: character.id,
+						name: character.name,
+						title: character.title,
+						avatar: character.avatar,
+						str: character.str,
+						currencies: character.currencies,
+						private_currencies: character.privateCurrencies,
+					})),
+					items: INITIAL_ITEMS.map(toDbItem),
+					camp_chest_currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+				};
+				const { data, error } = await supabase.functions.invoke<{
+					campaign_id: string;
+					invite_code: string;
+				}>('create-campaign', {
+					body: {
 						name: campaignName.trim(),
-						dm_id: dmId,
-						invite_code: inviteCodeGenerated,
-						max_characters_per_player: 1,
-					});
-
-				if (campaignError) throw campaignError;
-
-				await supabase.from('campaign_members').insert({
-					campaign_id: newCampaignId,
-					user_id: dmId,
-					role: 'dm',
+						template: 'sample',
+						seed,
+					},
 				});
+				if (error) {
+					if (error.context instanceof Response) {
+						const errorBody: unknown = await error.context
+							.clone()
+							.json()
+							.catch(() => null);
+						if (
+							errorBody &&
+							typeof errorBody === 'object' &&
+							'error' in errorBody &&
+							typeof errorBody.error === 'string'
+						) {
+							throw new Error(errorBody.error);
+						}
+					}
+					throw new Error(error.message);
+				}
+				if (!data?.campaign_id || !data.invite_code) {
+					throw new Error('建立戰役服務未回傳完整結果，請稍後再試。');
+				}
 
-				// 2. 自動為新戰役初始化預設角色與物品，帶上 campaign_id
-				const initialCharsWithCampaign = INITIAL_CHARACTERS.map((c) => ({
-					...toDbCharacter(c),
-					campaign_id: newCampaignId,
-				}));
-				const initialItemsWithCampaign = INITIAL_ITEMS.map((i) => ({
-					...toDbItem(i),
-					campaign_id: newCampaignId,
-				}));
-
-				await supabase.from('characters').upsert(initialCharsWithCampaign);
-				await supabase.from('inventory_items').upsert(initialItemsWithCampaign);
+				newCampaignId = data.campaign_id;
+				setCampaigns((current) => [
+					{
+						id: data.campaign_id,
+						name: campaignName.trim(),
+						dm_id: user.id,
+						invite_code: data.invite_code,
+					},
+					...current,
+				]);
 			}
 
 			// 3. 清理狀態並跳轉至新戰役背包
@@ -167,42 +188,30 @@ function CampaignLobbyPage() {
 
 		try {
 			const cleanCode = inviteCode.trim().toUpperCase();
-			const userId = user?.id ?? 'guest-user';
-
-			if (supabase) {
-				// 1. 根據邀請碼尋找戰役
-				const { data: campaign, error: findError } = await supabase
-					.from('campaigns')
-					.select('id, name')
-					.eq('invite_code', cleanCode)
-					.single();
-
-				if (findError || !campaign) {
-					throw new Error('找不到對應的戰役，請確認邀請碼是否正確。');
-				}
-
-				// 2. 將使用者加入 campaign_members
-				const { error: joinError } = await supabase
-					.from('campaign_members')
-					.upsert(
-						{
-							campaign_id: campaign.id,
-							user_id: userId,
-							role: 'player',
-						},
-						{ onConflict: 'campaign_id, user_id' },
-					);
-
-				if (joinError) throw joinError;
-
-				// 3. 成功後跳轉至該戰役
-				closeDialog();
-				setInviteCode('');
-				await navigate({
-					to: '/campaigns/$campaignId',
-					params: { campaignId: campaign.id },
-				});
+			if (!supabase || isGuest || !user) {
+				throw new Error('加入戰役需要有效的 Supabase 登入狀態。');
 			}
+
+			const { data, error } = await supabase.rpc(
+				'join_campaign_by_invite_code',
+				{ p_invite_code: cleanCode },
+			);
+			if (error) throw new Error(error.message);
+			if (
+				!data ||
+				typeof data !== 'object' ||
+				!('campaign_id' in data) ||
+				typeof data.campaign_id !== 'string'
+			) {
+				throw new Error('加入戰役服務未回傳有效的戰役資料。');
+			}
+
+			closeDialog();
+			setInviteCode('');
+			await navigate({
+				to: '/campaigns/$campaignId',
+				params: { campaignId: data.campaign_id },
+			});
 		} catch (error) {
 			setErrorMessage(
 				error instanceof Error ? error.message : '加入戰役失敗，請稍後再試。',
@@ -444,7 +453,7 @@ function CampaignLobbyPage() {
 								placeholder='例如：博德之門：血戰風雲'
 							/>
 							<p className='text-[11px] leading-relaxed text-stone-500'>
-								建立後將自動在資料庫初始化獨立的戰役空間與預設冒險者隊員。
+								建立後將建立獨立戰役，並載入三名預設冒險者與範例物品。
 							</p>
 							<div className='flex justify-end gap-2 pt-2'>
 								<Button
@@ -479,7 +488,7 @@ function CampaignLobbyPage() {
 								placeholder='輸入 DM 提供的邀請碼'
 							/>
 							<p className='text-[11px] leading-relaxed text-stone-500'>
-								此功能目前為介面預留，邀請碼驗證系統即將推出。
+								使用 DM 提供的六碼邀請碼加入戰役。
 							</p>
 							<div className='flex justify-end gap-2 pt-2'>
 								<Button

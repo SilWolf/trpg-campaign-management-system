@@ -1,0 +1,4 @@
+project_id = "trpg-campaign-management-system"
+
+[functions.create-campaign]
+verify_jwt = true

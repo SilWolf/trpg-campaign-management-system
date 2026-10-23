@@ -1,161 +1,97 @@
-# 移除預設戰役並導入戰役範本：開發規劃
+# 移除預設戰役並改由 Edge Function 建立戰役：開發規劃
 
-## 背景與目標
+## 背景與資料模型決策
 
-早期試用期間，專案以 `campaignId = 'default'` 提供固定的「博德之門：腦噬者危機」示範戰役、角色與物品。相關資料同時存在前端程式碼和資料庫，並在大廳、角色權限、同步及設定頁等位置形成特殊判斷。
+早期試用期間，專案以 `campaignId = 'default'` 顯示固定的「博德之門：腦噬者危機」示範戰役，示範角色和物品則同時存在前端與資料庫。本計畫逐步移除預設戰役特殊分支，改由使用者建立自己的戰役。
 
-本次改造的目標：
+- 不建立 `campaign_templates`、範本角色／物品表或其他範本資料表。前端從版本控制中的 `src/data.ts` 組裝示範內容，隨請求 body 傳至 Edge Function。
+- 建立戰役由前端呼叫 Supabase Edge Function；Function 驗證登入者，並呼叫 PostgreSQL 單一交易 RPC。交易建立 campaign、DM 成員、角色及物品，避免前端逐表寫入留下半成品。
+- Edge Function 驗證 `sample`／`blank` 類型及 body 中種子資料的結構與數量；建立者 ID 僅取自已驗證的登入者，不接受客戶端提供。service role key 僅留在伺服器端，建團 RPC 僅授權 `service_role`。
+- `camp-chest` 是每個戰役都有的虛擬公共儲存庫，不是角色、沒有擁有人，不提供私人背包／錢包。本次不含停用功能。
+- 營地箱貨幣放在 `campaigns.camp_chest_currency`；營地箱物品使用 `owner_id = 'camp-chest'`，並以必填 `inventory_items.campaign_id` 隔離不同戰役。
+- 資料庫資料列已由維護者清空；保留既有表格。migration 不重建表格、不清資料、不建立 `default` 戰役；SQL 由維護者手動部署。
 
-- 戰役大廳只顯示使用者實際建立或加入的戰役，不再顯示預設戰役。
-- 移除所有只為 `campaignId === 'default'` 設計的例外流程。
-- 將目前示範內容轉為可選的資料庫範本；建立戰役時依正常戰役資料流程複製範本。
-- 範本建立的所有角色，其擁有人均為建立戰役的使用者。
-- 確認範本已可用後，清除資料庫中舊預設戰役及其產生的資料。
+## 程式現況及改造範圍
 
-本文件是後續實作與驗收依據，不代表已執行程式碼或資料庫變更。
+| 範圍 | 改造需求 |
+| --- | --- |
+| 戰役大廳 | 移除固定示範卡片及 `id === 'default'` 過濾，僅顯示使用者實際建立或加入的戰役。 |
+| 建立戰役 | 以 Edge Function 建團；示範建團載入 3 角色／9 物品，空白建團建立零角色／物品；成功後使用伺服器回傳 ID，失敗明確顯示錯誤且不導向。 |
+| 加入戰役 | campaign row 僅開放成員／DM 讀取後，邀請加入流程須改呼叫 `join_campaign_by_invite_code`，不可直接查 campaign 邀請碼。 |
+| 示範資料 | [src/data.ts](../src/data.ts) 現有 `CAMP_CHEST_DEFAULT`、`INITIAL_CHARACTERS`、`INITIAL_ITEMS`；Edge Function 必須排除虛擬 camp-chest 角色，僅複製三名真正角色和九件物品。 |
+| 同步與離線 | 檢查 [useCampaignSync.ts](../src/hooks/useCampaignSync.ts) 等資料流，確保遠端空集合不會自動補入示範資料；保留未設定 Supabase 及訪客模式的退避行為。 |
+| camp-chest UI | 保留目前特殊外觀、公共物品及金錢操作；改以 campaign 欄位與 campaign-scoped 物品資料作來源，不能把虛擬箱當成角色 CRUD。 |
+| 預設戰役特例 | 逐步檢查角色權限、背包、設定、角色設定面板、開發指引及測試中的 `default` 分支；完成後只保留必要相容性，不再依預設戰役識別碼授權。 |
 
-## 目前程式盤點
+## 建立戰役與安全性規格
 
-| 範圍 | 現況 | 改造注意事項 |
-|---|---|---|
-| 戰役大廳 | [src/routes/_protected/index.tsx](../src/routes/_protected/index.tsx) 固定渲染預設戰役卡片，且另外排除 `id === 'default'`。 | 移除固定卡片及過濾條件，保留從資料庫載入並顯示實際戰役。 |
-| 建立戰役 | 同一大廳頁面建立主表與成員後，將 `INITIAL_CHARACTERS`、`INITIAL_ITEMS` 寫入新戰役。 | 新增範本選擇；「空白戰役」與指定範本均走正式建立流程。確認每次建立資料的 ID 和關聯映射。 |
-| 硬編碼資料 | [src/data.ts](../src/data.ts) 定義 `CAMP_CHEST_DEFAULT`、`INITIAL_CHARACTERS`、`INITIAL_ITEMS`；角色帶有固定 `default-owner`。 | 將要保留的示範內容遷入資料庫範本。資料遷移和程式切換完成後，刪除專供預設戰役使用的常數。 |
-| 初始同步 | [src/hooks/useCampaignSync.ts](../src/hooks/useCampaignSync.ts) 在遠端沒有角色或物品時，會用 Hook 參數中的初始資料回填資料庫。 | 避免空白戰役自動載入示範內容。需要重新檢視 Hook 的初始化參數、初始排序和本地／訪客退避，不應只刪除呼叫端常數而留下隱性回填行為。 |
-| 身分判斷 | [src/hooks/useUserCampaignRole.ts](../src/hooks/useUserCampaignRole.ts) 將 `default` 直接視為 DM。 | 一律依實際登入者和 `campaign_members` 判斷角色；未設定 Supabase 或訪客模式仍依既有退避規則處理。 |
-| 背包頁 | [src/routes/_protected/campaigns/$campaignId/index.tsx](../src/routes/_protected/campaigns/$campaignId/index.tsx) 對 `default` 跳過讀取角色上限，並用硬編碼初始角色與物品呼叫同步 Hook。 | 移除戰役 ID 特判；確認空戰役、角色為空及營地儲物箱的選取和顯示行為。 |
-| 設定頁 | [src/routes/_protected/campaigns/$campaignId/settings/index.tsx](../src/routes/_protected/campaigns/$campaignId/settings/index.tsx) 為 `default` 建立假設定、成員和角色資料，並在儲存、邀請、刪除、角色移轉等流程排除 `default`。 | 移除假資料分支與所有對應限制，改由一般戰役及 DM 權限決定操作。 |
-| 角色設定面板 | [CharacterSettingsPanel.tsx](../src/routes/_protected/campaigns/$campaignId/settings/-parts/CharacterSettingsPanel.tsx) 依 `default` 隱藏危險操作與角色擁有權移轉。 | 使用一般 DM／角色權限規則控制顯示及操作。 |
-| 開發指引 | [.github/copilot-instructions.md](../.github/copilot-instructions.md) 將 `campaignId === 'default'` 列為離線退避條件。 | 改為只描述真正的未設定 Supabase、訪客等離線退避條件。 |
-| 測試 | [tests/e2e/phase-1-baseline.spec.ts](../tests/e2e/phase-1-baseline.spec.ts) 已測試大廳建立戰役，但未驗證範本選擇和初始化資料。 | 擴充大廳、建立流程與資料映射測試；依資料庫測試能力補上 RLS 和原子性驗證。 |
+### 建立流程
 
-### 資料庫現況
+1. 前端呼叫 `create-campaign`，傳入 `{ name, template: 'sample' | 'blank' }`。
+2. Edge Function 驗證 HTTP method、名稱、template、seed 格式／數量和 Bearer token，再由 Supabase Auth `getUser(token)` 取得可信任的 user UUID。
+3. Function 使用伺服器端 service-role client，將 request body 中的 seed 原樣傳入 `create_campaign_from_seed(p_name, p_user_id, p_seed)`。`sample` 種子由前端從 `src/data.ts` 組裝；`blank` 由前端傳入空陣列及零餘額錢包。
+4. PostgreSQL 函式在單一交易建立 campaign、邀請碼、DM member、角色及物品，將角色擁有人設為建立者，將角色物品 owner 映射至新角色 ID，並回傳新 campaign ID、邀請碼和角色 ID 對照。
+5. 任一步驟錯誤均回滾交易；前端只在收到完整成功結果時導向新戰役。
 
-在本次盤點中，專案內沒有找到已提交的 SQL 遷移檔。正式實作前，需確認實際 Supabase 專案的遷移管理方式、現有 Schema、RLS、外鍵和相關資料表，再建立可追蹤、可重複部署的遷移。不可只依前端程式推測資料庫結構。
+函式固定 `search_path`，使用者資料與 `auth.uid()` 比較時遵守 `uuid`／`text` 型別規則。`create_campaign_from_seed` 不授權 `anon` 或 `authenticated` 執行；只有完成登入驗證的 Edge Function service-role client 能呼叫。`join_campaign_by_invite_code` 則由登入中的 authenticated 使用者呼叫，RPC 使用 `auth.uid()` 確定加入者。
 
-依專案規範，戰役、角色、物品 ID 為 `TEXT`；成員使用者 ID 為 `UUID`。若遷移或資料庫函式會比較 `dm_id`／`characters.user_id` 與 `auth.uid()`，必須遵守現有型別轉換規範；RLS 不可直接查詢自身表格造成無限遞迴。
+### camp-chest 與前端互動要求
 
-## 建議方案
+- 每個真正戰役都預設有公共 camp-chest；空白戰役也保有 UI 虛擬庫及零值錢包。此次不加 DM 停用設定。
+- `camp-chest` 不存在於 `characters`，不能有 userId／owner、角色權限列、私人背包／私人錢包、角色設定、刪除或角色上限。
+- 存入／取出物品須保留 owner 轉移互動，目標 camp-chest 不要求角色擁有權；來源角色的修改權和既有 ACL 規則仍須檢查。
+- 營地箱物品寫入時 `owner_id = 'camp-chest'`、`campaign_id = 當前戰役 ID`、`is_private = false`。查詢、排序、更新、刪除、移轉、Realtime、負重計算都依 campaign_id 過濾。
+- 營地箱存錢／取錢讀寫 `campaigns.camp_chest_currency`，不可把虛擬錢包存入 `characters.currencies`。跨錢包轉帳需防止重複扣款／入帳及並行更新競爭。
+- 保留專屬視覺樣式及公共物品／錢包操作；隱藏角色擁有者、角色設定、私人資料及刪除控制。切換戰役後不得看到其他戰役營地箱物品或錢幣。
 
-### 將範本建模為獨立資料，不建立「模板型戰役」
+## 分階段執行與狀態
 
-建議新增獨立的範本資料模型，與可遊玩的 `campaigns` 區分。範本包含供選擇的識別資料與範本角色、物品內容；一般戰役列表、成員、邀請碼和戰役權限只處理真正的戰役。
+### 階段一：確認範圍與資料來源 — 完成
 
-不建議把範本偽裝成 `campaigns` 表中的特殊列再靠旗標或特殊 ID 到處過濾。這會延續目前的耦合問題，並可能讓模板誤入戰役大廳、邀請流程、成員權限或刪除流程。
+- 前提為資料列已清空、既有 Schema 保留；不安排舊資料匯出、回填或 `default` 資料清理。
+- 確認示範資料以 `src/data.ts` 為來源，角色為 `tav`、`shadowheart`、`gale`，物品為 9 件。
+- 確認 Schema 快照 `external/schema.md` 不是即時資料庫結果；部署仍需維護者檢視目標專案及 migration history。
+- 確立 camp-chest 為無擁有人的虛擬庫，以及戰役隔離欄位需求。
 
-建立戰役介面至少提供：
+### 階段二：資料庫安全基線與建團後端 — 程式碼完成，待維護者手動部署
 
-1. **空白戰役**：只建立戰役及 DM 成員，不新增角色或物品。
-2. **博德之門：腦噬者危機**：複製該範本的角色與物品。
+- 新增 Supabase 專案設定及既有 Schema 基線檢查；基線不建立既有業務表。
+- 增量 migration 新增 `campaigns.camp_chest_currency`；要求 `inventory_items.campaign_id` 非空，建立 campaign 外鍵／索引，限制 camp-chest 物品不可設私人；加入 membership／DM helper、campaign／角色／物品／成員／邀請／權限 RLS、限制非 DM 僅能更新 campaign 公共錢包、邀請碼 RPC、建團交易 RPC 及 campaign Realtime publication。
+- 不建立 `campaign_templates` 相關表格或範例 seed SQL。建團 RPC 接收受信任 Edge Function 的 JSON 種子，原子建立資料。
+- 新增 `create-campaign` Edge Function：gateway JWT 驗證、伺服器端使用者驗證、固定的 sample／blank 兩種建立模式；service-role key 不進入前端。
+- 更新部署文件，要求維護者手動檢查 Schema、Secrets、migration 計畫並部署 SQL／Function。**此工作階段未連線或執行 SQL，資料庫、Edge Function 尚未部署。**
 
-### 範本複製規則
+### 階段三：前端建立／加入流程與營地箱資料串接 — 部分完成
 
-選用範本時應符合下列規則：
+- 大廳建立示範戰役已改呼叫 Edge Function，並在 request body 傳送從 `src/data.ts` 組裝的角色、物品及營地箱貨幣；採用伺服器回傳的 ID，錯誤顯示於介面。正式登入者才能在遠端建立，訪客／離線走既有本地退避。
+- 大廳邀請加入已改呼叫 `join_campaign_by_invite_code`，避免先直接查詢不具讀取權限的 campaign row。
+- `blank` 建團已由 Edge Function 與交易 RPC 支援，後續可於 UI 加入建立模式選擇。
+- camp-chest 背包／錢包 UI、同步 Hook、Realtime、campaign-scoped 讀寫仍須逐一串接；完成前不可宣稱公共庫互動符合新 Schema。
 
-- 所有複製出的角色（包含營地儲物箱，如它屬於該範本角色清單）都以建立者的使用者 ID 作為擁有人。
-- 物品的擁有人應映射至新戰役中對應的新角色 ID，不得仍引用範本角色 ID。
-- 為新戰役及複製出的角色、物品產生不衝突的新 ID；不可假設資料列只靠 `campaign_id` 就能避免主鍵或唯一約束衝突。
-- 保留範本中預期的角色資料、背包內容、貨幣與物品屬性；確認範本本身不會被建立流程修改。
-- 空白戰役不得因「資料列為空」而被同步 Hook 自動補上示範資料。
+### 階段四：移除預設戰役特例 — 待執行
 
-### 建立流程的原子性與授權
+- 移除大廳固定示範戰役卡片與預設戰役專用過濾。
+- 檢查角色權限 Hook、背包頁、設定頁、角色設定面板、同步 Hook 和 `.github/copilot-instructions.md`。
+- 移除 `default` 專用假資料、操作限制及自動回填；保留通用訪客／離線退避。
+- 在不再依賴 `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 做客戶端回填後，評估如何保留或移除前端展示 seed。Edge Function 需繼續使用相同資料來源或一份唯一權威種子。
 
-建議以資料庫交易函式或專案既有的可信任後端建立流程，一次完成：
+### 階段五：隔離環境驗收及手動上線 — 待執行
 
-1. 驗證目前使用者已登入，並且有權使用所選範本。
-2. 建立戰役及 DM 成員。
-3. 複製角色並將角色擁有人設為目前使用者。
-4. 建立範本角色 ID 至新角色 ID 的映射。
-5. 複製物品並以映射後的角色 ID 設定擁有人。
+- 維護者在隔離 Supabase 專案核對 Schema、套用 migration、部署 Edge Function 並驗證 Secrets；此階段不由程式碼任務自動部署。
+- 執行建團成功／失敗回滾、service-role 權限、邀請加入、RLS、Realtime、跨戰役物品／錢包隔離驗收。
+- 執行 `npm run typecheck`、`npm run lint`、相關 E2E 與 `npm run build`；端對端測試應 mock Edge Function，不接真實 Supabase。
 
-所有步驟應在同一交易中完成；任一步驟失敗都應回滾，避免留下沒有成員、角色或物品的半成品戰役。範本應允許讀取但不允許一般使用者修改或刪除，並確認 RLS／資料庫函式採用符合專案規範的安全方式。
+## 驗收清單
 
-## 分階段執行
+- 無 `campaign_templates` 或 template 相關資料表；不建立 `default` campaign。
+- `sample` 建團有 3 個真正角色、9 件物品；不將 camp-chest 寫成角色。`blank` 建團不建立角色／物品，camp-chest 錢包五幣種皆為零。
+- 每名 sample 角色的 `user_id` 及 `campaigns.dm_id` 指向經驗證登入者；成員列的 `user_id` 維持 UUID。
+- 所有物品 campaign_id 指向新戰役；角色物品 owner 重新映射；camp-chest 物品若有，owner 為 camp-chest 且不私人。
+- 未登入、錯誤輸入或資料庫錯誤不可留下半成品；authenticated／anon 不能直接呼叫建團 RPC。
+- 非成員無法讀取其他戰役、錢包、物品或 Realtime 事件；有效邀請碼可加入、無效邀請碼失敗、重複加入不會改變原角色。
+- UI 保留 camp-chest 專屬呈現與存取公共物品／貨幣互動，沒有 owner／private 的角色行為，不跨 campaign 顯示或寫入資料。
+- 訪客、未設定 Supabase 和離線模式保有已支援的退避行為。
 
-### 階段一：確認遷移範圍及資料保留政策
+## 手動部署與操作說明
 
-- 確認所有含 `campaign_id`、角色 ID、物品擁有人或權限外鍵的資料表。
-- 查明目前資料庫中的 `default` 戰役、成員、角色、物品、權限及其他相依資料。
-- 確認舊預設戰役是否曾被使用者修改；不要把資料庫現有內容直接假設為乾淨的初始範本。
-- 備份舊資料並界定哪些示範內容要遷入範本、哪些使用者資料要保留或另行處理。
-- 選定並沿用正式的資料庫遷移工具與部署流程。
-
-**完成條件：** 有完整的相依資料清單、回復方案及資料處理決策，尚未刪除舊資料。
-
-### 階段二：建立資料庫範本及安全存取
-
-- 新增獨立範本結構，遷入經確認的示範角色和物品。
-- 定義範本的讀取、修改和刪除權限；一般客戶端只能讀取可用範本。
-- 建立經授權且具交易性的範本複製流程。
-- 在資料庫測試環境驗證角色擁有人、角色 ID 映射、物品擁有人映射與交易回滾。
-
-**完成條件：** 未接前端前，已能在測試環境以合法使用者建立完整範本戰役，且範本資料不變。
-
-### 階段三：接上大廳建立介面
-
-- 在建立戰役對話框增加範本選擇，提供空白戰役及示範範本。
-- 載入範本失敗、建立失敗時呈現明確錯誤，不得成功導向不完整戰役。
-- 移除前端直接以硬編碼陣列建立角色和物品的流程。
-- 驗證建立後的戰役在大廳列表正常顯示，DM 身分依成員資料判定。
-
-**完成條件：** 範本與空白戰役都能經正式流程建立，且資料與擁有人正確。
-
-### 階段四：移除程式中的預設戰役特例
-
-- 移除大廳的固定示範卡片與 `id === 'default'` 過濾。
-- 移除角色權限 Hook、背包頁、設定頁及角色設定面板內與 `default` 有關的例外分支。
-- 移除設定頁為預設戰役產生的假成員、假角色、假邀請碼和限制操作邏輯。
-- 調整同步 Hook：明確區分資料庫空集合與本地／訪客初始狀態，不再自動寫入預設角色與物品。
-- 保留 `!supabase`、訪客及其他已支援的離線退避行為，但不再以 `campaignId` 特殊值作為離線開關。
-- 移除不再使用的硬編碼示範常數，更新開發指引。
-
-**完成條件：** 全專案搜尋不再有 `campaignId === 'default'` 等預設戰役業務判斷；必要的通用 UI variant 或無關文字不應誤刪。
-
-### 階段五：清理舊資料與驗收
-
-- 在範本部署、前端切換及備份確認後，按遷移順序清理舊 `default` 戰役與其專屬相依資料。
-- 先確認外鍵 `ON DELETE CASCADE` 的實際涵蓋範圍；不要假設所有資料都會自動清理。
-- 若舊戰役中有非示範使用者資料，依階段一決議保留、匯出或通知處理，不要無條件刪除。
-- 在測試環境重跑遷移與清理驗證，再部署至正式資料庫。
-
-**完成條件：** 舊預設戰役及其應清理資料已不存在；範本保留且建立新戰役流程正常。
-
-## 測試與驗收清單
-
-### 前端與端對端測試
-
-- 大廳不顯示「博德之門：腦噬者危機 (預設戰役)」固定卡片。
-- 大廳正常列出使用者建立或加入的戰役。
-- 建立空白戰役後，角色及物品為空，且同步不會補入示範資料。
-- 選擇示範範本建立戰役後，預期角色、物品及貨幣資料完整。
-- 範本建立的每一個角色（含營地儲物箱，如有）之 `userId` 均等於建立者。
-- 每件物品的擁有人均指向新戰役內的角色，而不是範本角色。
-- 建立流程失敗會顯示明確錯誤，不會跳轉至半成品戰役。
-- 一般 DM／玩家的設定、邀請、角色刪除和角色移轉行為由一般權限規則決定，不依賴特殊戰役 ID。
-- 未設定 Supabase、訪客和離線模式仍可按既有設計退避。
-
-### 資料庫與安全性測試
-
-- 未授權使用者不可讀取私有範本、不可建立不允許使用的範本。
-- 一般使用者不可修改或刪除範本資料。
-- 建立者不能偽造其他使用者作為角色擁有人。
-- 任一複製步驟失敗時，戰役、成員、角色、物品皆回滾。
-- 不同戰役複製相同範本時，主鍵及唯一鍵不衝突。
-- 清理舊戰役資料時沒有留下孤兒資料，也沒有誤刪範本或其他戰役資料。
-- 所有 RLS 政策遵守專案避免自我遞迴的規則。
-
-## 主要風險及建議
-
-1. **舊預設戰役可能已被修改。** 先備份及比對現存資料，再決定範本來源；不要直接把正式資料庫的 `default` 內容覆蓋成程式內原始種子資料。
-2. **跨戰役複製容易留下舊 ID 關聯。** 要明確建立舊角色 ID 至新角色 ID 的映射，再重寫物品擁有人和其他引用欄位。
-3. **只刪除前端判斷不足以移除根因。** `useCampaignSync` 的空資料回填行為必須一併調整，否則移除示範常數後可能仍有不一致的空戰役初始化。
-4. **客戶端逐表寫入不具原子性。** 優先採用資料庫交易函式或既有可信任後端流程，並明確呈現錯誤。
-5. **資料庫部署方式尚待確認。** 目前程式庫中沒有找到已提交 SQL 遷移檔；開始實作前先確認 Supabase 專案實際的遷移及部署慣例。
-6. **營地儲物箱需明確定義。** 確認它是每個新戰役要複製的範本角色、由建立流程固定產生，或由既有初始化邏輯提供；不可同時由範本與程式建立而造成重複。
-7. **舊連結與收藏可能仍指向 `default`。** 清理前確認是否需要顯示友善的不存在戰役提示或導回大廳，避免保留特殊資料以支援過時連結。
-
-## 建議的實作順序摘要
-
-先確認遷移工具和現有資料 → 備份並確定範本內容 → 建立受保護的範本資料及原子複製流程 → 接上建立戰役 UI → 移除所有預設戰役分支與硬編碼資料 → 執行端對端及資料庫測試 → 最後清理舊 `default` 資料。
-
-這個順序可先確保新範本流程完整可用，再移除舊流程和資料，降低部署期間無法建立戰役或遺失使用者資料的風險。
+詳細 Schema 前置檢查、migration dry-run、Edge Function 部署、secrets 管理及手動驗收步驟，見 [database-template-migration.md](./database-template-migration.md)。執行任何 SQL 或部署前，維護者須確認 Supabase project ref 和遠端 migration history。

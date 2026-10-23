@@ -71,7 +71,7 @@ test('邀請註冊可檢查密碼一致並接受邀請', async ({ page }) => {
 });
 
 test('大廳可建立戰役並進入該戰役', async ({ page }) => {
-	const { requests } = await mockSupabase(page);
+	const { requests, functionRequests } = await mockSupabase(page);
 	await seedAuthenticatedSession(page);
 	await page.goto('/');
 
@@ -82,8 +82,46 @@ test('大廳可建立戰役並進入該戰役', async ({ page }) => {
 	await dialog.getByLabel('戰役名稱').fill('Playwright 隔離測試戰役');
 	await dialog.getByRole('button', { name: '確認建立戰役' }).click();
 
-	await expect(page).toHaveURL(/\/campaigns\/campaign-\d+$/);
-	expect(requests).toContain('POST /rest/v1/campaigns');
+	await expect(page).toHaveURL(/\/campaigns\/mock-created-campaign$/);
+	expect(requests).toContain('POST /functions/v1/create-campaign');
+	expect(functionRequests).toHaveLength(1);
+	const payload = functionRequests[0] as {
+		name: string;
+		template: string;
+		seed: {
+			characters: { id: string }[];
+			items: unknown[];
+			camp_chest_currency: Record<string, number>;
+		};
+	};
+	expect(payload.name).toBe('Playwright 隔離測試戰役');
+	expect(payload.template).toBe('sample');
+	expect(payload.seed.characters).toHaveLength(3);
+	expect(payload.seed.characters.map((character) => character.id)).not.toContain(
+		'camp-chest',
+	);
+	expect(payload.seed.items).toHaveLength(9);
+	expect(payload.seed.camp_chest_currency).toEqual({
+		pp: 0,
+		gp: 0,
+		ep: 0,
+		sp: 0,
+		cp: 0,
+	});
+});
+
+test('大廳建立戰役失敗會顯示伺服器錯誤且不導向', async ({ page }) => {
+	await mockSupabase(page, { createCampaignError: '資料庫建立失敗' });
+	await seedAuthenticatedSession(page);
+	await page.goto('/');
+
+	await page.getByRole('button', { name: '建立新戰役 (DM)' }).click();
+	const dialog = page.getByRole('dialog', { name: '建立新戰役 (DM)' });
+	await dialog.getByLabel('戰役名稱').fill('失敗測試戰役');
+	await dialog.getByRole('button', { name: '確認建立戰役' }).click();
+
+	await expect(page.getByTestId('lobby-error')).toHaveText('資料庫建立失敗');
+	await expect(page).toHaveURL('/');
 });
 
 test('大廳對話框可用 Escape 關閉並將焦點還給觸發按鈕', async ({ page }) => {
@@ -115,9 +153,7 @@ test('大廳可用邀請碼加入戰役', async ({ page }) => {
 	await dialog.getByRole('button', { name: '確認加入' }).click();
 
 	await expect(page).toHaveURL(/\/campaigns\/mock-campaign-id$/);
-	expect(requests).toContain(
-		'GET /rest/v1/campaigns?select=id%2Cname&invite_code=eq.TESTCODE',
-	);
+	expect(requests).toContain('POST /rest/v1/rpc/join_campaign_by_invite_code');
 });
 
 test('大廳帳號設定與返回大廳連結可導覽', async ({ page }) => {

@@ -1,0 +1,74 @@
+# 資料庫與 Edge Function 手動部署
+
+本次不建立 `campaign_templates` 或其他範本資料表。前端將選用的範例內容放入請求 body，呼叫 `create-campaign` Edge Function；Function 驗證登入者與 payload 格式，再呼叫受限的 PostgreSQL 交易 RPC，一次建立戰役、DM 成員、角色與物品。SQL 只提供維護者手動部署；本次不連線或執行任何 SQL。
+
+## 部署前檢核
+
+1. 在目標 Supabase 專案確認既有 `campaigns`、`campaign_members`、`characters`、`inventory_items` 等資料表與 Schema 保留。此處假設資料列已清空，不代表資料表也已刪除。
+2. 核對 `campaigns.id`、`campaigns.dm_id`、角色及物品 ID／`campaign_id` 為 `text`，`campaign_members.user_id` 為 `uuid`，並比對 `external/schema.md` 及 `supabase/migrations/20261023000000_existing_schema_baseline.sql`。基線 migration 只驗證保留中的 Schema，不會從空資料庫建立表格。
+3. 確認所有 `inventory_items.campaign_id` 均有值且指向既有戰役。增量 migration 不推測未知的戰役歸屬；遇到 `NULL` 或既有非 cascade 外鍵時會停止，先由維護者處理。
+4. 核對遠端 migration history。如歷史版本與此 repo 不一致，先處理基線／版本對齊，不可直接標記 migration 已套用。
+5. 先在隔離的 Supabase 專案驗證 SQL、RLS、函式權限和 Edge Function，再部署正式環境。
+
+## 手動套用資料庫 migration
+
+維護者在已登入並連結正確專案的工作站檢視基線及 [20261023000001_campaign_creation_and_security.sql](../supabase/migrations/20261023000001_campaign_creation_and_security.sql)，再按維護者的 migration 流程套用。使用 Supabase CLI 時可先檢視計畫：
+
+```sh
+supabase migration list --linked
+supabase db push --dry-run --linked
+```
+
+核對 CLI 顯示的 project ref 和 migration 清單後，才由維護者明確執行：
+
+```sh
+supabase db push --linked
+```
+
+此 SQL 會新增 `campaigns.camp_chest_currency`；強制 `inventory_items.campaign_id`、外鍵、索引及 camp-chest 不可設私人等限制；限制 campaign、角色、物品、成員、邀請及角色權限資料依 campaign 成員資格存取；玩家只能更新 campaign 的公共營地箱錢包，DM 才能更新其他 campaign 欄位或刪除戰役。直接建立 campaign 或 campaign member 列會被限制，需使用安全函式。Migration 另提供邀請碼加入 RPC、僅 `service_role` 可執行的建團 RPC，並確認 `campaigns` 在 `supabase_realtime` publication 中。它不建立範本表、不放入範例 seed，也不建立 `default` 戰役。
+
+## 部署 Edge Function
+
+1. 維護者確認資料庫 migration 已成功套用，`create_campaign_from_seed(text, uuid, jsonb)` 僅授予 `service_role` 執行。
+2. 透過 Supabase Dashboard 或 CLI 的 secrets 管理機制確認 Edge Function 可取得 `SUPABASE_URL`、`SUPABASE_ANON_KEY` 及 `SUPABASE_SERVICE_ROLE_KEY`。service role key 僅能存在伺服器端，不能放入 Vite 環境變數、前端程式碼或版本控制。
+3. 使用 CLI 部署前先確認已連結正確專案：
+
+   ```sh
+   supabase functions deploy create-campaign --project-ref <正確的專案參照>
+   ```
+
+4. `supabase/config.toml` 對此 function 開啟 gateway JWT 驗證；程式內仍以 Supabase Auth `getUser(token)` 驗證實際登入者，並只把該 user UUID 傳入交易 RPC。函式不接受客戶端提供任意種子資料或建立者 ID。
+
+前端從 `src/data.ts` 組出 3 名真正角色與 9 件示範物品後放入 `seed`；會排除虛擬 `camp-chest`，不寫入角色列。Function 不自行產生或替換 seed，而是將收到的內容傳給交易 RPC。選用 `sample` 時送出範例內容；`blank` 則送出空角色／物品陣列與零餘額公共錢包。Function 限制陣列數量及資料形狀；SQL 交易為完整原子操作，任何角色／物品欄位錯誤都會回滾整筆建立。
+
+## 前端整合與邀請碼
+
+- 戰役大廳以 Supabase `functions.invoke('create-campaign', { body: { name, template: 'sample' } })` 建立示範戰役，使用 RPC 回傳的新戰役 ID 導向頁面；錯誤會顯示給使用者，不會導向半成品。
+- 空白戰役呼叫同一 Edge Function 並傳入 `template: 'blank'`。此選項已由伺服器端支援；若大廳提供空白選項，仍須保留此 payload 契約。
+- 因 campaign row 只允許成員／DM 讀取，邀請加入必須呼叫 `join_campaign_by_invite_code`，不可再用前端直接查詢 `campaigns.invite_code` 後寫入成員表。
+- 既有資料表與 `campaigns` RLS 還需依照專案 ACL 規則，持續驗證角色、物品和 `camp_chest_currency` 的寫入權限；Realtime 僅提供資料同步，不取代授權。
+
+## camp-chest 與隔離規則
+
+- `camp-chest` 是每個戰役都有的虛擬公共儲存庫，不屬於角色或使用者，沒有私人背包／錢包；不建立 `characters` 列、不建立範本表。
+- 公共貨幣存於該戰役的 `campaigns.camp_chest_currency`；營地箱物品使用 `owner_id = 'camp-chest'`，且每列都必須帶正確的 `campaign_id`。
+- 前端所有營地箱物品查詢、排序、建立、更新、刪除、移轉及負重計算均須帶當前 `campaign_id`。跨戰役相同 owner ID 不可互通。
+- UI 保留既有 camp-chest 專用外觀與公共庫存互動：角色能存取物品及公共貨幣；不顯示角色設定、刪除、擁有人或私人欄位。公共錢包改讀寫 campaign row，並透過 Realtime 更新畫面。
+
+## 手動驗收清單
+
+- 確認資料庫沒有任何 `campaign_templates` 相關表格或 seed 資料。
+- 未登入呼叫 function 應被拒絕；錯誤名稱、未知 template、無效登入均不得建立 campaign。
+- `sample` 建團成功後有 3 名角色和 9 件物品，沒有 `camp-chest` 角色；DM、campaign member、角色 user ID 都對應已驗證登入者。
+- 每件物品的 `campaign_id` 指向剛建立的戰役，角色物品 owner 映射至新角色；camp-chest 物品若存在，維持 `owner_id = 'camp-chest'` 且非私人。
+- `blank` 建團只建立 campaign 和 DM 成員，沒有角色／物品，公共錢包五幣種皆為零。
+- 故意傳入無效物品欄位觸發 RPC 錯誤，確認 campaign、成員、角色、物品均完全回滾。
+- 一般 `authenticated`／`anon` 不能直接執行 `create_campaign_from_seed`；只有 `service_role` 有 EXECUTE 權限。
+- 有效邀請碼透過加入 RPC 後可以讀取新戰役；無效邀請碼失敗，重複加入不會改變既有成員角色。
+- 非成員無法讀取另一戰役 campaign row、物品或 Realtime 事件。不同 campaign 的 camp-chest 錢包及物品互相隔離。
+- `inventory_items.campaign_id` 不可為 NULL、不可以指向不存在 campaign；刪除 campaign cascade 清除對應物品。
+- camp-chest 物品若設 `is_private = true`，資料庫應拒絕寫入。
+
+## 部署狀態
+
+此工作階段僅編輯 migration、前端呼叫、Edge Function 與文件；沒有連線 Supabase、執行 SQL、部署 Edge Function 或存取 service role secrets。目標環境 Schema、migration history、Secrets 與資料庫／RLS 整合測試須由維護者手動確認。
