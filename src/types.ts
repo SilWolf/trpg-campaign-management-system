@@ -28,7 +28,9 @@ export interface BlacksmithItem {
 	sourceKey: string;
 	name: string;
 	category: ItemCategory;
-	subType: string;
+	subTypes: string[];
+	weaponProperties?: string[];
+	weaponMastery?: string;
 	rarity: Rarity;
 	icon: string;
 	damage: string | null;
@@ -36,7 +38,7 @@ export interface BlacksmithItem {
 	valueGp: number;
 	requiresAttunement: boolean;
 	description: string;
-	dmNotes: string;
+	source: string;
 	aliases: string[];
 	searchTerms: string[];
 }

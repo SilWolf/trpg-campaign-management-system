@@ -7,7 +7,7 @@ import type {
 	Rarity,
 } from '@/types';
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 3;
 const CATEGORIES: readonly ItemCategory[] = [
 	'Weapon',
 	'Armor',
@@ -33,12 +33,13 @@ const ITEM_KEYS = [
 	'damage',
 	'weight',
 	'description',
-	'dmNotes',
+	'source',
 	'category',
-	'subType',
+	'subTypes',
 	'valueGp',
 	'icon',
 ];
+const WEAPON_ITEM_KEYS = ['weaponProperties', 'weaponMastery'];
 const LOOKUP_KEYS = ['schemaVersion', 'catalogId', 'items'];
 const LOOKUP_ENTRY_KEYS = [
 	'sourceKey',
@@ -96,6 +97,14 @@ function readStringArray(value: unknown, label: string): string[] {
 		throw new Error(`${label} 必須是字串陣列。`);
 	}
 	return value;
+}
+
+function readNonEmptyStringArray(value: unknown, label: string): string[] {
+	const entries = readStringArray(value, label);
+	if (entries.length === 0 || entries.some((entry) => entry.trim().length === 0)) {
+		throw new Error(`${label} 必須是包含非空字串的陣列。`);
+	}
+	return entries;
 }
 
 function readCatalogId(value: unknown, label: string): string {
@@ -190,7 +199,11 @@ function readItemFile(
 	}
 	return file.items.map((item, index) => {
 		const record = readJsonRecord(item, `「${catalog.title}」第 ${index + 1} 筆物品`);
-		if (!hasExactKeys(record, ITEM_KEYS)) {
+		const expectedKeys =
+			record.category === 'Weapon'
+				? [...ITEM_KEYS, ...WEAPON_ITEM_KEYS]
+				: ITEM_KEYS;
+		if (!hasExactKeys(record, expectedKeys)) {
 			throw new Error(`「${catalog.title}」第 ${index + 1} 筆物品欄位不符來源合約。`);
 		}
 		return record;
@@ -299,6 +312,19 @@ function adaptCatalogItems(
 			record.damage === null
 				? null
 				: readString(record.damage, `${label} damage`);
+		const weaponFields =
+			category === 'Weapon'
+				? {
+						weaponProperties: readStringArray(
+							record.weaponProperties,
+							`${label} weaponProperties`,
+						),
+						weaponMastery: readNonEmptyString(
+							record.weaponMastery,
+							`${label} weaponMastery`,
+						),
+					}
+				: {};
 
 		return {
 			catalogId: catalog.catalogId,
@@ -307,7 +333,7 @@ function adaptCatalogItems(
 			sourceKey: lookup.sourceKey,
 			name,
 			category,
-			subType: readNonEmptyString(record.subType, `${label} subType`),
+			subTypes: readNonEmptyStringArray(record.subTypes, `${label} subTypes`),
 			rarity,
 			icon,
 			damage,
@@ -315,7 +341,8 @@ function adaptCatalogItems(
 			valueGp,
 			requiresAttunement: record.requiresAttunement,
 			description: readString(record.description, `${label} description`),
-			dmNotes: readString(record.dmNotes, `${label} dmNotes`),
+			source: readString(record.source, `${label} source`),
+			...weaponFields,
 			aliases: lookup.aliases,
 			searchTerms: lookup.searchTerms,
 		};

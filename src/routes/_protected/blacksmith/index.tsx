@@ -41,11 +41,11 @@ function searchableText(item: BlacksmithItem): string {
 		item.name,
 		item.category,
 		CATEGORY_LABELS[item.category],
-		item.subType,
+		...item.subTypes,
 		item.rarity,
 		RARITY_LABELS[item.rarity],
 		item.catalogTitle,
-		item.dmNotes,
+		item.source,
 		item.description,
 		...item.aliases,
 		...item.searchTerms,
@@ -285,7 +285,7 @@ function BlacksmithCatalogPage() {
 												{item.name}
 											</span>
 											<span className='mt-1 block truncate text-xs text-stone-400'>
-												{CATEGORY_LABELS[item.category]} · {item.subType}
+												{CATEGORY_LABELS[item.category]} · {item.subTypes.join('、')}
 											</span>
 											<span className='mt-2 block text-[11px] text-amber-400/80'>
 												{item.catalogTitle}
@@ -322,7 +322,7 @@ function BlacksmithCatalogPage() {
 											{selectedItem.name}
 										</h2>
 										<p className='mt-1 text-xs text-stone-400'>
-											{CATEGORY_LABELS[selectedItem.category]} · {selectedItem.subType}
+											{CATEGORY_LABELS[selectedItem.category]} · {selectedItem.subTypes.join('、')}
 										</p>
 									</div>
 								</div>
@@ -377,9 +377,9 @@ function BlacksmithCatalogPage() {
 										{selectedItem.description || '此物品沒有附加描述。'}
 									</p>
 								</div>
-								{selectedItem.dmNotes && (
+								{selectedItem.source && (
 									<p className='mt-4 border-t border-stone-800 pt-3 text-xs text-stone-500'>
-										來源標記：{selectedItem.dmNotes}
+										來源：{selectedItem.source}
 									</p>
 								)}
 							</aside>

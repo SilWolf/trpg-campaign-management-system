@@ -17,6 +17,8 @@ DEFAULT_COLUMNS = {
     "types": "类型",
     "requiresAttunement": "同调",
     "damage": "伤害",
+    "weaponProperties": "属性",
+    "weaponMastery": "武器精通",
     "weight": "重量",
     "value": "价值",
     "description": "文本",
@@ -37,7 +39,7 @@ VALUE_PATTERN = re.compile(
     rf"^\s*({NUMBER_PATTERN})\s*(CP|SP|EP|GP|PP)\s*$", re.IGNORECASE
 )
 WEIGHT_PATTERN = re.compile(
-    rf"^\s*(?:(?P<number>{NUMBER_PATTERN})\s*)?(?P<half>½)?"
+    rf"^\s*(?:(?P<number>{NUMBER_PATTERN})\s*)?(?P<fraction>[½¼¾])?"
     r"(?:\s*(?:磅|lb|lbs|pound|pounds))?"
     r"(?:\s*[（(][^（）()]*[）)])?\s*$",
     re.IGNORECASE,
@@ -79,8 +81,16 @@ def parse_args():
         metavar="FIELD=HEADER",
         help="覆寫 CSV 欄名，可重複指定",
     )
-    parser.add_argument(
+    output_mode = parser.add_mutually_exclusive_group()
+    output_mode.add_argument(
+        "--append",
+        action="store_true",
+        help="將新項目附加至既有目錄，並拒絕重複 itemId 或 sourceKey",
+    )
+    output_mode.add_argument(
         "--force",
+        "--replace",
+        dest="force",
         action="store_true",
         help="明確允許覆寫同 catalogId 的 items 與 lookup 檔",
     )
@@ -115,11 +125,12 @@ def parse_weight(value):
     if not normalized or normalized.casefold() == "none":
         return 0
     match = WEIGHT_PATTERN.match(normalized)
-    if not match or not (match.group("number") or match.group("half")):
+    if not match or not (match.group("number") or match.group("fraction")):
         raise ValueError(f"無法解析重量：{value!r}")
     weight = Decimal((match.group("number") or "0").replace(",", ""))
-    if match.group("half"):
-        weight += Decimal("0.5")
+    weight += {"½": Decimal("0.5"), "¼": Decimal("0.25"), "¾": Decimal("0.75")}.get(
+        match.group("fraction"), Decimal("0")
+    )
     if weight < 0:
         raise ValueError(f"重量不可為負數：{value!r}")
     return as_json_number(weight)
@@ -190,7 +201,9 @@ def make_item(row, columns, catalog_id, category, row_number):
     identity = "\0".join((catalog_id, source, page, name))
     item_id = "item-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
     type_value = get_value(row, columns, "types")
-    subtype = ", ".join(part.strip() for part in type_value.split(",") if part.strip())
+    subtypes = [part.strip() for part in type_value.split(",") if part.strip()]
+    if category == "Weapon":
+        subtypes = [subtype for subtype in subtypes if subtype != "武器"]
     damage = get_value(row, columns, "damage")
 
     item = {
@@ -198,7 +211,7 @@ def make_item(row, columns, catalog_id, category, row_number):
         "name": name,
         "icon": f"./images/blacksmith/catalogs/{catalog_id}/{item_id}.webp",
         "category": category,
-        "subType": subtype,
+        "subTypes": subtypes,
         "rarity": parse_rarity(get_value(row, columns, "rarity")),
         "requiresAttunement": parse_attunement(
             get_value(row, columns, "requiresAttunement")
@@ -207,8 +220,18 @@ def make_item(row, columns, catalog_id, category, row_number):
         "weight": parse_weight(get_value(row, columns, "weight")),
         "valueGp": parse_value_gp(get_value(row, columns, "value")),
         "description": description,
-        "dmNotes": source,
+        "source": source,
     }
+    if category == "Weapon":
+        weapon_mastery = get_value(row, columns, "weaponMastery")
+        if not weapon_mastery:
+            raise ValueError(f"第 {row_number} 筆武器缺少武器精通")
+        item["weaponProperties"] = [
+            part.strip()
+            for part in get_value(row, columns, "weaponProperties").split(",")
+            if part.strip()
+        ]
+        item["weaponMastery"] = weapon_mastery
     lookup = {
         "sourceKey": f"{catalog_id}:{item_id}",
         "itemId": item_id,
@@ -216,8 +239,7 @@ def make_item(row, columns, catalog_id, category, row_number):
         "aliases": [],
         "searchTerms": list(
             dict.fromkeys(
-                [part.strip() for part in type_value.split(",") if part.strip()]
-                + ([source] if source else [])
+                subtypes + ([source] if source else [])
             )
         ),
     }
@@ -226,10 +248,10 @@ def make_item(row, columns, catalog_id, category, row_number):
 
 def load_index(index_path):
     if not index_path.exists():
-        return {"schemaVersion": 1, "catalogs": []}
+        return {"schemaVersion": 3, "catalogs": []}
     with index_path.open(encoding="utf-8") as index_file:
         index = json.load(index_file)
-    if index.get("schemaVersion") != 1 or not isinstance(index.get("catalogs"), list):
+    if index.get("schemaVersion") != 3 or not isinstance(index.get("catalogs"), list):
         raise ValueError(f"既有 catalog index 結構不符：{index_path}")
     return index
 
@@ -245,13 +267,37 @@ def write_catalog(args, items, lookup_items):
     items_path = catalogs_dir / f"{catalog_id}.items.json"
     lookup_path = catalogs_dir / f"{catalog_id}.lookup.json"
     index_path = args.output_root / "catalog-index.json"
-    if not args.force and (items_path.exists() or lookup_path.exists()):
+    if args.append and not (items_path.exists() and lookup_path.exists()):
+        raise FileNotFoundError(
+            f"附加模式需要既有的 items 與 lookup 檔：{items_path}、{lookup_path}"
+        )
+    if not args.append and not args.force and (
+        items_path.exists() or lookup_path.exists()
+    ):
         raise FileExistsError(
             f"輸出檔已存在：{items_path} 或 {lookup_path}；"
-            "確認要重建同一本書後再使用 --force。"
+            "確認要附加資料時使用 --append，或確認要重建時使用 --replace。"
         )
 
     index = load_index(index_path)
+    if args.append:
+        with items_path.open(encoding="utf-8") as items_file:
+            existing_items = json.load(items_file)
+        with lookup_path.open(encoding="utf-8") as lookup_file:
+            existing_lookup = json.load(lookup_file)
+        for path, document in (
+            (items_path, existing_items),
+            (lookup_path, existing_lookup),
+        ):
+            if (
+                document.get("schemaVersion") != 3
+                or document.get("catalogId") != catalog_id
+                or not isinstance(document.get("items"), list)
+            ):
+                raise ValueError(f"既有目錄檔結構不符：{path}")
+        items = existing_items["items"] + items
+        lookup_items = existing_lookup["items"] + lookup_items
+
     item_ids = [item["itemId"] for item in items]
     source_keys = [item["sourceKey"] for item in lookup_items]
     if len(item_ids) != len(set(item_ids)):
@@ -262,7 +308,7 @@ def write_catalog(args, items, lookup_items):
     catalogs_dir.mkdir(parents=True, exist_ok=True)
     items_path.write_text(
         json.dumps(
-            {"schemaVersion": 1, "catalogId": catalog_id, "items": items},
+            {"schemaVersion": 3, "catalogId": catalog_id, "items": items},
             ensure_ascii=False,
             indent=2,
         )
@@ -271,7 +317,7 @@ def write_catalog(args, items, lookup_items):
     )
     lookup_path.write_text(
         json.dumps(
-            {"schemaVersion": 1, "catalogId": catalog_id, "items": lookup_items},
+            {"schemaVersion": 3, "catalogId": catalog_id, "items": lookup_items},
             ensure_ascii=False,
             indent=2,
         )

@@ -54,8 +54,8 @@ const readJson = async (relativePath) => {
 
 const index = await readJson('catalog-index.json');
 expectObject(index, 'catalog-index.json', ['schemaVersion', 'catalogs']);
-if (index.schemaVersion !== 1 || !Array.isArray(index.catalogs)) {
-	fail('catalog-index.json 的 schemaVersion 必須為 1，且 catalogs 必須是陣列');
+if (index.schemaVersion !== 3 || !Array.isArray(index.catalogs)) {
+	fail('catalog-index.json 的 schemaVersion 必須為 3，且 catalogs 必須是陣列');
 }
 
 const catalogIds = new Set();
@@ -88,7 +88,7 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 			'items',
 		]);
 		if (
-			document.schemaVersion !== 1 ||
+			document.schemaVersion !== 3 ||
 			document.catalogId !== catalog.catalogId ||
 			!Array.isArray(document.items)
 		) {
@@ -104,27 +104,44 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 		'damage',
 		'weight',
 		'description',
-		'dmNotes',
+		'source',
 		'category',
-		'subType',
+		'subTypes',
 		'valueGp',
 		'icon',
 	];
 	const itemsById = new Map();
 	for (const [itemIndex, item] of itemsDocument.items.entries()) {
 		const itemLabel = `${catalog.catalogId} items[${itemIndex}]`;
-		expectObject(item, itemLabel, itemKeys);
+		const expectedItemKeys =
+			item.category === 'Weapon'
+				? [...itemKeys, 'weaponProperties', 'weaponMastery']
+				: itemKeys;
+		expectObject(item, itemLabel, expectedItemKeys);
 		for (const key of [
 			'itemId',
 			'name',
 			'rarity',
 			'description',
-			'dmNotes',
+			'source',
 			'category',
-			'subType',
 			'icon',
 		]) {
 			expectString(item[key], `${itemLabel}.${key}`);
+		}
+		expectStringArray(item.subTypes, `${itemLabel}.subTypes`);
+		if (
+			item.subTypes.length === 0 ||
+			item.subTypes.some((subType) => subType.trim().length === 0)
+		) {
+			fail(`${itemLabel}.subTypes 必須包含非空字串`);
+		}
+		if (item.category === 'Weapon') {
+			expectStringArray(item.weaponProperties, `${itemLabel}.weaponProperties`);
+			if (item.weaponProperties.some((property) => property.trim().length === 0)) {
+				fail(`${itemLabel}.weaponProperties 不可包含空字串`);
+			}
+			expectString(item.weaponMastery, `${itemLabel}.weaponMastery`);
 		}
 		if (typeof item.requiresAttunement !== 'boolean') {
 			fail(`${itemLabel}.requiresAttunement 必須是布林值`);

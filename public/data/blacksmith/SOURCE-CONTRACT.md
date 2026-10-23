@@ -4,7 +4,7 @@
 
 ## 檔案與版本
 
-- `catalog-index.json` 是目錄清單；`schemaVersion` 為整數 `1`。
+- `catalog-index.json` 是目錄清單；`schemaVersion` 為整數 `3`。
 - 每個目錄由 `catalogId`、顯示用 `title`、`itemsFile` 與 `lookupFile` 指定。資料檔路徑相對於 `public/data/blacksmith/`，目前指向 `./catalogs/` 下的 JSON。
 - 每本目錄的物品檔與 lookup 檔皆包含整數 `schemaVersion` 和相同的 `catalogId`。
 - 不同目錄即使有相同 `itemId`，仍是不同來源；識別一筆來源資料須使用 `catalogId + itemId`。
@@ -18,7 +18,7 @@
 | `itemId` | 非空字串 | 只在同一目錄內唯一；不是 `InventoryItem.id` |
 | `name` | 非空字串 | 來源顯示名稱 |
 | `category` | 非空字串 | 現有值遵循應用程式分類字串；不得由此推斷物品用途分類正確 |
-| `subType` | 非空字串 | 來源子類別，可包含逗號分隔文字 |
+| `subTypes` | 非空字串陣列 | 來源類型依逗號拆分並去除前後空白 |
 | `rarity` | 非空字串 | 目前值為 `Common` |
 | `icon` | 非空字串 | 目前為 `./images/...` 靜態資產路徑 |
 | `damage` | 字串或 `null` | 無傷害資料以 `null` 表示，不可自行補成空字串 |
@@ -26,7 +26,9 @@
 | `valueGp` | 不小於 0 的整數 | 以 GP 表示 |
 | `requiresAttunement` | 布林值 | 調諧需求 |
 | `description` | 字串 | 來源描述 |
-| `dmNotes` | 字串 | 目前填有 `PHB'24`、`DMG'24` 等來源標記 |
+| `source` | 字串 | 目前填有 `PHB'24`、`DMG'24` 等來源標記 |
+
+`category` 為 `Weapon` 時，另須包含 `weaponProperties`（字串陣列，可為空）與 `weaponMastery`（非空字串）。武器 `subTypes` 不含泛用標籤「武器」。其他類別不得包含這兩個欄位。
 
 現行 schema 版本不接受未列出的物品欄位；來源格式有增修時，須先核對資料並明確更新合約與版本，不得靜默丟棄欄位。來源目前未提供 `mastery`、`ac`、`maxCharges`、`effects`、`flavor`、`affixes` 等內容；不得將缺欄位解讀為來源明確提供了空值或預設值。
 
@@ -44,12 +46,12 @@
 
 這些 JSON 是隨專案提供的唯讀規則書目錄，不含作者帳號、分享狀態或戰役歸屬。讀取後應轉成物品定義；匯入戰役時需複製定義、產生新的 `InventoryItem.id`，並另外初始化 `campaignId`、`ownerId`、數量、裝備／調諧狀態、目前充能、鑑定狀態等實例欄位。不得把 lookup 的 `itemId` 或 `sourceKey` 當成戰役實例 ID。
 
-`dmNotes` 的書籍縮寫只能作為現有來源標記；目前 JSON 沒有授權名稱、授權版本或授權 URL 欄位，因此不能僅憑 `catalogId` 或書籍縮寫判定內容授權。新增或發布來源內容前，仍須由維護者確認來源與授權資訊。
+`source` 的書籍縮寫只能作為現有來源標記；目前 JSON 沒有授權名稱、授權版本或授權 URL 欄位，因此不能僅憑 `catalogId` 或書籍縮寫判定內容授權。新增或發布來源內容前，仍須由維護者確認來源與授權資訊。
 
 ## 目前資料集核對結果與範圍限制
 
-目前 `dnd-2024-srd-5.2` 有 91 筆物品及 91 筆 lookup；`itemId`、`sourceKey` 均無重複，lookup 的 ID、名稱與來源物品全部相符。每筆 `category` 都是 `Consumable`、`rarity` 都是 `Common`、`damage` 都是 `null`；91 筆 `aliases` 均為空。所有圖示路徑目前均能在 `public/` 下找到對應檔案。
+目前 `dnd-2024-srd-5.2` 有 131 筆物品及 131 筆 lookup；`itemId`、`sourceKey` 均無重複，lookup 的 ID、名稱與來源物品全部相符。其中 91 筆 `Consumable` 與 40 筆 `Weapon`；武器資料包含來源提供的 `damage`、`weaponProperties` 與 `weaponMastery`。91 筆既有 `aliases` 均為空。
 
-這批資料沒有可確認為武器、護甲、可充能物品或帶附魔詞條的樣本；亦沒有非 `null` 的傷害欄位樣本。因開發規劃要求不得自行補寫未提供的規則書內容，這些情境的來源欄位與轉換規則尚未由實際資料驗證。下一批來源資料提供後，須補做欄位核對，再擴充本合約；在此之前不得宣稱已完成上述情境的來源覆蓋。
+目前資料仍沒有可確認為護甲、可充能物品或帶附魔詞條的樣本。因開發規劃要求不得自行補寫未提供的規則書內容，這些情境的來源欄位與轉換規則尚未由實際資料驗證。下一批來源資料提供後，須補做欄位核對，再擴充本合約；在此之前不得宣稱已完成上述情境的來源覆蓋。
 
 可用 `npm run validate:blacksmith-source` 驗證現有檔案結構、型別及 items／lookup 對照。

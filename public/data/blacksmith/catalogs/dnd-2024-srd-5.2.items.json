@@ -1,5 +1,5 @@
 {
-	"schemaVersion": 1,
+	"schemaVersion": 3,
 	"catalogId": "dnd-2024-srd-5.2",
 	"items": [
 		{
@@ -10,9 +10,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "吸入這種毒藥的生物必須成功通過一次DC 15的體質豁免，否則將陷入中毒狀態8小時。以此中毒期間該生物還會陷入昏迷狀態。該生物會在受到傷害、或是其他生物用一個動作來將其搖醒時甦醒。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (吸入)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (吸入)"
+			],
 			"valueGp": 300,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c8494aecf5bc9b72.webp"
 		},
@@ -24,9 +27,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "一本書會記載虛構或非虛構的內容。如果你在某些事物上參考了一本內容準確而非虛構的書，你在相關事物上的智力（奧祕、歷史、自然或宗教）檢定則獲得 +5 的加值。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 25,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-305b7e34a70ca2a7.webp"
 		},
@@ -38,9 +43,11 @@
 			"damage": null,
 			"weight": 35,
 			"description": "你可以使用便攜式攻城錘撞破一扇門。當你這麼做時，你在力量檢定上獲得 +4 加值。其他一名角色可以協助你使用攻城錘，並使你這次檢定具有優勢。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 4,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9804cba393c5fc93.webp"
 		},
@@ -52,9 +59,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "以一個操作動作，你可以吹響一支信號笛，並使信號笛發出 600 尺外都可以聽見的響聲。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-7a6a9cc804a4c97b.webp"
 		},
@@ -66,9 +75,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "服用這種毒藥的生物需要進行一次DC 10的體質豁免。豁免失敗則受6（1d12）毒素傷害並陷入中毒狀態24小時。豁免成功則只受半傷。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (服用)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (服用)"
+			],
 			"valueGp": 150,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-346d60bd33f5a221.webp"
 		},
@@ -80,9 +92,11 @@
 			"damage": null,
 			"weight": 3,
 			"description": "一個醫療包有十次使用次數。以一個操作動作，你可以花費一次使用次數用來穩定一名生命值爲0的陷入昏迷的生物的傷勢。你這麼做時無需進行感知（醫藥）檢定。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ad36df259e42b7d2.webp"
 		},
@@ -94,9 +108,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "服用這種毒藥的生物不會立即出現異樣，其症狀會一直潛伏到午夜鐘聲敲響時。任何能夠解除中毒狀態的效應都可以在此之前中和午夜之淚，然而如果毒素在午夜之前尚未中和，該生物就要進行一次DC 17的體質豁免，豁免失敗則受到31（9d6）點毒素傷害，豁免成功則傷害減半。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (服用)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (服用)"
+			],
 			"valueGp": 1500,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e6bf339877fc508b.webp"
 		},
@@ -108,9 +125,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "口糧由適合長途旅行攜帶的食物組成，包含肉乾、風乾水果、餅乾和堅果等。不進食的危害詳見\"飢餓\"。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-75c682678b50a970.webp"
 		},
@@ -122,9 +141,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "一個吊桶能裝入至多半立方尺的東西。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-28f6129acddd7bcc.webp"
 		},
@@ -136,9 +157,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "服用該毒藥的生物必須成功通過一次DC 11的體質豁免，否則將陷入中毒狀態1小時。以此中毒的生物不能故意說謊。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (服用)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (服用)"
+			],
 			"valueGp": 150,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f9c76317bd6221e3.webp"
 		},
@@ -150,9 +174,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "當你執行攻擊動作時，你可以將你的一次攻擊替換爲丟出一扁瓶聖水。你可以選擇位於你20尺內可見的一個生物作爲目標。該目標必須通過一次敏捷豁免（DC 8+你的敏捷調整值+你的熟練加值），並且如果這個目標是邪魔或亡靈生物，失敗時承受2d8點光耀傷害。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 25,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-4cbdf4ecc222840f.webp"
 		},
@@ -164,9 +190,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "如果你在地圖所繪製的地點參考了一張準確的地圖，你爲辨認位置所進行的感知（求生）檢定獲得 +5 的加值。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f08a574c7f2aa8d6.webp"
 		},
@@ -178,9 +206,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "一個地圖或卷軸匣至多能存放10張紙張或5張羊皮紙。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-35d7e74ed50d8793.webp"
 		},
@@ -192,9 +222,11 @@
 			"damage": null,
 			"weight": 55,
 			"description": "地城套組包含以下物品：揹包、鐵蒺藜、撬棍、2 扁瓶燃油、10 天份的口糧、繩索、火絨盒、10 支火把和水袋。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 12,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-3f49387c67f8ff2a.webp"
 		},
@@ -206,9 +238,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "以一個附贈動作，你可以將一小瓶基礎毒藥塗抹在一把武器或至多三枚彈藥上。當一個生物受到由塗過毒的武器或彈藥所造成的穿刺或劈砍傷害時，該生物將受到額外1d4點毒素傷害。毒藥一旦被塗抹，毒效只會持續1分鐘或直至造成了額外傷害。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥",
+			"subTypes": [
+				"冒險用品",
+				"毒藥"
+			],
 			"valueGp": 100,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-240bebc75ab52114.webp"
 		},
@@ -220,9 +255,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "墨水一般裝在 1 盎司的瓶子裏，足夠撰寫 500 頁的內容。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 10,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-06f3339e2a2c8bbf.webp"
 		},
@@ -234,9 +271,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "墨水筆可以使用墨水來寫字或繪畫。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8a099a1e1882ec24.webp"
 		},
@@ -248,9 +287,11 @@
 			"damage": null,
 			"weight": 4,
 			"description": "壺具有一加侖的容量。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ccca640c4d989233.webp"
 		},
@@ -262,9 +303,11 @@
 			"damage": null,
 			"weight": 39,
 			"description": "外交套組包含以下物品：箱子、高檔服裝、墨水、5 支墨水筆、油燈、2 個地圖或卷軸匣、4 扁瓶燃油、5 張紙張、5 張羊皮紙、香水和火絨盒。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 39,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-888d036c63254e1e.webp"
 		},
@@ -276,9 +319,11 @@
 			"damage": null,
 			"weight": 22,
 			"description": "學者套組包含以下物品：揹包、書籍、墨水、墨水筆、油燈、10 扁瓶燃油、10 張羊皮紙和火絨盒。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 40,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8db1789c881c2836.webp"
 		},
@@ -290,9 +335,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "一個小包能夠至多裝入6磅重、五分之一立方尺大的東西。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e84d4fadb3f98c65.webp"
 		},
@@ -304,9 +351,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "小瓶具有 4 盎司容量。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-734362ecdeaa8c2c.webp"
 		},
@@ -318,9 +367,11 @@
 			"damage": null,
 			"weight": 20,
 			"description": "帳篷可以睡下兩個小型或中型的生物。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-399b6c4711eda40b.webp"
 		},
@@ -332,9 +383,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "一個弩矢匣至多能存放20根弩矢。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-bfaab92767d3b72d.webp"
 		},
@@ -346,9 +399,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "當你執行攻擊動作時，你可以將你的一次攻擊替換爲丟出一小瓶強酸。你可以選擇位於你20尺內可見的一個生物或物件作爲目標。該目標必須通過一次敏捷豁免（DC 8+你的敏捷調整值+你的熟練加值），否則承受2d6點強酸傷害。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 25,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-2bb32dd7727d2f98.webp"
 		},
@@ -360,9 +415,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "吸入這種毒藥的生物必須成功通過一次DC 15的體質豁免，否則將陷入中毒狀態1小時，以此中毒期間該生物還會陷入目盲狀態。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (吸入)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (吸入)"
+			],
 			"valueGp": 250,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b4264e135c8a2248.webp"
 		},
@@ -374,9 +432,11 @@
 			"damage": null,
 			"weight": 4,
 			"description": "若你穿着對應的戲服，你爲模仿他人或模仿某一類人所作的任何屬性檢定都具有優勢。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a5c84511457aac54.webp"
 		},
@@ -388,9 +448,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "一個扁瓶具有 1 品脫容量。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8bcd46afcd2300fa.webp"
 		},
@@ -402,9 +464,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "以一個附贈動作，你可以喝下一小瓶抗毒劑來使你在避免或結束中毒狀態的豁免中具有優勢，持續一小時。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 50,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f6994e45cf10d909.webp"
 		},
@@ -416,9 +480,11 @@
 			"damage": null,
 			"weight": 25,
 			"description": "以一個操作動作，你可以在某處設下捕獵陷阱。捕獵陷阱是一組帶有鋸齒的鐵環，當一個生物踩到中心的壓力板時，兩邊的鋸齒會迅速合上。這組陷阱需要用沉重的鏈條固定至某個無法移動的物件上——例如大樹或刺入地面的固定釘。踩到壓力板的生物必須通過一次DC 13的敏捷豁免，否則受到1d4點穿刺傷害，並且速度降至0，直至他的下一回合開始。直到該生物掙脫陷阱前，它的移動範圍會被鏈條的長度限制（通常爲3尺）。一個生物可以使用它的動作來進行一次DC 13的力量（運動）檢定，檢定成功時能夠讓自己或自己觸及範圍內的一個其他生物脫困。每次檢定失敗都會導致被困生物受到1點穿刺傷害。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-175a6f3788f36bce.webp"
 		},
@@ -430,9 +496,11 @@
 			"damage": null,
 			"weight": 3,
 			"description": "當你執行攻擊動作，你可以將你的一次攻擊替換爲丟出一張捕網。你可以選擇位於你15尺內可見的一個生物作爲目標。該目標必須通過一次敏捷豁免（DC 8+你的敏捷調整值+你的熟練加值），否則陷入束縛狀態，直至掙脫。體型是巨型及以上的目標將自動通過豁免。\n\n被束縛的目標或者位於目標5尺內的生物，可以通過一個動作來進行一次DC 10的力量（運動）檢定來掙脫捕網。若檢定成功，被束縛的生物將被解放。摧毀捕網（AC 10；5 HP；免疫鈍擊、毒素和心靈傷害）也能解放被困目標並結束捕網的效果。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c7d54e4653b85a10.webp"
 		},
@@ -444,9 +512,11 @@
 			"damage": null,
 			"weight": 55,
 			"description": "探索套組包含以下物品：揹包、鋪蓋、2 扁瓶燃油、10 份口糧、繩索、火絨盒、10 支火把和水袋。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 10,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-adcb1525fc35e9ae.webp"
 		},
@@ -458,9 +528,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "在能夠撬動的地方使用撬棍可以給予你在這方面的力量檢定優勢。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-09a5726593d89daa.webp"
 		},
@@ -472,9 +544,11 @@
 			"damage": null,
 			"weight": 12,
 			"description": "一套攀爬工具包含鞋子包頭、手套、巖釘和繫帶。以一個操作動作，你可以使用攀爬工具錨定自己，此時你不會從錨定處摔落超過25尺，且在使用附贈動作解除錨定前無法從錨定處向外移動超過25尺。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 25,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-90b1d266334772e6.webp"
 		},
@@ -486,9 +560,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "使用放大鏡時，你爲鑑定或檢查精密物品所作的任何屬性檢定都會具有優勢。想要使用放大鏡點火，需要一束如同陽光般明亮的強光用於聚焦，還需要用於點燃的火絨，隨後需要大約 5 分鐘的時間來生火。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 100,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-00dd64f066f23e90.webp"
 		},
@@ -500,9 +576,11 @@
 			"damage": null,
 			"weight": 4,
 			"description": "旅行服裝是爲應對在多種環境中的旅途而設計的結實服裝。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d163de3ec4e1dafb.webp"
 		},
@@ -514,9 +592,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "通過望遠鏡看到的物件要比原先的尺寸大上兩倍。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1000,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-03d1973297ee3aef.webp"
 		},
@@ -528,9 +608,11 @@
 			"damage": null,
 			"weight": 70,
 			"description": "一個木桶能夠至多裝入 40 加侖的液體或 4 立方尺的乾燥貨物。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-bdf28ae0f6fd42bb.webp"
 		},
@@ -542,9 +624,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "材料包是一種裝有你法術所需的一切免費材料的防水小包。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 25,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9f0499d797a959c4.webp"
 		},
@@ -556,9 +640,11 @@
 			"damage": null,
 			"weight": 25,
 			"description": "一把梯子有 10 尺高。你只能在梯子上爬上或是爬下。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-667fd1d6ece6dc05.webp"
 		},
@@ -570,9 +656,11 @@
 			"damage": null,
 			"weight": 3,
 			"description": "包裹在毯子中期間，你在抵抗極度寒冷的豁免檢定上具有優勢（詳見城主指南）。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-fd2ebb2c80af2ac7.webp"
 		},
@@ -584,9 +672,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "水袋具有4品脫容量。如果你喝水不足，你會遭受脫水的危害（見規則詳述）。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b2ef4b43a18b68fc.webp"
 		},
@@ -598,9 +688,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "一盞油燈使用燃油作爲燃料，點着時能夠發出半徑15尺的明亮光照以及額外30尺的微光光照。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-00021214075c3f32.webp"
 		},
@@ -612,9 +704,11 @@
 			"damage": null,
 			"weight": 4,
 			"description": "長袍通常具有特別的職業或儀式意義。有些活動和場合僅允許穿着帶有特定顏色或符號的長袍的人蔘與。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-1a85c269b91fb729.webp"
 		},
@@ -626,9 +720,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "滑輪組允許你提起你正常能提動的四倍重量的物品。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d52b5a47ccf2509a.webp"
 		},
@@ -640,9 +736,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "以一個操作動作，你能把一小包滾珠撒至地面，並覆蓋你周圍 10 尺內的一處 10 尺方形區域。任何生物每回合首次進入這片區域時都必須通過一次DC 10的敏捷豁免，否則陷入倒地狀態。重新收集這些滾珠需要花費 10 分鐘時間。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-14b0b86877d05c0b.webp"
 		},
@@ -654,9 +752,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "火把點燃後能夠燃燒 1 小時，燃燒期間發出半徑 20 尺的明亮光照以及額外 20 尺的微光光照。當你執行攻擊動作時，你可以將火把當作簡易近戰武器，並使用火把發動攻擊。命中時，目標受到 1 火焰傷害。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f301683285b9b52c.webp"
 		},
@@ -668,9 +768,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "火絨盒是一種裝有打火石、火鐮和火絨（通常是浸泡在燃油裏的乾布料）的小型容器，其中的物品可以用來點火。你可以使用附贈動作來用它點燃任何具有燃料的東西——例如蠟燭、油燈、提燈或火把。在沒有燃料的情況下生火需要1分鐘時間。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-138326789a0ceb2f.webp"
 		},
@@ -682,9 +784,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "當你執行攻擊動作時，你可以將你的一次攻擊替換爲丟出一扁瓶熾火膠。你可以選擇位於你20尺內可見的一個生物或物件作爲目標。該目標必須通過一次敏捷豁免（DC 8+你的敏捷調整值+你的熟練加值），否則承受1d4點火焰傷害並開始燃燒。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 50,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-3a275f28979dd486.webp"
 		},
@@ -696,9 +800,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "受害於該毒藥的生物必須成功通過一次DC 13的體質豁免，否則將受到10（3d6）毒素傷害，並在其每個回合開始時重複此豁免。此時每次豁免失敗後該生物都將受3（1d6）毒素傷害。累計三次豁免成功後，毒藥的效應終止。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (吸入)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (吸入)"
+			],
 			"valueGp": 500,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-18e2d0f2ef32ff02.webp"
 		},
@@ -710,9 +817,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "你能將燃油潑在一個生物、物件或一處空間上，你也可以將燃油作爲燃料使用。具體使用方法如下。\n\n潑灑一個生物或一個物件 Dousing a Creature or an Object. 當你執行攻擊動作，你可以將你的一次攻擊替換爲丟出一個油瓶。你可以選擇位於你20尺內可見的一個生物或物體作爲目標。該目標必須通過一次敏捷豁免檢定（DC 8 +你的敏捷調整值+你的 熟練加值），否則將被油覆蓋。如果目標在油乾燥前（1分鐘後）受到火焰傷害，目標將因燃燒的油額外受到5點火焰傷害。\n\n潑灑一處空間 Dousing a Space. 以一個操作動作，你可以將一扁瓶燃油潑在地面上，以覆蓋一塊邊長5尺且保持水平的方形區域。點燃後，從點燃時算起，燃油會持續燃燒兩輪並在回合結束時熄滅（或 12 秒）。點燃時，任何進入該區域或在該區域結束其回合的生物都會受到 5 點火焰傷害。同一生物每回合只受該傷害作用一次。\n\n燃料 Fuel. 燃油能作爲油燈和提燈的燃料使用。一旦點着，一扁瓶的燃油可以在油燈和提燈中持續燃燒 6 小時。持續時長並不需要是連續的，你可以熄滅點着的燃油（以一個操作動作），並在之後再點燃，直到總共燃燒了 6 小時。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b6d73fa67eb099ed.webp"
 		},
@@ -724,9 +833,11 @@
 			"damage": null,
 			"weight": 4,
 			"description": "以一個操作動作，你能將爪鉤朝着位於自身50尺內的一處欄杆、突起的邊緣或是一處能夠掛住的位置扔出，並進行一次DC 13的敏捷（特技）檢定。如果檢定成功，爪鉤則成功鉤在上面。如果爪鉤上還連了繩子，你則可以爬上去。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-662edad08988f4da.webp"
 		},
@@ -738,9 +849,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "一盞牛眼提燈使用燃油作爲燃料，點着時能夠發出60尺錐狀區域的明亮光照以及額外60尺的微光光照。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 10,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ad932dbb44bbf4c9.webp"
 		},
@@ -752,9 +865,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "一個玻璃瓶至多能裝入 1.5 品脫的東西。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f058bbdb620d66c0.webp"
 		},
@@ -766,9 +881,11 @@
 			"damage": null,
 			"weight": 29,
 			"description": "祭司套組包含以下物品：揹包、毯子、聖水、油燈、7天份的口糧、法袍和火絨盒。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 33,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-39aaa10254c78015.webp"
 		},
@@ -780,9 +897,11 @@
 			"damage": null,
 			"weight": 47.5,
 			"description": "竊賊套組包含以下物品：揹包、滾珠、鈴鐺、10 根蠟燭、撬棍、附蓋提燈、7 扁瓶燃油、五天份的口糧、繩索、火絨盒和水袋。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 16,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-1f1cd9b5f019c5ca.webp"
 		},
@@ -794,9 +913,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "箭袋至多能裝入20根箭矢。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-270a3d104c5dd965.webp"
 		},
@@ -808,9 +929,11 @@
 			"damage": null,
 			"weight": 25,
 			"description": "一個箱子至多能裝入 12 立方尺的東西。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-6ae3b8ed65c4bd28.webp"
 		},
@@ -822,9 +945,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "一個籃子能夠至多裝入 40 磅重 2 立方尺大的東西。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8c06a0b9d47972e8.webp"
 		},
@@ -836,9 +961,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "受該毒藥影響的生物需要進行一次DC 21的體質豁免，豁免失敗則受到35（10d6）毒素傷害，豁免成功則傷害減半。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (傷害)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (傷害)"
+			],
 			"valueGp": 2000,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-3dbb74ea6697cacf.webp"
 		},
@@ -850,9 +978,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "一頁紙張能夠寫滿 250 個手寫單詞。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e54df8acc4966609.webp"
 		},
@@ -864,9 +994,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "細線有 10 尺長。你能夠以一個操作動作爲它打一個結。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b83bf9350fdb653f.webp"
 		},
@@ -878,9 +1010,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "以一個操作動作，你可以進行一次DC 10的敏捷（巧手）檢定。如果該檢定成功，你能用繩索打一個結。扯壞繩索需要成功通過一次DC 20的力量（運動）檢定。\n\n你可以利用繩索捆住一個非自願生物，但該生物必須處於受擒、失能或束縛狀態。如果你綁住了該生物的腿，該生物陷入束縛狀態，直至掙脫。掙脫繩索需要該生物使用動作來通過一次DC 15的敏捷（特技）檢定。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a5ca8f34305244a2.webp"
 		},
@@ -892,9 +1026,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "遭受這種毒藥影響的生物必須成功通過一次DC 13的體質豁免，否則陷入中毒狀態1小時。若該生物豁免失敗且骰值比DC低5或更多，則該生物還會在以此法中毒期間陷入昏迷。該生物會在受到傷害、或是其他生物用一個動作來將其搖醒時甦醒。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (傷害)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (傷害)"
+			],
 			"valueGp": 200,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-aa121e5e93b264cc.webp"
 		},
@@ -906,9 +1043,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "一頁羊皮紙能夠寫滿 250 個手寫單詞。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8c189baf8874e28d.webp"
 		},
@@ -920,9 +1059,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "一個揹包最多能裝入 30 磅重 1 立方尺大的東西。揹包也能當作鞍囊使用。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-7b0c89311a8594c7.webp"
 		},
@@ -934,9 +1075,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "接觸到這種毒藥的生物必須成功通過一次DC 13的體質豁免，否則將陷入中毒狀態24小時。以此中毒期間該生物還會陷入昏迷狀態。該生物會在受到傷害時甦醒。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (接觸)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (接觸)"
+			],
 			"valueGp": 400,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f69d584cd365372a.webp"
 		},
@@ -948,9 +1092,11 @@
 			"damage": null,
 			"weight": 58.5,
 			"description": "藝人套組包含以下物品：揹包、鋪蓋、鈴鐺、牛眼提燈、3 件戲服、鏡子、8 扁瓶燃油、9 天份的口糧、火絨盒和水袋。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 40,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-fa4501d756af7dff.webp"
 		},
@@ -962,9 +1108,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "服用這種毒藥的生物必須成功通過一次DC 16的體質豁免，否則將受到3（1d6）毒素傷害並陷入中毒狀態。以此中毒的生物每過24小時都需要重複此豁免，豁免失敗則再受3（1d6）毒素傷害。此毒藥造成的傷害在此中毒效應終止前無法以任何方式恢復。該生物累計豁免成功七次後即不再中毒。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (服用)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (服用)"
+			],
 			"valueGp": 250,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-270284d5c6738d40.webp"
 		},
@@ -976,9 +1125,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "服用這種毒藥的生物必須成功通過一次DC 15的體質豁免，否則將陷入中毒狀態4d6小時。以此法中毒期間該生物的速度減半。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (服用)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (服用)"
+			],
 			"valueGp": 600,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-3b9f06e7ffb7f0c2.webp"
 		},
@@ -990,9 +1142,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "受該毒藥影響的生物必須成功通過一次DC 11的體質豁免，否則將受到10（3d6）毒素傷害，豁免成功則傷害減半。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (傷害)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (傷害)"
+			],
 			"valueGp": 200,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-28c544f3a8961317.webp"
 		},
@@ -1004,9 +1159,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "一根蠟燭可以燃燒 1 小時，併發出 5 尺範圍的明亮光照，以及額外 5 尺的微光光照。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e0e480ad42050862.webp"
 		},
@@ -1018,9 +1175,11 @@
 			"damage": null,
 			"weight": 10,
 			"description": "鐵壺具有一加侖的容量。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-44f6fc81f4424c7c.webp"
 		},
@@ -1032,9 +1191,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "以一個操作動作，你能把一包鐵蒺撒至地面並覆蓋你周圍5尺內的一處5尺方形區域。任何生物每回合首次進入這片區域時都必須通過一次DC 15的敏捷豁免，否則受到1點穿刺傷害，並且速度降至0，直到其下一回合開始爲止。重新收集這些鐵蒺藜需要花費10分鐘時間。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-427f9259079634e0.webp"
 		},
@@ -1046,9 +1207,11 @@
 			"damage": null,
 			"weight": 0.5,
 			"description": "一組鐵釘具有十支。以一個操作動作，你可以使用一把鈍器，例如輕錘，來將鐵釘錘入木頭、土地或類似的材質。你能通過這種方式堵死一扇門，或將繩索或鏈條固定在鐵釘上。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-f0333ebd4db9c220.webp"
 		},
@@ -1060,9 +1223,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "一組鐵釘具有十支。以一個操作動作，你可以使用一把鈍器，例如輕錘，來將鐵釘錘入木頭、土地或類似的材質。你能通過這種方式堵死一扇門，或將繩索或鏈條固定在鐵釘上。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-45c1143b0ced2fba.webp"
 		},
@@ -1074,9 +1239,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "以一個操作動作，你可以搖響一個鈴鐺，鈴鐺會發出 60 尺內都能夠聽到的聲音。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9ea7d6af261d9f06.webp"
 		},
@@ -1088,9 +1255,11 @@
 			"damage": null,
 			"weight": 5,
 			"description": "你可以使用鏟子來花費一小時時間在土壤或類似材質的地方挖出一個5尺邊長的洞。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-871f2dbef785ef77.webp"
 		},
@@ -1102,9 +1271,11 @@
 			"damage": null,
 			"weight": 7,
 			"description": "一卷鋪蓋能睡下一個小型或中型生物。躺在鋪蓋中時，你自動通過抵抗極度寒冷的豁免檢定（詳見城主指南）。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 1,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a2606373a31227ae.webp"
 		},
@@ -1116,9 +1287,11 @@
 			"damage": null,
 			"weight": 10,
 			"description": "以一個操作動作，你可以進行一次DC 13的力量（運動）檢定。如果該檢定成功，你能利用鏈條捆住一個位於你5尺內的非自願生物，但該生物必須處於受擒、失能或束縛狀態。如果你綁住了該生物的腿，該生物陷入束縛狀態，直至掙脫。掙脫鏈條需要該生物使用動作來通過一次DC 18的敏捷（特技）檢定。扯壞鏈條需要該生物使用動作來通過一次DC 20的力量（運動）檢定。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-bccf586f298acf9c.webp"
 		},
@@ -1130,9 +1303,11 @@
 			"damage": null,
 			"weight": 1,
 			"description": "每套鎖都有對應的鑰匙。如果沒有對應的鑰匙，一個生物還可以使用盜賊工具來通過一次DC 15的敏捷（巧手）檢定開鎖。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 10,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-1af4b06b86cc47f3.webp"
 		},
@@ -1144,9 +1319,11 @@
 			"damage": null,
 			"weight": 0.5,
 			"description": "一面手持的鋼鏡不光可以用來化妝打扮，也可以用來窺視拐角或利用反光打信號。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-6c36c4bfe3fa835a.webp"
 		},
@@ -1158,9 +1335,11 @@
 			"damage": null,
 			"weight": 6,
 			"description": "以一個操作動作，你能利用鐐銬捆住一個位於你 5 尺內的非自願的小型或中型生物，但該生物必須處於受擒、失能或束縛狀態，並且你成功通過一次DC 13的敏捷（巧手）檢定。如果該檢定成功，如果你銬住了該生物，該生物進行的攻擊檢定會具有劣勢。如果鐐銬還被鎖鏈或鉤子固定在了某處，該生物還會陷入束縛狀態。掙脫鐐銬需要該生物使用動作來通過一次DC 20的敏捷（巧手）檢定。扯壞鐐銬需要該生物使用動作來通過一次DC 25的力量（運動）檢定。\n\n每套鐐銬都有對應的鑰匙。如果沒有對應的鑰匙，一個生物還可以使用盜賊工具來通過一次DC 15的敏捷（巧手）檢定解開鐐銬的鎖。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 2,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-4134c2e38a9c1a44.webp"
 		},
@@ -1172,9 +1351,11 @@
 			"damage": null,
 			"weight": 7,
 			"description": "一柄長杆有10尺長。你可以用它去觸碰10尺外的東西。如果你必須爲一次跳高或跳遠進行力量（運動）檢定的話，你可以使用長杆進行跳遠，來使這次檢定具有優勢。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a84527d0be219dba.webp"
 		},
@@ -1186,9 +1367,11 @@
 			"damage": null,
 			"weight": 2,
 			"description": "一盞附蓋提燈使用燃油作爲燃料，點着時能夠發出半徑30尺的明亮光照以及額外30尺的微光光照。以一個附贈動作，你可以蓋上或掀開提燈的蓋子。蓋上蓋子時，提燈的光亮降至半徑5尺的微光光照。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-9045454d8b0c5960.webp"
 		},
@@ -1200,9 +1383,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "受這種毒藥影響的生物需要進行一次DC 14的體質豁免，豁免失敗則受到24（7d6）毒素傷害，豁免成功則傷害減半。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (傷害)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (傷害)"
+			],
 			"valueGp": 1200,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0188cc3f09e510a2.webp"
 		},
@@ -1214,9 +1400,12 @@
 			"damage": null,
 			"weight": 0,
 			"description": "接觸到這種毒藥的生物必須成功通過一次DC 13的體質豁免，否則將陷入中毒狀態1分鐘。以此中毒期間該生物還會陷入麻痹狀態。該生物在其每個回合結束重複此豁免，豁免成功則終止其身上的此效應。",
-			"dmNotes": "DMG'24",
+			"source": "DMG'24",
 			"category": "Consumable",
-			"subType": "冒險用品, 毒藥 (接觸)",
+			"subTypes": [
+				"冒險用品",
+				"毒藥 (接觸)"
+			],
 			"valueGp": 200,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-67548221eb77b87d.webp"
 		},
@@ -1228,9 +1417,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "在創作角色時，你可以根據飾品表擲骰來獲得一件微型飾品——一件帶點神祕色彩的簡單物品。DM有時候也會用到本表格，比如用來點綴地下城的房間或者用來裝滿某個生物的口袋。\n\n飾品1d100飾品01一隻風乾的地精手臂02一塊月光下微微發光的水晶03一枚鑄造於不知名地區的金質硬幣04一本用你不知道的語言編寫的日記05一枚不會失去光澤的黃銅戒指06一枚用玻璃製成的老舊象棋棋子07一對用指骨製成的骰子，每枚骰子在六點的那一面都畫着骷髏頭的圖樣08一尊夢魘般生物的塑像，靠近它睡覺時會讓人產生不安的夢境09一束某人的頭髮10某個你不明其所在的國度裏一塊地皮的地契11一盎司重的方塊，製作材料不明12一隻插滿針的小布偶13一顆來自未知野獸的牙齒14一片不尋常的鱗片，可能來自於一條龍15一根亮綠色的羽毛16一張老舊的預言牌，其上的畫像跟你很像17一個內部充斥着旋轉煙霧的玻璃球18一枚1磅重，有着亮紅外殼的蛋19一根吹泡泡的管子20一個玻璃罐，裏頭裝着一塊浮在醃汁裏的肉21一個侏儒制的小音樂盒，能放出一首你隱約記得兒時聽過的歌曲22一隻洋洋得意的半身人的小木雕23一個銘刻着奇怪符文的黃銅球24一個多彩的石碟25一個銀質的渡鴉小徽章26一隻裝有四十七枚類人生物牙齒的袋子，裏面其中一枚是爛牙27一塊摸起來感覺溫暖的黑曜石碎片28一隻龍骨爪，掛在一條簡樸的皮質項鍊上29一雙舊襪子30一本空白的書，其書頁無法用墨水，粉筆，石墨或是任何其他物質書寫31一枚五角星形狀的銀徽章32一把曾經爲親屬所用的刀刃33一個裝滿指甲屑的玻璃小瓶34一個長方形的金屬裝置，其中一端有兩個凸起的小金屬棒，弄溼時還會冒出火花35一隻適合人類尺寸，飾有亮片的白色手套36一件有一百個小兜的背心37一個沒什麼重量的小石塊38一幅畫着一隻地精的素描39一隻小玻璃瓶，裏面聞起來有香水的味道40一枚寶石，除你以外的任何人都會將它看作一塊煤41一小塊從一面老舊軍旗上撕下的布42一枚屬於某個失蹤軍團成員的勳章43一個沒有鈴舌的小銀鈴44一隻裝在燈裏的機械金絲雀45一隻底部刻成好像有無數只腳的小箱子46一隻死去的小仙靈裝在一個透徹的玻璃瓶中47一隻未打開的金屬罐，裏面聽起來像是裝滿了液體、沙子、蜘蛛或是碎玻璃（由你決定）48一個充滿水的玻璃球，裏面有一隻機械金魚在遊49一把柄上刻有\"M\"字的銀湯勺50一隻用金色木頭製成的哨子51一隻跟你手差不多大的死亡聖甲蟲52兩個玩具士兵，其中一個缺了頭53一個裝滿各種大小鈕釦的小盒子54一隻無法被點亮的蠟燭55一隻沒有門的小籠子56一把老舊的鑰匙57一幅模糊不清的藏寶圖58一把破劍的劍柄59一隻兔子腳60一顆玻璃眼61一枚刻有可怕人像的浮雕寶石62一個硬幣大小的銀頭骨63一面雪花石膏面具64一塊錐形的黏黏的黑色薰香，氣味十分糟糕65一頂可以帶給穿戴者美夢的睡帽66一枚單獨的骨質蒺藜67一副沒有鏡片的金質單邊眼睛框68一個1寸大小的立方體，每面繪着不同的顏色69一個水晶門把手70一個裝滿粉色塵土的小袋子71一首優美歌曲的樂譜片段，用音樂記號寫在兩張羊皮紙上72一枚包含一滴真淚珠的銀製淚滴耳環73一隻蛋殼，其上繪有令人不安的苦難場景74一把打開時能看到一隻睡貓的摺扇75一套骨菸斗76一根四葉草，壓在一本討論規矩和禮儀的書中77一張繪有複雜機械結構的羊皮紙78一把華麗的劍鞘，但你至今尚未找到任何能裝進去的劍79一張屬於某個曾經發生命案的聚會的邀請函80一枚銅質五角星，其中央蝕刻着一個老鼠頭81一條紫色的方手帕，其上繡着一位大法師的名字82一座廟宇、城堡或是其他建築物的半張平面圖83一塊疊起的布，展開時會變成一頂時尚的帽子84一張存款收據，其屬於某家遙遠城市中的銀行85一本丟失了七頁的日記86一個空的銀質鼻菸盒，它的蓋子上刻着\"夢\"87一枚屬於某個不明神的鐵質聖徽88一本講述某個傳奇英雄興起衰落的故事書，其中最後的章節丟失了。89一小瓶龍血90一支精靈設計的古箭91一根永不會彎的針92一枚矮人設計的華麗胸針93一個空的紅酒瓶，其上面有一枚漂亮的酒標寫着：\" 美酒巫師莊園The Wizard of Wines Winery，卓越紅龍汁Red Dragon Crush，331422—W\"94一塊多彩釉質表面的馬賽克瓦95一隻被石化的老鼠96一面裝飾着龍的頭骨和交叉骨頭的黑色海盜旗97一隻不被觀察就會活動的微型機械蟹或蜘蛛98一隻裝有葷油的玻璃罐其標籤上寫着\" 獅鷲油Griffon Grease\"99一隻陶底木盒，裏頭裝着一條兩頭都長着腦袋的活蠕蟲00一隻裝有英雄骨灰的金屬甕",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-6ff81d5c2123845e.webp"
 		},
@@ -1242,9 +1433,11 @@
 			"damage": null,
 			"weight": 0,
 			"description": "香水通常裝在4盎司的小瓶裏。爲自己拍上香水後的一小時裏，你爲影響對你態度冷漠的類人生物所作的魅力（遊說）檢定都具有優勢，但這個生物必須位於你的5尺內。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 5,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ebfc68b2807dd6a8.webp"
 		},
@@ -1256,9 +1449,11 @@
 			"damage": null,
 			"weight": 6,
 			"description": "高檔服裝使用昂貴的材料和裝飾物製成，並縫製着極其精密的細節。有些活動和場合僅允許穿着高檔服裝的人蔘與。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 15,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-1ab17e08139af3f9.webp"
 		},
@@ -1270,11 +1465,886 @@
 			"damage": null,
 			"weight": 0.5,
 			"description": "麻袋至多能夠裝入 30 磅 1 立方尺的東西。",
-			"dmNotes": "PHB'24",
+			"source": "PHB'24",
 			"category": "Consumable",
-			"subType": "冒險用品",
+			"subTypes": [
+				"冒險用品"
+			],
 			"valueGp": 0,
 			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d3e9e8e2dc5c164d.webp"
+		},
+		{
+			"itemId": "item-e009e3150ec798a6",
+			"name": "三叉戟",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e009e3150ec798a6.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 穿刺",
+			"weight": 4,
+			"valueGp": 5,
+			"description": "投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d10)",
+				"投擲 (20/60 尺)"
+			],
+			"weaponMastery": "精通: 失衡"
+		},
+		{
+			"itemId": "item-82b7c5e9355664de",
+			"name": "刺劍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-82b7c5e9355664de.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 穿刺",
+			"weight": 2,
+			"valueGp": 25,
+			"description": "靈巧 Finesse. 使用一把靈巧武器發動攻擊時，你可以自由選擇此次攻擊檢定與傷害擲骰使用力量調整值還是敏捷調整值。但是攻擊檢定與傷害擲骰必須使用同一個調整值。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"靈巧"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-8ca17cbbfc80f489",
+			"name": "匕首",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8ca17cbbfc80f489.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 穿刺",
+			"weight": 1,
+			"valueGp": 2,
+			"description": "靈巧 Finesse. 使用一把靈巧武器發動攻擊時，你可以自由選擇此次攻擊檢定與傷害擲骰使用力量調整值還是敏捷調整值。但是攻擊檢定與傷害擲骰必須使用同一個調整值。\n\n輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n精通: 迅擊. 當你進行輕型屬性的額外攻擊時，你可以將其作為攻擊動作的一部分進行，而不是作為附贈動作。每個回合中你只能進行這一次額外攻擊。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"投擲 (20/60 尺)",
+				"靈巧",
+				"輕型"
+			],
+			"weaponMastery": "精通: 迅擊"
+		},
+		{
+			"itemId": "item-d2fdfd286b43656d",
+			"name": "吹箭筒",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d2fdfd286b43656d.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1 穿刺",
+			"weight": 1,
+			"valueGp": 10,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n裝填 Loading. 當你使用動作、附贈動作或反應來射擊裝填類武器時，你只能發射一枚彈藥，不管你通常可以進行多少次攻擊。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"彈藥 (射程 25/100\\xa0尺; 針)",
+				"裝填"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-8dd444faecb8209f",
+			"name": "巨劍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8dd444faecb8209f.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "2d6 揮砍",
+			"weight": 6,
+			"valueGp": 50,
+			"description": "重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 擦掠. 當你以這把武器對一個生物發動的攻擊檢定失手時，你仍可以對目標生物造成一定傷害。其數額等同於此次攻擊所使用的屬性調整值，其傷害類型與你所使用的武器一致，並且這個傷害只能通過屬性調整值的提高而增長。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"重型"
+			],
+			"weaponMastery": "精通: 擦掠"
+		},
+		{
+			"itemId": "item-2a748f749dace69d",
+			"name": "巨斧",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-2a748f749dace69d.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d12 揮砍",
+			"weight": 7,
+			"valueGp": 30,
+			"description": "重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 橫掃. 當你用這把武器進行的近戰攻擊檢定命中一個生物時，你可以用該武器對位於該生物 5 尺內，且同樣身處你觸及範圍內的另一生物再進行一次近戰攻擊檢定。命中時，第二個生物也會受到此武器的傷害，但你無法將你的屬性調整值加入這次傷害中（除非該調整值為負數）。每個回合中你只能發動一次橫掃的額外攻擊。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"重型"
+			],
+			"weaponMastery": "精通: 橫掃"
+		},
+		{
+			"itemId": "item-595f764532b7c174",
+			"name": "巨棒",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-595f764532b7c174.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 鈍擊",
+			"weight": 10,
+			"valueGp": 0,
+			"description": "雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 推離. 當你用這把武器命中一個生物時，如果該生物的體型不超過大型，則你可以將這個生物從你身邊直線推離至多 10 尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手"
+			],
+			"weaponMastery": "精通: 推離"
+		},
+		{
+			"itemId": "item-8bc1292ce506647e",
+			"name": "巨錘",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-8bc1292ce506647e.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "2d6 鈍擊",
+			"weight": 10,
+			"valueGp": 10,
+			"description": "重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"重型"
+			],
+			"weaponMastery": "精通: 失衡"
+		},
+		{
+			"itemId": "item-2fb1bf282079a1ba",
+			"name": "彎刀",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-2fb1bf282079a1ba.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 揮砍",
+			"weight": 3,
+			"valueGp": 25,
+			"description": "靈巧 Finesse. 使用一把靈巧武器發動攻擊時，你可以自由選擇此次攻擊檢定與傷害擲骰使用力量調整值還是敏捷調整值。但是攻擊檢定與傷害擲骰必須使用同一個調整值。\n\n輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n精通: 迅擊. 當你進行輕型屬性的額外攻擊時，你可以將其作為攻擊動作的一部分進行，而不是作為附贈動作。每個回合中你只能進行這一次額外攻擊。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"靈巧",
+				"輕型"
+			],
+			"weaponMastery": "精通: 迅擊"
+		},
+		{
+			"itemId": "item-992be64d64ad4652",
+			"name": "戰斧",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-992be64d64ad4652.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 揮砍",
+			"weight": 4,
+			"valueGp": 10,
+			"description": "多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d10)"
+			],
+			"weaponMastery": "精通: 失衡"
+		},
+		{
+			"itemId": "item-da70b0f182bfc5a8",
+			"name": "戰錘",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-da70b0f182bfc5a8.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 鈍擊",
+			"weight": 5,
+			"valueGp": 15,
+			"description": "多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 推離. 當你用這把武器命中一個生物時，如果該生物的體型不超過大型，則你可以將這個生物從你身邊直線推離至多 10 尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d10)"
+			],
+			"weaponMastery": "精通: 推離"
+		},
+		{
+			"itemId": "item-fb4dc339a8d2f3ba",
+			"name": "戰鎬",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-fb4dc339a8d2f3ba.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 穿刺",
+			"weight": 2,
+			"valueGp": 5,
+			"description": "多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 削弱. 當你用這把武器命中一個生物時，直到你的下一回合開始前，該生物的下一次攻擊檢定將具有劣勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d10)"
+			],
+			"weaponMastery": "精通: 削弱"
+		},
+		{
+			"itemId": "item-a36bb039debf8572",
+			"name": "手弩",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a36bb039debf8572.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 穿刺",
+			"weight": 3,
+			"valueGp": 75,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n裝填 Loading. 當你使用動作、附贈動作或反應來射擊裝填類武器時，你只能發射一枚彈藥，不管你通常可以進行多少次攻擊。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"彈藥 (射程 30/120\\xa0尺; 弩矢)",
+				"裝填",
+				"輕型"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-d6307a55db0d7aa8",
+			"name": "手斧",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d6307a55db0d7aa8.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 揮砍",
+			"weight": 2,
+			"valueGp": 5,
+			"description": "輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"投擲 (20/60 尺)",
+				"輕型"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-3de144f8213dda76",
+			"name": "手槍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-3de144f8213dda76.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"遠程武器",
+				"槍械"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d10 穿刺",
+			"weight": 3,
+			"valueGp": 250,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n裝填 Loading. 當你使用動作、附贈動作或反應來射擊裝填類武器時，你只能發射一枚彈藥，不管你通常可以進行多少次攻擊。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"彈藥 (射程 30/90\\xa0尺; 槍械子彈)",
+				"裝填"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-28b2cde3bbef1cf2",
+			"name": "投石索",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-28b2cde3bbef1cf2.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 鈍擊",
+			"weight": 0,
+			"valueGp": 0,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"彈藥 (射程 30/120\\xa0尺; 投石索子彈)"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-d69454f4227d08b7",
+			"name": "木質法杖",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d69454f4227d08b7.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"法器",
+				"簡易武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 鈍擊",
+			"weight": 4,
+			"valueGp": 5,
+			"description": "多用 Versatile. 該武器可以用單手或雙手來使用。該屬性後將跟隨一個括號，其內的傷害值即為雙手持用該武器進行近戰攻擊時的傷害值。\n\n德魯伊法器是一種利用刻紋、綁帶或圖畫來引導原初魔法的物品，它會以下列德魯伊法器列表中的一種形式存在。德魯伊和遊俠可以使用這種物品作為法器。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d8)"
+			],
+			"weaponMastery": "精通: 失衡"
+		},
+		{
+			"itemId": "item-ff3d4e459434f34a",
+			"name": "標槍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ff3d4e459434f34a.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 穿刺",
+			"weight": 2,
+			"valueGp": 0,
+			"description": "投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"投擲 (30/120 尺)"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-c67809ca9487eb84",
+			"name": "法杖",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c67809ca9487eb84.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"法杖",
+				"法器",
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 鈍擊",
+			"weight": 4,
+			"valueGp": 5,
+			"description": "多用 Versatile. 該武器可以用單手或雙手來使用。該屬性後將跟隨一個括號，其內的傷害值即為雙手持用該武器進行近戰攻擊時的傷害值。\n\n奧術法器是一種利用寶石或是雕刻來引導奧術魔法的物品，它會以下列奧術法器列表中的一種形式存在。術士、魔契師和法師可以使用這種物品作為法器。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d8)"
+			],
+			"weaponMastery": "精通: 失衡"
+		},
+		{
+			"itemId": "item-a90c5ec68a8c7073",
+			"name": "滑膛槍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a90c5ec68a8c7073.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"遠程武器",
+				"槍械"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d12 穿刺",
+			"weight": 10,
+			"valueGp": 500,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n裝填 Loading. 當你使用動作、附贈動作或反應來射擊裝填類武器時，你只能發射一枚彈藥，不管你通常可以進行多少次攻擊。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"彈藥 (射程 40/120\\xa0尺; 槍械子彈)",
+				"裝填"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-b512a3431c26f88a",
+			"name": "矛",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-b512a3431c26f88a.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 穿刺",
+			"weight": 3,
+			"valueGp": 1,
+			"description": "投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 削弱. 當你用這把武器命中一個生物時，直到你的下一回合開始前，該生物的下一次攻擊檢定將具有劣勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d8)",
+				"投擲 (20/60 尺)"
+			],
+			"weaponMastery": "精通: 削弱"
+		},
+		{
+			"itemId": "item-09b722486b35e929",
+			"name": "短劍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-09b722486b35e929.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 穿刺",
+			"weight": 2,
+			"valueGp": 10,
+			"description": "靈巧 Finesse. 使用一把靈巧武器發動攻擊時，你可以自由選擇此次攻擊檢定與傷害擲骰使用力量調整值還是敏捷調整值。但是攻擊檢定與傷害擲骰必須使用同一個調整值。\n\n輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"靈巧",
+				"輕型"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-c2deaf62dd0c2882",
+			"name": "短弓",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c2deaf62dd0c2882.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 穿刺",
+			"weight": 2,
+			"valueGp": 25,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"彈藥 (射程 80/320\\xa0尺; 箭)"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-92f845ffe5792471",
+			"name": "短棒",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-92f845ffe5792471.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 鈍擊",
+			"weight": 2,
+			"valueGp": 0,
+			"description": "輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"輕型"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-d22334e7b1040f97",
+			"name": "硬頭錘",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-d22334e7b1040f97.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 鈍擊",
+			"weight": 4,
+			"valueGp": 5,
+			"description": "精通: 削弱. 當你用這把武器命中一個生物時，直到你的下一回合開始前，該生物的下一次攻擊檢定將具有劣勢。",
+			"source": "PHB'24",
+			"weaponProperties": [],
+			"weaponMastery": "精通: 削弱"
+		},
+		{
+			"itemId": "item-a93bb5b64f37ca91",
+			"name": "輕弩",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-a93bb5b64f37ca91.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 穿刺",
+			"weight": 5,
+			"valueGp": 25,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n裝填 Loading. 當你使用動作、附贈動作或反應來射擊裝填類武器時，你只能發射一枚彈藥，不管你通常可以進行多少次攻擊。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"彈藥 (射程 80/320\\xa0尺; 弩矢)",
+				"裝填"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-4b2a255b5499dfcf",
+			"name": "輕錘",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-4b2a255b5499dfcf.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 鈍擊",
+			"weight": 2,
+			"valueGp": 2,
+			"description": "輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n精通: 迅擊. 當你進行輕型屬性的額外攻擊時，你可以將其作為攻擊動作的一部分進行，而不是作為附贈動作。每個回合中你只能進行這一次額外攻擊。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"投擲 (20/60 尺)",
+				"輕型"
+			],
+			"weaponMastery": "精通: 迅擊"
+		},
+		{
+			"itemId": "item-77f5fbaf225e0f1f",
+			"name": "重弩",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-77f5fbaf225e0f1f.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d10 穿刺",
+			"weight": 18,
+			"valueGp": 50,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n裝填 Loading. 當你使用動作、附贈動作或反應來射擊裝填類武器時，你只能發射一枚彈藥，不管你通常可以進行多少次攻擊。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 推離. 當你用這把武器命中一個生物時，如果該生物的體型不超過大型，則你可以將這個生物從你身邊直線推離至多 10 尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"彈藥 (射程 100/400\\xa0尺; 弩矢)",
+				"裝填",
+				"重型"
+			],
+			"weaponMastery": "精通: 推離"
+		},
+		{
+			"itemId": "item-e22297c3aa891198",
+			"name": "釘頭錘",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-e22297c3aa891198.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 穿刺",
+			"weight": 4,
+			"valueGp": 15,
+			"description": "精通: 削弱. 當你用這把武器命中一個生物時，直到你的下一回合開始前，該生物的下一次攻擊檢定將具有劣勢。",
+			"source": "PHB'24",
+			"weaponProperties": [],
+			"weaponMastery": "精通: 削弱"
+		},
+		{
+			"itemId": "item-0ddb72cd6cbf5002",
+			"name": "鏈枷",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0ddb72cd6cbf5002.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 鈍擊",
+			"weight": 2,
+			"valueGp": 10,
+			"description": "精通: 削弱. 當你用這把武器命中一個生物時，直到你的下一回合開始前，該生物的下一次攻擊檢定將具有劣勢。",
+			"source": "PHB'24",
+			"weaponProperties": [],
+			"weaponMastery": "精通: 削弱"
+		},
+		{
+			"itemId": "item-ce0ec2fbbc63691b",
+			"name": "鐮刀",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-ce0ec2fbbc63691b.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 揮砍",
+			"weight": 2,
+			"valueGp": 1,
+			"description": "輕型 Light. 當你在自己回合中執行攻擊動作，並用一把輕型武器發動一次攻擊後，你可以在同一回合中用附贈動作發動一次額外的攻擊。這次額外的攻擊你必須使用另一把輕型武器發動，並且這次攻擊的傷害無法加入你的屬性調整值（除非該調整值為負數）。例如，若你在你的回合中執行了攻擊動作，一隻手手持短劍，另一隻手手持匕首，而這兩把武器均有輕型詞條，則你可以使用你的動作和附贈動作，來用這兩把武器各發動一次攻擊。但你不能將力量或敏捷調整值加入附贈動作攻擊武器的造成的傷害中（除非該調整值為負數）。\n\n精通: 迅擊. 當你進行輕型屬性的額外攻擊時，你可以將其作為攻擊動作的一部分進行，而不是作為附贈動作。每個回合中你只能進行這一次額外攻擊。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"輕型"
+			],
+			"weaponMastery": "精通: 迅擊"
+		},
+		{
+			"itemId": "item-dd440c1bffd31c47",
+			"name": "長劍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-dd440c1bffd31c47.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 揮砍",
+			"weight": 3,
+			"valueGp": 15,
+			"description": "多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 削弱. 當你用這把武器命中一個生物時，直到你的下一回合開始前，該生物的下一次攻擊檢定將具有劣勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d10)"
+			],
+			"weaponMastery": "精通: 削弱"
+		},
+		{
+			"itemId": "item-342123dacbd56654",
+			"name": "長弓",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-342123dacbd56654.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d8 穿刺",
+			"weight": 2,
+			"valueGp": 50,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n彈藥 Ammunition. 使用具有彈藥屬性的武器發動遠程攻擊時，你必須擁有該武器需求的彈藥。所需彈藥的種類會與武器的射程寫在一起。每次使用該武器攻擊都會花費一枚彈藥，且取出該彈藥的行為視為此次攻擊的一部分（你需要一隻空手來為一把單手武器的彈藥上膛或上弦）。在戰鬥結束後，你可以花費一分鐘搜索戰場，以回收你在戰鬥中所消耗的彈藥的一半（向下取整），而剩下的那些彈藥將會損失。\n\n重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"彈藥 (射程 150/600\\xa0尺; 箭)",
+				"重型"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-316037d7437dec2b",
+			"name": "長戟",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-316037d7437dec2b.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d10 揮砍",
+			"weight": 6,
+			"valueGp": 20,
+			"description": "重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n觸及 Reach. 使用長兵器攻擊時，你的觸及範圍增加5英尺，同時在確定你用它進行藉機攻擊的觸及範圍時也增加5英尺。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 橫掃. 當你用這把武器進行的近戰攻擊檢定命中一個生物時，你可以用該武器對位於該生物 5 尺內，且同樣身處你觸及範圍內的另一生物再進行一次近戰攻擊檢定。命中時，第二個生物也會受到此武器的傷害，但你無法將你的屬性調整值加入這次傷害中（除非該調整值為負數）。每個回合中你只能發動一次橫掃的額外攻擊。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"觸及",
+				"重型"
+			],
+			"weaponMastery": "精通: 橫掃"
+		},
+		{
+			"itemId": "item-bfd09683859f490f",
+			"name": "長柄刀",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-bfd09683859f490f.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d10 揮砍",
+			"weight": 6,
+			"valueGp": 20,
+			"description": "重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n觸及 Reach. 使用長兵器攻擊時，你的觸及範圍增加5英尺，同時在確定你用它進行藉機攻擊的觸及範圍時也增加5英尺。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 擦掠. 當你以這把武器對一個生物發動的攻擊檢定失手時，你仍可以對目標生物造成一定傷害。其數額等同於此次攻擊所使用的屬性調整值，其傷害類型與你所使用的武器一致，並且這個傷害只能通過屬性調整值的提高而增長。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"觸及",
+				"重型"
+			],
+			"weaponMastery": "精通: 擦掠"
+		},
+		{
+			"itemId": "item-730c1934f3ec2114",
+			"name": "長棍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-730c1934f3ec2114.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d6 鈍擊",
+			"weight": 4,
+			"valueGp": 0,
+			"description": "多用 Versatile. 多用武器可以單手使用也可以雙手使用。該詞條後將跟隨一個括號，其內的傷害數值即為雙手持用該武器進行近戰攻擊時的傷害。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"多用 (1d8)"
+			],
+			"weaponMastery": "精通: 失衡"
+		},
+		{
+			"itemId": "item-0aefa8e446278b19",
+			"name": "長矛",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-0aefa8e446278b19.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d10 穿刺",
+			"weight": 18,
+			"valueGp": 5,
+			"description": "重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n觸及 Reach. 使用長兵器攻擊時，你的觸及範圍增加5英尺，同時在確定你用它進行藉機攻擊的觸及範圍時也增加5英尺。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 推離. 當你用這把武器命中一個生物時，如果該生物的體型不超過大型，則你可以將這個生物從你身邊直線推離至多 10 尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手",
+				"觸及",
+				"重型"
+			],
+			"weaponMastery": "精通: 推離"
+		},
+		{
+			"itemId": "item-715c95ed7177aa2c",
+			"name": "鞭子",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-715c95ed7177aa2c.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 揮砍",
+			"weight": 3,
+			"valueGp": 2,
+			"description": "靈巧 Finesse. 使用一把靈巧武器發動攻擊時，你可以自由選擇此次攻擊檢定與傷害擲骰使用力量調整值還是敏捷調整值。但是攻擊檢定與傷害擲骰必須使用同一個調整值。\n\n觸及 Reach. 使用長兵器攻擊時，你的觸及範圍增加5英尺，同時在確定你用它進行藉機攻擊的觸及範圍時也增加5英尺。\n\n精通: 緩速. 如果你用這個武器擊中一個生物並對其造成傷害，你可以將其速度減少10英尺，直到你的下一回合開始。如果該生物被具有此屬性的武器擊中不止一次，速度的減少不會超過10英尺。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"靈巧",
+				"觸及"
+			],
+			"weaponMastery": "精通: 緩速"
+		},
+		{
+			"itemId": "item-cf08b09bc4240f96",
+			"name": "飛鏢",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-cf08b09bc4240f96.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"簡易武器",
+				"遠程武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d4 穿刺",
+			"weight": 0.25,
+			"valueGp": 0,
+			"description": "射程 Range. 遠程武器在彈藥或投擲屬性後的括號內有一個射程。射程列出了兩個數字。第一個是武器的正常射程（以英尺為單位），第二個是武器的長射程。當攻擊超出正常射程的目標時，你在攻擊檢定上具有劣勢。你不能攻擊超出長射程的目標。\n\n靈巧 Finesse. 使用一把靈巧武器發動攻擊時，你可以自由選擇此次攻擊檢定與傷害擲骰使用力量調整值還是敏捷調整值。但是攻擊檢定與傷害擲骰必須使用同一個調整值。\n\n投擲 Thrown. 如果一把武器具有投擲屬性，你可以把它投擲出去來發動一次遠程攻擊。同時，拔出這把武器可以視作這次攻擊的一部分。如果投擲出去的武器是一把近戰武器，則你在攻擊檢定和傷害擲骰中使用與你用其發動近戰攻擊時相同的屬性調整值。\n\n精通: 侵擾. 當你用這把武器命中一個生物並對其造成傷害時，直到你的下一回合結束前，你對該生物的下一次攻擊檢定將具有優勢。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"投擲 (20/60 尺)",
+				"靈巧"
+			],
+			"weaponMastery": "精通: 侵擾"
+		},
+		{
+			"itemId": "item-340eab015c12a796",
+			"name": "騎槍",
+			"icon": "./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-340eab015c12a796.webp",
+			"category": "Weapon",
+			"subTypes": [
+				"軍用武器",
+				"近戰武器"
+			],
+			"rarity": "Common",
+			"requiresAttunement": false,
+			"damage": "1d10 穿刺",
+			"weight": 6,
+			"valueGp": 10,
+			"description": "當你沒有騎乘時，長矛需要雙手來揮舞。\n\n重型 Heavy. 如果你的力量屬性值低於 13 點，則你用重型近戰武器發動的攻擊檢定具有劣勢；如果你的敏捷屬性值低於 13 點，則你用重型遠程武器發動的攻擊檢定具有劣勢。\n\n觸及 Reach. 使用長兵器攻擊時，你的觸及範圍增加5英尺，同時在確定你用它進行藉機攻擊的觸及範圍時也增加5英尺。\n\n雙手 Two-Handed. 用雙手武器攻擊時，你需要雙手並用。\n\n精通: 失衡. 如果你用此武器擊中一個生物，你可以迫使該生物進行一次體質豁免檢定（DC 8 加上用於進行攻擊擲骰的能力調整值以及你的熟練加值）。豁免失敗時，該生物獲得倒地狀態。",
+			"source": "PHB'24",
+			"weaponProperties": [
+				"雙手 (unless mounted)",
+				"觸及",
+				"重型"
+			],
+			"weaponMastery": "精通: 失衡"
 		}
 	]
 }
