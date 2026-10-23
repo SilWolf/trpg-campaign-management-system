@@ -101,7 +101,6 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 		'name',
 		'rarity',
 		'requiresAttunement',
-		'damage',
 		'weight',
 		'description',
 		'source',
@@ -115,19 +114,23 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 		const itemLabel = `${catalog.catalogId} items[${itemIndex}]`;
 		const expectedItemKeys =
 			item.category === 'Weapon'
-				? [...itemKeys, 'weaponProperties', 'weaponMastery']
-				: itemKeys;
+				? [...itemKeys, 'damage', 'weaponProperties', 'weaponMastery']
+				: item.category === 'Armor'
+					? [...itemKeys, 'ac']
+					: [...itemKeys, 'damage'];
 		expectObject(item, itemLabel, expectedItemKeys);
 		for (const key of [
 			'itemId',
 			'name',
 			'rarity',
-			'description',
 			'source',
 			'category',
 			'icon',
 		]) {
 			expectString(item[key], `${itemLabel}.${key}`);
+		}
+		if (typeof item.description !== 'string') {
+			fail(`${itemLabel}.description 必須是字串`);
 		}
 		expectStringArray(item.subTypes, `${itemLabel}.subTypes`);
 		if (
@@ -146,7 +149,14 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 		if (typeof item.requiresAttunement !== 'boolean') {
 			fail(`${itemLabel}.requiresAttunement 必須是布林值`);
 		}
-		if (item.damage !== null && typeof item.damage !== 'string') {
+		if (item.category === 'Armor') {
+			if (item.ac !== null && typeof item.ac !== 'string') {
+				fail(`${itemLabel}.ac 必須是字串或 null`);
+			}
+			if ('damage' in item) {
+				fail(`${itemLabel} Armor 不應包含 damage 欄位`);
+			}
+		} else if (item.damage !== null && typeof item.damage !== 'string') {
 			fail(`${itemLabel}.damage 必須是字串或 null`);
 		}
 		if (typeof item.weight !== 'number' || !Number.isFinite(item.weight) || item.weight < 0) {

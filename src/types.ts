@@ -33,7 +33,8 @@ export interface BlacksmithItem {
 	weaponMastery?: string;
 	rarity: Rarity;
 	icon: string;
-	damage: string | null;
+	damage?: string | null;
+	ac?: string | null;
 	weight: number;
 	valueGp: number;
 	requiresAttunement: boolean;

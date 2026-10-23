@@ -193,8 +193,6 @@ def make_item(row, columns, catalog_id, category, row_number):
     description = get_value(row, columns, "description")
     if not name:
         raise ValueError(f"第 {row_number} 筆資料名稱為空")
-    if not description:
-        raise ValueError(f"第 {row_number} 筆資料描述為空")
 
     source = get_value(row, columns, "source")
     page = get_value(row, columns, "page")
@@ -216,7 +214,6 @@ def make_item(row, columns, catalog_id, category, row_number):
         "requiresAttunement": parse_attunement(
             get_value(row, columns, "requiresAttunement")
         ),
-        "damage": damage or None,
         "weight": parse_weight(get_value(row, columns, "weight")),
         "valueGp": parse_value_gp(get_value(row, columns, "value")),
         "description": description,
@@ -232,6 +229,10 @@ def make_item(row, columns, catalog_id, category, row_number):
             if part.strip()
         ]
         item["weaponMastery"] = weapon_mastery
+    elif category == "Armor":
+        item["ac"] = damage or None
+    else:
+        item["damage"] = damage or None
     lookup = {
         "sourceKey": f"{catalog_id}:{item_id}",
         "itemId": item_id,

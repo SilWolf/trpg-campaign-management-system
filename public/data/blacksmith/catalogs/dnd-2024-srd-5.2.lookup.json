@@ -1370,6 +1370,126 @@
 				"近戰武器",
 				"PHB'24"
 			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-11f763ba8c83ccd5",
+			"itemId": "item-11f763ba8c83ccd5",
+			"name": "獸皮甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-b05ae23c54c68155",
+			"itemId": "item-b05ae23c54c68155",
+			"name": "半身板甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-fb1792ec105793cf",
+			"itemId": "item-fb1792ec105793cf",
+			"name": "布甲",
+			"aliases": [],
+			"searchTerms": [
+				"輕甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-923962931e313efc",
+			"itemId": "item-923962931e313efc",
+			"name": "板條甲",
+			"aliases": [],
+			"searchTerms": [
+				"重甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c9c43e58f9b1afc1",
+			"itemId": "item-c9c43e58f9b1afc1",
+			"name": "板甲",
+			"aliases": [],
+			"searchTerms": [
+				"重甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-8b9f1f8f94e80bf1",
+			"itemId": "item-8b9f1f8f94e80bf1",
+			"name": "環甲",
+			"aliases": [],
+			"searchTerms": [
+				"重甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-63aac6fe56bdd560",
+			"itemId": "item-63aac6fe56bdd560",
+			"name": "皮甲",
+			"aliases": [],
+			"searchTerms": [
+				"輕甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-85bd0cdfd6c078e0",
+			"itemId": "item-85bd0cdfd6c078e0",
+			"name": "胸甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-f424c7fb470a44b3",
+			"itemId": "item-f424c7fb470a44b3",
+			"name": "鏈甲",
+			"aliases": [],
+			"searchTerms": [
+				"重甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-cf7031a827101b3c",
+			"itemId": "item-cf7031a827101b3c",
+			"name": "鏈甲衫",
+			"aliases": [],
+			"searchTerms": [
+				"中甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-179d3ee4ae810e11",
+			"itemId": "item-179d3ee4ae810e11",
+			"name": "鑲釘皮甲",
+			"aliases": [],
+			"searchTerms": [
+				"輕甲",
+				"PHB'24"
+			]
+		},
+		{
+			"sourceKey": "dnd-2024-srd-5.2:item-c40bf00481fb451f",
+			"itemId": "item-c40bf00481fb451f",
+			"name": "鱗甲",
+			"aliases": [],
+			"searchTerms": [
+				"中甲",
+				"PHB'24"
+			]
 		}
 	]
 }

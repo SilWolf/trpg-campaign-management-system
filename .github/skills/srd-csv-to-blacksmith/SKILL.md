@@ -16,7 +16,7 @@ argument-hint: '提供 CSV 路徑、catalogId 與標題'
 - `catalogs/<catalogId>.items.json`：`{ schemaVersion: 3, catalogId, items }`。
 - `catalogs/<catalogId>.lookup.json`：`{ schemaVersion: 3, catalogId, items }`。
 
-每筆 items 是可重用物品定義，欄位盡量對應 `src/types.ts` 的 `InventoryItem` 物品定義部分，而非完整戰役實例。常用欄位為 `itemId`、`name`、`category`、`subTypes`、`rarity`、`icon`、`requiresAttunement`、`damage`、`weight`、`valueGp`、`description`、`source`。`subTypes` 是字串陣列，從來源逗號分隔的類型拆分而來；`icon` 一律使用 `./images/blacksmith/catalogs/<catalogId>/<itemId>.webp` 路徑；此轉換只建立引用，不產生或複製圖片檔。不在目錄項目中虛構 `ownerId`、`campaignId`、`quantity`、裝備狀態或其他戰役實例資料。除非來源有可靠對應，`mastery`、`ac`、`effects`、`flavor` 等其他型別欄位不應捏造。
+每筆 items 是可重用物品定義，欄位盡量對應 `src/types.ts` 的 `InventoryItem` 物品定義部分，而非完整戰役實例。常用欄位為 `itemId`、`name`、`category`、`subTypes`、`rarity`、`icon`、`requiresAttunement`、`damage`、`weight`、`valueGp`、`description`、`source`。`subTypes` 是字串陣列，從來源逗號分隔的類型拆分而來；`icon` 一律使用 `./images/blacksmith/catalogs/<catalogId>/<itemId>.webp` 路徑；此轉換只建立引用，不產生或複製圖片檔。不在目錄項目中虛構 `ownerId`、`campaignId`、`quantity`、裝備狀態或其他戰役實例資料。除非來源有可靠對應，`mastery`、`ac`、`effects`、`flavor` 等其他型別欄位不應捏造；護甲僅將來源明確提供的護甲值寫入 `ac`，不輸出 `damage`。
 
 武器資料另可包含 `weaponProperties`（字串陣列）與 `weaponMastery`（字串）；僅來源明確提供時才輸出。轉換武器時，`subTypes` 排除完整相符的「武器」類型標籤，保留其他類型。
 
@@ -37,7 +37,7 @@ lookup 每筆項目使用：
 ## 工作流程
 
 1. 確認 CSV 路徑、輸出 `catalogId` 和書籍標題。`catalogId` 使用小寫英數字、句點與連字號，例如 `dnd-2024-srd-5.2`。
-2. 檢查 CSV 編碼、標頭、資料列數、必填名稱／描述、重複名稱及來源欄位。不要假設另一份 CSV 與先前來源有相同欄名或分類；必要時使用轉換器的 `--column` 明確指定欄位對應。
+2. 檢查 CSV 編碼、標頭、資料列數、名稱、重複名稱及來源欄位；名稱欄必須有值，描述欄必須存在但允許個別資料列留白（輸出為空字串）。不要假設另一份 CSV 與先前來源有相同欄名或分類；必要時使用轉換器的 `--column` 明確指定欄位對應。
 3. 判斷本批資料適用的 `category`。先前來源全是冒險用品，因此指定 `Consumable`；不可把這個判斷套用至武器、護甲或其他新資料。若分類不明且會影響使用者資料，先釐清或回報，不要靜默猜測。
 4. 執行 [CSV 轉換器](./scripts/convert_csv.py)。預設欄位名稱為中文 SRD CSV 格式：`名称`、`来源`、`页码`、`稀有度`、`类型`、`同调`、`伤害`、`属性`、`武器精通`、`重量`、`价值`、`文本`。常見映射為：
    - 名稱 → `name`
@@ -45,9 +45,12 @@ lookup 每筆項目使用：
    - 來源 → `source`
    - 稀有度 → `rarity`（空值或 `none` 轉成 `Common`）
    - 類型 → 以逗號分隔後拆分為 `subTypes` 字串陣列
-   - 若 `category` 是 `Weapon`，從 `subTypes` 移除「武器」，並把「属性」以逗號拆分為 `weaponProperties`；「武器精通」原值寫入 `weaponMastery`
+   - 來源 CSV 的「类型」負責判定應輸出的 `category`：類型包含「武器」時 `category` 設為 `Weapon`；類型包含輕甲、中甲或重甲標籤時（來源可能使用簡體「轻甲／中甲／重甲」）`category` 設為 `Armor`。不要將這些細分類型值直接當成 `category`。
+   - 此 CSV 的「伤害」欄位由武器與護甲共用，必須依「类型」判斷其意義：武器類型視為武器傷害，寫入 `damage`；護甲類型視為護甲值，寫入 `ac`，不可寫入 `damage`。不可單憑欄位名稱或非空值判斷為傷害。
+   - 若 `category` 是 `Weapon`，來源「类型」應包含「武器」；從 `subTypes` 移除完整相符的「武器」標籤，並把「属性」以逗號拆分為 `weaponProperties`；「武器精通」原值寫入 `weaponMastery`
+   - 若 `category` 是 `Armor`，來源「类型」應包含輕甲、中甲或重甲標籤；以「类型」拆分結果作為 `subTypes`，並將「伤害」欄位的護甲值寫入 `ac`（空白時為 `null`）；護甲項目不包含 `damage` 欄位，且不移除護甲類型標籤
    - 同調 → `requiresAttunement` 布林值
-   - 傷害 → `damage`（空白為 `null`）
+   - 「伤害」欄位依上述類型規則寫入武器 `damage` 或護甲 `ac`；對應欄位空白時為 `null`
    - 重量 → 磅數值（空白為 `0`；支援 `¼`、`½`、`¾`，並略過單位／括號註記）
    - 價值 → GP 數值（空白或低於 1 GP 為 `0`；CP、SP、EP、GP、PP 先換算為 GP）
    - 文本 → `description`

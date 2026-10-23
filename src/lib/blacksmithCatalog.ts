@@ -30,7 +30,6 @@ const ITEM_KEYS = [
 	'name',
 	'rarity',
 	'requiresAttunement',
-	'damage',
 	'weight',
 	'description',
 	'source',
@@ -201,8 +200,10 @@ function readItemFile(
 		const record = readJsonRecord(item, `「${catalog.title}」第 ${index + 1} 筆物品`);
 		const expectedKeys =
 			record.category === 'Weapon'
-				? [...ITEM_KEYS, ...WEAPON_ITEM_KEYS]
-				: ITEM_KEYS;
+				? [...ITEM_KEYS, 'damage', ...WEAPON_ITEM_KEYS]
+				: record.category === 'Armor'
+					? [...ITEM_KEYS, 'ac']
+					: [...ITEM_KEYS, 'damage'];
 		if (!hasExactKeys(record, expectedKeys)) {
 			throw new Error(`「${catalog.title}」第 ${index + 1} 筆物品欄位不符來源合約。`);
 		}
@@ -309,9 +310,17 @@ function adaptCatalogItems(
 			throw new Error(`${label} icon 必須是安全的 ./images/ 相對路徑。`);
 		}
 		const damage =
-			record.damage === null
-				? null
-				: readString(record.damage, `${label} damage`);
+			category === 'Armor'
+				? undefined
+				: record.damage === null
+					? null
+					: readString(record.damage, `${label} damage`);
+		const ac =
+			category === 'Armor'
+				? record.ac === null
+					? null
+					: readString(record.ac, `${label} ac`)
+				: undefined;
 		const weaponFields =
 			category === 'Weapon'
 				? {
@@ -336,7 +345,8 @@ function adaptCatalogItems(
 			subTypes: readNonEmptyStringArray(record.subTypes, `${label} subTypes`),
 			rarity,
 			icon,
-			damage,
+			...(damage !== undefined ? { damage } : {}),
+			...(ac !== undefined ? { ac } : {}),
 			weight,
 			valueGp,
 			requiresAttunement: record.requiresAttunement,

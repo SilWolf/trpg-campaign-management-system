@@ -360,11 +360,17 @@ function BlacksmithCatalogPage() {
 									</div>
 								</div>
 
-								{selectedItem.damage !== null && (
+								{(selectedItem.category === 'Armor'
+									? selectedItem.ac
+									: selectedItem.damage) != null && (
 									<p className='mt-4 rounded-md border border-stone-800 bg-stone-950/80 px-3 py-2 text-sm'>
-										<span className='text-stone-500'>傷害：</span>
+										<span className='text-stone-500'>
+											{selectedItem.category === 'Armor' ? '護甲值：' : '傷害：'}
+										</span>
 										<span className='font-mono text-stone-200'>
-											{selectedItem.damage}
+											{selectedItem.category === 'Armor'
+												? selectedItem.ac
+												: selectedItem.damage}
 										</span>
 									</p>
 								)}
