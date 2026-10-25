@@ -28,3 +28,7 @@ blob-report/
 repomix-output.xml
 external/*
 outputs/*
+/.scripts/items-icon-splitter/inputs/*
+!/.scripts/items-icon-splitter/inputs/.gitkeep
+/.scripts/items-icon-splitter/outputs/*
+!/.scripts/items-icon-splitter/outputs/.gitkeep
