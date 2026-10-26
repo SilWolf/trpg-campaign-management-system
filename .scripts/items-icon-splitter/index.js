@@ -39,7 +39,9 @@ const readItemDocument = async (fileName) => {
 		fail(`${fileName} 必須包含 items 陣列`);
 	}
 	if (document.items.length > maxItemsPerJson) {
-		fail(`${fileName} 有 ${document.items.length} 筆物品，最多只能有 ${maxItemsPerJson} 筆`);
+		fail(
+			`${fileName} 有 ${document.items.length} 筆物品，最多只能有 ${maxItemsPerJson} 筆`,
+		);
 	}
 
 	return document.items;
@@ -72,10 +74,14 @@ const main = async () => {
 	const jsonFiles = inputEntries
 		.filter((entry) => entry.isFile() && /^\d+\.json$/.test(entry.name))
 		.map((entry) => entry.name)
-		.sort((left, right) => Number.parseInt(left, 10) - Number.parseInt(right, 10));
+		.sort(
+			(left, right) => Number.parseInt(left, 10) - Number.parseInt(right, 10),
+		);
 
 	if (jsonFiles.length === 0) {
-		fail(`輸入資料夾中找不到 1.json、2.json 等數字命名的 JSON 檔案：${inputDirectory}`);
+		fail(
+			`輸入資料夾中找不到 1.json、2.json 等數字命名的 JSON 檔案：${inputDirectory}`,
+		);
 	}
 
 	const imageFiles = new Set(
@@ -128,7 +134,9 @@ const main = async () => {
 	}
 
 	for (const imageName of imageFiles) {
-		const [, fileNumberText, sheetNumberText] = /^(\d+)-(\d+)\.jfif$/.exec(imageName);
+		const [, fileNumberText, sheetNumberText] = /^(\d+)-(\d+)\.jfif$/.exec(
+			imageName,
+		);
 		const fileNumber = Number.parseInt(fileNumberText, 10);
 		const sheetNumber = Number.parseInt(sheetNumberText, 10);
 		if (
@@ -149,10 +157,17 @@ const main = async () => {
 	const outputs = [];
 	const missingSheets = [];
 	for (const { fileNumber, ids } of itemGroups) {
-		for (let sheetIndex = 0; sheetIndex < Math.ceil(ids.length / itemsPerSheet); sheetIndex += 1) {
+		for (
+			let sheetIndex = 0;
+			sheetIndex < Math.ceil(ids.length / itemsPerSheet);
+			sheetIndex += 1
+		) {
 			const imageName = `${fileNumber}-${sheetIndex + 1}.jfif`;
 			if (!imageFiles.has(imageName)) {
-				const missingCount = Math.min(itemsPerSheet, ids.length - sheetIndex * itemsPerSheet);
+				const missingCount = Math.min(
+					itemsPerSheet,
+					ids.length - sheetIndex * itemsPerSheet,
+				);
 				missingSheets.push(`${imageName}（略過 ${missingCount} 個圖示）`);
 			}
 		}
@@ -172,11 +187,24 @@ const main = async () => {
 			metadata.width !== sheetSize ||
 			metadata.height !== sheetSize
 		) {
-			fail(`${sheet.imageName} 必須是 ${sheetSize}x${sheetSize} 的 JFIF/JPEG 圖片`);
+			fail(
+				`${sheet.imageName} 必須是 ${sheetSize}x${sheetSize} 的 JFIF/JPEG 圖片`,
+			);
 		}
 
 		for (const [index, id] of sheet.itemIds.entries()) {
 			try {
+				const originalSizeBuffer = await sharp(imagePath)
+					.extract({
+						left: (index % gridSize) * iconSize,
+						top: Math.floor(index / gridSize) * iconSize,
+						width: iconSize,
+						height: iconSize,
+					})
+					.webp({ quality: 90, effort: 4 })
+					.toBuffer();
+				outputs.push({ fileName: `${id}-4x.webp`, buffer: originalSizeBuffer });
+
 				const buffer = await sharp(imagePath)
 					.extract({
 						left: (index % gridSize) * iconSize,
@@ -189,7 +217,9 @@ const main = async () => {
 					.toBuffer();
 				outputs.push({ fileName: `${id}.webp`, buffer });
 			} catch (error) {
-				fail(`${sheet.imageName} 的第 ${index + 1} 格無法處理：${error.message}`);
+				fail(
+					`${sheet.imageName} 的第 ${index + 1} 格無法處理：${error.message}`,
+				);
 			}
 		}
 	}
@@ -199,9 +229,13 @@ const main = async () => {
 		await writeFile(path.join(outputDirectory, output.fileName), output.buffer);
 	}
 
-	console.log(`完成：輸出 ${outputs.length} 個 128x128 WebP 圖示至 ${outputDirectory}`);
+	console.log(
+		`完成：輸出 ${outputs.length} 個 128x128 WebP 圖示至 ${outputDirectory}`,
+	);
 	if (missingSheets.length > 0) {
-		console.warn(`以下圖片缺失，已略過對應圖示：\n- ${missingSheets.join('\n- ')}`);
+		console.warn(
+			`以下圖片缺失，已略過對應圖示：\n- ${missingSheets.join('\n- ')}`,
+		);
 	}
 };
 
