@@ -1,6 +1,6 @@
 # 戰役商店：手動部署與隔離環境驗收
 
-本文件涵蓋戰役商店 migration `20261026000000_campaign_shops.sql`。它不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
+本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql` 及 `20261026000001_campaign_shop_item_delete.sql`。後者補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM。它不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
 
 ## Migration 依賴與範圍
 
@@ -12,13 +12,14 @@
 
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 及保存待審付款錢包類型的 `campaign_shop_order_payments`。
 - campaign 範圍外鍵、商品與訂單快照、庫存約束、索引、RLS、管理欄位權限及交易 RPC。
+- 後續刪除權限 migration 僅允許 authenticated DM 刪除所屬戰役商品；依現有外鍵，刪除商品也會 cascade 刪除其訂單與付款輔助列。
 - `authenticated` 可執行的購買、建立待審、核准、拒絕及取消 RPC；`anon` 與 `PUBLIC` 不可執行。資料表仍由 grants 與 RLS 一起限制。
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 的 `supabase_realtime` publication 設定。付款輔助表不屬於公開訂單，也不應加入 Realtime。
 
 ## 部署前安全檢查
 
 1. 由維護者確認部署目標、環境用途、專案參照及目前資料庫備份／還原方式。先選用可丟棄的隔離 Supabase 專案，不在未確認目標時登入、連結或執行部署命令。
-2. 確認隔離專案的 schema、migration history、先決 helper functions 與 publication，並檢視本文件所列的完整商店 migration。
+2. 確認隔離專案的 schema、migration history、先決 helper functions 與 publication，並檢視本文件所列的商店 migrations。
 3. 在已連結且確認為隔離專案的工作站執行下列只讀清單／dry run；確認輸出只包含已核准的 pending migrations。`db push` 可能套用所有 pending migrations，若清單包含本功能以外的變更，停止並先由維護者處理 migration history。
 
    ```sh
@@ -32,7 +33,7 @@
    supabase db push --linked
    ```
 
-5. 驗證 migration history 已記錄 `20261026000000`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
+5. 驗證 migration history 已記錄 `20261026000000` 與 `20261026000001`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
 6. 隔離驗收通過並取得維護者核准後，才依相同檢查流程安排正式環境部署。正式部署前確認備份、回復方案、維護窗口，以及任何並行 migration。
 
 本功能沒有新增 Edge Function 或 secrets。不可為此部署把 service-role key 放入前端、測試替身或版本控制。
@@ -86,6 +87,24 @@ SELECT
 ```
 
 預期三欄均為 `true`。authenticated 能呼叫 RPC 不代表任意使用者能核准；實際 DM、成員、角色擁有權及錢包 ACL 均須由 RPC 驗證，請依下一節驗收拒絕未授權操作。
+
+確認商品刪除權限已授予 authenticated，且沒有授予 anon：
+
+```sql
+SELECT
+  has_table_privilege(
+    'authenticated',
+    'public.campaign_shop_items',
+    'DELETE'
+  ) AS authenticated_can_delete_shop_items,
+  NOT has_table_privilege(
+    'anon',
+    'public.campaign_shop_items',
+    'DELETE'
+  ) AS anon_cannot_delete_shop_items;
+```
+
+預期兩欄均為 `true`。再以隔離測試帳號驗證 DM 可刪除自己戰役的商品、一般成員及其他戰役 DM 均無法刪除；刪除會 cascade 清除該商品的訂單及付款輔助列。
 
 ## 隔離環境雙帳號驗收
 

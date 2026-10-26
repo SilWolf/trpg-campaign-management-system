@@ -146,6 +146,20 @@ export async function saveCampaignShopItem(
 	return fromDbCampaignShopItem(data);
 }
 
+export async function deleteCampaignShopItem(
+	campaignId: string,
+	shopId: string,
+	id: string,
+): Promise<void> {
+	const { error } = await requireSupabase()
+		.from('campaign_shop_items')
+		.delete()
+		.eq('id', id)
+		.eq('campaign_id', campaignId)
+		.eq('shop_id', shopId);
+	if (error) throw error;
+}
+
 export async function loadCampaignShopOrders(
 	campaignId: string,
 ): Promise<CampaignShopOrder[]> {

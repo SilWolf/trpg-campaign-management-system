@@ -1,0 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
+import { createFileRoute, Outlet } from '@tanstack/react-router';
+
+export const Route = createFileRoute(
+	'/_protected/campaigns/$campaignId/shops/$shopId',
+)({
+	component: () => <Outlet />,
+});

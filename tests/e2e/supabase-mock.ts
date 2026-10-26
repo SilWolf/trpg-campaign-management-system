@@ -45,6 +45,7 @@ export async function mockSupabase(
 		blacksmithImportCharacters?: { id: string; name: string }[];
 		blacksmithImportError?: string;
 		campaignShopSeed?: boolean;
+		campaignShopItemIcon?: string;
 		campaignShopWalletGp?: number;
 		campaignShopWalletAccess?: { public: number; private: number };
 		campaignShopRpcErrors?: Partial<
@@ -81,7 +82,7 @@ export async function mockSupabase(
 		name: '治療藥水',
 		category: 'Consumable',
 		rarity: 'Common',
-		icon: 'FlaskConical',
+		icon: options.campaignShopItemIcon ?? 'FlaskConical',
 	};
 	const campaignShopItems: Record<string, unknown>[] = options.campaignShopSeed
 		? [
@@ -569,6 +570,23 @@ export async function mockSupabase(
 					updated_at: new Date().toISOString(),
 				});
 				await route.fulfill({ json: row });
+				return;
+			}
+			if (method === 'DELETE') {
+				const idFilter =
+					url.searchParams.get('id')?.slice('eq.'.length) ?? '';
+				const index = rows.findIndex(
+					(item) => item.id === idFilter && matchesCampaign(item),
+				);
+				if (index < 0) {
+					await route.fulfill({
+						status: 404,
+						json: { message: '找不到商店商品' },
+					});
+					return;
+				}
+				rows.splice(index, 1);
+				await route.fulfill({ status: 204 });
 				return;
 			}
 		}

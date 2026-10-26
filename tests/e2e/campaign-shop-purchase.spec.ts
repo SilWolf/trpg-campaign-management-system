@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { mockSupabase, seedAuthenticatedSession } from './supabase-mock';
 
-const shopUrl = '/campaigns/settings-campaign/shops';
+const shopUrl = '/campaigns/settings-campaign/shops/mock-shop-1';
 
 test('玩家可用有修改權的錢包直接購買並查看公開紀錄', async ({ page }) => {
 	const { campaignShopRpcRequests } = await mockSupabase(page, {
@@ -114,6 +114,8 @@ test('DM 可核准待審請求並完成訂單', async ({ page }) => {
 	await page.getByLabel('購買商品').selectOption('shop-item-review');
 	await page.getByRole('button', { name: '送出審查請求' }).click();
 	await expect(page.getByTestId('shop-order-row')).toContainText('待審查');
+	await expect(page.getByRole('button', { name: '核准' })).toHaveCount(0);
+	await page.goto(`${shopUrl}/settings`);
 	await page.getByRole('button', { name: '核准' }).click();
 
 	await expect(page.getByTestId('shop-order-row')).toContainText('已完成');
@@ -131,7 +133,7 @@ test('DM 可拒絕待審請求並釋放庫存', async ({ page }) => {
 		campaignShopWalletGp: 100,
 	});
 	await seedAuthenticatedSession(page);
-	await page.goto(shopUrl);
+	await page.goto(`${shopUrl}/settings`);
 
 	await expect(page.getByTestId('shop-transactions-panel')).toBeVisible();
 	await page.getByLabel('購物角色').selectOption('settings-character');
@@ -183,7 +185,7 @@ test('核准 RPC 失敗時待審訂單仍保留原狀', async ({ page }) => {
 		},
 	});
 	await seedAuthenticatedSession(page);
-	await page.goto(shopUrl);
+	await page.goto(`${shopUrl}/settings`);
 
 	await expect(page.getByTestId('shop-transactions-panel')).toBeVisible();
 	await page.getByLabel('購物角色').selectOption('settings-character');

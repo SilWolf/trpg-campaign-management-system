@@ -24,6 +24,7 @@ interface ShopTransactionsPanelProps {
 	shop: CampaignShop;
 	items: CampaignShopItem[];
 	isDm: boolean;
+	canManageOrders: boolean;
 	userId: string;
 }
 
@@ -110,6 +111,7 @@ export function ShopTransactionsPanel({
 	shop,
 	items,
 	isDm,
+	canManageOrders,
 	userId,
 }: ShopTransactionsPanelProps) {
 	const [characters, setCharacters] = useState<PurchasableCharacter[]>([]);
@@ -122,7 +124,8 @@ export function ShopTransactionsPanel({
 	const [orders, setOrders] = useState<CampaignShopOrder[]>([]);
 	const [selectedCharacterId, setSelectedCharacterId] = useState('');
 	const [selectedItemId, setSelectedItemId] = useState('');
-	const [walletType, setWalletType] = useState<CampaignShopWalletType>('public');
+	const [walletType, setWalletType] =
+		useState<CampaignShopWalletType>('public');
 	const [quantity, setQuantity] = useState('1');
 	const [isLoading, setIsLoading] = useState(true);
 	const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
@@ -137,7 +140,8 @@ export function ShopTransactionsPanel({
 	const selectedItem =
 		activeItems.find((item) => item.id === selectedItemId) ?? null;
 	const selectedCharacter =
-		characters.find((character) => character.id === selectedCharacterId) ?? null;
+		characters.find((character) => character.id === selectedCharacterId) ??
+		null;
 	const availableWallets = [
 		...(selectedCharacter?.canUsePublicWallet ? (['public'] as const) : []),
 		...(selectedCharacter?.canUsePrivateWallet ? (['private'] as const) : []),
@@ -192,9 +196,7 @@ export function ShopTransactionsPanel({
 		if (!isDm) {
 			const { data: permissionRows, error: permissionError } = await client
 				.from('character_permissions')
-				.select(
-					'character_id,public_wallet_access,private_wallet_access',
-				)
+				.select('character_id,public_wallet_access,private_wallet_access')
 				.eq('campaign_id', campaignId)
 				.eq('user_id', userId)
 				.in(
@@ -230,10 +232,7 @@ export function ShopTransactionsPanel({
 			);
 		if (walletError) throw walletError;
 		const wallets = new Map(
-			((walletRows ?? []) as CharacterWalletRow[]).map((row) => [
-				row.id,
-				row,
-			]),
+			((walletRows ?? []) as CharacterWalletRow[]).map((row) => [row.id, row]),
 		);
 		const nextCharacters = permittedRows.flatMap((row) => {
 			const wallet = wallets.get(row.id);
@@ -418,9 +417,7 @@ export function ShopTransactionsPanel({
 							<select
 								aria-label='購物角色'
 								value={selectedCharacterId}
-								onChange={(event) =>
-									setSelectedCharacterId(event.target.value)
-								}
+								onChange={(event) => setSelectedCharacterId(event.target.value)}
 								className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
 							>
 								<option value=''>選擇角色</option>
@@ -575,9 +572,8 @@ export function ShopTransactionsPanel({
 												{order.itemSnapshot.name}
 											</p>
 											<p className='mt-1 text-xs text-stone-400'>
-												{characterNames.get(order.characterId) ??
-													'未知角色'}
-												・{order.shopNameSnapshot}・數量 {order.quantity}・
+												{characterNames.get(order.characterId) ?? '未知角色'}・
+												{order.shopNameSnapshot}・數量 {order.quantity}・
 												<span className='font-mono text-amber-300'>
 													{order.totalPriceGp} gp
 												</span>
@@ -598,7 +594,7 @@ export function ShopTransactionsPanel({
 											{ORDER_STATUS_LABELS[order.status]}
 										</span>
 									</div>
-									{isDm && isPendingApproval && (
+									{canManageOrders && isPendingApproval && (
 										<div className='mt-3 flex justify-end gap-2'>
 											<Button
 												type='button'
