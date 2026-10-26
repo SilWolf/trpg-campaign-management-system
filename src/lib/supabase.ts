@@ -232,6 +232,7 @@ export const fromDbCampaignShopItem = (
 
 export interface DbCampaignShopOrder {
 	id: string;
+	checkout_id?: string | null;
 	campaign_id: string;
 	shop_id: string;
 	shop_item_id: string;
@@ -252,6 +253,7 @@ export const fromDbCampaignShopOrder = (
 	row: DbCampaignShopOrder,
 ): CampaignShopOrder => ({
 	id: row.id,
+	checkoutId: row.checkout_id ?? null,
 	campaignId: row.campaign_id,
 	shopId: row.shop_id,
 	shopItemId: row.shop_item_id,

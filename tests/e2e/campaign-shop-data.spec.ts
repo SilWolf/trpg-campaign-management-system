@@ -80,6 +80,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		const decodedStatuses = statuses.map((status) =>
 			converters.fromDbCampaignShopOrder({
 				id: `order-${status}`,
+				checkout_id: 'checkout-group-id',
 				campaign_id: 'campaign-text-id',
 				shop_id: 'shop-text-id',
 				shop_item_id: 'shop-item-id',
@@ -102,6 +103,24 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			decodedItem,
 			legacyItem,
 			decodedStatuses,
+			decodedCheckoutId: converters.fromDbCampaignShopOrder({
+				id: 'order-in-checkout',
+				checkout_id: 'checkout-group-id',
+				campaign_id: 'campaign-text-id',
+				shop_id: 'shop-text-id',
+				shop_item_id: 'shop-item-id',
+				character_id: 'character-text-id',
+				item_snapshot: encoded.item_snapshot,
+				shop_name_snapshot: '武器店',
+				unit_price_gp: '15.00',
+				quantity: 1,
+				total_price_gp: '15.00',
+				status: 'completed',
+				requires_approval: false,
+				created_at: '2026-01-01T00:00:00Z',
+				updated_at: '2026-01-02T00:00:00Z',
+				reviewed_at: null,
+			}).checkoutId,
 		};
 	});
 
@@ -143,6 +162,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		'rejected',
 		'cancelled',
 	]);
+	expect(data.decodedCheckoutId).toBe('checkout-group-id');
 });
 
 test('商店批次匯入驗證邊界並在有錯誤時拒絕部分結果', async ({ page }) => {

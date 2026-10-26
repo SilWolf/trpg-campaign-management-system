@@ -54,7 +54,7 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 	Common: {
 		label: '普通',
 		color: '#9ca3af',
-		border: 'border-stone-600/80 hover:border-stone-400',
+		border: 'border-stone-400',
 		bg: 'from-stone-800/90 via-stone-900/95 to-stone-950',
 		headerGradient: 'from-stone-700/80 via-stone-800/90 to-stone-950',
 		glow: '',
@@ -64,7 +64,7 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 	Uncommon: {
 		label: '非普通',
 		color: '#22c55e',
-		border: 'border-emerald-500/70 hover:border-emerald-400',
+		border: 'border-emerald-400',
 		bg: 'from-emerald-950/60 via-stone-900/95 to-stone-950',
 		headerGradient: 'from-emerald-900/90 via-emerald-950/90 to-stone-950',
 		glow: 'shadow-[inset_0_0_12px_rgba(34,197,94,0.25),0_0_8px_rgba(34,197,94,0.15)]',
@@ -74,7 +74,7 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 	Rare: {
 		label: '稀有',
 		color: '#3b82f6',
-		border: 'border-blue-500/80 hover:border-blue-400',
+		border: 'border-blue-400',
 		bg: 'from-blue-950/65 via-stone-900/95 to-stone-950',
 		headerGradient: 'from-blue-900/90 via-blue-950/90 to-stone-950',
 		glow: 'shadow-[inset_0_0_14px_rgba(59,130,246,0.3),0_0_10px_rgba(59,130,246,0.2)]',
@@ -84,7 +84,7 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 	VeryRare: {
 		label: '極珍稀',
 		color: '#a855f7',
-		border: 'border-purple-500/80 hover:border-purple-400',
+		border: 'border-purple-400',
 		bg: 'from-purple-950/65 via-stone-900/95 to-stone-950',
 		headerGradient: 'from-purple-900/90 via-purple-950/90 to-stone-950',
 		glow: 'shadow-[inset_0_0_16px_rgba(168,85,247,0.35),0_0_12px_rgba(168,85,247,0.25)]',
@@ -94,7 +94,7 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 	Legendary: {
 		label: '傳奇',
 		color: '#f59e0b',
-		border: 'border-amber-400/90 hover:border-amber-300',
+		border: 'border-amber-300',
 		bg: 'from-amber-950/70 via-stone-900/95 to-stone-950',
 		headerGradient: 'from-amber-700/90 via-amber-950/90 to-stone-950',
 		glow: 'shadow-[inset_0_0_18px_rgba(245,158,11,0.4),0_0_15px_rgba(245,158,11,0.3)]',
@@ -104,7 +104,7 @@ export const RARITY_CONFIG: Record<Rarity, RarityStyle> = {
 	Artifact: {
 		label: '神器',
 		color: '#ef4444',
-		border: 'border-red-500/90 hover:border-red-400',
+		border: 'border-red-400',
 		bg: 'from-red-950/75 via-stone-900/95 to-stone-950',
 		headerGradient: 'from-red-800/90 via-red-950/90 to-stone-950',
 		glow: 'shadow-[inset_0_0_20px_rgba(239,68,68,0.45),0_0_16px_rgba(239,68,68,0.35)]',

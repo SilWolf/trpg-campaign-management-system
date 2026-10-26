@@ -212,6 +212,7 @@ export interface CampaignShopItem {
 
 export interface CampaignShopOrder {
 	id: string;
+	checkoutId: string | null;
 	campaignId: string;
 	shopId: string;
 	shopItemId: string;

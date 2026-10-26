@@ -1,13 +1,14 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Plus, Store } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
-import { saveCampaignShop, loadCampaignShops } from '@/lib/campaignShops';
+import { loadCampaignShops } from '@/lib/campaignShops';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { Button, Input } from '@/components/ui';
+import { Button } from '@/components/ui';
 import type { CampaignShop } from '@/types';
+import { CampaignShopDialog } from './-parts/CampaignShopDialog';
 
 export const Route = createFileRoute(
 	'/_protected/campaigns/$campaignId/shops/',
@@ -20,10 +21,7 @@ function CampaignShopsIndex() {
 	const { isDm, loading: roleLoading } = useUserCampaignRole(campaignId);
 	const { isGuest } = useAuth();
 	const [shops, setShops] = useState<CampaignShop[]>([]);
-	const [shopName, setShopName] = useState('');
-	const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
 	const [isCreating, setIsCreating] = useState(false);
-	const [isSaving, setIsSaving] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -45,48 +43,6 @@ function CampaignShopsIndex() {
 		};
 	}, [campaignId, isGuest]);
 
-	const handleCreateShop = async (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		const name = shopName.trim();
-		if (!name || name.length > 120) {
-			setErrorMessage('商店名稱必須為 1 至 120 個字元。');
-			return;
-		}
-
-		const imageUrl = backgroundImageUrl.trim();
-		if (imageUrl) {
-			try {
-				const parsed = new URL(imageUrl);
-				if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-					throw new Error('invalid protocol');
-				}
-			} catch {
-				setErrorMessage('背景圖片網址必須是有效的 http 或 https 網址。');
-				return;
-			}
-		}
-
-		setIsSaving(true);
-		setErrorMessage(null);
-		try {
-			const shop = await saveCampaignShop(campaignId, {
-				name,
-				backgroundImageUrl: imageUrl || null,
-				isActive: true,
-			});
-			setShops((current) => [...current, shop]);
-			setShopName('');
-			setBackgroundImageUrl('');
-			setIsCreating(false);
-		} catch (error) {
-			setErrorMessage(
-				error instanceof Error ? error.message : '建立商店失敗。',
-			);
-		} finally {
-			setIsSaving(false);
-		}
-	};
-
 	const visibleShops = shops.filter((shop) => isDm || shop.isActive);
 
 	return (
@@ -106,10 +62,7 @@ function CampaignShopsIndex() {
 				{isDm && (
 					<Button
 						type='button'
-						onClick={() => {
-							setIsCreating((current) => !current);
-							setErrorMessage(null);
-						}}
+						onClick={() => setIsCreating(true)}
 						className='border border-amber-500/60 bg-amber-800 text-amber-50 hover:bg-amber-700'
 					>
 						<Plus className='h-4 w-4' />
@@ -125,54 +78,11 @@ function CampaignShopsIndex() {
 			)}
 
 			{isCreating && isDm && (
-				<form
-					onSubmit={handleCreateShop}
-					className='mb-6 grid gap-4 rounded-lg border border-amber-800/50 bg-stone-900/80 p-4 sm:grid-cols-2'
-				>
-					<h2 className='font-serif text-xl font-bold text-amber-200 sm:col-span-2'>
-						建立商店
-					</h2>
-					<label className='text-sm text-stone-300'>
-						商店名稱
-						<Input
-							required
-							maxLength={120}
-							value={shopName}
-							onChange={(event) => setShopName(event.target.value)}
-							className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
-							placeholder='例如：灰港冒險者商會'
-							data-testid='shop-name'
-						/>
-					</label>
-					<label className='text-sm text-stone-300'>
-						背景圖片網址（選填）
-						<Input
-							type='url'
-							maxLength={2048}
-							value={backgroundImageUrl}
-							onChange={(event) => setBackgroundImageUrl(event.target.value)}
-							className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
-							placeholder='https://example.com/shop.webp'
-						/>
-					</label>
-					<div className='flex justify-end gap-2 sm:col-span-2'>
-						<Button
-							type='button'
-							variant='ghost'
-							onClick={() => setIsCreating(false)}
-							className='text-stone-400'
-						>
-							取消
-						</Button>
-						<Button
-							type='submit'
-							loading={isSaving}
-							className='border border-amber-500/60 bg-amber-800 text-amber-50'
-						>
-							儲存商店
-						</Button>
-					</div>
-				</form>
+				<CampaignShopDialog
+					campaignId={campaignId}
+					onClose={() => setIsCreating(false)}
+					onSaved={(shop) => setShops((current) => [...current, shop])}
+				/>
 			)}
 
 			{roleLoading ? (

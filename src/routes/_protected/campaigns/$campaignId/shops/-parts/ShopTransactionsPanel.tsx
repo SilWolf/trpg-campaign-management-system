@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Check, Clock3, ShoppingBag, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+	AlertCircle,
+	Check,
+	Clock3,
+	Minus,
+	Plus,
+	ShoppingBag,
+	X,
+} from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import {
 	approveCampaignShopOrder,
 	cancelCampaignShopOrder,
+	checkoutCampaignShopCart,
 	loadCampaignShopOrders,
 	purchaseCampaignShopItem,
 	rejectCampaignShopOrder,
@@ -18,6 +27,7 @@ import type {
 	Character,
 	CurrencyType,
 } from '@/types';
+import ItemIcon from '../../-parts/ItemIcon';
 
 interface ShopTransactionsPanelProps {
 	campaignId: string;
@@ -26,6 +36,13 @@ interface ShopTransactionsPanelProps {
 	isDm: boolean;
 	canManageOrders: boolean;
 	userId: string;
+	showPurchaseForm?: boolean;
+	showPublicHistory?: boolean;
+	cartItems?: { item: CampaignShopItem; quantity: number }[];
+	checkoutOpen?: boolean;
+	onCheckoutOpenChange?: (open: boolean) => void;
+	onCartQuantityChange?: (itemId: string, quantity: number) => void;
+	onCheckoutComplete?: () => void;
 }
 
 interface CharacterNameRow {
@@ -113,6 +130,13 @@ export function ShopTransactionsPanel({
 	isDm,
 	canManageOrders,
 	userId,
+	showPurchaseForm = true,
+	showPublicHistory = true,
+	cartItems,
+	checkoutOpen = false,
+	onCheckoutOpenChange,
+	onCartQuantityChange,
+	onCheckoutComplete,
 }: ShopTransactionsPanelProps) {
 	const [characters, setCharacters] = useState<PurchasableCharacter[]>([]);
 	const [characterNames, setCharacterNames] = useState<Map<string, string>>(
@@ -132,6 +156,7 @@ export function ShopTransactionsPanel({
 	const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
+	const checkoutDialogRef = useRef<HTMLDialogElement>(null);
 
 	const activeItems = useMemo(
 		() => items.filter((item) => item.isActive && item.stockAvailable > 0),
@@ -170,6 +195,48 @@ export function ShopTransactionsPanel({
 		? selectedItem.unitPriceGp * (isValidQuantity ? parsedQuantity : 0)
 		: 0;
 	const totalPriceCp = Math.round(totalPriceGp * 100);
+	const purchasableCartItems = (cartItems ?? []).filter(
+		({ quantity: lineQuantity }) => lineQuantity > 0,
+	);
+	const cartTotalGp = purchasableCartItems.reduce(
+		(total, entry) => total + entry.item.unitPriceGp * entry.quantity,
+		0,
+	);
+	const cartTotalCp = Math.round(cartTotalGp * 100);
+	const cartHasApproval = purchasableCartItems.some(
+		(entry) => entry.item.requiresApproval,
+	);
+	const cartIsValid =
+		purchasableCartItems.length > 0 &&
+		purchasableCartItems.every(
+			({ item, quantity: lineQuantity }) =>
+				item.isActive &&
+				Number.isSafeInteger(lineQuantity) &&
+				lineQuantity >= 1 &&
+				lineQuantity <= item.stockAvailable,
+		) &&
+		Number.isSafeInteger(cartTotalCp);
+	const displayedOrders = showPublicHistory
+		? orders
+		: orders.filter(
+				(order) =>
+					canManageOrders &&
+					order.status === 'pending' &&
+					order.requiresApproval,
+			);
+	const orderGroups = useMemo(() => {
+		const groups = new Map<string, CampaignShopOrder[]>();
+		for (const order of displayedOrders) {
+			const groupId = order.checkoutId ?? order.id;
+			const group = groups.get(groupId) ?? [];
+			group.push(order);
+			groups.set(groupId, group);
+		}
+		return [...groups.entries()].map(([id, groupOrders]) => ({
+			id,
+			orders: groupOrders,
+		}));
+	}, [displayedOrders]);
 
 	const reloadCharacters = useCallback(async () => {
 		const client = supabase;
@@ -316,6 +383,13 @@ export function ShopTransactionsPanel({
 		};
 	}, [campaignId, reloadOrders]);
 
+	useEffect(() => {
+		const dialog = checkoutDialogRef.current;
+		if (!dialog) return;
+		if (checkoutOpen && !dialog.open) dialog.showModal();
+		if (!checkoutOpen && dialog.open) dialog.close();
+	}, [checkoutOpen]);
+
 	const runOrderAction = async (
 		orderId: string,
 		action: () => Promise<string>,
@@ -375,9 +449,62 @@ export function ShopTransactionsPanel({
 		}
 	};
 
+	const handleCartCheckout = async () => {
+		if (
+			!cartItems ||
+			purchasableCartItems.length === 0 ||
+			!cartIsValid ||
+			!selectedCharacter ||
+			!walletAllowed ||
+			!shop.isActive
+		) {
+			return;
+		}
+		if (!cartHasApproval && walletBalanceCp < cartTotalCp) {
+			setErrorMessage('所選錢包餘額不足，請調整付款錢包或購物車內容。');
+			return;
+		}
+		setIsSubmittingPurchase(true);
+		setErrorMessage(null);
+		setNotice(null);
+		try {
+			await checkoutCampaignShopCart({
+				campaignId,
+				shopId: shop.id,
+				characterId: selectedCharacter.id,
+				walletType: effectiveWalletType,
+				items: purchasableCartItems.map(({ item, quantity: lineQuantity }) => ({
+					shopItemId: item.id,
+					quantity: lineQuantity,
+				})),
+			});
+			onCheckoutComplete?.();
+			onCheckoutOpenChange?.(false);
+			setNotice(
+				cartHasApproval
+					? '購買請求已送出；整筆交易待 DM 審查，核准前不會扣款。'
+					: '結帳完成，商品已加入角色公開背包。',
+			);
+			try {
+				await reload();
+			} catch (error) {
+				setErrorMessage(
+					`交易已成立，但無法重新載入最新紀錄：${getErrorMessage(
+						error,
+						'同步購物資料失敗。',
+					)}`,
+				);
+			}
+		} catch (error) {
+			setErrorMessage(getErrorMessage(error, '結帳失敗，請稍後重試。'));
+		} finally {
+			setIsSubmittingPurchase(false);
+		}
+	};
+
 	return (
 		<section className='space-y-6' data-testid='shop-transactions-panel'>
-			{errorMessage && (
+			{errorMessage && !checkoutOpen && (
 				<div
 					role='alert'
 					className='flex items-start gap-2 rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200'
@@ -395,6 +522,257 @@ export function ShopTransactionsPanel({
 				</div>
 			)}
 
+			{cartItems && (
+				<dialog
+					ref={checkoutDialogRef}
+					aria-labelledby='shop-checkout-title'
+					onClose={() => onCheckoutOpenChange?.(false)}
+					className='m-auto max-h-[90vh] w-[min(42rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-stone-700 bg-stone-950 p-0 text-stone-100 shadow-2xl backdrop:bg-black/70'
+					data-testid='shop-checkout-dialog'
+				>
+					<div className='space-y-5 p-5'>
+						<div className='flex items-start justify-between gap-4 border-b border-stone-800 pb-4'>
+							<div>
+								<p className='text-xs font-semibold tracking-[0.18em] text-amber-500'>
+									確認交易
+								</p>
+								<h2
+									id='shop-checkout-title'
+									className='mt-1 font-serif text-2xl font-bold text-amber-100'
+								>
+									結帳清單
+								</h2>
+							</div>
+							<Button
+								type='button'
+								variant='ghost'
+								size='sm'
+								aria-label='關閉結帳視窗'
+								onClick={() => onCheckoutOpenChange?.(false)}
+								className='text-stone-400'
+							>
+								<X className='h-4 w-4' />
+							</Button>
+						</div>
+
+						{errorMessage && (
+							<div
+								role='alert'
+								className='rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200'
+							>
+								{errorMessage}
+							</div>
+						)}
+
+						<div className='max-h-64 space-y-2 overflow-y-auto'>
+							{cartItems.map(({ item, quantity: lineQuantity }) => (
+								<div
+									key={item.id}
+									data-testid={`shop-checkout-item-${item.id}`}
+									className={`flex items-start justify-between gap-4 rounded-md border p-3 ${
+										item.requiresApproval
+											? 'border-amber-700/70 bg-amber-950/30'
+											: 'border-stone-800 bg-stone-900/60'
+									}`}
+								>
+									<div className='flex min-w-0 items-start gap-3'>
+										<div
+											className='relative h-10 w-10 shrink-0 overflow-hidden rounded border border-stone-700 bg-stone-950'
+											data-testid={`shop-checkout-item-icon-${item.id}`}
+										>
+											<ItemIcon
+												iconName={item.itemSnapshot.icon}
+												className='h-6 w-6 text-stone-300'
+											/>
+										</div>
+										<div className='min-w-0'>
+											<p className='font-serif font-bold text-stone-100'>
+												{item.itemSnapshot.name}
+											</p>
+											<p className='mt-1 text-xs text-stone-400'>
+												單價{' '}
+												<span className='font-mono'>
+													{formatGpFromCp(
+														Math.round(item.unitPriceGp * 100),
+													)}{' '}
+													gp
+												</span>
+											</p>
+											<div className='mt-2 flex items-center gap-2'>
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
+													aria-label={`減少${item.itemSnapshot.name}數量`}
+													disabled={lineQuantity === 0 || isSubmittingPurchase}
+													onClick={() =>
+														onCartQuantityChange?.(
+															item.id,
+															Math.max(0, lineQuantity - 1),
+														)
+													}
+													className='h-7 min-w-7 px-1.5'
+												>
+													<Minus className='h-3 w-3' />
+												</Button>
+												<span
+													className='min-w-6 text-center font-mono text-sm text-stone-200'
+													data-testid={`shop-checkout-quantity-${item.id}`}
+												>
+													{lineQuantity}
+												</span>
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
+													aria-label={`增加${item.itemSnapshot.name}數量`}
+													disabled={
+														lineQuantity >= item.stockAvailable ||
+														isSubmittingPurchase
+													}
+													onClick={() =>
+														onCartQuantityChange?.(
+															item.id,
+															Math.min(item.stockAvailable, lineQuantity + 1),
+														)
+													}
+													className='h-7 min-w-7 px-1.5'
+												>
+													<Plus className='h-3 w-3' />
+												</Button>
+												<span className='text-xs text-stone-500'>
+													庫存 {item.stockAvailable}
+												</span>
+											</div>
+											{item.requiresApproval && (
+												<p className='mt-2 rounded bg-amber-900/50 px-2 py-1 text-xs font-semibold text-amber-200'>
+													注意：此商品需要 DM 審查，整筆交易將等待核准。
+												</p>
+											)}
+										</div>
+									</div>
+									<p className='shrink-0 font-mono text-amber-300'>
+										{formatGpFromCp(
+											Math.round(item.unitPriceGp * lineQuantity * 100),
+										)}{' '}
+										gp
+									</p>
+								</div>
+							))}
+						</div>
+
+						<div className='grid gap-3 sm:grid-cols-2'>
+							<label className='text-sm text-stone-300'>
+								結帳角色
+								<select
+									aria-label='結帳角色'
+									value={selectedCharacterId}
+									onChange={(event) =>
+										setSelectedCharacterId(event.target.value)
+									}
+									className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
+								>
+									<option value=''>選擇角色</option>
+									{characters.map((character) => (
+										<option key={character.id} value={character.id}>
+											{character.name}
+										</option>
+									))}
+								</select>
+							</label>
+							<label className='text-sm text-stone-300'>
+								付款錢包
+								<select
+									aria-label='結帳錢包'
+									value={effectiveWalletType}
+									onChange={(event) =>
+										setWalletType(
+											event.target.value as CampaignShopWalletType,
+										)
+									}
+									disabled={!selectedCharacter || availableWallets.length === 0}
+									className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 disabled:opacity-50'
+								>
+									{availableWallets.length === 0 ? (
+										<option value='public'>沒有可修改的錢包</option>
+									) : (
+										availableWallets.map((wallet) => (
+											<option key={wallet} value={wallet}>
+												{wallet === 'public'
+													? '公開錢包'
+													: '私人暗袋錢包'}
+												・餘額{' '}
+												{formatGpFromCp(
+													getWalletTotalCp(
+														wallet === 'public'
+															? selectedCharacter!.currencies
+															: selectedCharacter!.privateCurrencies,
+													),
+												)}{' '}
+												gp
+											</option>
+										))
+									)}
+								</select>
+							</label>
+						</div>
+
+						{characters.length === 0 && (
+							<p className='text-sm text-amber-200'>
+								找不到可用角色或具有修改權（2）的錢包；請確認角色與 ACL 設定。
+							</p>
+						)}
+						{purchasableCartItems.some(
+							({ item, quantity: lineQuantity }) =>
+								lineQuantity > item.stockAvailable || !item.isActive,
+						) && (
+							<p role='alert' className='text-sm text-red-300'>
+								購物車中有商品庫存不足或已停用，請返回目錄調整數量。
+							</p>
+						)}
+
+						<div className='flex flex-wrap items-center justify-between gap-4 border-t border-stone-800 pt-4'>
+							<div>
+								<p className='text-xs text-stone-500'>
+									{cartHasApproval ? '待審交易總額' : '應付總額'}
+								</p>
+								<p className='font-mono text-xl text-amber-300'>
+									{formatGpFromCp(cartTotalCp)} gp
+								</p>
+								{cartHasApproval && (
+									<p className='mt-1 text-xs text-amber-300'>
+										DM 核准前不扣款，商品庫存會先保留。
+									</p>
+								)}
+							</div>
+							<Button
+								type='button'
+								disabled={
+									isSubmittingPurchase ||
+									!shop.isActive ||
+									!cartIsValid ||
+									!selectedCharacter ||
+									!walletAllowed ||
+									availableWallets.length === 0 ||
+									(!cartHasApproval && walletBalanceCp < cartTotalCp)
+								}
+								onClick={() => void handleCartCheckout()}
+								data-testid='shop-checkout-confirm'
+								className='border border-amber-700/60 bg-amber-900 text-amber-100'
+							>
+								<ShoppingBag className='h-4 w-4' />
+								{isSubmittingPurchase
+									? '處理中…'
+									: cartHasApproval
+										? '向 DM 申請購買'
+										: '結帳'}
+							</Button>
+						</div>
+					</div>
+				</dialog>
+			)}
+
+			{showPurchaseForm && (
 			<div className={PANEL_CLASS}>
 				<div className='mb-4 flex items-center gap-2'>
 					<ShoppingBag className='h-5 w-5 text-amber-400' />
@@ -533,49 +911,85 @@ export function ShopTransactionsPanel({
 					</div>
 				)}
 			</div>
+			)}
 
 			<div className={PANEL_CLASS}>
 				<div className='mb-4 flex items-center justify-between'>
 					<div>
 						<h2 className='font-serif text-xl font-bold text-amber-100'>
-							公開購買紀錄
+							{showPublicHistory ? '公開購買紀錄' : '待審核購買請求'}
 						</h2>
 						<p className='mt-1 text-xs text-stone-500'>
-							戰役成員可見；不顯示付款錢包種類或餘額。
+							{showPublicHistory
+								? '戰役成員可見；不顯示付款錢包種類或餘額。'
+								: '僅顯示待 DM 核准的購買請求。'}
 						</p>
 					</div>
 					<span className='font-mono text-xs text-stone-500'>
-						{orders.length} 筆
+						{orderGroups.length} 筆
 					</span>
 				</div>
-				{orders.length === 0 ? (
+				{orderGroups.length === 0 ? (
 					<p className='rounded-md border border-dashed border-stone-700 p-6 text-center text-sm text-stone-500'>
-						目前沒有購買紀錄。
+						{showPublicHistory ? '目前沒有購買紀錄。' : '目前沒有待審核請求。'}
 					</p>
 				) : (
 					<div className='space-y-2'>
-						{orders.map((order) => {
-							const isPendingApproval =
-								order.status === 'pending' && order.requiresApproval;
+						{orderGroups.map((group) => {
+							const order = group.orders[0];
+							if (!order) return null;
+							const quantity = group.orders.reduce(
+								(total, entry) => total + entry.quantity,
+								0,
+							);
+							const groupTotalGp = group.orders.reduce(
+								(total, entry) => total + entry.totalPriceGp,
+								0,
+							);
+							const isPendingApproval = group.orders.every(
+								(entry) =>
+									entry.status === 'pending' && entry.requiresApproval,
+							);
 							const canCancel =
 								isPendingApproval &&
 								characterOwners.get(order.characterId) === userId;
 							return (
 								<article
-									key={order.id}
+									key={group.id}
 									className='rounded-md border border-stone-800 bg-stone-950/60 p-3'
 									data-testid='shop-order-row'
 								>
 									<div className='flex flex-wrap items-start justify-between gap-3'>
 										<div className='min-w-0'>
-											<p className='font-serif font-bold text-stone-100'>
-												{order.itemSnapshot.name}
-											</p>
+											{showPublicHistory ? (
+												<p
+													className='font-serif font-bold text-stone-100'
+													data-testid='shop-order-title'
+												>
+													{group.orders
+														.map(
+															(entry) =>
+																`${entry.itemSnapshot.name}${entry.quantity === 1 ? '' : `x${entry.quantity}`}`,
+														)
+														.join(', ')}
+												</p>
+											) : (
+												<div className='space-y-1'>
+													{group.orders.map((entry) => (
+														<p
+															key={entry.id}
+															className='font-serif font-bold text-stone-100'
+														>
+															{entry.itemSnapshot.name}
+														</p>
+													))}
+												</div>
+											)}
 											<p className='mt-1 text-xs text-stone-400'>
 												{characterNames.get(order.characterId) ?? '未知角色'}・
-												{order.shopNameSnapshot}・數量 {order.quantity}・
+												{order.shopNameSnapshot}・共 {quantity} 件・
 												<span className='font-mono text-amber-300'>
-													{order.totalPriceGp} gp
+													{groupTotalGp} gp
 												</span>
 											</p>
 											<p className='mt-1 text-[11px] text-stone-500'>
@@ -604,7 +1018,7 @@ export function ShopTransactionsPanel({
 													void runOrderAction(
 														order.id,
 														() => rejectCampaignShopOrder(order.id),
-														'已拒絕請求並釋放保留庫存。',
+														'已拒絕整筆請求並釋放保留庫存。',
 													)
 												}
 												className='border border-red-900/70 bg-red-950/40 text-red-200'
@@ -619,7 +1033,7 @@ export function ShopTransactionsPanel({
 													void runOrderAction(
 														order.id,
 														() => approveCampaignShopOrder(order.id),
-														'請求已核准，已扣款並交付商品。',
+														'整筆請求已核准，已扣款並交付商品。',
 													)
 												}
 												className='border border-emerald-800 bg-emerald-950/60 text-emerald-200'
@@ -639,7 +1053,7 @@ export function ShopTransactionsPanel({
 													void runOrderAction(
 														order.id,
 														() => cancelCampaignShopOrder(order.id),
-														'已取消請求並釋放保留庫存。',
+														'已取消整筆請求並釋放保留庫存。',
 													)
 												}
 												className='border border-stone-700 bg-stone-900 text-stone-300'

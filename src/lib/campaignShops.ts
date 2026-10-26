@@ -37,7 +37,7 @@ function requireSupabase() {
 }
 
 const ORDER_SELECT =
-	'id,campaign_id,shop_id,shop_item_id,character_id,item_snapshot,shop_name_snapshot,unit_price_gp,quantity,total_price_gp,status,requires_approval,created_at,updated_at,reviewed_at';
+	'id,checkout_id,campaign_id,shop_id,shop_item_id,character_id,item_snapshot,shop_name_snapshot,unit_price_gp,quantity,total_price_gp,status,requires_approval,created_at,updated_at,reviewed_at';
 
 export async function loadCampaignShops(
 	campaignId: string,
@@ -176,6 +176,7 @@ async function callOrderRpc(
 	name:
 		| 'purchase_campaign_shop_item'
 		| 'request_campaign_shop_item'
+		| 'checkout_campaign_shop_cart'
 		| 'approve_campaign_shop_order'
 		| 'reject_campaign_shop_order'
 		| 'cancel_campaign_shop_order',
@@ -186,6 +187,13 @@ async function callOrderRpc(
 				p_character_id: string;
 				p_wallet_type: CampaignShopWalletType;
 				p_quantity: number;
+		  }
+		| {
+				p_campaign_id: string;
+				p_shop_id: string;
+				p_character_id: string;
+				p_wallet_type: CampaignShopWalletType;
+				p_items: { shop_item_id: string; quantity: number }[];
 		  }
 		| { p_order_id: string },
 ): Promise<string> {
@@ -231,6 +239,24 @@ export function requestCampaignShopItem(
 		'request_campaign_shop_item',
 		toPurchaseArgs(details),
 	);
+}
+
+export function checkoutCampaignShopCart(
+	details: Omit<PurchaseDetails, 'shopItemId' | 'quantity'> & {
+		shopId: string;
+		items: { shopItemId: string; quantity: number }[];
+	},
+): Promise<string> {
+	return callOrderRpc('checkout_campaign_shop_cart', {
+		p_campaign_id: details.campaignId,
+		p_shop_id: details.shopId,
+		p_character_id: details.characterId,
+		p_wallet_type: details.walletType,
+		p_items: details.items.map((item) => ({
+			shop_item_id: item.shopItemId,
+			quantity: item.quantity,
+		})),
+	});
 }
 
 export function approveCampaignShopOrder(orderId: string): Promise<string> {

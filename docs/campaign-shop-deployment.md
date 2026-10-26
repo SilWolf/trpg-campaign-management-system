@@ -1,6 +1,6 @@
 # 戰役商店：手動部署與隔離環境驗收
 
-本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql` 及 `20261026000001_campaign_shop_item_delete.sql`。後者補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM。它不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
+本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql` 及 `20261027000000_campaign_shop_cart_checkout.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
 
 ## Migration 依賴與範圍
 
@@ -12,8 +12,9 @@
 
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 及保存待審付款錢包類型的 `campaign_shop_order_payments`。
 - campaign 範圍外鍵、商品與訂單快照、庫存約束、索引、RLS、管理欄位權限及交易 RPC。
+- `campaign_shop_orders.checkout_id` 將同次購物車的多個商品列分組；`checkout_campaign_shop_cart` 在單一 PostgreSQL 交易內建立整筆直接交易或待審請求。只要購物車有一項需審查，整車都會保留庫存且不扣款；核准、拒絕或取消均以整車為單位。
 - 後續刪除權限 migration 僅允許 authenticated DM 刪除所屬戰役商品；依現有外鍵，刪除商品也會 cascade 刪除其訂單與付款輔助列。
-- `authenticated` 可執行的購買、建立待審、核准、拒絕及取消 RPC；`anon` 與 `PUBLIC` 不可執行。資料表仍由 grants 與 RLS 一起限制。
+- `authenticated` 可執行的購買、建立待審、購物車結帳、核准、拒絕及取消 RPC；`anon` 與 `PUBLIC` 不可執行。資料表仍由 grants 與 RLS 一起限制。
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 的 `supabase_realtime` publication 設定。付款輔助表不屬於公開訂單，也不應加入 Realtime。
 
 ## 部署前安全檢查
@@ -33,7 +34,7 @@
    supabase db push --linked
    ```
 
-5. 驗證 migration history 已記錄 `20261026000000` 與 `20261026000001`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
+5. 驗證 migration history 已記錄 `20261026000000`、`20261026000001` 與 `20261027000000`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
 6. 隔離驗收通過並取得維護者核准後，才依相同檢查流程安排正式環境部署。正式部署前確認備份、回復方案、維護窗口，以及任何並行 migration。
 
 本功能沒有新增 Edge Function 或 secrets。不可為此部署把 service-role key 放入前端、測試替身或版本控制。
@@ -47,7 +48,14 @@ SELECT
   to_regclass('public.campaign_shops') IS NOT NULL AS shops_exists,
   to_regclass('public.campaign_shop_items') IS NOT NULL AS items_exist,
   to_regclass('public.campaign_shop_orders') IS NOT NULL AS orders_exist,
-  to_regclass('public.campaign_shop_order_payments') IS NOT NULL AS payment_table_exists;
+  to_regclass('public.campaign_shop_order_payments') IS NOT NULL AS payment_table_exists,
+  EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'campaign_shop_orders'
+      AND column_name = 'checkout_id'
+  ) AS checkout_group_exists;
 ```
 
 確認三個公開資料表位於 Realtime publication：
@@ -74,6 +82,16 @@ SELECT
     'public.purchase_campaign_shop_item(text,text,text,text,integer)',
     'EXECUTE'
   ) AS authenticated_can_purchase,
+  has_function_privilege(
+    'authenticated',
+    'public.checkout_campaign_shop_cart(text,text,text,text,jsonb)',
+    'EXECUTE'
+  ) AS authenticated_can_checkout_cart,
+  NOT has_function_privilege(
+    'anon',
+    'public.checkout_campaign_shop_cart(text,text,text,text,jsonb)',
+    'EXECUTE'
+  ) AS anon_cannot_checkout_cart,
   NOT has_function_privilege(
     'anon',
     'public.purchase_campaign_shop_item(text,text,text,text,integer)',
@@ -86,7 +104,7 @@ SELECT
   ) AS authenticated_can_call_approval_rpc;
 ```
 
-預期三欄均為 `true`。authenticated 能呼叫 RPC 不代表任意使用者能核准；實際 DM、成員、角色擁有權及錢包 ACL 均須由 RPC 驗證，請依下一節驗收拒絕未授權操作。
+預期所有欄位均為 `true`。authenticated 能呼叫 RPC 不代表任意使用者能核准；實際 DM、成員、角色擁有權及錢包 ACL 均須由 RPC 驗證，請依下一節驗收拒絕未授權操作。
 
 確認商品刪除權限已授予 authenticated，且沒有授予 anon：
 
@@ -122,6 +140,7 @@ SELECT
 ### 錢包與交易
 
 - 以玩家自有角色及公開錢包修改權 `2` 完成一次購買；另以私人錢包修改權 `2` 完成一次購買。確認付款及找零只影響被選取的錢包，不合併或改寫另一個錢包。
+- 同一購物車加入多項直接購買商品，確認只呼叫一次購物車 RPC，並以整筆原子扣款、交付及建立同一 `checkout_id` 的公開紀錄。若購物車混入需審查商品，確認所有商品列均進入同一待審交易；核准、拒絕或取消任一筆都必須整車轉換，不可部分完成。
 - 對公開或私人錢包只有閱讀權 `1`、無權 `0`、他人角色及 `camp-chest` 嘗試呼叫購買 RPC，均應失敗且訂單、庫存、錢包與背包維持原狀。
 - 選擇不能整除的付款組合，確認依 D&D 幣值換算及同錢包找零正確；以兩位小數 gp 邊界及超出精度的值確認接受／拒絕結果符合 schema 約束。
 - 對需審查商品送出請求，確認先保留庫存、不扣款、不交付；拒絕或玩家取消後可用庫存恢復。核准後才扣款、交付物品並將保留數量扣除。

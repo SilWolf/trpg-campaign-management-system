@@ -1,15 +1,26 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Image, Pencil, Store } from 'lucide-react';
+import {
+	ChevronLeft,
+	ChevronRight,
+	Image,
+	Minus,
+	Pencil,
+	Plus,
+	ShoppingBag,
+	Store,
+} from 'lucide-react';
+import { RARITY_CONFIG } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import { loadCampaignShopItems, loadCampaignShops } from '@/lib/campaignShops';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui';
+import ReactMarkdown from 'react-markdown';
 import ItemIcon from '../../-parts/ItemIcon';
 import { ShopTransactionsPanel } from '../-parts/ShopTransactionsPanel';
-import type { CampaignShop, CampaignShopItem, ItemCategory, Rarity } from '@/types';
+import type { CampaignShop, CampaignShopItem, ItemCategory } from '@/types';
 
 export const Route = createFileRoute(
 	'/_protected/campaigns/$campaignId/shops/$shopId/',
@@ -24,14 +35,7 @@ const CATEGORY_LABELS: Record<ItemCategory, string> = {
 	Misc: '雜物',
 };
 
-const RARITY_LABELS: Record<Rarity, string> = {
-	Common: '普通',
-	Uncommon: '非普通',
-	Rare: '稀有',
-	VeryRare: '極稀有',
-	Legendary: '傳奇',
-	Artifact: '神器',
-};
+const ITEM_EFFECTS_MAX_HEIGHT = 200;
 
 function CampaignShopDetail() {
 	const { campaignId, shopId } = Route.useParams();
@@ -39,12 +43,88 @@ function CampaignShopDetail() {
 	const { user, isGuest } = useAuth();
 	const [shop, setShop] = useState<CampaignShop | null>(null);
 	const [items, setItems] = useState<CampaignShopItem[]>([]);
+	const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+	const [cartQuantities, setCartQuantities] = useState<Record<string, number>>(
+		{},
+	);
+	const [checkoutOpen, setCheckoutOpen] = useState(false);
+	const [requestedPage, setRequestedPage] = useState(1);
+	const [expandedItemEffectsId, setExpandedItemEffectsId] = useState<
+		string | null
+	>(null);
+	const [longItemEffectsId, setLongItemEffectsId] = useState<string | null>(
+		null,
+	);
+	const itemEffectsContentRef = useRef<HTMLDivElement>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const visibleItems = useMemo(
 		() => items.filter((item) => isDm || item.isActive),
 		[isDm, items],
 	);
+	const pageSize = 10;
+	const pageCount = Math.max(1, Math.ceil(visibleItems.length / pageSize));
+	const currentPage = Math.min(requestedPage, pageCount);
+	const paginatedItems = visibleItems.slice(
+		(currentPage - 1) * pageSize,
+		currentPage * pageSize,
+	);
+	const cartItems = items.flatMap((item) => {
+		const quantity = cartQuantities[item.id] ?? 0;
+		return quantity > 0 ? [{ item, quantity }] : [];
+	});
+	const checkoutItems = items.flatMap((item) => {
+		const quantity = cartQuantities[item.id];
+		return quantity === undefined ? [] : [{ item, quantity }];
+	});
+	const cartItemCount = cartItems.reduce(
+		(total, entry) => total + entry.quantity,
+		0,
+	);
+	const cartTotalGp = cartItems.reduce(
+		(total, entry) => total + entry.item.unitPriceGp * entry.quantity,
+		0,
+	);
+	const cartIsValid =
+		cartItems.length > 0 &&
+		cartItems.every(
+			({ item, quantity }) => item.isActive && quantity <= item.stockAvailable,
+		);
+	const handleCheckoutOpenChange = (open: boolean) => {
+		if (!open) {
+			setCartQuantities((current) =>
+				Object.fromEntries(
+					Object.entries(current).filter(([, quantity]) => quantity > 0),
+				),
+			);
+		}
+		setCheckoutOpen(open);
+	};
+	const selectedItem =
+		visibleItems.find((item) => item.id === selectedItemId) ??
+		visibleItems[0] ??
+		null;
+	const isItemEffectsExpanded =
+		selectedItem !== null && expandedItemEffectsId === selectedItem.id;
+	const hasLongItemEffects =
+		selectedItem !== null && longItemEffectsId === selectedItem.id;
+	const selectedItemEffectId = selectedItem?.id;
+	const selectedItemEffects = selectedItem?.itemSnapshot.effects;
+
+	useEffect(() => {
+		const content = itemEffectsContentRef.current;
+		if (!content || !selectedItemEffectId) return;
+
+		const observer = new ResizeObserver(() => {
+			setLongItemEffectsId(
+				content.scrollHeight > ITEM_EFFECTS_MAX_HEIGHT
+					? selectedItemEffectId
+					: null,
+			);
+		});
+		observer.observe(content);
+		return () => observer.disconnect();
+	}, [selectedItemEffectId, selectedItemEffects]);
 
 	useEffect(() => {
 		if (!isSupabaseConfigured || isGuest) {
@@ -113,7 +193,9 @@ function CampaignShopDetail() {
 	if (!isSupabaseConfigured || isGuest) {
 		return (
 			<main className='rounded-lg border border-amber-800/50 bg-stone-900/80 p-6'>
-				<h1 className='font-serif text-2xl font-bold text-amber-200'>戰役商店</h1>
+				<h1 className='font-serif text-2xl font-bold text-amber-200'>
+					戰役商店
+				</h1>
 				<p className='mt-3 text-sm text-stone-400'>
 					商店雲端功能需要登入 Supabase 帳號。
 				</p>
@@ -131,7 +213,10 @@ function CampaignShopDetail() {
 
 	if (errorMessage) {
 		return (
-			<main role='alert' className='rounded-lg border border-red-800/70 bg-red-950/40 p-4 text-sm text-red-200'>
+			<main
+				role='alert'
+				className='rounded-lg border border-red-800/70 bg-red-950/40 p-4 text-sm text-red-200'
+			>
 				{errorMessage}
 			</main>
 		);
@@ -183,14 +268,20 @@ function CampaignShopDetail() {
 
 			<div className='overflow-hidden rounded-lg border border-stone-800 bg-stone-900/70'>
 				{shop.backgroundImageUrl ? (
-					<img src={shop.backgroundImageUrl} alt='' className='h-48 w-full object-cover' />
+					<img
+						src={shop.backgroundImageUrl}
+						alt=''
+						className='h-48 w-full object-cover'
+					/>
 				) : (
 					<div className='flex h-36 items-center justify-center bg-gradient-to-br from-amber-950/50 via-stone-900 to-stone-950'>
 						<Image className='h-8 w-8 text-amber-900' />
 					</div>
 				)}
 				<div className='px-4 py-3'>
-					<h2 className='font-serif text-xl font-bold text-amber-100'>{shop.name}</h2>
+					<h2 className='font-serif text-xl font-bold text-amber-100'>
+						{shop.name}
+					</h2>
 					<p className='mt-1 text-xs text-stone-500'>
 						{shop.isActive ? '營業中' : '已停用'}
 					</p>
@@ -198,63 +289,392 @@ function CampaignShopDetail() {
 			</div>
 
 			<section className='mt-5 rounded-lg border border-stone-800 bg-stone-900/50 p-4'>
-				<div className='mb-4 flex items-center justify-between'>
-					<div>
-						<h2 className='font-serif text-xl font-bold text-amber-100'>商品目錄</h2>
-						<p className='mt-1 text-xs text-stone-500'>
-							選擇角色與可修改的錢包，即可購買或送出審查請求。
-						</p>
-					</div>
-					<span className='font-mono text-xs text-stone-500'>{visibleItems.length} 項</span>
+				<div className='mb-4'>
+					<h2 className='font-serif text-xl font-bold text-amber-100'>
+						商品目錄
+					</h2>
+					<p className='mt-1 text-xs text-stone-500'>
+						選擇商品查看詳細資料，使用 +1／-1 調整數量，再選擇角色與錢包結帳。
+					</p>
 				</div>
-				{visibleItems.length === 0 ? (
-					<div className='rounded-md border border-dashed border-stone-700 p-8 text-center text-sm text-stone-500'>
-						尚無商品
-					</div>
-				) : (
-					<div className='grid gap-3 sm:grid-cols-2 xl:grid-cols-3'>
-						{visibleItems.map((item) => (
-							<article
-								key={item.id}
-								className='rounded-md border border-stone-800 bg-stone-950/70 p-3'
-								data-testid='shop-item-card'
+				<div className='flex flex-col gap-4 lg:flex-row'>
+					<div className='min-w-0 rounded-md border border-stone-800 bg-stone-950/40 lg:flex-[3]'>
+						<div className='border-b border-stone-800 px-3 py-2'>
+							<span className='font-mono text-xs text-stone-500'>
+								{visibleItems.length} 項商品
+							</span>
+						</div>
+						{visibleItems.length === 0 ? (
+							<div className='rounded-md border border-dashed border-stone-700 p-8 text-center text-sm text-stone-500'>
+								尚無商品
+							</div>
+						) : (
+							<div className='max-h-[38rem] divide-y divide-stone-800 overflow-y-auto'>
+								{paginatedItems.map((item) => {
+									const isSelected = selectedItem?.id === item.id;
+									const quantity = cartQuantities[item.id] ?? 0;
+									const rarityStyle = RARITY_CONFIG[item.itemSnapshot.rarity];
+									const canAdd =
+										shop.isActive &&
+										item.isActive &&
+										quantity < item.stockAvailable;
+									return (
+										<div
+											key={item.id}
+											className='flex min-w-0 items-stretch border-b border-stone-800 last:border-b-0'
+											data-testid='shop-item-rarity-card'
+											style={{ borderLeftColor: rarityStyle.color }}
+										>
+											<Button
+												type='button'
+												variant='ghost'
+												aria-label={`查看${item.itemSnapshot.name}`}
+												aria-pressed={isSelected}
+												onClick={() => setSelectedItemId(item.id)}
+												className={`flex min-w-0 flex-1 items-center justify-between gap-3 rounded-none px-3 py-2 text-left ${
+													isSelected
+														? 'border-amber-500/80 bg-amber-950/40'
+														: 'border-transparent bg-stone-950/70 hover:border-stone-600 hover:bg-stone-900'
+												}`}
+												data-testid='shop-item-card'
+											>
+												<div className='flex min-w-0 flex-1 items-center gap-2'>
+													<div
+														className={`relative h-9 w-9 shrink-0 overflow-hidden rounded border bg-stone-950 ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
+														data-testid='shop-item-icon'
+													>
+														<ItemIcon
+															iconName={item.itemSnapshot.icon}
+															className='h-6 w-6 text-stone-300'
+														/>
+													</div>
+													<div className='min-w-0'>
+														<h3
+															className={`truncate font-serif text-sm font-bold ${rarityStyle.text}`}
+														>
+															{item.itemSnapshot.name}
+														</h3>
+														<p className='mt-1 truncate text-xs text-stone-500'>
+															{CATEGORY_LABELS[item.itemSnapshot.category]}・
+															<span
+																data-testid='shop-item-rarity'
+																className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
+															>
+																{rarityStyle.label}
+															</span>
+														</p>
+													</div>
+												</div>
+												<div className='flex shrink-0 flex-col items-end gap-2'>
+													<span className='font-mono text-sm text-amber-300'>
+														{item.unitPriceGp.toLocaleString('zh-TW')} gp
+													</span>
+													<span className='text-[11px] text-stone-500'>
+														庫存 {item.stockAvailable}
+													</span>
+												</div>
+												{isDm && !item.isActive && (
+													<span className='text-[11px] text-stone-500'>
+														停用
+													</span>
+												)}
+												{item.requiresApproval && (
+													<span className='text-[11px] text-amber-300'>
+														需 DM 審查
+													</span>
+												)}
+											</Button>
+											<div
+												className='flex shrink-0 items-center justify-center gap-2 px-3'
+												aria-label={`${item.itemSnapshot.name}購買數量`}
+											>
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
+													aria-label={`-1 ${item.itemSnapshot.name}`}
+													disabled={quantity === 0}
+													onClick={() =>
+														setCartQuantities((current) => ({
+															...current,
+															[item.id]: Math.max(
+																0,
+																(current[item.id] ?? 0) - 1,
+															),
+														}))
+													}
+													className='h-7 min-w-7 px-1.5'
+												>
+													<Minus className='h-3 w-3' />
+												</Button>
+												<span
+													className='min-w-6 text-center font-mono text-sm text-stone-200'
+													data-testid={`shop-cart-quantity-${item.id}`}
+												>
+													{quantity}
+												</span>
+												<Button
+													type='button'
+													variant='secondary'
+													size='sm'
+													aria-label={`+1 ${item.itemSnapshot.name}`}
+													disabled={!canAdd}
+													onClick={() =>
+														setCartQuantities((current) => ({
+															...current,
+															[item.id]: (current[item.id] ?? 0) + 1,
+														}))
+													}
+													className='h-7 min-w-7 px-1.5'
+												>
+													<Plus className='h-3 w-3' />
+												</Button>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						)}
+						{visibleItems.length > pageSize && (
+							<nav
+								aria-label='商品列表分頁'
+								className='flex flex-wrap items-center justify-between gap-3 border-t border-stone-800 px-3 py-2'
 							>
-								<div className='flex items-start gap-3'>
+								<p
+									data-testid='shop-items-pagination-status'
+									className='text-xs text-stone-400'
+								>
+									第{' '}
+									<span className='font-mono text-stone-200'>
+										{currentPage}
+									</span>{' '}
+									/{' '}
+									<span className='font-mono text-stone-200'>{pageCount}</span>{' '}
+									頁
+									<span className='hidden sm:inline'>
+										{' '}
+										· 顯示 {(currentPage - 1) * pageSize + 1}–
+										{Math.min(currentPage * pageSize, visibleItems.length)} 筆
+									</span>
+								</p>
+								<div className='flex gap-2'>
+									<Button
+										type='button'
+										variant='secondary'
+										size='sm'
+										aria-label='上一頁'
+										disabled={currentPage === 1}
+										onClick={() =>
+											setRequestedPage((page) => Math.max(1, page - 1))
+										}
+										className='gap-1'
+									>
+										<ChevronLeft aria-hidden='true' className='h-4 w-4' />
+										上一頁
+									</Button>
+									<Button
+										type='button'
+										variant='secondary'
+										size='sm'
+										aria-label='下一頁'
+										disabled={currentPage === pageCount}
+										onClick={() =>
+											setRequestedPage((page) => Math.min(pageCount, page + 1))
+										}
+										className='gap-1'
+									>
+										下一頁
+										<ChevronRight aria-hidden='true' className='h-4 w-4' />
+									</Button>
+								</div>
+							</nav>
+						)}
+					</div>
+
+					<aside
+						className='min-w-0 rounded-md border border-stone-800 bg-stone-950/60 p-4 lg:min-w-72 lg:flex-[2]'
+						aria-label='物品詳細'
+						data-testid='shop-item-details'
+					>
+						{selectedItem ? (
+							<>
+								<div className='flex items-start gap-3 border-b border-stone-800 pb-4'>
 									<div
-										className='relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-stone-700 bg-stone-950'
-										data-testid='shop-item-icon'
+										className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-gradient-to-b ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].border} ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].bg} ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].glow}`}
+										data-testid='shop-item-detail-icon'
 									>
 										<ItemIcon
-											iconName={item.itemSnapshot.icon}
-											className='h-7 w-7 text-stone-300'
+											iconName={selectedItem.itemSnapshot.icon}
+											className='h-8 w-8 text-stone-300'
 										/>
 									</div>
-									<div className='min-w-0 flex-1'>
-										<h3 className='truncate font-serif font-bold text-stone-100'>
-											{item.itemSnapshot.name}
+									<div className='min-w-0'>
+										<h3
+											className={`font-serif text-xl font-bold ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].text}`}
+										>
+											{selectedItem.itemSnapshot.name}
 										</h3>
-										<p className='mt-1 text-xs text-stone-500'>
-											{CATEGORY_LABELS[item.itemSnapshot.category]}・
-											{RARITY_LABELS[item.itemSnapshot.rarity]}
+										<p className='mt-1 text-xs text-stone-400'>
+											{CATEGORY_LABELS[selectedItem.itemSnapshot.category]}・
+											{RARITY_CONFIG[selectedItem.itemSnapshot.rarity].label}
+											{selectedItem.itemSnapshot.subType
+												? `・${selectedItem.itemSnapshot.subType}`
+												: ''}
 										</p>
 									</div>
 								</div>
-								<p className='mt-3 font-mono text-lg text-amber-300'>
-									{item.unitPriceGp.toLocaleString('zh-TW')} gp
-								</p>
-								<div className='mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500'>
-									<span>
-										庫存 <span className='font-mono text-stone-300'>{item.stockAvailable}</span>
-									</span>
-									{isDm && !item.isActive && <span>停用</span>}
-									{item.requiresApproval && (
-										<span className='text-purple-300'>需 DM 審查</span>
+
+								<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
+									{selectedItem.itemSnapshot.damage && (
+										<div>
+											<p className='text-[11px] text-stone-500'>傷害</p>
+											<p className='font-mono text-amber-200'>
+												{selectedItem.itemSnapshot.damage}
+											</p>
+										</div>
+									)}
+									{selectedItem.itemSnapshot.ac && (
+										<div>
+											<p className='text-[11px] text-stone-500'>護甲等級</p>
+											<p className='font-mono text-sky-200'>
+												AC {selectedItem.itemSnapshot.ac}
+											</p>
+										</div>
+									)}
+									<div>
+										<p className='text-[11px] text-stone-500'>重量</p>
+										<p className='font-mono text-stone-200'>
+											{selectedItem.itemSnapshot.weight} lb
+										</p>
+									</div>
+									<div>
+										<p className='text-[11px] text-stone-500'>商店價格</p>
+										<p className='font-mono text-amber-300'>
+											{selectedItem.unitPriceGp.toLocaleString('zh-TW')} gp
+										</p>
+									</div>
+									<div>
+										<p className='text-[11px] text-stone-500'>可用庫存</p>
+										<p className='font-mono text-stone-200'>
+											{selectedItem.stockAvailable}
+										</p>
+									</div>
+									{selectedItem.itemSnapshot.requiresAttunement && (
+										<div className='self-end text-xs text-purple-300'>
+											需同調
+										</div>
 									)}
 								</div>
-							</article>
-						))}
+
+								{selectedItem.itemSnapshot.flavor && (
+									<div className='border-b border-stone-800 py-3'>
+										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+											物品描述
+										</h4>
+										<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+											<ReactMarkdown>
+												{selectedItem.itemSnapshot.flavor}
+											</ReactMarkdown>
+										</div>
+									</div>
+								)}
+								{selectedItem.itemSnapshot.effects && (
+									<div className='border-b border-stone-800 py-3'>
+										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+											物品效果
+										</h4>
+										<div
+											className={`max-w-none overflow-hidden ${
+												isItemEffectsExpanded ? 'max-h-none' : 'max-h-[200px]'
+											}`}
+											data-testid='shop-item-effects'
+										>
+											<div
+												ref={itemEffectsContentRef}
+												className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'
+											>
+												<ReactMarkdown>
+													{selectedItem.itemSnapshot.effects}
+												</ReactMarkdown>
+											</div>
+										</div>
+										{hasLongItemEffects && (
+											<Button
+												type='button'
+												variant='ghost'
+												size='sm'
+												aria-expanded={isItemEffectsExpanded}
+												onClick={() =>
+													setExpandedItemEffectsId(
+														isItemEffectsExpanded ? null : selectedItem.id,
+													)
+												}
+												className='mt-2 px-0 text-xs text-amber-300 hover:text-amber-200'
+											>
+												{isItemEffectsExpanded ? '收合' : '顯示全部'}
+											</Button>
+										)}
+									</div>
+								)}
+								{(selectedItem.itemSnapshot.affixes ?? [])
+									.filter((affix) => isDm || !affix.isHidden)
+									.map((affix) => (
+										<div
+											key={affix.id}
+											className='border-b border-stone-800 py-3 last:border-0'
+										>
+											<h4 className='mb-1 text-xs font-semibold text-purple-300'>
+												{affix.name}
+											</h4>
+											<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+												<ReactMarkdown>{affix.desc}</ReactMarkdown>
+											</div>
+										</div>
+									))}
+								{isDm && !selectedItem.isActive && (
+									<p className='mt-3 text-xs text-stone-500'>
+										此商品目前已停用。
+									</p>
+								)}
+								{selectedItem.requiresApproval && (
+									<p className='mt-3 text-xs text-purple-300'>
+										此商品購買需要 DM 審查。
+									</p>
+								)}
+							</>
+						) : (
+							<div className='flex min-h-48 items-center justify-center text-center text-sm text-stone-500'>
+								請先從左側選擇商品以查看詳細資料。
+							</div>
+						)}
+					</aside>
+				</div>
+				<div className='mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-stone-800 pt-4'>
+					<div>
+						<p className='text-xs text-stone-500'>已挑選商品</p>
+						<p className='mt-1 text-sm text-stone-200'>
+							<span className='font-mono'>{cartItemCount}</span> 件
+							<span className='mx-2 text-stone-600'>·</span>
+							總價值{' '}
+							<span className='font-mono text-amber-300'>
+								{cartTotalGp.toLocaleString('zh-TW', {
+									maximumFractionDigits: 2,
+								})}{' '}
+								gp
+							</span>
+						</p>
 					</div>
-				)}
+					<Button
+						type='button'
+						disabled={!cartIsValid || !shop.isActive}
+						onClick={() => setCheckoutOpen(true)}
+						data-testid='shop-checkout-open'
+						className='border border-amber-700/60 bg-amber-900 text-amber-100'
+					>
+						<ShoppingBag className='h-4 w-4' />
+						結帳
+					</Button>
+				</div>
 			</section>
 
 			{shop && user?.id && (
@@ -265,6 +685,17 @@ function CampaignShopDetail() {
 					isDm={isDm}
 					canManageOrders={false}
 					userId={user.id}
+					showPurchaseForm={false}
+					cartItems={checkoutItems}
+					checkoutOpen={checkoutOpen}
+					onCheckoutOpenChange={handleCheckoutOpenChange}
+					onCartQuantityChange={(itemId, quantity) =>
+						setCartQuantities((current) => ({
+							...current,
+							[itemId]: quantity,
+						}))
+					}
+					onCheckoutComplete={() => setCartQuantities({})}
 				/>
 			)}
 		</main>
