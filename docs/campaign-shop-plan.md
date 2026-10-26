@@ -160,12 +160,16 @@ DM 調整庫存時只編輯可用數量，且不得使庫存為負數。已保�
 
 ### 階段一：Schema、授權與交易 RPC
 
-1. 核對現有 campaigns、characters、inventory_items、character_permissions 的實際 schema、RLS 及索引。
-2. 新增商店、商品、訂單資料表、必要 constraint、索引、campaign cascade 外鍵、RLS 與 Realtime publication 設定。
-3. 新增建立商店／商品管理、購買、建立待審請求、核准、拒絕及取消所需 RPC。
-4. 以兩個以上帳號在隔離 Supabase 專案驗證權限及併發交易，再由維護者手動部署。
+1. [x] 核對 repository 中 campaigns、characters、inventory_items、character_permissions 的 schema、RLS 與 ACL 欄位；確認 campaign／character ID 與角色 owner 為 `text`、ACL user ID 為 `uuid`。目標 Supabase 的即時 schema 尚待維護者驗證。
+2. [x] 新增 `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 與私有 `campaign_shop_order_payments` 表，含 campaign cascade 外鍵、快照、庫存約束、索引、RLS 與 Realtime publication 設定。
+3. [x] 新增直接購買、建立待審請求、核准、拒絕及取消 RPC。DM 商店／商品管理採受欄位權限與 RLS 保護的直接資料操作；訂單只能由 RPC 建立或轉換狀態。
+4. [ ] 以兩個以上帳號在隔離 Supabase 專案驗證權限、RLS、Realtime 及併發交易，再由維護者手動部署。
 
-**完成條件：** RLS 無遞迴；未授權的直接寫入遭拒；購買與庫存／錢包更新完整原子化；同一庫存不足時併發請求不會超賣。
+**目前實作：** migration 為 [`20261026000000_campaign_shops.sql`](../supabase/migrations/20261026000000_campaign_shops.sql)。交易函式以資料列鎖保護商品庫存、訂單及角色錢包；價格以最多兩位小數的 gp 儲存並換算為整數 cp，找零只寫回訂單綁定的同一錢包。待審請求先保留庫存；其付款錢包種類只存於一般使用者不可讀寫的輔助表，不列入公開訂單欄位。付款不足或任何交付失敗會令 PostgreSQL 整筆交易回滾。
+
+**尚未驗證／不可宣稱完成：** 此環境沒有 `psql` 或 Supabase CLI，本次未套用 migration，也未連線任何 Supabase 專案。兩帳號 RLS、Realtime、併發超賣及失敗回滾驗收仍待維護者在確認過的隔離專案執行；完成前不可視為已部署或通過資料庫驗收。
+
+**完成條件：** RLS 無遞迴；未授權的直接寫入遭拒；購買與庫存／錢包更新完整原子化；同一庫存不足時併發請求不會超賣。上述條件中的真實資料庫驗收目前仍待執行。
 
 ### 階段二：型別、轉換器與資料服務
 
