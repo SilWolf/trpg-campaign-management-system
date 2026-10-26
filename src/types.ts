@@ -99,6 +99,13 @@ export type WeaponMasteryKey =
 export type WeaponMasteryInfo = { name: string; desc: string };
 export type CurrencyType = 'pp' | 'gp' | 'ep' | 'sp' | 'cp';
 export type ViewMode = 'player' | 'dm';
+export type CampaignShopItemSourceType = 'catalog' | 'blacksmith' | 'manual';
+export type CampaignShopOrderStatus =
+	| 'completed'
+	| 'pending'
+	| 'rejected'
+	| 'cancelled';
+export type CampaignShopWalletType = 'public' | 'private';
 
 // 背包展示模式與四大自動分類
 export type InventoryDisplayMode = 'grid6' | 'grid' | 'list';
@@ -162,6 +169,64 @@ export type InventoryItem = {
 	isImportant?: boolean;
 	affixes?: ItemAffix[];
 };
+
+export type CampaignShopItemSnapshot = Omit<
+	InventoryItem,
+	| 'id'
+	| 'ownerId'
+	| 'slot'
+	| 'quantity'
+	| 'equipped'
+	| 'attuned'
+	| 'isIdentified'
+	| 'charges'
+	| 'playerNotes'
+	| 'isPrivate'
+>;
+
+export interface CampaignShop {
+	id: string;
+	campaignId: string;
+	name: string;
+	backgroundImageUrl: string | null;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CampaignShopItem {
+	id: string;
+	campaignId: string;
+	shopId: string;
+	itemSnapshot: CampaignShopItemSnapshot;
+	sourceType: CampaignShopItemSourceType;
+	sourceId: string | null;
+	unitPriceGp: number;
+	stockAvailable: number;
+	stockReserved: number;
+	requiresApproval: boolean;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface CampaignShopOrder {
+	id: string;
+	campaignId: string;
+	shopId: string;
+	shopItemId: string;
+	characterId: string;
+	itemSnapshot: CampaignShopItemSnapshot;
+	shopNameSnapshot: string;
+	unitPriceGp: number;
+	quantity: number;
+	totalPriceGp: number;
+	status: CampaignShopOrderStatus;
+	requiresApproval: boolean;
+	createdAt: string;
+	updatedAt: string;
+	reviewedAt: string | null;
+}
 
 export type Character = {
 	userId: string;

@@ -23,6 +23,7 @@ import { Route as ProtectedBlacksmithOfficialsCatelogIdRouteImport } from './rou
 import { Route as ProtectedCampaignsCampaignIdIndexRouteImport } from './routes/_protected/campaigns/$campaignId/index'
 import { Route as ProtectedSettingsProfileIndexRouteImport } from './routes/_protected/settings/profile/index'
 import { Route as ProtectedCampaignsCampaignIdSettingsIndexRouteImport } from './routes/_protected/campaigns/$campaignId/settings/index'
+import { Route as ProtectedCampaignsCampaignIdShopsIndexRouteImport } from './routes/_protected/campaigns/$campaignId/shops/index'
 
 const ProtectedRouteRoute = ProtectedRouteRouteImport.update({
   id: '/_protected',
@@ -102,6 +103,12 @@ const ProtectedCampaignsCampaignIdSettingsIndexRoute =
     path: '/settings/',
     getParentRoute: () => ProtectedCampaignsCampaignIdRouteRoute,
   } as any)
+const ProtectedCampaignsCampaignIdShopsIndexRoute =
+  ProtectedCampaignsCampaignIdShopsIndexRouteImport.update({
+    id: '/shops/',
+    path: '/shops/',
+    getParentRoute: () => ProtectedCampaignsCampaignIdRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/settings/profile/': typeof ProtectedSettingsProfileIndexRoute
   '/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
+  '/campaigns/$campaignId/shops/': typeof ProtectedCampaignsCampaignIdShopsIndexRoute
 }
 export interface FileRoutesByTo {
   '/settings': typeof ProtectedSettingsRouteRouteWithChildren
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
   '/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/settings/profile': typeof ProtectedSettingsProfileIndexRoute
   '/campaigns/$campaignId/settings': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
+  '/campaigns/$campaignId/shops': typeof ProtectedCampaignsCampaignIdShopsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -147,6 +156,7 @@ export interface FileRoutesById {
   '/_protected/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/_protected/settings/profile/': typeof ProtectedSettingsProfileIndexRoute
   '/_protected/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
+  '/_protected/campaigns/$campaignId/shops/': typeof ProtectedCampaignsCampaignIdShopsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/campaigns/$campaignId/'
     | '/settings/profile/'
     | '/campaigns/$campaignId/settings/'
+    | '/campaigns/$campaignId/shops/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/settings'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/campaigns/$campaignId'
     | '/settings/profile'
     | '/campaigns/$campaignId/settings'
+    | '/campaigns/$campaignId/shops'
   id:
     | '__root__'
     | '/_protected'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/_protected/campaigns/$campaignId/'
     | '/_protected/settings/profile/'
     | '/_protected/campaigns/$campaignId/settings/'
+    | '/_protected/campaigns/$campaignId/shops/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedCampaignsCampaignIdSettingsIndexRouteImport
       parentRoute: typeof ProtectedCampaignsCampaignIdRouteRoute
     }
+    '/_protected/campaigns/$campaignId/shops/': {
+      id: '/_protected/campaigns/$campaignId/shops/'
+      path: '/shops'
+      fullPath: '/campaigns/$campaignId/shops/'
+      preLoaderRoute: typeof ProtectedCampaignsCampaignIdShopsIndexRouteImport
+      parentRoute: typeof ProtectedCampaignsCampaignIdRouteRoute
+    }
   }
 }
 
@@ -343,6 +363,7 @@ const ProtectedSettingsRouteRouteWithChildren =
 interface ProtectedCampaignsCampaignIdRouteRouteChildren {
   ProtectedCampaignsCampaignIdIndexRoute: typeof ProtectedCampaignsCampaignIdIndexRoute
   ProtectedCampaignsCampaignIdSettingsIndexRoute: typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
+  ProtectedCampaignsCampaignIdShopsIndexRoute: typeof ProtectedCampaignsCampaignIdShopsIndexRoute
 }
 
 const ProtectedCampaignsCampaignIdRouteRouteChildren: ProtectedCampaignsCampaignIdRouteRouteChildren =
@@ -351,6 +372,8 @@ const ProtectedCampaignsCampaignIdRouteRouteChildren: ProtectedCampaignsCampaign
       ProtectedCampaignsCampaignIdIndexRoute,
     ProtectedCampaignsCampaignIdSettingsIndexRoute:
       ProtectedCampaignsCampaignIdSettingsIndexRoute,
+    ProtectedCampaignsCampaignIdShopsIndexRoute:
+      ProtectedCampaignsCampaignIdShopsIndexRoute,
   }
 
 const ProtectedCampaignsCampaignIdRouteRouteWithChildren =

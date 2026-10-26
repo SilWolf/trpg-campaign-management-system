@@ -7,7 +7,7 @@ import {
 	Link,
 	useParams,
 } from '@tanstack/react-router';
-import { Backpack, Settings, Shield, ArrowLeft } from 'lucide-react';
+import { Backpack, Settings, Shield, ArrowLeft, Store } from 'lucide-react';
 import { SystemLinkBar } from '@/components/SystemLinkBar';
 
 export const Route = createFileRoute('/_protected/campaigns/$campaignId')({
@@ -55,6 +55,15 @@ function CampaignLayout() {
 							>
 								<Backpack className='w-3.5 h-3.5' />
 								<span>軍械庫與背包</span>
+							</Link>
+
+							<Link
+								to='/campaigns/$campaignId/shops'
+								params={{ campaignId }}
+								className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition [&.active]:bg-amber-800/80 [&.active]:text-amber-100 text-stone-400 hover:text-stone-200'
+							>
+								<Store className='w-3.5 h-3.5' />
+								<span>戰役商店</span>
 							</Link>
 
 							<Link

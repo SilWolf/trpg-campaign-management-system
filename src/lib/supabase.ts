@@ -5,6 +5,12 @@ import {
 	type CharacterPermission,
 	type CurrencyType,
 	type BlacksmithTemplate,
+	type CampaignShop,
+	type CampaignShopItem,
+	type CampaignShopItemSnapshot,
+	type CampaignShopItemSourceType,
+	type CampaignShopOrder,
+	type CampaignShopOrderStatus,
 	type InventoryItem,
 } from '@/types';
 
@@ -48,6 +54,219 @@ export const fromDbCampaignCurrency = (
 		cp: valueFor('cp'),
 	};
 };
+
+export interface DbCampaignShop {
+	id: string;
+	campaign_id: string;
+	name: string;
+	background_image_url: string | null;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export const toDbCampaignShop = (
+	shop: Pick<CampaignShop, 'campaignId' | 'name' | 'backgroundImageUrl' | 'isActive'>,
+): Pick<
+	DbCampaignShop,
+	'campaign_id' | 'name' | 'background_image_url' | 'is_active'
+> => ({
+	campaign_id: shop.campaignId,
+	name: shop.name,
+	background_image_url: shop.backgroundImageUrl,
+	is_active: shop.isActive,
+});
+
+export const fromDbCampaignShop = (row: DbCampaignShop): CampaignShop => ({
+	id: row.id,
+	campaignId: row.campaign_id,
+	name: row.name,
+	backgroundImageUrl: row.background_image_url ?? null,
+	isActive: Boolean(row.is_active),
+	createdAt: row.created_at,
+	updatedAt: row.updated_at,
+});
+
+export interface DbCampaignShopItem {
+	id: string;
+	campaign_id: string;
+	shop_id: string;
+	item_snapshot: Partial<DbCampaignShopItemSnapshot> | null;
+	source_type: CampaignShopItemSourceType;
+	source_id: string | null;
+	unit_price_gp: number | string;
+	stock_available: number;
+	stock_reserved: number;
+	requires_approval: boolean;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface DbCampaignShopItemSnapshot {
+	name: string;
+	category: InventoryItem['category'];
+	sub_type: string;
+	rarity: InventoryItem['rarity'];
+	icon: string;
+	damage: string | null;
+	mastery: InventoryItem['mastery'];
+	ac: string | null;
+	weight: number;
+	value_gp: number;
+	requires_attunement: boolean;
+	is_homebrew: boolean;
+	max_charges: number;
+	effects: string;
+	flavor: string;
+	dm_notes: string;
+	is_equippable: boolean;
+	is_consumable: boolean;
+	is_important: boolean;
+	affixes: NonNullable<InventoryItem['affixes']>;
+}
+
+const fromDbCampaignShopItemSnapshot = (
+	snapshot: Partial<DbCampaignShopItemSnapshot> | null | undefined,
+): CampaignShopItemSnapshot => ({
+	name: snapshot?.name ?? '',
+	category: snapshot?.category ?? 'Misc',
+	subType: snapshot?.sub_type ?? '',
+	rarity: snapshot?.rarity ?? 'Common',
+	icon: snapshot?.icon ?? 'Package',
+	damage: snapshot?.damage ?? null,
+	mastery: snapshot?.mastery ?? 'None',
+	ac: snapshot?.ac ?? null,
+	weight: Number(snapshot?.weight ?? 0),
+	valueGp: Number(snapshot?.value_gp ?? 0),
+	requiresAttunement: Boolean(snapshot?.requires_attunement),
+	isHomebrew: Boolean(snapshot?.is_homebrew),
+	maxCharges: Number(snapshot?.max_charges ?? 0),
+	effects: snapshot?.effects ?? '',
+	flavor: snapshot?.flavor ?? '',
+	dmNotes: snapshot?.dm_notes ?? '',
+	isEquippable: Boolean(snapshot?.is_equippable),
+	isConsumable: Boolean(snapshot?.is_consumable),
+	isImportant: Boolean(snapshot?.is_important),
+	affixes: snapshot?.affixes ?? [],
+});
+
+const toDbCampaignShopItemSnapshot = (
+	snapshot: CampaignShopItemSnapshot,
+): DbCampaignShopItemSnapshot => ({
+	name: snapshot.name,
+	category: snapshot.category,
+	sub_type: snapshot.subType,
+	rarity: snapshot.rarity,
+	icon: snapshot.icon,
+	damage: snapshot.damage,
+	mastery: snapshot.mastery,
+	ac: snapshot.ac,
+	weight: snapshot.weight,
+	value_gp: snapshot.valueGp,
+	requires_attunement: snapshot.requiresAttunement,
+	is_homebrew: snapshot.isHomebrew,
+	max_charges: snapshot.maxCharges,
+	effects: snapshot.effects,
+	flavor: snapshot.flavor,
+	dm_notes: snapshot.dmNotes,
+	is_equippable: Boolean(snapshot.isEquippable),
+	is_consumable: Boolean(snapshot.isConsumable),
+	is_important: Boolean(snapshot.isImportant),
+	affixes: snapshot.affixes ?? [],
+});
+
+export const toDbCampaignShopItem = (
+	item: Pick<
+		CampaignShopItem,
+		| 'campaignId'
+		| 'shopId'
+		| 'itemSnapshot'
+		| 'sourceType'
+		| 'sourceId'
+		| 'unitPriceGp'
+		| 'stockAvailable'
+		| 'requiresApproval'
+		| 'isActive'
+	>,
+): Pick<
+	DbCampaignShopItem,
+	| 'campaign_id'
+	| 'shop_id'
+	| 'item_snapshot'
+	| 'source_type'
+	| 'source_id'
+	| 'unit_price_gp'
+	| 'stock_available'
+	| 'requires_approval'
+	| 'is_active'
+> => ({
+	campaign_id: item.campaignId,
+	shop_id: item.shopId,
+	item_snapshot: toDbCampaignShopItemSnapshot(item.itemSnapshot),
+	source_type: item.sourceType,
+	source_id: item.sourceId,
+	unit_price_gp: item.unitPriceGp,
+	stock_available: item.stockAvailable,
+	requires_approval: item.requiresApproval,
+	is_active: item.isActive,
+});
+
+export const fromDbCampaignShopItem = (
+	row: DbCampaignShopItem,
+): CampaignShopItem => ({
+	id: row.id,
+	campaignId: row.campaign_id,
+	shopId: row.shop_id,
+	itemSnapshot: fromDbCampaignShopItemSnapshot(row.item_snapshot),
+	sourceType: row.source_type,
+	sourceId: row.source_id ?? null,
+	unitPriceGp: Number(row.unit_price_gp),
+	stockAvailable: Number(row.stock_available),
+	stockReserved: Number(row.stock_reserved ?? 0),
+	requiresApproval: Boolean(row.requires_approval),
+	isActive: Boolean(row.is_active),
+	createdAt: row.created_at,
+	updatedAt: row.updated_at,
+});
+
+export interface DbCampaignShopOrder {
+	id: string;
+	campaign_id: string;
+	shop_id: string;
+	shop_item_id: string;
+	character_id: string;
+	item_snapshot: Partial<DbCampaignShopItemSnapshot> | null;
+	shop_name_snapshot: string;
+	unit_price_gp: number | string;
+	quantity: number;
+	total_price_gp: number | string;
+	status: CampaignShopOrderStatus;
+	requires_approval: boolean;
+	created_at: string;
+	updated_at: string;
+	reviewed_at: string | null;
+}
+
+export const fromDbCampaignShopOrder = (
+	row: DbCampaignShopOrder,
+): CampaignShopOrder => ({
+	id: row.id,
+	campaignId: row.campaign_id,
+	shopId: row.shop_id,
+	shopItemId: row.shop_item_id,
+	characterId: row.character_id,
+	itemSnapshot: fromDbCampaignShopItemSnapshot(row.item_snapshot),
+	shopNameSnapshot: row.shop_name_snapshot,
+	unitPriceGp: Number(row.unit_price_gp),
+	quantity: Number(row.quantity),
+	totalPriceGp: Number(row.total_price_gp),
+	status: row.status,
+	requiresApproval: Boolean(row.requires_approval),
+	createdAt: row.created_at,
+	updatedAt: row.updated_at,
+	reviewedAt: row.reviewed_at ?? null,
+});
 
 // ==========================================
 // 資料庫欄位 (snake_case) <-> 前端型別 (camelCase) 轉換器

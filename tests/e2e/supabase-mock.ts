@@ -44,6 +44,19 @@ export async function mockSupabase(
 		blacksmithImportCampaigns?: { id: string; name: string }[];
 		blacksmithImportCharacters?: { id: string; name: string }[];
 		blacksmithImportError?: string;
+		campaignShopSeed?: boolean;
+		campaignShopWalletGp?: number;
+		campaignShopWalletAccess?: { public: number; private: number };
+		campaignShopRpcErrors?: Partial<
+			Record<
+				| 'purchase_campaign_shop_item'
+				| 'request_campaign_shop_item'
+				| 'approve_campaign_shop_order'
+				| 'reject_campaign_shop_order'
+				| 'cancel_campaign_shop_order',
+				string
+			>
+		>;
 	} = {},
 ) {
 	const requests: string[] = [];
@@ -51,6 +64,64 @@ export async function mockSupabase(
 	const campaignUpdates: unknown[] = [];
 	const blacksmithImportRequests: unknown[] = [];
 	const blacksmithItems = [...(options.blacksmithSharedItems ?? [])];
+	const campaignShops: Record<string, unknown>[] = options.campaignShopSeed
+		? [
+				{
+					id: 'mock-shop-1',
+					campaign_id: 'settings-campaign',
+					name: '灰港冒險者商會',
+					background_image_url: null,
+					is_active: true,
+					created_at: '2025-01-01T00:00:00.000Z',
+					updated_at: '2025-01-01T00:00:00.000Z',
+				},
+			]
+		: [];
+	const shopItemSnapshot = {
+		name: '治療藥水',
+		category: 'Consumable',
+		rarity: 'Common',
+		icon: 'FlaskConical',
+	};
+	const campaignShopItems: Record<string, unknown>[] = options.campaignShopSeed
+		? [
+				{
+					id: 'shop-item-direct',
+					campaign_id: 'settings-campaign',
+					shop_id: 'mock-shop-1',
+					item_snapshot: shopItemSnapshot,
+					source_type: 'manual',
+					source_id: null,
+					unit_price_gp: 2,
+					stock_available: 4,
+					stock_reserved: 0,
+					requires_approval: false,
+					is_active: true,
+					created_at: '2025-01-01T00:00:00.000Z',
+					updated_at: '2025-01-01T00:00:00.000Z',
+				},
+				{
+					id: 'shop-item-review',
+					campaign_id: 'settings-campaign',
+					shop_id: 'mock-shop-1',
+					item_snapshot: { ...shopItemSnapshot, name: '治療藥水（需審查）' },
+					source_type: 'manual',
+					source_id: null,
+					unit_price_gp: 3,
+					stock_available: 4,
+					stock_reserved: 0,
+					requires_approval: true,
+					is_active: true,
+					created_at: '2025-01-01T00:00:00.000Z',
+					updated_at: '2025-01-01T00:00:00.000Z',
+				},
+			]
+		: [];
+	const campaignShopOrders: Record<string, unknown>[] = [];
+	const campaignShopRpcRequests: { name: string; body: unknown }[] = [];
+	let nextShopId = 1;
+	let nextShopItemId = 1;
+	let nextShopOrderId = 1;
 	const campaignSettingsRole = options.campaignSettingsRole;
 	const campaignInventoryRole = options.campaignInventoryRole;
 	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
@@ -440,6 +511,160 @@ export async function mockSupabase(
 		}
 
 		if (
+			url.pathname === '/rest/v1/campaign_shops' ||
+			url.pathname === '/rest/v1/campaign_shop_items'
+		) {
+			const rows =
+				url.pathname === '/rest/v1/campaign_shops'
+					? campaignShops
+					: campaignShopItems;
+			const matchesCampaign = (row: Record<string, unknown>) => {
+				const filter = url.searchParams.get('campaign_id');
+				return !filter || String(row.campaign_id) === filter.slice('eq.'.length);
+			};
+			if (method === 'GET') {
+				await route.fulfill({
+					json: rows.filter(matchesCampaign),
+				});
+				return;
+			}
+			if (method === 'POST') {
+				const payload: unknown = request.postDataJSON();
+				const values = Array.isArray(payload) ? payload : [payload];
+				const inserted = values.map((value) => {
+					const row = value as Record<string, unknown>;
+					const isShop = url.pathname === '/rest/v1/campaign_shops';
+					const saved = {
+						...row,
+						id: isShop
+							? `mock-shop-${nextShopId++}`
+							: `mock-shop-item-${nextShopItemId++}`,
+						stock_reserved: row.stock_reserved ?? 0,
+						created_at: new Date().toISOString(),
+						updated_at: new Date().toISOString(),
+					};
+					rows.push(saved);
+					return saved;
+				});
+				await route.fulfill({
+					status: 201,
+					json: Array.isArray(payload) ? inserted : inserted[0],
+				});
+				return;
+			}
+			if (method === 'PATCH') {
+				const idFilter =
+					url.searchParams.get('id')?.slice('eq.'.length) ?? '';
+				const row = rows.find(
+					(item) => item.id === idFilter && matchesCampaign(item),
+				);
+				if (!row) {
+					await route.fulfill({
+						status: 404,
+						json: { message: '找不到商店資料' },
+					});
+					return;
+				}
+				Object.assign(row, request.postDataJSON(), {
+					updated_at: new Date().toISOString(),
+				});
+				await route.fulfill({ json: row });
+				return;
+			}
+		}
+
+		if (
+			url.pathname.startsWith('/rest/v1/rpc/') &&
+			[
+				'purchase_campaign_shop_item',
+				'request_campaign_shop_item',
+				'approve_campaign_shop_order',
+				'reject_campaign_shop_order',
+				'cancel_campaign_shop_order',
+			].some((name) => url.pathname.endsWith(`/${name}`))
+		) {
+			const rpcName = url.pathname.split('/').pop() ?? '';
+			const body = request.postDataJSON() as Record<string, unknown>;
+			campaignShopRpcRequests.push({ name: rpcName, body });
+			const rpcError =
+				options.campaignShopRpcErrors?.[
+					rpcName as keyof NonNullable<typeof options.campaignShopRpcErrors>
+				];
+			if (rpcError) {
+				await route.fulfill({ status: 400, json: { message: rpcError } });
+				return;
+			}
+			if (
+				rpcName === 'purchase_campaign_shop_item' ||
+				rpcName === 'request_campaign_shop_item'
+			) {
+				const item = campaignShopItems.find(
+					(row) => row.id === body.p_shop_item_id,
+				);
+				if (!item) {
+					await route.fulfill({
+						status: 400,
+						json: { message: '找不到測試商店商品' },
+					});
+					return;
+				}
+				const quantity = Number(body.p_quantity);
+				item.stock_available = Number(item.stock_available) - quantity;
+				const isPending = rpcName === 'request_campaign_shop_item';
+				if (isPending) {
+					item.stock_reserved = Number(item.stock_reserved) + quantity;
+				}
+				const orderId = `mock-shop-order-${nextShopOrderId++}`;
+				campaignShopOrders.push({
+					id: orderId,
+					campaign_id: body.p_campaign_id,
+					shop_id: item.shop_id,
+					shop_item_id: item.id,
+					character_id: body.p_character_id,
+					item_snapshot: item.item_snapshot,
+					shop_name_snapshot: '灰港冒險者商會',
+					unit_price_gp: item.unit_price_gp,
+					quantity,
+					total_price_gp: Number(item.unit_price_gp) * quantity,
+					status: isPending ? 'pending' : 'completed',
+					requires_approval: isPending,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+					reviewed_at: null,
+				});
+				await route.fulfill({ json: orderId });
+				return;
+			}
+
+			const order = campaignShopOrders.find(
+				(row) => row.id === body.p_order_id,
+			);
+			if (order) {
+				const item = campaignShopItems.find(
+					(row) => row.id === order.shop_item_id,
+				);
+				if (item && order.status === 'pending') {
+					item.stock_reserved =
+						Number(item.stock_reserved) - Number(order.quantity);
+					if (rpcName === 'reject_campaign_shop_order') {
+						item.stock_available =
+							Number(item.stock_available) + Number(order.quantity);
+						order.status = 'rejected';
+					} else if (rpcName === 'cancel_campaign_shop_order') {
+						item.stock_available =
+							Number(item.stock_available) + Number(order.quantity);
+						order.status = 'cancelled';
+					} else {
+						order.status = 'completed';
+					}
+					order.updated_at = new Date().toISOString();
+				}
+			}
+			await route.fulfill({ json: String(body.p_order_id ?? '') });
+			return;
+		}
+
+		if (
 			campaignRole &&
 			url.pathname === '/rest/v1/campaigns' &&
 			method === 'GET'
@@ -487,6 +712,26 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/characters' &&
 			method === 'GET'
 		) {
+			if (
+				url.searchParams.get('select') === 'id,currencies,private_currencies'
+			) {
+				const walletAmount = options.campaignShopWalletGp ?? 0;
+				await route.fulfill({
+					json: campaignCharacters
+						.filter((row) =>
+							url.searchParams.get('id')?.includes(row.id),
+						)
+						.map((row) => ({
+							id: row.id,
+							currencies: { ...row.currencies, gp: walletAmount },
+							private_currencies: {
+								...row.private_currencies,
+								gp: walletAmount,
+							},
+						})),
+				});
+				return;
+			}
 			await route.fulfill({
 				json: options.blankCampaign
 					? []
@@ -525,7 +770,27 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/character_permissions' &&
 			method === 'GET'
 		) {
-			await route.fulfill({ json: [] });
+			await route.fulfill({
+				json: options.campaignShopWalletAccess
+					? [
+							{
+								character_id: 'settings-character',
+								public_wallet_access:
+									options.campaignShopWalletAccess.public,
+								private_wallet_access:
+									options.campaignShopWalletAccess.private,
+							},
+						]
+					: [],
+			});
+			return;
+		}
+
+		if (
+			url.pathname === '/rest/v1/campaign_shop_orders' &&
+			method === 'GET'
+		) {
+			await route.fulfill({ json: campaignShopOrders });
 			return;
 		}
 
@@ -568,5 +833,6 @@ export async function mockSupabase(
 		functionRequests,
 		campaignUpdates,
 		blacksmithImportRequests,
+		campaignShopRpcRequests,
 	};
 }
