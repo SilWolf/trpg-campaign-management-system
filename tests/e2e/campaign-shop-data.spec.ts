@@ -37,11 +37,24 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			requiresApproval: false,
 			isActive: true,
 		});
+		const refreshPolicy = {
+			flags: { keepItemsOnRefresh: true },
+			rules: [
+				{
+					possibleItemsOrFilters: [
+						{ source: 'official-catalog', param: { rarity: 'Rare' as const } },
+					],
+					pickCount: 2,
+					stockAvailable: { min: 1, max: 4 },
+				},
+			],
+		};
 		const encodedShop = converters.toDbCampaignShop({
 			campaignId: 'campaign-text-id',
 			name: '武器店',
 			backgroundImageUrl: null,
 			isActive: true,
+			refreshPolicy,
 		});
 		const decodedShop = converters.fromDbCampaignShop({
 			id: 'shop-text-id',
@@ -49,6 +62,42 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			created_at: '2026-01-01T00:00:00Z',
 			updated_at: '2026-01-02T00:00:00Z',
 		});
+		const legacyShop = converters.fromDbCampaignShop({
+			id: 'legacy-shop-id',
+			campaign_id: 'campaign-text-id',
+			name: '舊商店',
+			background_image_url: null,
+			is_active: true,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-02T00:00:00Z',
+		});
+		const refresh = await import('/src/lib/campaignShopRefresh.ts');
+		let invalidCatalogError = '';
+		try {
+			refresh.normalizeCampaignShopRefreshPolicy(
+				refreshPolicy,
+				new Set(['another-catalog']),
+			);
+		} catch (error) {
+			invalidCatalogError =
+				error instanceof Error ? error.message : String(error);
+		}
+		let invalidStockError = '';
+		try {
+			refresh.normalizeCampaignShopRefreshPolicy({
+				flags: { keepItemsOnRefresh: false },
+				rules: [
+					{
+						possibleItemsOrFilters: [],
+						pickCount: null,
+						stockAvailable: { min: 0, max: 2_147_483_648 },
+					},
+				],
+			});
+		} catch (error) {
+			invalidStockError =
+				error instanceof Error ? error.message : String(error);
+		}
 		const decodedItem = converters.fromDbCampaignShopItem({
 			id: 'shop-item-id',
 			...encoded,
@@ -99,7 +148,11 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		);
 		return {
 			encoded,
+			encodedShop,
 			decodedShop,
+			legacyShop,
+			invalidCatalogError,
+			invalidStockError,
 			decodedItem,
 			legacyItem,
 			decodedStatuses,
@@ -130,7 +183,26 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		name: '武器店',
 		backgroundImageUrl: null,
 		isActive: true,
+		refreshPolicy: {
+			flags: { keepItemsOnRefresh: true },
+			rules: [
+				{
+					possibleItemsOrFilters: [
+						{ source: 'official-catalog', param: { rarity: 'Rare' } },
+					],
+					pickCount: 2,
+					stockAvailable: { min: 1, max: 4, p: 1, step: 1 },
+				},
+			],
+		},
 	});
+	expect(data.encodedShop.refresh_policy).toEqual(data.decodedShop.refreshPolicy);
+	expect(data.legacyShop.refreshPolicy).toEqual({
+		flags: { keepItemsOnRefresh: false },
+		rules: [],
+	});
+	expect(data.invalidCatalogError).toContain('不存在的官方目錄');
+	expect(data.invalidStockError).toContain('資料庫 integer 上限');
 	expect(data.encoded.item_snapshot).toMatchObject({
 		sub_type: '軍用武器',
 		value_gp: 15,

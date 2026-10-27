@@ -106,6 +106,54 @@ export type CampaignShopOrderStatus =
 	| 'rejected'
 	| 'cancelled';
 export type CampaignShopWalletType = 'public' | 'private';
+export interface CampaignShopRefreshRange {
+	min?: number;
+	max?: number | null;
+	p?: number;
+	step?: number;
+}
+
+export type CampaignShopRefreshCandidate =
+	| BlacksmithItem
+	| {
+			source: string;
+			param: {
+				search?: string;
+				rarity?: Rarity;
+				category?: ItemCategory;
+			};
+	  };
+
+export interface CampaignShopRefreshRule {
+	possibleItemsOrFilters: CampaignShopRefreshCandidate[];
+	pickCount?: number | null | CampaignShopRefreshRange;
+	stockAvailable: CampaignShopRefreshRange;
+}
+
+export interface CampaignShopRefreshPolicy {
+	flags: {
+		keepItemsOnRefresh: boolean;
+	};
+	rules: CampaignShopRefreshRule[];
+}
+
+export interface CampaignShopRefreshExpectedItem {
+	id: string;
+	updatedAt: string;
+}
+
+export interface CampaignShopRefreshItemChange {
+	sourceId: string;
+	itemSnapshot: CampaignShopItemSnapshot;
+	unitPriceGp: number;
+	stockAvailable: number;
+}
+
+export interface CampaignShopRefreshResult {
+	created: number;
+	restocked: number;
+	retired: number;
+}
 
 // 背包展示模式與四大自動分類
 export type InventoryDisplayMode = 'grid6' | 'grid' | 'list';
@@ -190,6 +238,7 @@ export interface CampaignShop {
 	name: string;
 	backgroundImageUrl: string | null;
 	isActive: boolean;
+	refreshPolicy: CampaignShopRefreshPolicy;
 	createdAt: string;
 	updatedAt: string;
 }

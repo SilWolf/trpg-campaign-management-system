@@ -6,17 +6,26 @@ import {
 	toDbCampaignShop,
 	toDbCampaignShopItem,
 } from '@/lib/supabase';
+import {
+	normalizeCampaignShopRefreshPolicy,
+} from '@/lib/campaignShopRefresh';
+import { loadBlacksmithCatalogDefinitions } from '@/lib/blacksmithCatalog';
 import type {
 	CampaignShop,
 	CampaignShopItem,
 	CampaignShopOrder,
+	CampaignShopRefreshExpectedItem,
+	CampaignShopRefreshItemChange,
+	CampaignShopRefreshPolicy,
+	CampaignShopRefreshResult,
 	CampaignShopWalletType,
 } from '@/types';
 
 export type CampaignShopValues = Pick<
 	CampaignShop,
 	'name' | 'backgroundImageUrl' | 'isActive'
->;
+> &
+	Partial<Pick<CampaignShop, 'refreshPolicy'>>;
 
 export type CampaignShopItemValues = Pick<
 	CampaignShopItem,
@@ -34,6 +43,16 @@ function requireSupabase() {
 		throw new Error('商店雲端資料需要設定 Supabase，請先完成登入與環境設定。');
 	}
 	return supabase;
+}
+
+async function validateRefreshPolicy(
+	policy: CampaignShopRefreshPolicy,
+): Promise<CampaignShopRefreshPolicy> {
+	const catalogs = await loadBlacksmithCatalogDefinitions();
+	return normalizeCampaignShopRefreshPolicy(
+		policy,
+		new Set(catalogs.map((catalog) => catalog.catalogId)),
+	);
 }
 
 const ORDER_SELECT =
@@ -57,7 +76,11 @@ export async function saveCampaignShop(
 	id?: string,
 ): Promise<CampaignShop> {
 	const client = requireSupabase();
-	const shop = { campaignId, ...values };
+	const refreshPolicy =
+		values.refreshPolicy === undefined
+			? undefined
+			: await validateRefreshPolicy(values.refreshPolicy);
+	const shop = { campaignId, ...values, refreshPolicy };
 	const result = id
 		? await client
 				.from('campaign_shops')
@@ -65,6 +88,9 @@ export async function saveCampaignShop(
 					name: shop.name,
 					background_image_url: shop.backgroundImageUrl,
 					is_active: shop.isActive,
+					...(refreshPolicy
+						? { refresh_policy: refreshPolicy }
+						: {}),
 				})
 				.eq('id', id)
 				.eq('campaign_id', campaignId)
@@ -72,10 +98,27 @@ export async function saveCampaignShop(
 				.single()
 		: await client
 				.from('campaign_shops')
-				.insert(toDbCampaignShop(shop))
+				.insert(toDbCampaignShop({ ...shop, refreshPolicy }))
 				.select()
 				.single();
 	const { data, error } = result;
+	if (error) throw error;
+	return fromDbCampaignShop(data);
+}
+
+export async function saveCampaignShopRefreshPolicy(
+	campaignId: string,
+	shopId: string,
+	policy: CampaignShopRefreshPolicy,
+): Promise<CampaignShop> {
+	const refreshPolicy = await validateRefreshPolicy(policy);
+	const { data, error } = await requireSupabase()
+		.from('campaign_shops')
+		.update({ refresh_policy: refreshPolicy })
+		.eq('id', shopId)
+		.eq('campaign_id', campaignId)
+		.select()
+		.single();
 	if (error) throw error;
 	return fromDbCampaignShop(data);
 }
@@ -158,6 +201,106 @@ export async function deleteCampaignShopItem(
 		.eq('campaign_id', campaignId)
 		.eq('shop_id', shopId);
 	if (error) throw error;
+}
+
+export async function refreshCampaignShopItems(
+	campaignId: string,
+	shopId: string,
+	expectedShopUpdatedAt: string,
+	expectedItems: CampaignShopRefreshExpectedItem[],
+	keepItemsOnRefresh: boolean,
+	changes: CampaignShopRefreshItemChange[],
+): Promise<CampaignShopRefreshResult> {
+	const catalogs = await loadBlacksmithCatalogDefinitions();
+	const catalogIds = new Set(catalogs.map((catalog) => catalog.catalogId));
+	if (!Number.isFinite(Date.parse(expectedShopUpdatedAt))) {
+		throw new Error('刷新預覽的商店版本無效，請重新載入並產生預覽。');
+	}
+	if (
+		expectedItems.some(
+			(item) =>
+				!item.id || !Number.isFinite(Date.parse(item.updatedAt)),
+		) ||
+		new Set(expectedItems.map((item) => item.id)).size !== expectedItems.length
+	) {
+		throw new Error('刷新預覽的商品版本資料無效，請重新產生預覽。');
+	}
+
+	const sourceIds = new Set<string>();
+	const dbChanges = changes.map((change) => {
+		const separatorIndex = change.sourceId.indexOf(':');
+		const catalogId = change.sourceId.slice(0, separatorIndex);
+		const itemId = change.sourceId.slice(separatorIndex + 1);
+		if (
+			separatorIndex < 1 ||
+			itemId.length === 0 ||
+			!catalogIds.has(catalogId) ||
+			sourceIds.has(change.sourceId)
+		) {
+			throw new Error('刷新預覽包含無效或重複的官方目錄來源商品。');
+		}
+		sourceIds.add(change.sourceId);
+		if (
+			!Number.isSafeInteger(change.stockAvailable) ||
+			change.stockAvailable < 0 ||
+			change.stockAvailable > 2_147_483_647 ||
+			!Number.isFinite(change.unitPriceGp) ||
+			change.unitPriceGp < 0.01 ||
+			change.unitPriceGp >= 10_000_000_000 ||
+			Math.abs(
+				change.unitPriceGp * 100 -
+					Math.round(change.unitPriceGp * 100),
+			) > 1e-8
+		) {
+			throw new Error('刷新預覽包含無效的商品價格或庫存。');
+		}
+		return toDbCampaignShopItem({
+			campaignId,
+			shopId,
+			itemSnapshot: change.itemSnapshot,
+			sourceType: 'catalog',
+			sourceId: change.sourceId,
+			unitPriceGp: change.unitPriceGp,
+			stockAvailable: change.stockAvailable,
+			requiresApproval: false,
+			isActive: true,
+		});
+	});
+
+	const { data, error } = await requireSupabase().rpc(
+		'refresh_campaign_shop_items',
+		{
+			p_campaign_id: campaignId,
+			p_shop_id: shopId,
+			p_expected_shop_updated_at: expectedShopUpdatedAt,
+			p_expected_items: expectedItems.map((item) => ({
+				id: item.id,
+				updated_at: item.updatedAt,
+			})),
+			p_keep_items: keepItemsOnRefresh,
+			p_changes: dbChanges.map((change) => ({
+				source_id: change.source_id,
+				item_snapshot: change.item_snapshot,
+				unit_price_gp: change.unit_price_gp,
+				stock_available: change.stock_available,
+			})),
+		},
+	);
+	if (error) throw error;
+	if (
+		typeof data !== 'object' ||
+		data === null ||
+		!Number.isSafeInteger(data.created) ||
+		!Number.isSafeInteger(data.restocked) ||
+		!Number.isSafeInteger(data.retired)
+	) {
+		throw new Error('商店刷新服務回傳了無效的結果。');
+	}
+	return {
+		created: data.created,
+		restocked: data.restocked,
+		retired: data.retired,
+	};
 }
 
 export async function loadCampaignShopOrders(

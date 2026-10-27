@@ -13,6 +13,7 @@ import {
 	type CampaignShopOrderStatus,
 	type InventoryItem,
 } from '@/types';
+import { normalizeCampaignShopRefreshPolicy } from '@/lib/campaignShopRefresh';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
@@ -61,20 +62,30 @@ export interface DbCampaignShop {
 	name: string;
 	background_image_url: string | null;
 	is_active: boolean;
+	refresh_policy?: unknown;
 	created_at: string;
 	updated_at: string;
 }
 
 export const toDbCampaignShop = (
-	shop: Pick<CampaignShop, 'campaignId' | 'name' | 'backgroundImageUrl' | 'isActive'>,
+	shop: Pick<
+		CampaignShop,
+		'campaignId' | 'name' | 'backgroundImageUrl' | 'isActive'
+	> &
+		Partial<Pick<CampaignShop, 'refreshPolicy'>>,
 ): Pick<
 	DbCampaignShop,
-	'campaign_id' | 'name' | 'background_image_url' | 'is_active'
+	| 'campaign_id'
+	| 'name'
+	| 'background_image_url'
+	| 'is_active'
+	| 'refresh_policy'
 > => ({
 	campaign_id: shop.campaignId,
 	name: shop.name,
 	background_image_url: shop.backgroundImageUrl,
 	is_active: shop.isActive,
+	refresh_policy: normalizeCampaignShopRefreshPolicy(shop.refreshPolicy),
 });
 
 export const fromDbCampaignShop = (row: DbCampaignShop): CampaignShop => ({
@@ -83,6 +94,7 @@ export const fromDbCampaignShop = (row: DbCampaignShop): CampaignShop => ({
 	name: row.name,
 	backgroundImageUrl: row.background_image_url ?? null,
 	isActive: Boolean(row.is_active),
+	refreshPolicy: normalizeCampaignShopRefreshPolicy(row.refresh_policy),
 	createdAt: row.created_at,
 	updatedAt: row.updated_at,
 });
