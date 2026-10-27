@@ -4,10 +4,13 @@ import ReactMarkdown from 'react-markdown';
 import ItemIcon from './ItemIcon';
 import {
 	CAMP_CHEST_ID,
+	getItemArmorClass,
+	getItemDamage,
+	getItemWeaponMastery,
 	resolveItemFlags,
 	type Character,
 	type InventoryItem,
-	type Rarity,
+	type ItemBaseRarity,
 	type RarityStyle,
 	type ViewMode,
 	type WeaponMasteryInfo,
@@ -42,7 +45,7 @@ import { Button, Input, Textarea } from '@/components/ui';
 interface ItemTooltipProps {
 	inspectedItem: InventoryItem | null;
 	viewMode: ViewMode;
-	rarityConfig: Record<Rarity, RarityStyle>;
+	rarityConfig: Record<ItemBaseRarity, RarityStyle>;
 	weaponMasteries: Record<WeaponMasteryKey, WeaponMasteryInfo>;
 	characters: Character[];
 	activeCharId: string;
@@ -121,9 +124,12 @@ export default function ItemTooltip({
 					const rStyle = masked
 						? rarityConfig.Uncommon
 						: rarityConfig[inspectedItem.rarity] || rarityConfig.Common;
+					const damage = getItemDamage(inspectedItem);
+					const armorClass = getItemArmorClass(inspectedItem);
+					const weaponMastery = getItemWeaponMastery(inspectedItem);
 					const masteryInfo =
-						!masked && inspectedItem.mastery && inspectedItem.mastery !== 'None'
-							? weaponMasteries[inspectedItem.mastery]
+						!masked && weaponMastery
+							? weaponMasteries[weaponMastery]
 							: null;
 					const { isEquippable, isConsumable, isImportant } =
 						resolveItemFlags(inspectedItem);
@@ -188,7 +194,7 @@ export default function ItemTooltip({
 													{masked ? '未鑑定' : rStyle.label}
 												</span>
 												<span>•</span>
-												<span>{inspectedItem.subType}</span>
+												<span>{inspectedItem.subTypes.join('、')}</span>
 											</div>
 										</div>
 									</div>
@@ -216,27 +222,27 @@ export default function ItemTooltip({
 
 							{/* 核心數值區 */}
 							<div className='p-4 space-y-3.5 text-sm'>
-								{!masked && (inspectedItem.damage || inspectedItem.ac) && (
+								{!masked && (damage || armorClass) && (
 									<div className='grid grid-cols-2 gap-2.5 bg-stone-900/90 border border-stone-800 rounded-md p-2.5'>
-										{inspectedItem.damage && (
+										{damage && (
 											<div>
 												<div className='text-[10px] text-stone-400 uppercase'>
 													傷害骰 (Damage)
 												</div>
 												<div className='text-sm font-bold text-amber-300 flex items-center gap-1.5 mt-0.5'>
 													<Sword className='w-4 h-4 text-amber-500' />
-													<span>{inspectedItem.damage}</span>
+													<span>{damage}</span>
 												</div>
 											</div>
 										)}
-										{inspectedItem.ac && (
+										{armorClass && (
 											<div>
 												<div className='text-[10px] text-stone-400 uppercase'>
 													護甲等級 (Armor Class)
 												</div>
 												<div className='text-sm font-bold text-sky-300 flex items-center gap-1.5 mt-0.5'>
 													<Shield className='w-4 h-4 text-sky-400' />
-													<span>AC {inspectedItem.ac}</span>
+													<span>AC {armorClass}</span>
 												</div>
 											</div>
 										)}
@@ -309,7 +315,7 @@ export default function ItemTooltip({
 								<div className='bg-stone-900/50 border border-stone-800/80 rounded-md p-3'>
 									<div className='text-[11px] text-stone-400 font-semibold mb-1.5 flex items-center justify-between'>
 										<span>物品效果與規則</span>
-										{inspectedItem.requiresAttunement && (
+										{inspectedItem.isRequireAttunement && (
 											<span className='text-amber-400'>* 需同調</span>
 										)}
 									</div>
@@ -647,7 +653,7 @@ export default function ItemTooltip({
 													</Button>
 												)}
 
-												{!isInCampChest && inspectedItem.requiresAttunement && (
+												{!isInCampChest && inspectedItem.isRequireAttunement && (
 													<Button
 														type='button'
 														variant='secondary'

@@ -1,6 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import {
+	getItemArmorClass,
+	getItemDamage,
+	getItemWeaponMastery,
 	resolveItemFlags,
+	type AllItem,
 	type Character,
 	type CharacterPermission,
 	type CurrencyType,
@@ -11,13 +15,263 @@ import {
 	type CampaignShopItemSourceType,
 	type CampaignShopOrder,
 	type CampaignShopOrderStatus,
+	type CampaignShopRefreshPolicy,
 	type InventoryItem,
+	type ItemBaseCategory,
+	type ItemBaseRarity,
+	type WeaponItemMastery,
 } from '@/types';
 import { normalizeCampaignShopRefreshPolicy } from '@/lib/campaignShopRefresh';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
 	string | undefined;
+
+const ITEM_BASE_CATEGORIES: readonly ItemBaseCategory[] = [
+	'Weapon',
+	'Armor',
+	'Potion',
+	'Poison',
+	'Ring',
+	'Rod',
+	'Scroll',
+	'Staff',
+	'Wand',
+	'WondrousItem',
+	'TradeGood',
+	'Gemstone',
+	'Tool',
+	'AdventureGear',
+	'FoodAndDrink',
+	'Mount',
+	'Vehicle',
+	'Misc',
+];
+const WEAPON_MASTERIES: readonly WeaponItemMastery[] = [
+	'Cleave',
+	'Graze',
+	'Nick',
+	'Push',
+	'Sap',
+	'Slow',
+	'Topple',
+	'Vex',
+];
+const ITEM_BASE_RARITIES: readonly ItemBaseRarity[] = [
+	'Common',
+	'Uncommon',
+	'Rare',
+	'VeryRare',
+	'Legendary',
+	'Artifact',
+];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readCanonicalItemBase(value: unknown): AllItem | null {
+	if (
+		!isRecord(value) ||
+		!ITEM_BASE_CATEGORIES.includes(value.category as ItemBaseCategory) ||
+		typeof value.name !== 'string' ||
+		!Array.isArray(value.subTypes) ||
+		!value.subTypes.every((entry) => typeof entry === 'string') ||
+		!ITEM_BASE_RARITIES.includes(value.rarity as ItemBaseRarity) ||
+		typeof value.weight !== 'number' ||
+		!Number.isFinite(value.weight) ||
+		value.weight < 0 ||
+		typeof value.valueGp !== 'number' ||
+		!Number.isFinite(value.valueGp) ||
+		value.valueGp < 0 ||
+		!Array.isArray(value.affixes) ||
+		!value.affixes.every(
+			(affix) =>
+				isRecord(affix) &&
+				typeof affix.id === 'string' &&
+				typeof affix.name === 'string' &&
+				typeof affix.desc === 'string' &&
+				(affix.isHidden === undefined || typeof affix.isHidden === 'boolean'),
+		) ||
+		typeof value.effects !== 'string' ||
+		typeof value.dmNotes !== 'string' ||
+		(value.icon !== undefined &&
+			value.icon !== null &&
+			typeof value.icon !== 'string') ||
+		(value.flavor !== undefined &&
+			value.flavor !== null &&
+			typeof value.flavor !== 'string') ||
+		(value.maxCharges !== undefined &&
+			value.maxCharges !== null &&
+			(typeof value.maxCharges !== 'number' ||
+				!Number.isSafeInteger(value.maxCharges) ||
+				value.maxCharges < 0)) ||
+		typeof value.isEquippable !== 'boolean' ||
+		typeof value.isConsumable !== 'boolean' ||
+		typeof value.isRequireAttunement !== 'boolean'
+	) {
+		return null;
+	}
+	if (value.category === 'Weapon') {
+		if (
+			!isRecord(value.weaponProperties) ||
+			typeof value.weaponProperties.damage !== 'string' ||
+			!Array.isArray(value.weaponProperties.properties) ||
+			!value.weaponProperties.properties.every((entry) => typeof entry === 'string') ||
+			(value.weaponProperties.mastery !== undefined &&
+				!WEAPON_MASTERIES.includes(
+					value.weaponProperties.mastery as WeaponItemMastery,
+				))
+		) {
+			return null;
+		}
+		return value as unknown as AllItem;
+	}
+	if (value.category === 'Armor') {
+		if (!isRecord(value.armorProperties) || typeof value.armorProperties.ac !== 'string') {
+			return null;
+		}
+		return value as unknown as AllItem;
+	}
+	return value as unknown as AllItem;
+}
+
+function legacyCategory(category: string): ItemBaseCategory {
+	if (category === 'Consumable') return 'AdventureGear';
+	if (ITEM_BASE_CATEGORIES.includes(category as ItemBaseCategory)) {
+		return category as ItemBaseCategory;
+	}
+	throw new Error(`資料庫物品分類不受支援：${category}`);
+}
+
+function createLegacyItemBase(row: {
+	name: string;
+	category: string;
+	sub_type?: string | null;
+	rarity?: string | null;
+	icon?: string | null;
+	damage?: string | null;
+	mastery?: string | null;
+	ac?: string | null;
+	weight?: number | string | null;
+	value_gp?: number | string | null;
+	requires_attunement?: boolean | null;
+	max_charges?: number | string | null;
+	effects?: string | null;
+	flavor?: string | null;
+	dm_notes?: string | null;
+	is_equippable?: boolean | null;
+	is_consumable?: boolean | null;
+	is_important?: boolean | null;
+	affixes?: AllItem['affixes'] | null;
+}): AllItem {
+	if (!row.name.trim()) throw new Error('資料庫物品缺少名稱。');
+	const category = legacyCategory(row.category);
+	if (category === 'Weapon' && !row.damage?.trim()) {
+		throw new Error(`武器「${row.name}」缺少傷害欄位。`);
+	}
+	if (category === 'Armor' && !row.ac?.trim()) {
+		throw new Error(`護甲「${row.name}」缺少護甲值欄位。`);
+	}
+	const common = {
+		name: row.name,
+		subTypes: row.sub_type ? [row.sub_type] : [],
+		rarity: ((
+			row.rarity === 'Uncommon' ||
+			row.rarity === 'Rare' ||
+			row.rarity === 'VeryRare' ||
+			row.rarity === 'Legendary' ||
+			row.rarity === 'Artifact'
+				? row.rarity
+				: 'Common') as ItemBaseRarity),
+		icon: row.icon ?? 'Package',
+		weight: Number(row.weight ?? 0),
+		valueGp: Number(row.value_gp ?? 0),
+		affixes: row.affixes ?? [],
+		effects: row.effects ?? '',
+		flavor: row.flavor ?? '',
+		dmNotes: row.dm_notes ?? '',
+		maxCharges: Number(row.max_charges ?? 0),
+		isEquippable: Boolean(row.is_equippable),
+		isConsumable:
+			row.is_consumable !== undefined && row.is_consumable !== null
+				? Boolean(row.is_consumable)
+				: row.category === 'Consumable',
+		isRequireAttunement: Boolean(row.requires_attunement),
+	};
+	if (category === 'Weapon') {
+		return {
+			...common,
+			category,
+			weaponProperties: {
+				damage: row.damage ?? '',
+				...(WEAPON_MASTERIES.includes(row.mastery as WeaponItemMastery)
+					? { mastery: row.mastery as WeaponItemMastery }
+					: {}),
+				properties: [],
+			},
+		};
+	}
+	if (category === 'Armor') {
+		return { ...common, category, armorProperties: { ac: row.ac ?? '' } };
+	}
+	return { ...common, category };
+}
+
+function serializeItemBase(item: AllItem): AllItem {
+	const common = {
+		name: item.name,
+		subTypes: [...item.subTypes],
+		rarity: item.rarity,
+		icon: item.icon,
+		weight: item.weight,
+		valueGp: item.valueGp,
+		affixes: item.affixes,
+		effects: item.effects,
+		flavor: item.flavor,
+		dmNotes: item.dmNotes,
+		maxCharges: item.maxCharges,
+		isEquippable: item.isEquippable,
+		isConsumable: item.isConsumable,
+		isRequireAttunement: item.isRequireAttunement,
+	};
+	if (item.category === 'Weapon') {
+		return { ...common, category: item.category, weaponProperties: item.weaponProperties };
+	}
+	if (item.category === 'Armor') {
+		return { ...common, category: item.category, armorProperties: item.armorProperties };
+	}
+	return { ...common, category: item.category };
+}
+
+function legacyDbCategory(item: Pick<AllItem, 'category' | 'isConsumable'>): string {
+	if (item.category === 'Weapon' || item.category === 'Armor') return item.category;
+	return item.isConsumable ? 'Consumable' : 'Misc';
+}
+
+function serializeCampaignShopRefreshPolicy(
+	policy: CampaignShopRefreshPolicy,
+): unknown {
+	return {
+		...policy,
+		rules: policy.rules.map((rule) => ({
+			...rule,
+			possibleItemsOrFilters: rule.possibleItemsOrFilters.map((candidate) => {
+				if (!('itemId' in candidate)) return candidate;
+				return {
+					...candidate,
+					category: legacyDbCategory(candidate),
+					icon: candidate.icon ?? 'Package',
+					description: candidate.effects,
+					requiresAttunement: candidate.isRequireAttunement,
+					damage: getItemDamage(candidate),
+					ac: getItemArmorClass(candidate),
+					item_base: serializeItemBase(candidate),
+				};
+			}),
+		})),
+	};
+}
 
 // 若未設定環境變數則為 null，自動退回單機模式
 export const supabase =
@@ -85,7 +339,9 @@ export const toDbCampaignShop = (
 	name: shop.name,
 	background_image_url: shop.backgroundImageUrl,
 	is_active: shop.isActive,
-	refresh_policy: normalizeCampaignShopRefreshPolicy(shop.refreshPolicy),
+	refresh_policy: serializeCampaignShopRefreshPolicy(
+		normalizeCampaignShopRefreshPolicy(shop.refreshPolicy),
+	),
 });
 
 export const fromDbCampaignShop = (row: DbCampaignShop): CampaignShop => ({
@@ -116,76 +372,94 @@ export interface DbCampaignShopItem {
 }
 
 export interface DbCampaignShopItemSnapshot {
-	name: string;
-	category: InventoryItem['category'];
-	sub_type: string;
-	rarity: InventoryItem['rarity'];
-	icon: string;
-	damage: string | null;
-	mastery: InventoryItem['mastery'];
-	ac: string | null;
-	weight: number;
-	value_gp: number;
-	requires_attunement: boolean;
-	is_homebrew: boolean;
-	max_charges: number;
-	effects: string;
-	flavor: string;
-	dm_notes: string;
-	is_equippable: boolean;
-	is_consumable: boolean;
-	is_important: boolean;
-	affixes: NonNullable<InventoryItem['affixes']>;
+	name?: string;
+	category?: string;
+	sub_type?: string | null;
+	rarity?: string | null;
+	icon?: string | null;
+	damage?: string | null;
+	mastery?: string | null;
+	ac?: string | null;
+	weight?: number | string | null;
+	value_gp?: number | string | null;
+	requires_attunement?: boolean | null;
+	is_homebrew?: boolean | null;
+	max_charges?: number | string | null;
+	effects?: string | null;
+	flavor?: string | null;
+	dm_notes?: string | null;
+	is_equippable?: boolean | null;
+	is_consumable?: boolean | null;
+	is_important?: boolean | null;
+	affixes?: AllItem['affixes'] | null;
+	item_base?: unknown;
 }
 
 const fromDbCampaignShopItemSnapshot = (
 	snapshot: Partial<DbCampaignShopItemSnapshot> | null | undefined,
-): CampaignShopItemSnapshot => ({
-	name: snapshot?.name ?? '',
-	category: snapshot?.category ?? 'Misc',
-	subType: snapshot?.sub_type ?? '',
-	rarity: snapshot?.rarity ?? 'Common',
-	icon: snapshot?.icon ?? 'Package',
-	damage: snapshot?.damage ?? null,
-	mastery: snapshot?.mastery ?? 'None',
-	ac: snapshot?.ac ?? null,
-	weight: Number(snapshot?.weight ?? 0),
-	valueGp: Number(snapshot?.value_gp ?? 0),
-	requiresAttunement: Boolean(snapshot?.requires_attunement),
-	isHomebrew: Boolean(snapshot?.is_homebrew),
-	maxCharges: Number(snapshot?.max_charges ?? 0),
-	effects: snapshot?.effects ?? '',
-	flavor: snapshot?.flavor ?? '',
-	dmNotes: snapshot?.dm_notes ?? '',
-	isEquippable: Boolean(snapshot?.is_equippable),
-	isConsumable: Boolean(snapshot?.is_consumable),
-	isImportant: Boolean(snapshot?.is_important),
-	affixes: snapshot?.affixes ?? [],
-});
+): CampaignShopItemSnapshot => {
+	const canonical = snapshot?.item_base == null
+		? null
+		: readCanonicalItemBase(snapshot.item_base);
+	if (snapshot?.item_base != null && !canonical) {
+		throw new Error('商店快照中的 item_base 格式無效。');
+	}
+	const base =
+		canonical ??
+		createLegacyItemBase({
+			name: snapshot?.name ?? '',
+			category: snapshot?.category ?? 'Misc',
+			sub_type: snapshot?.sub_type,
+			rarity: snapshot?.rarity,
+			icon: snapshot?.icon,
+			damage: snapshot?.damage,
+			mastery: snapshot?.mastery,
+			ac: snapshot?.ac,
+			weight: snapshot?.weight,
+			value_gp: snapshot?.value_gp,
+			requires_attunement: snapshot?.requires_attunement,
+			max_charges: snapshot?.max_charges,
+			effects: snapshot?.effects,
+			flavor: snapshot?.flavor,
+			dm_notes: snapshot?.dm_notes,
+			is_equippable: snapshot?.is_equippable,
+			is_consumable: snapshot?.is_consumable,
+			affixes: snapshot?.affixes,
+		});
+	return {
+		...base,
+		icon: base.icon ?? 'Package',
+		flavor: base.flavor ?? '',
+		maxCharges: base.maxCharges ?? 0,
+		isHomebrew: Boolean(snapshot?.is_homebrew),
+		isImportant: Boolean(snapshot?.is_important),
+	};
+};
 
 const toDbCampaignShopItemSnapshot = (
 	snapshot: CampaignShopItemSnapshot,
 ): DbCampaignShopItemSnapshot => ({
 	name: snapshot.name,
-	category: snapshot.category,
-	sub_type: snapshot.subType,
+	category: legacyDbCategory(snapshot),
+	sub_type: snapshot.subTypes[0] ?? '',
 	rarity: snapshot.rarity,
 	icon: snapshot.icon,
-	damage: snapshot.damage,
-	mastery: snapshot.mastery,
-	ac: snapshot.ac,
+	damage: getItemDamage(snapshot),
+	mastery: getItemWeaponMastery(snapshot) ?? 'None',
+	ac: getItemArmorClass(snapshot),
 	weight: snapshot.weight,
 	value_gp: snapshot.valueGp,
-	requires_attunement: snapshot.requiresAttunement,
+	requires_attunement: snapshot.isRequireAttunement,
 	is_homebrew: snapshot.isHomebrew,
 	max_charges: snapshot.maxCharges,
 	effects: snapshot.effects,
 	flavor: snapshot.flavor,
 	dm_notes: snapshot.dmNotes,
-	is_equippable: Boolean(snapshot.isEquippable),
-	is_consumable: Boolean(snapshot.isConsumable),
+	is_equippable: snapshot.isEquippable,
+	is_consumable: snapshot.isConsumable,
 	is_important: Boolean(snapshot.isImportant),
-	affixes: snapshot.affixes ?? [],
+	affixes: snapshot.affixes,
+	item_base: serializeItemBase(snapshot),
 });
 
 export const toDbCampaignShopItem = (
@@ -290,12 +564,12 @@ export interface DbInventoryItem {
 	owner_id: string;
 	slot: number;
 	name: string;
-	category: InventoryItem['category'];
+	category: string;
 	sub_type: string;
-	rarity: InventoryItem['rarity'];
+	rarity: string;
 	icon: string;
 	damage: string | null;
-	mastery: InventoryItem['mastery'];
+	mastery: string | null;
 	ac: string | null;
 	weight: number;
 	value_gp: number;
@@ -316,6 +590,7 @@ export interface DbInventoryItem {
 	is_consumable: boolean;
 	is_important: boolean;
 	affixes: InventoryItem['affixes'];
+	item_base?: unknown;
 }
 export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 	const flags = resolveItemFlags(item);
@@ -324,18 +599,18 @@ export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 		owner_id: item.ownerId,
 		slot: Number(item.slot ?? 0),
 		name: item.name,
-		category: item.category,
-		sub_type: item.subType,
+		category: legacyDbCategory(item),
+		sub_type: item.subTypes[0] ?? '',
 		rarity: item.rarity,
 		icon: item.icon,
-		damage: item.damage,
-		mastery: item.mastery,
-		ac: item.ac,
+		damage: getItemDamage(item),
+		mastery: getItemWeaponMastery(item),
+		ac: getItemArmorClass(item),
 		weight: Number(item.weight),
 		value_gp: Number(item.valueGp),
 		quantity: Number(item.quantity),
 		equipped: item.equipped,
-		requires_attunement: item.requiresAttunement,
+		requires_attunement: item.isRequireAttunement,
 		attuned: item.attuned,
 		is_homebrew: item.isHomebrew,
 		is_identified: item.isIdentified,
@@ -350,60 +625,56 @@ export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 		is_consumable: flags.isConsumable,
 		is_important: flags.isImportant,
 		affixes: item.affixes ?? [],
+		item_base: serializeItemBase(item),
 	};
 };
 
-export const fromDbItem = (row: DbInventoryItem): InventoryItem => ({
-	id: row.id,
-	ownerId: row.owner_id,
-	slot: Number(row.slot),
-	name: row.name,
-	category: row.category,
-	subType: row.sub_type,
-	rarity: row.rarity,
-	icon: row.icon,
-	damage: row.damage,
-	mastery: row.mastery,
-	ac: row.ac,
-	weight: Number(row.weight),
-	valueGp: Number(row.value_gp),
-	quantity: Number(row.quantity),
-	equipped: Boolean(row.equipped),
-	requiresAttunement: Boolean(row.requires_attunement),
-	attuned: Boolean(row.attuned),
-	isHomebrew: Boolean(row.is_homebrew),
-	isIdentified: Boolean(row.is_identified),
-	charges: Number(row.charges),
-	maxCharges: Number(row.max_charges),
-	effects: row.effects || '',
-	flavor: row.flavor || '',
-	dmNotes: row.dm_notes || '',
-	playerNotes: row.player_notes || '',
-	isPrivate: Boolean(row.is_private),
-	isEquippable:
-		row.is_equippable !== undefined
-			? Boolean(row.is_equippable)
-			: row.category === 'Weapon' ||
-				row.category === 'Armor' ||
-				Boolean(row.requires_attunement),
-	isConsumable:
-		row.is_consumable !== undefined
-			? Boolean(row.is_consumable)
-			: row.category === 'Consumable',
-	isImportant: Boolean(row.is_important),
-	affixes: row.affixes ?? [],
-});
+export const fromDbItem = (row: DbInventoryItem): InventoryItem => {
+	const canonical =
+		row.item_base == null ? null : readCanonicalItemBase(row.item_base);
+	if (row.item_base != null && !canonical) {
+		throw new Error(`物品 ${row.id} 的 item_base 格式無效。`);
+	}
+	const base =
+		canonical ??
+		createLegacyItemBase({
+			...row,
+			is_equippable:
+				row.is_equippable ??
+				(row.category === 'Weapon' ||
+					row.category === 'Armor' ||
+					Boolean(row.requires_attunement)),
+		});
+	return {
+		...base,
+		id: row.id,
+		ownerId: row.owner_id,
+		slot: Number(row.slot),
+		icon: base.icon ?? 'Package',
+		flavor: base.flavor ?? '',
+		maxCharges: Number(row.max_charges ?? base.maxCharges ?? 0),
+		quantity: Number(row.quantity),
+		equipped: Boolean(row.equipped),
+		attuned: Boolean(row.attuned),
+		isHomebrew: Boolean(row.is_homebrew),
+		isIdentified: Boolean(row.is_identified),
+		charges: Number(row.charges),
+		playerNotes: row.player_notes || '',
+		isPrivate: Boolean(row.is_private),
+		isImportant: Boolean(row.is_important),
+	};
+};
 
 export interface DbBlacksmithItem {
 	id: string;
 	owner_id: string;
 	name: string;
-	category: BlacksmithTemplate['category'];
+	category: string;
 	sub_type: string;
-	rarity: BlacksmithTemplate['rarity'];
+	rarity: string;
 	icon: string;
 	damage: string | null;
-	mastery: BlacksmithTemplate['mastery'];
+	mastery: string | null;
 	ac: string | null;
 	weight: number;
 	value_gp: number;
@@ -420,6 +691,7 @@ export interface DbBlacksmithItem {
 	is_shared: boolean;
 	created_at: string;
 	updated_at: string;
+	item_base?: unknown;
 }
 
 export const toDbBlacksmithItem = (
@@ -428,16 +700,16 @@ export const toDbBlacksmithItem = (
 	id: item.id,
 	owner_id: item.ownerId,
 	name: item.name,
-	category: item.category,
-	sub_type: item.subType,
+	category: legacyDbCategory(item),
+	sub_type: item.subTypes[0] ?? '',
 	rarity: item.rarity,
 	icon: item.icon,
-	damage: item.damage,
-	mastery: item.mastery,
-	ac: item.ac,
+	damage: getItemDamage(item),
+	mastery: getItemWeaponMastery(item),
+	ac: getItemArmorClass(item),
 	weight: item.weight,
 	value_gp: item.valueGp,
-	requires_attunement: item.requiresAttunement,
+	requires_attunement: item.isRequireAttunement,
 	is_homebrew: item.isHomebrew,
 	max_charges: item.maxCharges,
 	effects: item.effects,
@@ -450,37 +722,32 @@ export const toDbBlacksmithItem = (
 	is_shared: item.isShared,
 	created_at: item.createdAt,
 	updated_at: item.updatedAt,
+	item_base: serializeItemBase(item),
 });
 
 export const fromDbBlacksmithItem = (
 	row: DbBlacksmithItem,
-): BlacksmithTemplate => ({
-	id: row.id,
-	ownerId: row.owner_id,
-	name: row.name,
-	category: row.category,
-	subType: row.sub_type ?? '',
-	rarity: row.rarity ?? 'Common',
-	icon: row.icon ?? 'Package',
-	damage: row.damage ?? null,
-	mastery: row.mastery ?? 'None',
-	ac: row.ac ?? null,
-	weight: Number(row.weight ?? 0),
-	valueGp: Number(row.value_gp ?? 0),
-	requiresAttunement: Boolean(row.requires_attunement),
-	isHomebrew: row.is_homebrew ?? true,
-	maxCharges: Number(row.max_charges ?? 0),
-	effects: row.effects ?? '',
-	flavor: row.flavor ?? '',
-	dmNotes: row.dm_notes ?? '',
-	isEquippable: Boolean(row.is_equippable),
-	isConsumable: Boolean(row.is_consumable),
-	isImportant: Boolean(row.is_important),
-	affixes: row.affixes ?? [],
-	isShared: Boolean(row.is_shared),
-	createdAt: row.created_at,
-	updatedAt: row.updated_at,
-});
+): BlacksmithTemplate => {
+	const canonical =
+		row.item_base == null ? null : readCanonicalItemBase(row.item_base);
+	if (row.item_base != null && !canonical) {
+		throw new Error(`鍛造物品 ${row.id} 的 item_base 格式無效。`);
+	}
+	const base = canonical ?? createLegacyItemBase(row);
+	return {
+		...base,
+		id: row.id,
+		ownerId: row.owner_id,
+		icon: base.icon ?? 'Package',
+		flavor: base.flavor ?? '',
+		maxCharges: Number(base.maxCharges ?? row.max_charges ?? 0),
+		isHomebrew: row.is_homebrew ?? true,
+		isImportant: Boolean(row.is_important),
+		isShared: Boolean(row.is_shared),
+		createdAt: row.created_at,
+		updatedAt: row.updated_at,
+	};
+};
 
 export interface DbCharacter {
 	id: string;

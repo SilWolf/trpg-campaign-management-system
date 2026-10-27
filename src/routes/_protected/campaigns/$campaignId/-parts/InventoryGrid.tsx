@@ -1,11 +1,13 @@
 import ItemIcon from './ItemIcon';
 import {
+	getItemArmorClass,
+	getItemDamage,
 	getItemSection,
 	resolveItemFlags,
 	type InventoryDisplayMode,
 	type InventoryItem,
 	type ItemSection,
-	type Rarity,
+	type ItemBaseRarity,
 	type RarityStyle,
 	type ViewMode,
 } from '@/types';
@@ -28,7 +30,7 @@ interface InventoryGridProps {
 	displayMode: InventoryDisplayMode;
 	inspectedItemId: string | null;
 	totalItemsValueGp: number;
-	rarityConfig: Record<Rarity, RarityStyle>;
+	rarityConfig: Record<ItemBaseRarity, RarityStyle>;
 	canReadCurrentBag?: boolean;
 	canEditCurrentBag?: boolean;
 	isItemMatchingFilter: (item: InventoryItem | null | undefined) => boolean;
@@ -276,6 +278,8 @@ export default function InventoryGrid({
 										{sectionItems.map((item) => {
 											const masked =
 												!item.isIdentified && viewMode === 'player';
+											const damage = getItemDamage(item);
+											const armorClass = getItemArmorClass(item);
 											const rStyle = masked
 												? rarityConfig.Uncommon
 												: rarityConfig[item.rarity] || rarityConfig.Common;
@@ -351,11 +355,11 @@ export default function InventoryGrid({
 															</div>
 															<div className='text-[10px] text-stone-400 truncate'>
 																{masked ? '未鑑定' : rStyle.label} •{' '}
-																{item.subType}
-																{!masked && item.damage
-																	? ` • ${item.damage}`
+																{item.subTypes.join('、')}
+																{!masked && damage
+																	? ` • ${damage}`
 																	: ''}
-																{!masked && item.ac ? ` • AC ${item.ac}` : ''}
+																{!masked && armorClass ? ` • AC ${armorClass}` : ''}
 															</div>
 														</div>
 													</div>

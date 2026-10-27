@@ -1,6 +1,6 @@
 # 戰役商店：手動部署與隔離環境驗收
 
-本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql`、`20261027000000_campaign_shop_cart_checkout.sql`、`20261027000001_campaign_shop_refresh.sql` 及 `20261027000002_campaign_shop_refresh_delete.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理；第四個 migration 新增刷新政策欄位與驗證，以及 DM 專用的原子刷新 RPC；第五個 migration 讓刷新清除模式在同一交易內實際刪除退役商品，並回報刪除數量。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
+本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql`、`20261027000000_campaign_shop_cart_checkout.sql`、`20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql`，以及後續的 `20261028000000_item_base_unification.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理；第四個 migration 新增刷新政策欄位與驗證，以及 DM 專用的原子刷新 RPC；第五個 migration 讓刷新清除模式在同一交易內實際刪除退役商品，並回報刪除數量；第六個 migration 新增 `inventory_items.item_base` 與 `blacksmith_items.item_base` canonical JSON、擴充分類約束，並更新範例建團、鍛造匯入及購買交付 RPC 保存巢狀屬性。它不回填既有資料，部署前仍須由維護者確認規劃中的空資料表前提。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
 
 ## Migration 依賴與範圍
 
@@ -17,6 +17,7 @@
 - 刷新 migration 在 `campaign_shops` 儲存 `refresh_policy` JSONB，使用 CHECK constraint 驗證政策形狀與範圍，並提供 `refresh_campaign_shop_items`。RPC 驗證 campaign DM、shop/campaign 對應、政策保留模式及商店／商品版本，依商店後商品 ID 順序鎖定，再於同一交易內刪除、補貨或新增商品。商品刪除依現有外鍵 cascade 刪除關聯訂單與付款輔助列；保留模式不修改 `stock_reserved`。
 - 刷新刪除 migration 將原刷新 RPC 內部化為受限函式，再以同簽章的公開 RPC 包裝；使用者只能呼叫新 RPC，新 RPC 完成原有驗證與資料更新後，在同一資料庫交易刪除清除模式的退役商品，並以 `deleted` 回傳實際刪除數。
 - 刷新政策的官方目錄 ID 由前端對照靜態 `catalog-index.json`；資料庫不維護目錄索引，RPC 只能驗證來源識別格式及來源符合目前政策，不可單獨證明靜態目錄 ID 仍有效。
+- `item_base` migration 保留既有扁平欄位作為相容投影，且用 trigger 補上未指定 canonical JSON 的舊寫入。新 client 寫入及匯入／購買 RPC 會提供完整 `item_base`；此相容機制不取代隔離環境對分類約束及資料格式的驗收。
 - `authenticated` 可執行的購買、建立待審、購物車結帳、核准、拒絕及取消 RPC；`anon` 與 `PUBLIC` 不可執行。資料表仍由 grants 與 RLS 一起限制。
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 的 `supabase_realtime` publication 設定。付款輔助表不屬於公開訂單，也不應加入 Realtime。
 
@@ -37,7 +38,7 @@
    supabase db push --linked
    ```
 
-5. 驗證 migration history 已記錄 `20261026000000`、`20261026000001`、`20261027000000`、`20261027000001` 與 `20261027000002`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
+5. 驗證 migration history 已記錄 `20261026000000`、`20261026000001`、`20261027000000`、`20261027000001`、`20261027000002` 與 `20261028000000`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
 6. 隔離驗收通過並取得維護者核准後，才依相同檢查流程安排正式環境部署。正式部署前確認備份、回復方案、維護窗口，以及任何並行 migration。
 
 本功能沒有新增 Edge Function 或 secrets。不可為此部署把 service-role key 放入前端、測試替身或版本控制。
@@ -224,4 +225,4 @@ Playwright 對 Auth、REST、RPC 與 Edge Function 使用測試替身，適合�
 
 ## 目前狀態
 
-刷新 migrations `20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql` 已新增至 repository，但本文件與前端測試不代表 migration 已執行。本次工作不連線 Supabase、不執行 SQL、不部署任何 migration，也不修改 Secrets。目標環境的 schema、migration history、RLS、Realtime、併發交易及回滾狀態，均須由維護者依上列步驟手動驗收。
+刷新 migrations `20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql` 及物品型別 migration `20261028000000_item_base_unification.sql` 已新增至 repository，但本文件與前端測試不代表 migration 已執行。本次工作不連線 Supabase、不執行 SQL、不部署任何 migration，也不修改 Secrets。目標環境的空資料表前提、schema、migration history、RLS、Realtime、併發交易及回滾狀態，均須由維護者依上列步驟手動驗收。

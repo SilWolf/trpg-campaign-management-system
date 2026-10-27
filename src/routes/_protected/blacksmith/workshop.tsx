@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertCircle, Eye, Hammer, Plus, RotateCw, Trash2 } from 'lucide-react';
 import { BlacksmithImportButton } from '@/components/blacksmith/BlacksmithImportButton';
-import { RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
+import { ITEM_CATEGORY_LABELS, RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import {
 	deleteBlacksmithTemplate,
@@ -14,10 +14,11 @@ import {
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type {
 	BlacksmithTemplate,
+	AllItem,
 	ItemAffix,
-	ItemCategory,
-	Rarity,
-	WeaponMasteryKey,
+	ItemBaseCategory,
+	ItemBaseRarity,
+	WeaponItemMastery,
 } from '@/types';
 
 export const Route = createFileRoute('/_protected/blacksmith/workshop')({
@@ -26,16 +27,19 @@ export const Route = createFileRoute('/_protected/blacksmith/workshop')({
 
 type EditorValues = {
 	name: string;
-	category: ItemCategory;
-	subType: string;
-	rarity: Rarity;
+	category: ItemBaseCategory;
+	subTypes: string[];
+	rarity: ItemBaseRarity;
 	icon: string;
-	damage: string;
-	mastery: WeaponMasteryKey;
-	ac: string;
+	weaponProperties: {
+		damage: string;
+		mastery: WeaponItemMastery | '';
+		properties: string[];
+	};
+	armorProperties: { ac: string };
 	weight: string;
 	valueGp: string;
-	requiresAttunement: boolean;
+	isRequireAttunement: boolean;
 	maxCharges: string;
 	effects: string;
 	flavor: string;
@@ -50,15 +54,14 @@ type EditorValues = {
 const EMPTY_FORM: EditorValues = {
 	name: '',
 	category: 'Misc',
-	subType: '',
+	subTypes: [],
 	rarity: 'Common',
 	icon: 'Package',
-	damage: '',
-	mastery: 'None',
-	ac: '',
+	weaponProperties: { damage: '', mastery: '', properties: [] },
+	armorProperties: { ac: '' },
 	weight: '0',
 	valueGp: '0',
-	requiresAttunement: false,
+	isRequireAttunement: false,
 	maxCharges: '0',
 	effects: '',
 	flavor: '',
@@ -70,19 +73,11 @@ const EMPTY_FORM: EditorValues = {
 	isShared: false,
 };
 
-const CATEGORIES: { value: ItemCategory; label: string }[] = [
-	{ value: 'Weapon', label: '武器' },
-	{ value: 'Armor', label: '護甲' },
-	{ value: 'Consumable', label: '消耗品' },
-	{ value: 'Misc', label: '雜物' },
-];
-const CATEGORY_LABELS: Record<ItemCategory, string> = {
-	Weapon: '武器',
-	Armor: '護甲',
-	Consumable: '消耗品',
-	Misc: '雜物',
-};
-const RARITIES: Rarity[] = [
+const CATEGORIES = Object.entries(ITEM_CATEGORY_LABELS).map(([value, label]) => ({
+	value: value as ItemBaseCategory,
+	label,
+}));
+const RARITIES: ItemBaseRarity[] = [
 	'Common',
 	'Uncommon',
 	'Rare',
@@ -90,8 +85,7 @@ const RARITIES: Rarity[] = [
 	'Legendary',
 	'Artifact',
 ];
-const MASTERIES: WeaponMasteryKey[] = [
-	'None',
+const MASTERIES: WeaponItemMastery[] = [
 	'Cleave',
 	'Graze',
 	'Nick',
@@ -106,15 +100,21 @@ function toEditorValues(item: BlacksmithTemplate): EditorValues {
 	return {
 		name: item.name,
 		category: item.category,
-		subType: item.subType,
+		subTypes: [...item.subTypes],
 		rarity: item.rarity,
-		icon: item.icon,
-		damage: item.damage ?? '',
-		mastery: item.mastery,
-		ac: item.ac ?? '',
+		icon: item.icon ?? 'Package',
+		weaponProperties:
+			item.category === 'Weapon'
+				? {
+						...item.weaponProperties,
+						mastery: item.weaponProperties.mastery ?? '',
+					}
+				: { damage: '', mastery: '', properties: [] },
+		armorProperties:
+			item.category === 'Armor' ? { ...item.armorProperties } : { ac: '' },
 		weight: String(item.weight),
 		valueGp: String(item.valueGp),
-		requiresAttunement: item.requiresAttunement,
+		isRequireAttunement: item.isRequireAttunement,
 		maxCharges: String(item.maxCharges),
 		effects: item.effects,
 		flavor: item.flavor,
@@ -165,34 +165,59 @@ function createTemplateValues(form: EditorValues): BlacksmithTemplateValues {
 	if (!name || name.length > 120) {
 		throw new Error('物品名稱必須為 1 至 120 個字元。');
 	}
-	if (form.subType.length > 120) throw new Error('物品子類型不可超過 120 個字元。');
+	if (form.subTypes.some((subType) => subType.length > 120)) {
+		throw new Error('每個物品子類型不可超過 120 個字元。');
+	}
 	if (!form.icon.trim() || form.icon.trim().length > 500) {
 		throw new Error('圖示名稱必須為 1 至 500 個字元。');
 	}
 	const maxCharges = parseNonNegativeNumber(form.maxCharges, '最大充能');
 	if (!Number.isInteger(maxCharges)) throw new Error('最大充能必須是整數。');
-
-	return {
+	const common = {
 		name,
-		category: form.category,
-		subType: form.subType.trim(),
+		subTypes: form.subTypes.map((subType) => subType.trim()).filter(Boolean),
 		rarity: form.rarity,
 		icon: form.icon.trim(),
-		damage: form.damage.trim() || null,
-		mastery: form.mastery,
-		ac: form.ac.trim() || null,
 		weight: parseNonNegativeNumber(form.weight, '重量'),
 		valueGp: parseNonNegativeNumber(form.valueGp, '價值'),
-		requiresAttunement: form.requiresAttunement,
-		isHomebrew: true,
 		maxCharges,
 		effects: form.effects,
 		flavor: form.flavor,
 		dmNotes: form.dmNotes,
 		isEquippable: form.isEquippable,
 		isConsumable: form.isConsumable,
-		isImportant: form.isImportant,
+		isRequireAttunement: form.isRequireAttunement,
 		affixes: parseAffixes(form.affixesJson),
+	};
+	let base: AllItem;
+	if (form.category === 'Weapon') {
+		const damage = form.weaponProperties.damage.trim();
+		if (!damage) throw new Error('武器必須填寫傷害描述。');
+		base = {
+			...common,
+			category: 'Weapon',
+			weaponProperties: {
+				damage,
+				...(form.weaponProperties.mastery
+					? { mastery: form.weaponProperties.mastery }
+					: {}),
+				properties: form.weaponProperties.properties,
+			},
+		};
+	} else if (form.category === 'Armor') {
+		const ac = form.armorProperties.ac.trim();
+		if (!ac) throw new Error('護甲必須填寫護甲值。');
+		base = { ...common, category: 'Armor', armorProperties: { ac } };
+	} else {
+		base = { ...common, category: form.category };
+	}
+	return {
+		...base,
+		icon: base.icon ?? 'Package',
+		flavor: base.flavor ?? '',
+		maxCharges: base.maxCharges ?? 0,
+		isHomebrew: true,
+		isImportant: form.isImportant,
 		isShared: form.isShared,
 	};
 }
@@ -257,7 +282,7 @@ function BlacksmithWorkshopPage() {
 			[
 				item.name,
 				item.category,
-				item.subType,
+				...item.subTypes,
 				item.rarity,
 				item.effects,
 				item.flavor,
@@ -480,7 +505,7 @@ function BlacksmithWorkshopPage() {
 											{item.name}
 										</h2>
 										<p className='mt-1 text-xs text-stone-400'>
-											{CATEGORY_LABELS[item.category]} · {item.subType || '未分類'} · {RARITY_CONFIG[item.rarity].label}
+											{ITEM_CATEGORY_LABELS[item.category]} · {item.subTypes.join('、') || '未分類'} · {RARITY_CONFIG[item.rarity].label}
 										</p>
 									</div>
 									{activeTab === 'mine' ? (
@@ -581,7 +606,7 @@ function BlacksmithWorkshopPage() {
 								物品分類
 								<select
 									value={form.category}
-									onChange={(event) => updateForm('category', event.target.value as ItemCategory)}
+									onChange={(event) => updateForm('category', event.target.value as ItemBaseCategory)}
 									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
 								>
 									{CATEGORIES.map((category) => (
@@ -593,8 +618,16 @@ function BlacksmithWorkshopPage() {
 								子類型
 								<input
 									maxLength={120}
-									value={form.subType}
-									onChange={(event) => updateForm('subType', event.target.value)}
+									value={form.subTypes.join('、')}
+									onChange={(event) =>
+										updateForm(
+											'subTypes',
+											event.target.value
+												.split(/[、,，]/)
+												.map((part) => part.trim())
+												.filter(Boolean),
+										)
+									}
 									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
 								/>
 							</label>
@@ -602,7 +635,7 @@ function BlacksmithWorkshopPage() {
 								稀有度
 								<select
 									value={form.rarity}
-									onChange={(event) => updateForm('rarity', event.target.value as Rarity)}
+									onChange={(event) => updateForm('rarity', event.target.value as ItemBaseRarity)}
 									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
 								>
 									{RARITIES.map((rarity) => <option key={rarity} value={rarity}>{RARITY_CONFIG[rarity].label}</option>)}
@@ -611,8 +644,11 @@ function BlacksmithWorkshopPage() {
 							<label className='text-xs text-stone-400'>
 								武器精通
 								<select
-									value={form.mastery}
-									onChange={(event) => updateForm('mastery', event.target.value as WeaponMasteryKey)}
+									value={form.weaponProperties.mastery}
+									onChange={(event) => updateForm('weaponProperties', {
+										...form.weaponProperties,
+										mastery: event.target.value as WeaponItemMastery | '',
+									})}
 									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
 								>
 									{MASTERIES.map((mastery) => <option key={mastery} value={mastery}>{WEAPON_MASTERIES[mastery].name}</option>)}
@@ -621,16 +657,19 @@ function BlacksmithWorkshopPage() {
 							<label className='text-xs text-stone-400'>
 								傷害
 								<input
-									value={form.damage}
-									onChange={(event) => updateForm('damage', event.target.value)}
+									value={form.weaponProperties.damage}
+									onChange={(event) => updateForm('weaponProperties', {
+										...form.weaponProperties,
+										damage: event.target.value,
+									})}
 									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
 								/>
 							</label>
 							<label className='text-xs text-stone-400'>
 								護甲值
 								<input
-									value={form.ac}
-									onChange={(event) => updateForm('ac', event.target.value)}
+									value={form.armorProperties.ac}
+									onChange={(event) => updateForm('armorProperties', { ac: event.target.value })}
 									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
 								/>
 							</label>
@@ -670,7 +709,7 @@ function BlacksmithWorkshopPage() {
 						</div>
 						<div className='grid gap-3 sm:grid-cols-2'>
 							<label className='flex items-center gap-2 text-sm text-stone-300'>
-								<input type='checkbox' checked={form.requiresAttunement} onChange={(event) => updateForm('requiresAttunement', event.target.checked)} />
+								<input type='checkbox' checked={form.isRequireAttunement} onChange={(event) => updateForm('isRequireAttunement', event.target.checked)} />
 								需要調諧
 							</label>
 							<label className='flex items-center gap-2 text-sm text-stone-300'>

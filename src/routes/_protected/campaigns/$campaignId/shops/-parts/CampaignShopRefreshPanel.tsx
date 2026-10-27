@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Check, Plus, RotateCw, Trash2 } from 'lucide-react';
-import { RARITY_CONFIG } from '@/data';
+import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import {
 	BLACKSMITH_CATEGORY_LABELS,
 	loadBlacksmithCatalogDefinitions,
@@ -25,8 +25,8 @@ import type {
 	CampaignShopRefreshPolicy,
 	CampaignShopRefreshRange,
 	CampaignShopRefreshRule,
-	ItemCategory,
-	Rarity,
+	ItemBaseCategory,
+	ItemBaseRarity,
 } from '@/types';
 
 interface CampaignShopRefreshPanelProps {
@@ -42,8 +42,8 @@ type CandidateDraft = {
 	catalogId: string;
 	itemId: string;
 	search: string;
-	rarity: Rarity | '';
-	category: ItemCategory | '';
+	rarity: ItemBaseRarity | '';
+	category: ItemBaseCategory | '';
 };
 
 const EMPTY_DRAFT: CandidateDraft = {
@@ -58,7 +58,7 @@ const EMPTY_DRAFT: CandidateDraft = {
 const INPUT_CLASS =
 	'w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-600 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600';
 
-const RARITIES: readonly Rarity[] = [
+const RARITIES: readonly ItemBaseRarity[] = [
 	'Common',
 	'Uncommon',
 	'Rare',
@@ -66,12 +66,9 @@ const RARITIES: readonly Rarity[] = [
 	'Legendary',
 	'Artifact',
 ];
-const CATEGORIES: readonly ItemCategory[] = [
-	'Weapon',
-	'Armor',
-	'Consumable',
-	'Misc',
-];
+const CATEGORIES: readonly ItemBaseCategory[] = Object.keys(
+	ITEM_CATEGORY_LABELS,
+) as ItemBaseCategory[];
 
 function getErrorMessage(error: unknown, fallback: string): string {
 	if (error instanceof Error) return error.message;
@@ -557,14 +554,14 @@ export function CampaignShopRefreshPanel({
 										</label>
 										<label className='text-xs text-stone-400'>
 											稀有度
-											<select value={draft.rarity} onChange={(event) => updateDraft(ruleIndex, { rarity: event.target.value as Rarity | '' })} className={`mt-1 ${INPUT_CLASS}`}>
+											<select value={draft.rarity} onChange={(event) => updateDraft(ruleIndex, { rarity: event.target.value as ItemBaseRarity | '' })} className={`mt-1 ${INPUT_CLASS}`}>
 												<option value=''>不限</option>
 												{RARITIES.map((rarity) => <option key={rarity} value={rarity}>{RARITY_CONFIG[rarity].label}</option>)}
 											</select>
 										</label>
 										<label className='text-xs text-stone-400 md:col-span-2'>
 											分類
-											<select value={draft.category} onChange={(event) => updateDraft(ruleIndex, { category: event.target.value as ItemCategory | '' })} className={`mt-1 ${INPUT_CLASS}`}>
+											<select value={draft.category} onChange={(event) => updateDraft(ruleIndex, { category: event.target.value as ItemBaseCategory | '' })} className={`mt-1 ${INPUT_CLASS}`}>
 												<option value=''>不限</option>
 												{CATEGORIES.map((category) => <option key={category} value={category}>{BLACKSMITH_CATEGORY_LABELS[category]}</option>)}
 											</select>

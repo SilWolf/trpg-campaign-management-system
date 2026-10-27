@@ -6,10 +6,10 @@ import {
 } from '@/lib/supabase';
 import type { BlacksmithTemplate } from '@/types';
 
-export type BlacksmithTemplateValues = Omit<
-	BlacksmithTemplate,
-	'id' | 'ownerId' | 'createdAt' | 'updatedAt'
->;
+type BlacksmithTemplateValue<T> = T extends BlacksmithTemplate
+	? Omit<T, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>
+	: never;
+export type BlacksmithTemplateValues = BlacksmithTemplateValue<BlacksmithTemplate>;
 
 function requireSupabase() {
 	if (!supabase) {
@@ -51,14 +51,19 @@ export async function saveBlacksmithTemplate(
 ): Promise<BlacksmithTemplate> {
 	const client = requireSupabase();
 	const now = new Date().toISOString();
-	const template: BlacksmithTemplate = {
-		...values,
+	const metadata = {
 		id: id ?? crypto.randomUUID(),
 		ownerId,
 		isHomebrew: true,
 		createdAt: now,
 		updatedAt: now,
 	};
+	const template: BlacksmithTemplate =
+		values.category === 'Weapon'
+			? { ...values, ...metadata }
+			: values.category === 'Armor'
+				? { ...values, ...metadata }
+				: { ...values, ...metadata };
 	const insertValues: Partial<DbBlacksmithItem> = toDbBlacksmithItem(template);
 	delete insertValues.created_at;
 	delete insertValues.updated_at;

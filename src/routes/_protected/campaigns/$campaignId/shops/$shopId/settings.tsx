@@ -21,7 +21,11 @@ import {
 	Trash2,
 	X,
 } from 'lucide-react';
-import { RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
+import {
+	ITEM_CATEGORY_LABELS,
+	RARITY_CONFIG,
+	WEAPON_MASTERIES,
+} from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import {
@@ -48,15 +52,17 @@ import ItemIcon from '../../-parts/ItemIcon';
 import { ShopTransactionsPanel } from '../-parts/ShopTransactionsPanel';
 import type {
 	BlacksmithTemplate,
+	AllItem,
 	CampaignShop,
 	CampaignShopItem,
 	CampaignShopItemSnapshot,
 	CampaignShopItemSourceType,
-	ItemCategory,
+	ItemBaseCategory,
 	ItemAffix,
-	Rarity,
-	WeaponMasteryKey,
+	ItemBaseRarity,
+	WeaponItemMastery,
 } from '@/types';
+import { getItemArmorClass, getItemDamage } from '@/types';
 
 export const Route = createFileRoute(
 	'/_protected/campaigns/$campaignId/shops/$shopId/settings',
@@ -66,16 +72,19 @@ export const Route = createFileRoute(
 
 type ItemForm = {
 	name: string;
-	category: ItemCategory;
-	subType: string;
-	rarity: Rarity;
+	category: ItemBaseCategory;
+	subTypes: string[];
+	rarity: ItemBaseRarity;
 	icon: string;
-	damage: string;
-	mastery: WeaponMasteryKey;
-	ac: string;
+	weaponProperties: {
+		damage: string;
+		mastery: WeaponItemMastery | '';
+		properties: string[];
+	};
+	armorProperties: { ac: string };
 	weight: string;
 	valueGp: string;
-	requiresAttunement: boolean;
+	isRequireAttunement: boolean;
 	maxCharges: string;
 	effects: string;
 	flavor: string;
@@ -104,15 +113,14 @@ interface ImportSource {
 const EMPTY_ITEM: ItemForm = {
 	name: '',
 	category: 'Misc',
-	subType: '',
+	subTypes: [],
 	rarity: 'Common',
 	icon: 'Package',
-	damage: '',
-	mastery: 'None',
-	ac: '',
+	weaponProperties: { damage: '', mastery: '', properties: [] },
+	armorProperties: { ac: '' },
 	weight: '0',
 	valueGp: '0',
-	requiresAttunement: false,
+	isRequireAttunement: false,
 	maxCharges: '0',
 	effects: '',
 	flavor: '',
@@ -130,20 +138,11 @@ const EMPTY_ITEM: ItemForm = {
 const INPUT_CLASS =
 	'w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600';
 
-const CATEGORY_LABELS: Record<ItemCategory, string> = {
-	Weapon: '武器',
-	Armor: '護甲',
-	Consumable: '消耗品',
-	Misc: '雜物',
-};
-
-const ITEM_CATEGORIES: { value: ItemCategory; label: string }[] = [
-	{ value: 'Weapon', label: '武器' },
-	{ value: 'Armor', label: '護甲' },
-	{ value: 'Consumable', label: '消耗品' },
-	{ value: 'Misc', label: '雜物' },
-];
-const ITEM_RARITIES: Rarity[] = [
+const CATEGORY_LABELS = ITEM_CATEGORY_LABELS;
+const ITEM_CATEGORIES = Object.entries(ITEM_CATEGORY_LABELS).map(
+	([value, label]) => ({ value: value as ItemBaseCategory, label }),
+);
+const ITEM_RARITIES: ItemBaseRarity[] = [
 	'Common',
 	'Uncommon',
 	'Rare',
@@ -162,15 +161,23 @@ function itemFormFromSnapshot(
 	return {
 		name: snapshot.name,
 		category: snapshot.category,
-		subType: snapshot.subType,
+		subTypes: [...snapshot.subTypes],
 		rarity: snapshot.rarity,
-		icon: snapshot.icon,
-		damage: snapshot.damage ?? '',
-		mastery: snapshot.mastery,
-		ac: snapshot.ac ?? '',
+		icon: snapshot.icon ?? 'Package',
+		weaponProperties:
+			snapshot.category === 'Weapon'
+				? {
+						...snapshot.weaponProperties,
+						mastery: snapshot.weaponProperties.mastery ?? '',
+					}
+				: { damage: '', mastery: '', properties: [] },
+		armorProperties:
+			snapshot.category === 'Armor'
+				? { ...snapshot.armorProperties }
+				: { ac: '' },
 		weight: String(snapshot.weight),
 		valueGp: String(snapshot.valueGp),
-		requiresAttunement: snapshot.requiresAttunement,
+		isRequireAttunement: snapshot.isRequireAttunement,
 		maxCharges: String(snapshot.maxCharges),
 		effects: snapshot.effects,
 		flavor: snapshot.flavor,
@@ -215,28 +222,39 @@ function parseAffixes(value: string): ItemAffix[] {
 function snapshotFromTemplate(
 	template: BlacksmithTemplate,
 ): CampaignShopItemSnapshot {
-	return {
+	const base = {
 		name: template.name,
-		category: template.category,
-		subType: template.subType,
+		subTypes: [...template.subTypes],
 		rarity: template.rarity,
-		icon: template.icon,
-		damage: template.damage,
-		mastery: template.mastery,
-		ac: template.ac,
+		icon: template.icon ?? 'Package',
 		weight: template.weight,
 		valueGp: template.valueGp,
-		requiresAttunement: template.requiresAttunement,
-		isHomebrew: true,
-		maxCharges: template.maxCharges,
+		affixes: [...template.affixes],
 		effects: template.effects,
-		flavor: template.flavor,
+		flavor: template.flavor ?? '',
 		dmNotes: template.dmNotes,
+		maxCharges: template.maxCharges ?? 0,
 		isEquippable: template.isEquippable,
 		isConsumable: template.isConsumable,
+		isRequireAttunement: template.isRequireAttunement,
+		isHomebrew: true,
 		isImportant: template.isImportant,
-		affixes: template.affixes,
 	};
+	if (template.category === 'Weapon') {
+		return {
+			...base,
+			category: 'Weapon',
+			weaponProperties: { ...template.weaponProperties },
+		};
+	}
+	if (template.category === 'Armor') {
+		return {
+			...base,
+			category: 'Armor',
+			armorProperties: { ...template.armorProperties },
+		};
+	}
+	return { ...base, category: template.category };
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -304,7 +322,7 @@ function CampaignShopsPage() {
 				return false;
 			return (
 				!query ||
-				`${source.name} ${source.detail} ${source.snapshot.subType}`
+				`${source.name} ${source.detail} ${source.snapshot.subTypes.join(' ')}`
 					.toLocaleLowerCase()
 					.includes(query)
 			);
@@ -532,8 +550,8 @@ function CampaignShopsPage() {
 		if (!itemForm.icon.trim() || itemForm.icon.trim().length > 500) {
 			throw new Error('圖示名稱必須為 1 至 500 個字元。');
 		}
-		if (itemForm.subType.length > 120) {
-			throw new Error('物品子類型不可超過 120 個字元。');
+		if (itemForm.subTypes.some((subType) => subType.length > 120)) {
+			throw new Error('每個物品子類型不可超過 120 個字元。');
 		}
 		const parseItemNumber = (value: string, label: string) => {
 			if (!value.trim()) throw new Error(`${label}不可空白。`);
@@ -547,27 +565,52 @@ function CampaignShopsPage() {
 		const valueGp = parseItemNumber(itemForm.valueGp, '物品價值');
 		const maxCharges = parseItemNumber(itemForm.maxCharges, '最大充能');
 		if (!Number.isInteger(maxCharges)) throw new Error('最大充能必須是整數。');
-		const itemSnapshot: CampaignShopItemSnapshot = {
+		const affixes = parseAffixes(itemForm.affixesJson);
+		const common = {
 			name,
-			category: itemForm.category,
-			subType: itemForm.subType.trim(),
+			subTypes: itemForm.subTypes.map((subType) => subType.trim()).filter(Boolean),
 			rarity: itemForm.rarity,
 			icon: itemForm.icon.trim(),
-			damage: itemForm.damage.trim() || null,
-			mastery: itemForm.mastery,
-			ac: itemForm.ac.trim() || null,
 			weight,
 			valueGp,
-			requiresAttunement: itemForm.requiresAttunement,
-			isHomebrew: editingItem?.itemSnapshot.isHomebrew ?? true,
-			maxCharges,
+			affixes,
 			effects: itemForm.effects,
 			flavor: itemForm.flavor,
 			dmNotes: itemForm.dmNotes,
+			maxCharges,
 			isEquippable: itemForm.isEquippable,
 			isConsumable: itemForm.isConsumable,
+			isRequireAttunement: itemForm.isRequireAttunement,
+		};
+		let base: AllItem;
+		if (itemForm.category === 'Weapon') {
+			const damage = itemForm.weaponProperties.damage.trim();
+			if (!damage) throw new Error('武器必須填寫傷害描述。');
+			base = {
+				...common,
+				category: 'Weapon',
+				weaponProperties: {
+					damage,
+					...(itemForm.weaponProperties.mastery
+						? { mastery: itemForm.weaponProperties.mastery }
+						: {}),
+					properties: itemForm.weaponProperties.properties,
+				},
+			};
+		} else if (itemForm.category === 'Armor') {
+			const ac = itemForm.armorProperties.ac.trim();
+			if (!ac) throw new Error('護甲必須填寫護甲值。');
+			base = { ...common, category: 'Armor', armorProperties: { ac } };
+		} else {
+			base = { ...common, category: itemForm.category };
+		}
+		const itemSnapshot: CampaignShopItemSnapshot = {
+			...base,
+			icon: base.icon ?? 'Package',
+			flavor: base.flavor ?? '',
+			maxCharges: base.maxCharges ?? 0,
+			isHomebrew: editingItem?.itemSnapshot.isHomebrew ?? true,
 			isImportant: itemForm.isImportant,
-			affixes: parseAffixes(itemForm.affixesJson),
 		};
 		return { name, unitPriceGp, stockAvailable, itemSnapshot };
 	};
@@ -1044,29 +1087,29 @@ function CampaignShopsPage() {
 																RARITY_CONFIG[selectedItem.itemSnapshot.rarity]
 																	.label
 															}
-															{selectedItem.itemSnapshot.subType
-																? `・${selectedItem.itemSnapshot.subType}`
+															{selectedItem.itemSnapshot.subTypes.length > 0
+																? `・${selectedItem.itemSnapshot.subTypes.join('、')}`
 																: ''}
 														</p>
 													</div>
 												</div>
 
 												<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
-													{selectedItem.itemSnapshot.damage && (
+													{getItemDamage(selectedItem.itemSnapshot) && (
 														<div>
 															<p className='text-[11px] text-stone-500'>傷害</p>
 															<p className='font-mono text-amber-200'>
-																{selectedItem.itemSnapshot.damage}
+																{getItemDamage(selectedItem.itemSnapshot)}
 															</p>
 														</div>
 													)}
-													{selectedItem.itemSnapshot.ac && (
+													{getItemArmorClass(selectedItem.itemSnapshot) && (
 														<div>
 															<p className='text-[11px] text-stone-500'>
 																護甲等級
 															</p>
 															<p className='font-mono text-sky-200'>
-																AC {selectedItem.itemSnapshot.ac}
+																AC {getItemArmorClass(selectedItem.itemSnapshot)}
 															</p>
 														</div>
 													)}
@@ -1112,7 +1155,7 @@ function CampaignShopsPage() {
 												</div>
 
 												<div className='flex flex-wrap gap-2 border-b border-stone-800 py-3 text-xs'>
-													{selectedItem.itemSnapshot.requiresAttunement && (
+													{selectedItem.itemSnapshot.isRequireAttunement && (
 														<span className='text-purple-300'>需調諧</span>
 													)}
 													{selectedItem.itemSnapshot.isEquippable && (
@@ -1269,7 +1312,7 @@ function CampaignShopsPage() {
 													onChange={(event) =>
 														updateItemForm(
 															'category',
-															event.target.value as ItemCategory,
+															event.target.value as ItemBaseCategory,
 														)
 													}
 													className={`mt-1 ${INPUT_CLASS}`}
@@ -1285,9 +1328,15 @@ function CampaignShopsPage() {
 												子類型
 												<Input
 													maxLength={120}
-													value={itemForm.subType}
+													value={itemForm.subTypes.join('、')}
 													onChange={(event) =>
-														updateItemForm('subType', event.target.value)
+														updateItemForm(
+															'subTypes',
+															event.target.value
+																.split(/[、,，]/)
+																.map((part) => part.trim())
+																.filter(Boolean),
+														)
 													}
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
@@ -1299,7 +1348,7 @@ function CampaignShopsPage() {
 													onChange={(event) =>
 														updateItemForm(
 															'rarity',
-															event.target.value as Rarity,
+															event.target.value as ItemBaseRarity,
 														)
 													}
 													className={`mt-1 ${INPUT_CLASS}`}
@@ -1311,47 +1360,77 @@ function CampaignShopsPage() {
 													))}
 												</select>
 											</label>
-											<label className='text-sm text-stone-300'>
-												傷害
-												<Input
-													value={itemForm.damage}
-													onChange={(event) =>
-														updateItemForm('damage', event.target.value)
-													}
-													className={`mt-1 ${INPUT_CLASS}`}
-												/>
-											</label>
-											<label className='text-sm text-stone-300'>
-												武器精通
-												<select
-													value={itemForm.mastery}
-													onChange={(event) =>
-														updateItemForm(
-															'mastery',
-															event.target.value as WeaponMasteryKey,
-														)
-													}
-													className={`mt-1 ${INPUT_CLASS}`}
-												>
-													{Object.entries(WEAPON_MASTERIES).map(
-														([key, mastery]) => (
-															<option key={key} value={key}>
-																{mastery.name}
-															</option>
-														),
-													)}
-												</select>
-											</label>
-											<label className='text-sm text-stone-300'>
-												護甲值
-												<Input
-													value={itemForm.ac}
-													onChange={(event) =>
-														updateItemForm('ac', event.target.value)
-													}
-													className={`mt-1 ${INPUT_CLASS}`}
-												/>
-											</label>
+											{itemForm.category === 'Weapon' && (
+												<>
+													<label className='text-sm text-stone-300'>
+														傷害
+														<Input
+															required
+															value={itemForm.weaponProperties.damage}
+															onChange={(event) =>
+																updateItemForm('weaponProperties', {
+																	...itemForm.weaponProperties,
+																	damage: event.target.value,
+																})
+															}
+															className={`mt-1 ${INPUT_CLASS}`}
+														/>
+													</label>
+													<label className='text-sm text-stone-300'>
+														武器特性（以頓號分隔）
+														<Input
+															value={itemForm.weaponProperties.properties.join('、')}
+															onChange={(event) =>
+																updateItemForm('weaponProperties', {
+																	...itemForm.weaponProperties,
+																	properties: event.target.value
+																		.split(/[、,，]/)
+																		.map((part) => part.trim())
+																		.filter(Boolean),
+																})
+															}
+															className={`mt-1 ${INPUT_CLASS}`}
+														/>
+													</label>
+													<label className='text-sm text-stone-300'>
+														武器精通
+														<select
+															value={itemForm.weaponProperties.mastery}
+															onChange={(event) =>
+																updateItemForm('weaponProperties', {
+																	...itemForm.weaponProperties,
+																	mastery: event.target.value as WeaponItemMastery | '',
+																})
+															}
+															className={`mt-1 ${INPUT_CLASS}`}
+														>
+															<option value=''>無</option>
+															{Object.entries(WEAPON_MASTERIES)
+																.filter(([key]) => key !== 'None')
+																.map(([key, mastery]) => (
+																	<option key={key} value={key}>
+																		{mastery.name}
+																	</option>
+																))}
+														</select>
+													</label>
+												</>
+											)}
+											{itemForm.category === 'Armor' && (
+												<label className='text-sm text-stone-300'>
+													護甲值
+													<Input
+														required
+														value={itemForm.armorProperties.ac}
+														onChange={(event) =>
+															updateItemForm('armorProperties', {
+																ac: event.target.value,
+															})
+														}
+														className={`mt-1 ${INPUT_CLASS}`}
+													/>
+												</label>
+											)}
 											<label className='text-sm text-stone-300'>
 												重量（磅）
 												<Input
@@ -1426,7 +1505,7 @@ function CampaignShopsPage() {
 											{(
 												[
 													[
-														'requiresAttunement',
+														'isRequireAttunement',
 														'需要調諧',
 														'accent-purple-500',
 													],

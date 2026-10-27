@@ -8,13 +8,12 @@ import type {
 	CampaignShopRefreshPolicy,
 	CampaignShopRefreshRange,
 	CampaignShopRefreshRule,
-	ItemCategory,
-	Rarity,
-	WeaponMasteryKey,
+	ItemBaseCategory,
+	ItemBaseRarity,
 } from '@/types';
 import { filterBlacksmithCatalogItems } from '@/lib/blacksmithCatalog';
 
-const RARITIES: readonly Rarity[] = [
+const RARITIES: readonly ItemBaseRarity[] = [
 	'Common',
 	'Uncommon',
 	'Rare',
@@ -22,23 +21,26 @@ const RARITIES: readonly Rarity[] = [
 	'Legendary',
 	'Artifact',
 ];
-const CATEGORIES: readonly ItemCategory[] = [
+const CATEGORIES: readonly ItemBaseCategory[] = [
 	'Weapon',
 	'Armor',
-	'Consumable',
+	'Potion',
+	'Poison',
+	'Ring',
+	'Rod',
+	'Scroll',
+	'Staff',
+	'Wand',
+	'WondrousItem',
+	'TradeGood',
+	'Gemstone',
+	'Tool',
+	'AdventureGear',
+	'FoodAndDrink',
+	'Mount',
+	'Vehicle',
 	'Misc',
 ];
-const WEAPON_MASTERY_KEYS: ReadonlySet<string> = new Set([
-	'None',
-	'Cleave',
-	'Graze',
-	'Nick',
-	'Push',
-	'Sap',
-	'Slow',
-	'Topple',
-	'Vex',
-]);
 const MAX_STOCK = 2_147_483_647;
 
 export interface CampaignShopRefreshSelection {
@@ -62,8 +64,8 @@ export interface CampaignShopRefreshPreviewEntry {
 	sourceId: string | null;
 	ruleIndex: number | null;
 	name: string;
-	rarity: Rarity;
-	category: ItemCategory;
+	rarity: ItemBaseRarity;
+	category: ItemBaseCategory;
 	unitPriceGp: number;
 	stockAvailable: number;
 	itemSnapshot: CampaignShopItemSnapshot;
@@ -126,36 +128,46 @@ function isBlacksmithItem(value: unknown): value is BlacksmithItem {
 		typeof value.name !== 'string' ||
 		value.name.trim().length === 0 ||
 		!isStringArray(value.subTypes) ||
-		!RARITIES.includes(value.rarity as Rarity) ||
-		typeof value.icon !== 'string' ||
+		!RARITIES.includes(value.rarity as ItemBaseRarity) ||
+		(value.icon !== undefined &&
+			value.icon !== null &&
+			typeof value.icon !== 'string') ||
 		typeof value.weight !== 'number' ||
 		!Number.isFinite(value.weight) ||
 		value.weight < 0 ||
 		typeof value.valueGp !== 'number' ||
 		!Number.isFinite(value.valueGp) ||
 		value.valueGp < 0 ||
-		typeof value.requiresAttunement !== 'boolean' ||
-		typeof value.description !== 'string' ||
+		typeof value.isRequireAttunement !== 'boolean' ||
+		typeof value.isEquippable !== 'boolean' ||
+		typeof value.isConsumable !== 'boolean' ||
+		typeof value.effects !== 'string' ||
+		!Array.isArray(value.affixes) ||
 		typeof value.source !== 'string' ||
 		!isStringArray(value.aliases) ||
 		!isStringArray(value.searchTerms) ||
-		!CATEGORIES.includes(value.category as ItemCategory)
+		!CATEGORIES.includes(value.category as ItemBaseCategory)
 	) {
 		return false;
 	}
-	if (
-		(value.weaponProperties !== undefined &&
-			!isStringArray(value.weaponProperties)) ||
-		(value.weaponMastery !== undefined &&
-			typeof value.weaponMastery !== 'string')
-	) {
-		return false;
-	}
-
 	if (value.category === 'Armor') {
-		return value.ac === null || typeof value.ac === 'string';
+		return (
+			isRecord(value.armorProperties) &&
+			typeof value.armorProperties.ac === 'string' &&
+			value.armorProperties.ac.trim().length > 0
+		);
 	}
-	return value.damage === null || typeof value.damage === 'string';
+	if (value.category === 'Weapon') {
+		return (
+			isRecord(value.weaponProperties) &&
+			typeof value.weaponProperties.damage === 'string' &&
+			value.weaponProperties.damage.trim().length > 0 &&
+			isStringArray(value.weaponProperties.properties) &&
+			(value.weaponProperties.mastery === undefined ||
+				typeof value.weaponProperties.mastery === 'string')
+		);
+	}
+	return true;
 }
 
 function normalizeRange(
@@ -194,6 +206,9 @@ function normalizeCandidate(
 	field: string,
 	catalogIds?: ReadonlySet<string>,
 ): CampaignShopRefreshCandidate {
+	if (isRecord(value) && isRecord(value.item_base)) {
+		value = { ...value, ...value.item_base };
+	}
 	if (isBlacksmithItem(value)) {
 		if (catalogIds && !catalogIds.has(value.catalogId)) {
 			throw new Error(`${field} 指定了不存在的官方目錄「${value.catalogId}」。`);
@@ -218,8 +233,8 @@ function normalizeCandidate(
 
 	const normalizedParam: {
 		search?: string;
-		rarity?: Rarity;
-		category?: ItemCategory;
+		rarity?: ItemBaseRarity;
+		category?: ItemBaseCategory;
 	} = {};
 	if (value.param.search !== undefined) {
 		if (typeof value.param.search !== 'string') {
@@ -228,16 +243,16 @@ function normalizeCandidate(
 		normalizedParam.search = value.param.search;
 	}
 	if (value.param.rarity !== undefined) {
-		if (!RARITIES.includes(value.param.rarity as Rarity)) {
+		if (!RARITIES.includes(value.param.rarity as ItemBaseRarity)) {
 			throw new Error(`${field}.param.rarity 不是有效的稀有度。`);
 		}
-		normalizedParam.rarity = value.param.rarity as Rarity;
+		normalizedParam.rarity = value.param.rarity as ItemBaseRarity;
 	}
 	if (value.param.category !== undefined) {
-		if (!CATEGORIES.includes(value.param.category as ItemCategory)) {
+		if (!CATEGORIES.includes(value.param.category as ItemBaseCategory)) {
 			throw new Error(`${field}.param.category 不是有效的物品分類。`);
 		}
-		normalizedParam.category = value.param.category as ItemCategory;
+		normalizedParam.category = value.param.category as ItemBaseCategory;
 	}
 	return { source: value.source, param: normalizedParam };
 }
@@ -368,40 +383,42 @@ export async function resolveCampaignShopRefreshCandidates(
 	return selections;
 }
 
-function isWeaponMasteryKey(value: string): value is WeaponMasteryKey {
-	return WEAPON_MASTERY_KEYS.has(value);
-}
-
 export function blacksmithItemToCampaignShopSnapshot(
 	item: BlacksmithItem,
 ): CampaignShopItemSnapshot {
-	return {
+	const base = {
 		name: item.name,
-		category: item.category,
-		subType: item.subTypes.join('、'),
+		subTypes: [...item.subTypes],
 		rarity: item.rarity,
-		icon: item.icon,
-		damage: item.category === 'Armor' ? null : item.damage,
-		mastery:
-			item.category === 'Weapon' &&
-			item.weaponMastery &&
-			isWeaponMasteryKey(item.weaponMastery)
-				? item.weaponMastery
-				: 'None',
-		ac: item.category === 'Armor' ? item.ac : null,
+		icon: item.icon ?? 'Package',
 		weight: item.weight,
 		valueGp: item.valueGp,
-		requiresAttunement: item.requiresAttunement,
+		affixes: [...item.affixes],
+		effects: item.effects,
+		flavor: item.flavor ?? '',
+		dmNotes: item.dmNotes,
+		maxCharges: item.maxCharges ?? 0,
+		isEquippable: item.isEquippable,
+		isConsumable: item.isConsumable,
+		isRequireAttunement: item.isRequireAttunement,
 		isHomebrew: false,
-		maxCharges: 0,
-		effects: item.description,
-		flavor: '',
-		dmNotes: '',
-		isEquippable: item.category === 'Weapon' || item.category === 'Armor',
-		isConsumable: item.category === 'Consumable',
 		isImportant: false,
-		affixes: [],
 	};
+	if (item.category === 'Weapon') {
+		return {
+			...base,
+			category: 'Weapon',
+			weaponProperties: { ...item.weaponProperties },
+		};
+	}
+	if (item.category === 'Armor') {
+		return {
+			...base,
+			category: 'Armor',
+			armorProperties: { ...item.armorProperties },
+		};
+	}
+	return { ...base, category: item.category };
 }
 
 function makePreviewEntry(

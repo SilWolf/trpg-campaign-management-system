@@ -54,8 +54,8 @@ const readJson = async (relativePath) => {
 
 const index = await readJson('catalog-index.json');
 expectObject(index, 'catalog-index.json', ['schemaVersion', 'catalogs']);
-if (index.schemaVersion !== 3 || !Array.isArray(index.catalogs)) {
-	fail('catalog-index.json 的 schemaVersion 必須為 3，且 catalogs 必須是陣列');
+if (index.schemaVersion !== 4 || !Array.isArray(index.catalogs)) {
+	fail('catalog-index.json 的 schemaVersion 必須為 4，且 catalogs 必須是陣列');
 }
 
 const catalogIds = new Set();
@@ -88,7 +88,7 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 			'items',
 		]);
 		if (
-			document.schemaVersion !== 3 ||
+			document.schemaVersion !== 4 ||
 			document.catalogId !== catalog.catalogId ||
 			!Array.isArray(document.items)
 		) {
@@ -99,71 +99,165 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 	const itemKeys = [
 		'itemId',
 		'name',
-		'rarity',
-		'requiresAttunement',
-		'weight',
-		'description',
-		'source',
 		'category',
 		'subTypes',
-		'valueGp',
+		'rarity',
 		'icon',
+		'weight',
+		'valueGp',
+		'affixes',
+		'effects',
+		'flavor',
+		'dmNotes',
+		'maxCharges',
+		'isEquippable',
+		'isConsumable',
+		'isRequireAttunement',
+		'source',
 	];
+	const categories = new Set([
+		'Weapon',
+		'Armor',
+		'Potion',
+		'Poison',
+		'Ring',
+		'Rod',
+		'Scroll',
+		'Staff',
+		'Wand',
+		'WondrousItem',
+		'TradeGood',
+		'Gemstone',
+		'Tool',
+		'AdventureGear',
+		'FoodAndDrink',
+		'Mount',
+		'Vehicle',
+		'Misc',
+	]);
+	const rarities = new Set([
+		'Common',
+		'Uncommon',
+		'Rare',
+		'VeryRare',
+		'Legendary',
+		'Artifact',
+	]);
+	const weaponMasteries = new Set([
+		'Cleave',
+		'Graze',
+		'Nick',
+		'Push',
+		'Sap',
+		'Slow',
+		'Topple',
+		'Vex',
+	]);
 	const itemsById = new Map();
 	for (const [itemIndex, item] of itemsDocument.items.entries()) {
 		const itemLabel = `${catalog.catalogId} items[${itemIndex}]`;
 		const expectedItemKeys =
 			item.category === 'Weapon'
-				? [...itemKeys, 'damage', 'weaponProperties', 'weaponMastery']
+				? [...itemKeys, 'weaponProperties']
 				: item.category === 'Armor'
-					? [...itemKeys, 'ac']
-					: [...itemKeys, 'damage'];
+					? [...itemKeys, 'armorProperties']
+					: itemKeys;
 		expectObject(item, itemLabel, expectedItemKeys);
 		for (const key of [
 			'itemId',
 			'name',
-			'rarity',
-			'source',
 			'category',
-			'icon',
+			'source',
 		]) {
 			expectString(item[key], `${itemLabel}.${key}`);
 		}
-		if (typeof item.description !== 'string') {
-			fail(`${itemLabel}.description 必須是字串`);
+		if (!categories.has(item.category)) {
+			fail(`${itemLabel}.category 不受支援：${item.category}`);
+		}
+		if (!rarities.has(item.rarity)) {
+			fail(`${itemLabel}.rarity 不受支援：${item.rarity}`);
 		}
 		expectStringArray(item.subTypes, `${itemLabel}.subTypes`);
+		if (item.subTypes.some((subType) => subType.trim().length === 0)) {
+			fail(`${itemLabel}.subTypes 不可包含空字串`);
+		}
+		if (item.icon !== null) {
+			expectString(item.icon, `${itemLabel}.icon`);
+			if (
+				!item.icon.startsWith('./images/') ||
+				item.icon.includes('\\') ||
+				item.icon.split('/').includes('..')
+			) {
+				fail(`${itemLabel}.icon 必須是安全的 ./images/ 相對路徑或 null`);
+			}
+		}
 		if (
-			item.subTypes.length === 0 ||
-			item.subTypes.some((subType) => subType.trim().length === 0)
+			typeof item.effects !== 'string' ||
+			(item.flavor !== null && typeof item.flavor !== 'string') ||
+			typeof item.dmNotes !== 'string'
 		) {
-			fail(`${itemLabel}.subTypes 必須包含非空字串`);
+			fail(`${itemLabel}.effects、flavor 或 dmNotes 文字欄位格式錯誤`);
+		}
+		if (!Array.isArray(item.affixes)) fail(`${itemLabel}.affixes 必須是陣列`);
+		for (const [affixIndex, affix] of item.affixes.entries()) {
+			const affixLabel = `${itemLabel}.affixes[${affixIndex}]`;
+			expectObject(affix, affixLabel, [
+				'id',
+				'name',
+				'desc',
+				...(Object.hasOwn(affix, 'isHidden') ? ['isHidden'] : []),
+			]);
+			for (const key of ['id', 'name', 'desc']) {
+				if (typeof affix[key] !== 'string') fail(`${affixLabel}.${key} 必須是字串`);
+			}
+			if (affix.isHidden !== undefined && typeof affix.isHidden !== 'boolean') {
+				fail(`${affixLabel}.isHidden 必須是布林值`);
+			}
+		}
+		for (const key of ['isEquippable', 'isConsumable', 'isRequireAttunement']) {
+			if (typeof item[key] !== 'boolean') fail(`${itemLabel}.${key} 必須是布林值`);
+		}
+		if (
+			item.maxCharges !== null &&
+			(!Number.isSafeInteger(item.maxCharges) || item.maxCharges < 0)
+		) {
+			fail(`${itemLabel}.maxCharges 必須是非負整數或 null`);
 		}
 		if (item.category === 'Weapon') {
-			expectStringArray(item.weaponProperties, `${itemLabel}.weaponProperties`);
-			if (item.weaponProperties.some((property) => property.trim().length === 0)) {
-				fail(`${itemLabel}.weaponProperties 不可包含空字串`);
+			expectObject(item.weaponProperties, `${itemLabel}.weaponProperties`, [
+				'damage',
+				...(Object.hasOwn(item.weaponProperties, 'mastery') ? ['mastery'] : []),
+				'properties',
+			]);
+			expectString(item.weaponProperties.damage, `${itemLabel}.weaponProperties.damage`);
+			expectStringArray(item.weaponProperties.properties, `${itemLabel}.weaponProperties.properties`);
+			if (
+				item.weaponProperties.properties.some(
+					(property) => property.trim().length === 0,
+				)
+			) {
+				fail(`${itemLabel}.weaponProperties.properties 不可包含空字串`);
 			}
-			expectString(item.weaponMastery, `${itemLabel}.weaponMastery`);
-		}
-		if (typeof item.requiresAttunement !== 'boolean') {
-			fail(`${itemLabel}.requiresAttunement 必須是布林值`);
+			if (
+				item.weaponProperties.mastery !== undefined &&
+				!weaponMasteries.has(item.weaponProperties.mastery)
+			) {
+				fail(`${itemLabel}.weaponProperties.mastery 不受支援`);
+			}
 		}
 		if (item.category === 'Armor') {
-			if (item.ac !== null && typeof item.ac !== 'string') {
-				fail(`${itemLabel}.ac 必須是字串或 null`);
-			}
-			if ('damage' in item) {
-				fail(`${itemLabel} Armor 不應包含 damage 欄位`);
-			}
-		} else if (item.damage !== null && typeof item.damage !== 'string') {
-			fail(`${itemLabel}.damage 必須是字串或 null`);
+			expectObject(item.armorProperties, `${itemLabel}.armorProperties`, ['ac']);
+			expectString(item.armorProperties.ac, `${itemLabel}.armorProperties.ac`);
 		}
 		if (typeof item.weight !== 'number' || !Number.isFinite(item.weight) || item.weight < 0) {
 			fail(`${itemLabel}.weight 必須是有限且不小於 0 的數字`);
 		}
-		if (!Number.isInteger(item.valueGp) || item.valueGp < 0) {
-			fail(`${itemLabel}.valueGp 必須是不小於 0 的整數`);
+		if (
+			typeof item.valueGp !== 'number' ||
+			!Number.isFinite(item.valueGp) ||
+			item.valueGp < 0
+		) {
+			fail(`${itemLabel}.valueGp 必須是有限且不小於 0 的數字`);
 		}
 		if (itemsById.has(item.itemId)) {
 			fail(`${catalog.catalogId} 出現重複 itemId：${item.itemId}`);

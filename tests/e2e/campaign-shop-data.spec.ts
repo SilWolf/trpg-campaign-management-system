@@ -7,15 +7,17 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		const snapshot = {
 			name: '長劍',
 			category: 'Weapon' as const,
-			subType: '軍用武器',
+			subTypes: ['軍用武器'],
 			rarity: 'Common' as const,
 			icon: 'Sword',
-			damage: '1d8',
-			mastery: 'Sap' as const,
-			ac: null,
+			weaponProperties: {
+				damage: '1d8',
+				mastery: 'Sap' as const,
+				properties: ['Versatile'],
+			},
 			weight: 3,
 			valueGp: 15,
-			requiresAttunement: false,
+			isRequireAttunement: false,
 			isHomebrew: false,
 			maxCharges: 0,
 			effects: '描述',
@@ -37,6 +39,38 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			requiresApproval: false,
 			isActive: true,
 		});
+		const inventoryItem = {
+			...snapshot,
+			id: 'item-text-id',
+			ownerId: 'owner-text-id',
+			slot: 2,
+			quantity: 1,
+			equipped: false,
+			attuned: false,
+			isHomebrew: false,
+			isIdentified: true,
+			charges: 0,
+			maxCharges: 0,
+			playerNotes: '',
+			isPrivate: false,
+			isImportant: false,
+		};
+		const encodedInventory = converters.toDbItem(inventoryItem);
+		const decodedInventory = converters.fromDbItem(encodedInventory);
+		const blacksmithTemplate = {
+			...snapshot,
+			id: 'template-text-id',
+			ownerId: 'owner-text-id',
+			isHomebrew: true,
+			isImportant: false,
+			isShared: true,
+			createdAt: '2026-01-01T00:00:00Z',
+			updatedAt: '2026-01-02T00:00:00Z',
+			maxCharges: 0,
+		};
+		const encodedBlacksmith = converters.toDbBlacksmithItem(blacksmithTemplate);
+		const decodedBlacksmith =
+			converters.fromDbBlacksmithItem(encodedBlacksmith);
 		const refreshPolicy = {
 			flags: { keepItemsOnRefresh: true },
 			rules: [
@@ -148,6 +182,10 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		);
 		return {
 			encoded,
+			encodedInventory,
+			decodedInventory,
+			encodedBlacksmith,
+			decodedBlacksmith,
 			encodedShop,
 			decodedShop,
 			legacyShop,
@@ -207,11 +245,52 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		sub_type: '軍用武器',
 		value_gp: 15,
 		is_equippable: true,
+		item_base: {
+			weaponProperties: {
+				damage: '1d8',
+				mastery: 'Sap',
+				properties: ['Versatile'],
+			},
+		},
 	});
 	expect(data.decodedItem.itemSnapshot).toMatchObject({
-		subType: '軍用武器',
+		subTypes: ['軍用武器'],
 		valueGp: 15,
 		isEquippable: true,
+		weaponProperties: {
+			damage: '1d8',
+			mastery: 'Sap',
+			properties: ['Versatile'],
+		},
+	});
+	expect(data.encodedInventory.item_base).toMatchObject({
+		category: 'Weapon',
+		subTypes: ['軍用武器'],
+		weaponProperties: {
+			damage: '1d8',
+			mastery: 'Sap',
+			properties: ['Versatile'],
+		},
+	});
+	expect(data.decodedInventory).toMatchObject({
+		id: 'item-text-id',
+		category: 'Weapon',
+		subTypes: ['軍用武器'],
+		weaponProperties: {
+			damage: '1d8',
+			mastery: 'Sap',
+			properties: ['Versatile'],
+		},
+	});
+	expect(data.decodedBlacksmith).toMatchObject({
+		id: 'template-text-id',
+		category: 'Weapon',
+		subTypes: ['軍用武器'],
+		weaponProperties: {
+			damage: '1d8',
+			mastery: 'Sap',
+			properties: ['Versatile'],
+		},
 	});
 	expect(data.legacyItem).toMatchObject({
 		unitPriceGp: 0.01,
@@ -220,7 +299,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		itemSnapshot: {
 			name: '舊物品',
 			category: 'Misc',
-			subType: '',
+			subTypes: [],
 			rarity: 'Common',
 			icon: 'Package',
 			weight: 0,

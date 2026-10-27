@@ -16,15 +16,23 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 			icon: './images/sword.svg',
 			weight: 3,
 			valueGp: 15,
-			requiresAttunement: false,
-			description: '一把龍焰武器',
+			affixes: [],
+			effects: '一把龍焰武器',
+			flavor: null,
+			dmNotes: '',
+			maxCharges: null,
+			isEquippable: true,
+			isConsumable: false,
+			isRequireAttunement: false,
 			source: '核心規則',
 			aliases: ['龍焰'],
 			searchTerms: ['dragon flame'],
 			category: 'Weapon' as const,
-			damage: '1d8',
-			weaponProperties: ['Versatile'],
-			weaponMastery: 'Sap',
+			weaponProperties: {
+				damage: '1d8',
+				mastery: 'Sap' as const,
+				properties: ['Versatile'],
+			},
 		});
 		const items = [
 			makeItem('longsword', '長劍'),
@@ -54,6 +62,31 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 				},
 			],
 		};
+		const converters = await import('/src/lib/supabase.ts');
+		const encodedShop = converters.toDbCampaignShop({
+			campaignId: 'campaign-text-id',
+			name: '刷新測試商店',
+			backgroundImageUrl: null,
+			isActive: true,
+			refreshPolicy: {
+				flags: { keepItemsOnRefresh: false },
+				rules: [
+					{
+						possibleItemsOrFilters: [items[0]],
+						pickCount: null,
+						stockAvailable: { min: 1, max: 1 },
+					},
+				],
+			},
+		});
+		const decodedShop = converters.fromDbCampaignShop({
+			id: 'shop-text-id',
+			...encodedShop,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-02T00:00:00Z',
+		});
+		const restoredCandidate =
+			decodedShop.refreshPolicy.rules[0].possibleItemsOrFilters[0];
 		const randomValues = [0.9, 0.1, 0.5];
 		let randomIndex = 0;
 		const selections = await refresh.resolveCampaignShopRefreshCandidates(
@@ -148,6 +181,15 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 				() => stockRandomValues[stockRandomIndex++] ?? 0,
 			);
 		return {
+			restoredCatalogItem:
+				'itemId' in restoredCandidate
+					? {
+							category: restoredCandidate.category,
+							subTypes: restoredCandidate.subTypes,
+							weaponProperties: restoredCandidate.weaponProperties,
+							isRequireAttunement: restoredCandidate.isRequireAttunement,
+						}
+					: null,
 			filterIds: filterMatches.map((item) => item.itemId),
 			selections: selections.map(({ item, ruleIndex, stockAvailable }) => ({
 				itemId: item.itemId,
@@ -172,6 +214,16 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 	});
 
 	expect(result.filterIds).toEqual(['longsword', 'greatsword', 'dagger']);
+	expect(result.restoredCatalogItem).toEqual({
+		category: 'Weapon',
+		subTypes: ['軍用武器'],
+		weaponProperties: {
+			damage: '1d8',
+			mastery: 'Sap',
+			properties: ['Versatile'],
+		},
+		isRequireAttunement: false,
+	});
 	expect(result.selections).toEqual([
 		{ itemId: 'greatsword', ruleIndex: 0, stockAvailable: 2 },
 		{ itemId: 'longsword', ruleIndex: 0, stockAvailable: 2 },
@@ -205,15 +257,23 @@ test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪�
 			icon: './images/sword.svg',
 			weight: 3,
 			valueGp: 15,
-			requiresAttunement: false,
-			description: '武器描述',
+			affixes: [],
+			effects: '武器描述',
+			flavor: null,
+			dmNotes: '',
+			maxCharges: null,
+			isEquippable: true,
+			isConsumable: false,
+			isRequireAttunement: false,
 			source: '核心規則',
 			aliases: [],
 			searchTerms: [],
 			category: 'Weapon' as const,
-			damage: '1d8',
-			weaponProperties: ['Versatile'],
-			weaponMastery: 'Sap',
+			weaponProperties: {
+				damage: '1d8',
+				mastery: 'Sap' as const,
+				properties: ['Versatile'],
+			},
 		};
 		const snapshot = refresh.blacksmithItemToCampaignShopSnapshot(item);
 		const existing = {

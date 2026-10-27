@@ -10,26 +10,30 @@ import {
 	resolveItemFlags,
 	type Character,
 	type CurrencyType,
+	type AllItem,
 	type HomebrewForm,
 	type InventoryItem,
 	type ItemAffix,
-	type Rarity,
+	type ItemBaseRarity,
 } from '@/types';
 import { getItemImageUrl, ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 
 const DEFAULT_FORM: HomebrewForm = {
 	name: '',
 	category: 'Weapon',
-	subType: '長劍 (雙用)',
+	subTypes: ['長劍 (雙用)'],
 	rarity: 'Rare',
 	icon: 'Sword',
-	damage: '1d8+2 揮砍',
-	mastery: 'Vex',
-	ac: '',
+	weaponProperties: {
+		damage: '1d8+2 揮砍',
+		mastery: 'Vex',
+		properties: [],
+	},
+	armorProperties: { ac: '' },
 	weight: '3',
 	valueGp: '1000',
 	quantity: '1',
-	requiresAttunement: true,
+	isRequireAttunement: true,
 	isIdentified: false,
 	maxCharges: '0',
 	effects: '',
@@ -41,6 +45,47 @@ const DEFAULT_FORM: HomebrewForm = {
 	isImportant: false,
 	affixes: [],
 };
+
+function formToAllItem(form: HomebrewForm): AllItem {
+	const maxCharges = Number.parseInt(form.maxCharges, 10) || 0;
+	const common = {
+		name: form.name.trim(),
+		subTypes: form.subTypes,
+		rarity: form.rarity,
+		icon: form.icon.trim(),
+		weight: Number.parseFloat(form.weight) || 0,
+		valueGp: Number.parseFloat(form.valueGp) || 0,
+		affixes: form.affixes,
+		effects: form.effects || '無特殊規則描述。',
+		flavor: form.flavor || '',
+		dmNotes: form.dmNotes || '',
+		maxCharges,
+		isEquippable: form.isEquippable,
+		isConsumable: form.isConsumable,
+		isRequireAttunement: form.isRequireAttunement,
+	};
+	if (form.category === 'Weapon') {
+		const damage = form.weaponProperties.damage.trim();
+		if (!damage) throw new Error('武器必須填寫傷害描述。');
+		return {
+			...common,
+			category: 'Weapon',
+			weaponProperties: {
+				damage,
+				...(form.weaponProperties.mastery
+					? { mastery: form.weaponProperties.mastery }
+					: {}),
+				properties: form.weaponProperties.properties,
+			},
+		};
+	}
+	if (form.category === 'Armor') {
+		const ac = form.armorProperties.ac.trim();
+		if (!ac) throw new Error('護甲必須填寫護甲值。');
+		return { ...common, category: 'Armor', armorProperties: { ac } };
+	}
+	return { ...common, category: form.category };
+}
 
 interface UseInventoryActionsProps {
 	characters: Character[];
@@ -254,7 +299,7 @@ export function useInventoryActions({
 	};
 
 	const handleAutoSort = (sortBy: 'rarity' | 'weight' | 'value') => {
-		const rarityOrder: Record<Rarity, number> = {
+		const rarityOrder: Record<ItemBaseRarity, number> = {
 			Artifact: 6,
 			Legendary: 5,
 			VeryRare: 4,
@@ -671,16 +716,19 @@ export function useInventoryActions({
 		setNewItemForm({
 			name: item.name,
 			category: item.category,
-			subType: item.subType,
+			subTypes: [...item.subTypes],
 			rarity: item.rarity,
 			icon: item.icon,
-			damage: item.damage || '',
-			mastery: item.mastery || 'None',
-			ac: item.ac || '',
+			weaponProperties:
+				item.category === 'Weapon'
+					? { ...item.weaponProperties, mastery: item.weaponProperties.mastery ?? '' }
+					: { damage: '', mastery: '', properties: [] },
+			armorProperties:
+				item.category === 'Armor' ? { ...item.armorProperties } : { ac: '' },
 			weight: String(item.weight),
 			valueGp: String(item.valueGp),
 			quantity: String(item.quantity),
-			requiresAttunement: item.requiresAttunement,
+			isRequireAttunement: item.isRequireAttunement,
 			isIdentified: item.isIdentified,
 			maxCharges: String(item.maxCharges),
 			effects: item.effects,
@@ -706,38 +754,43 @@ export function useInventoryActions({
 			return;
 		}
 
+		let baseItem: AllItem;
+		try {
+			baseItem = formToAllItem(newItemForm);
+		} catch (error) {
+			showToast(error instanceof Error ? error.message : '物品資料無效。');
+			return;
+		}
+		const inventoryBase: AllItem & {
+			icon: string;
+			flavor: string;
+			maxCharges: number;
+		} = {
+			...baseItem,
+			icon: baseItem.icon ?? 'Package',
+			flavor: baseItem.flavor ?? '',
+			maxCharges: baseItem.maxCharges ?? 0,
+		};
+
 		if (editingItemId) {
-			const maxChg = parseInt(newItemForm.maxCharges, 10) || 0;
 			setItems((prev) =>
 				prev.map((item) => {
 					if (item.id !== editingItemId) return item;
 					return {
-						...item,
-						name: newItemForm.name.trim(),
-						category: newItemForm.category,
-						subType: newItemForm.subType || '奇物',
-						rarity: newItemForm.rarity,
-						icon: newItemForm.icon,
-						damage:
-							newItemForm.category === 'Weapon' ? newItemForm.damage : null,
-						mastery:
-							newItemForm.category === 'Weapon' ? newItemForm.mastery : 'None',
-						ac: newItemForm.category === 'Armor' ? newItemForm.ac : null,
-						weight: parseFloat(newItemForm.weight) || 1.0,
-						valueGp: parseInt(newItemForm.valueGp, 10) || 0,
-						quantity: parseInt(newItemForm.quantity, 10) || 1,
-						requiresAttunement: newItemForm.requiresAttunement,
+						...inventoryBase,
+						id: item.id,
+						ownerId: item.ownerId,
+						slot: item.slot,
+						quantity: Number.parseInt(newItemForm.quantity, 10) || 1,
+						equipped: item.equipped,
+						attuned: item.attuned,
+						isHomebrew: item.isHomebrew,
 						isIdentified: newItemForm.isIdentified,
-						maxCharges: maxChg,
-						charges: Math.min(item.charges, maxChg),
-						effects: newItemForm.effects || '無特殊規則描述。',
-						flavor: newItemForm.flavor || '',
-						dmNotes: newItemForm.dmNotes || '',
+						charges: Math.min(item.charges, inventoryBase.maxCharges),
+						maxCharges: inventoryBase.maxCharges,
+						playerNotes: item.playerNotes,
 						isPrivate: Boolean(newItemForm.isPrivate),
-						isEquippable: newItemForm.isEquippable,
-						isConsumable: newItemForm.isConsumable,
 						isImportant: newItemForm.isImportant,
-						affixes: newItemForm.affixes || [],
 					};
 				}),
 			);
@@ -749,36 +802,19 @@ export function useInventoryActions({
 
 		const targetPrivate = Boolean(newItemForm.isPrivate);
 		const createdItem: InventoryItem = {
+			...inventoryBase,
 			id: `hb-${Date.now()}`,
 			ownerId: activeCharId,
 			slot: 0,
-			name: newItemForm.name.trim(),
-			category: newItemForm.category,
-			subType: newItemForm.subType || '自創奇物',
-			rarity: newItemForm.rarity,
-			icon: newItemForm.icon,
-			damage: newItemForm.category === 'Weapon' ? newItemForm.damage : null,
-			mastery: newItemForm.category === 'Weapon' ? newItemForm.mastery : 'None',
-			ac: newItemForm.category === 'Armor' ? newItemForm.ac : null,
-			weight: parseFloat(newItemForm.weight) || 1.0,
-			valueGp: parseInt(newItemForm.valueGp, 10) || 100,
 			quantity: parseInt(newItemForm.quantity, 10) || 1,
 			equipped: false,
-			requiresAttunement: newItemForm.requiresAttunement,
 			attuned: false,
 			isHomebrew: true,
 			isIdentified: newItemForm.isIdentified,
 			charges: parseInt(newItemForm.maxCharges, 10) || 0,
-			maxCharges: parseInt(newItemForm.maxCharges, 10) || 0,
-			effects: newItemForm.effects || '無特殊規則描述。',
-			flavor: newItemForm.flavor || '「由地下城主親手鍛造的神秘器物。」',
-			dmNotes: newItemForm.dmNotes || '',
 			playerNotes: '',
 			isPrivate: targetPrivate,
-			isEquippable: newItemForm.isEquippable,
-			isConsumable: newItemForm.isConsumable,
 			isImportant: newItemForm.isImportant,
-			affixes: newItemForm.affixes || [],
 		};
 
 		setItems((prev) => [...prev, createdItem]);

@@ -2,8 +2,8 @@ import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import type {
 	HomebrewForm,
 	ItemAffix,
-	ItemCategory,
-	Rarity,
+	ItemBaseCategory,
+	ItemBaseRarity,
 	WeaponMasteryInfo,
 	WeaponMasteryKey,
 } from '@/types';
@@ -26,6 +26,7 @@ import {
 	Wand2,
 } from 'lucide-react';
 import { Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
+import { ITEM_CATEGORY_LABELS } from '@/data';
 import ItemIcon from './ItemIcon';
 import { ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 
@@ -175,7 +176,7 @@ export default function HomebrewModal({
 								aria-label='BG3 稀有度光框'
 								value={form.rarity}
 								onChange={(e) =>
-									setForm({ ...form, rarity: e.target.value as Rarity })
+									setForm({ ...form, rarity: e.target.value as ItemBaseRarity })
 								}
 								className='w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 							>
@@ -268,7 +269,7 @@ export default function HomebrewModal({
 								aria-label='規則子分類'
 								value={form.category}
 								onChange={(e) => {
-									const nextCat = e.target.value as ItemCategory;
+									const nextCat = e.target.value as ItemBaseCategory;
 									setForm({
 										...form,
 										category: nextCat,
@@ -277,23 +278,36 @@ export default function HomebrewModal({
 												? true
 												: form.isEquippable,
 										isConsumable:
-											nextCat === 'Consumable' ? true : form.isConsumable,
+											['Potion', 'Poison', 'Scroll', 'FoodAndDrink'].includes(
+												nextCat,
+											)
+												? true
+												: form.isConsumable,
 									});
 								}}
 								className='w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 							>
-								<option value='Weapon'>武器 (Weapon)</option>
-								<option value='Armor'>護甲 (Armor)</option>
-								<option value='Consumable'>消耗品 (Consumable)</option>
-								<option value='Misc'>奇物/雜物 (Misc)</option>
+								{Object.entries(ITEM_CATEGORY_LABELS).map(([category, label]) => (
+									<option key={category} value={category}>
+										{label} ({category})
+									</option>
+								))}
 							</Select>
 						</div>
 						<div>
 							<label className='block text-stone-400 mb-1'>子類型描述</label>
 							<Input
 								aria-label='子類型描述'
-								value={form.subType}
-								onChange={(e) => setForm({ ...form, subType: e.target.value })}
+								value={form.subTypes.join('、')}
+								onChange={(e) =>
+									setForm({
+										...form,
+										subTypes: e.target.value
+											.split(/[、,，]/)
+											.map((part) => part.trim())
+											.filter(Boolean),
+									})
+								}
 								placeholder='如：長劍、奇物、戒指'
 								className='w-full bg-stone-900 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 							/>
@@ -384,8 +398,16 @@ export default function HomebrewModal({
 								</label>
 								<Input
 									aria-label='武器傷害骰與屬性'
-									value={form.damage}
-									onChange={(e) => setForm({ ...form, damage: e.target.value })}
+									value={form.weaponProperties.damage}
+									onChange={(e) =>
+										setForm({
+											...form,
+											weaponProperties: {
+												...form.weaponProperties,
+												damage: e.target.value,
+											},
+										})
+									}
 									placeholder='例如：2d6+3 揮砍 + 1d4 黯蝕'
 									className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 								/>
@@ -396,16 +418,20 @@ export default function HomebrewModal({
 								</label>
 								<Select
 									aria-label='D&D 5R 武器精通'
-									value={form.mastery}
+									value={form.weaponProperties.mastery}
 									onChange={(e) =>
 										setForm({
 											...form,
-											mastery: e.target.value as WeaponMasteryKey,
+											weaponProperties: {
+												...form.weaponProperties,
+												mastery: e.target.value as HomebrewForm['weaponProperties']['mastery'],
+											},
 										})
 									}
 									className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 								>
-									{Object.entries(weaponMasteries).map(([k, v]) => (
+									<option value=''>無</option>
+									{Object.entries(weaponMasteries).filter(([key]) => key !== 'None').map(([k, v]) => (
 										<option key={k} value={k}>
 											{v.name}
 										</option>
@@ -422,8 +448,15 @@ export default function HomebrewModal({
 							</label>
 							<Input
 								aria-label='護甲等級描述'
-								value={form.ac}
-								onChange={(e) => setForm({ ...form, ac: e.target.value })}
+								value={form.armorProperties.ac}
+								onChange={(e) =>
+									setForm({
+										...form,
+										armorProperties: {
+											ac: e.target.value,
+										},
+									})
+								}
 								placeholder='例如：18 (重甲，不加敏捷)'
 								className='w-full bg-stone-950 border border-stone-700 rounded px-2.5 py-1.5 text-stone-100 outline-none'
 							/>
@@ -683,9 +716,9 @@ export default function HomebrewModal({
 							label='需同調 (Requires Attunement)'
 							labelClassName='cursor-pointer text-stone-200'
 							className='accent-amber-500'
-								checked={form.requiresAttunement}
+								checked={form.isRequireAttunement}
 								onChange={(e) =>
-									setForm({ ...form, requiresAttunement: e.target.checked })
+									setForm({ ...form, isRequireAttunement: e.target.checked })
 								}
 						/>
 

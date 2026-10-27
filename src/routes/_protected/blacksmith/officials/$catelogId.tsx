@@ -28,7 +28,11 @@ import {
 	getBlacksmithIconUrl,
 	loadBlacksmithCatalogs,
 } from '@/lib/blacksmithCatalog';
-import type { BlacksmithItem, ItemCategory, Rarity } from '@/types';
+import type {
+	BlacksmithItem,
+	ItemBaseCategory,
+	ItemBaseRarity,
+} from '@/types';
 
 export const Route = createFileRoute(
 	'/_protected/blacksmith/officials/$catelogId',
@@ -36,7 +40,7 @@ export const Route = createFileRoute(
 	component: BlacksmithCatalogPage,
 });
 
-const RARITIES: Rarity[] = [
+const RARITIES: ItemBaseRarity[] = [
 	'Common',
 	'Uncommon',
 	'Rare',
@@ -44,27 +48,30 @@ const RARITIES: Rarity[] = [
 	'Legendary',
 	'Artifact',
 ];
-const CATEGORY_STYLES: Record<
-	ItemCategory,
-	{ icon: typeof Sword; badge: string }
-> = {
-	Weapon: {
-		icon: Sword,
-		badge: 'border-amber-600/50 bg-amber-900/60 text-amber-200',
-	},
-	Armor: {
-		icon: Shield,
-		badge: 'border-amber-600/50 bg-amber-900/60 text-amber-200',
-	},
-	Consumable: {
-		icon: FlaskConical,
-		badge: 'border-emerald-600/50 bg-emerald-900/60 text-emerald-200',
-	},
-	Misc: {
+function getCategoryStyle(category: ItemBaseCategory) {
+	if (category === 'Weapon') {
+		return {
+			icon: Sword,
+			badge: 'border-amber-600/50 bg-amber-900/60 text-amber-200',
+		};
+	}
+	if (category === 'Armor') {
+		return {
+			icon: Shield,
+			badge: 'border-amber-600/50 bg-amber-900/60 text-amber-200',
+		};
+	}
+	if (['Potion', 'Poison', 'FoodAndDrink', 'Scroll'].includes(category)) {
+		return {
+			icon: FlaskConical,
+			badge: 'border-emerald-600/50 bg-emerald-900/60 text-emerald-200',
+		};
+	}
+	return {
 		icon: Package,
 		badge: 'border-stone-600/50 bg-stone-800 text-stone-300',
-	},
-};
+	};
+}
 
 function getWeaponMasteryLabel(mastery: string): string {
 	return (
@@ -81,7 +88,7 @@ function BlacksmithCatalogPage() {
 	const [reloadKey, setReloadKey] = useState(0);
 	const [query, setQuery] = useState('');
 	const [categoryFilter, setCategoryFilter] = useState('all');
-	const [rarityFilter, setRarityFilter] = useState<Rarity | 'all'>('all');
+	const [rarityFilter, setRarityFilter] = useState<ItemBaseRarity | 'all'>('all');
 	const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageInput, setPageInput] = useState('1');
@@ -120,7 +127,7 @@ function BlacksmithCatalogPage() {
 	const filteredItems = useMemo(() => {
 		return filterBlacksmithCatalogItems(items, {
 			search: query,
-			category: categoryFilter as ItemCategory | 'all',
+			category: categoryFilter as ItemBaseCategory | 'all',
 			rarity: rarityFilter,
 		});
 	}, [items, query, categoryFilter, rarityFilter]);
@@ -242,7 +249,7 @@ function BlacksmithCatalogPage() {
 						onChange={(event) => {
 							setCurrentPage(1);
 							setPageInput('1');
-							setRarityFilter(event.target.value as Rarity | 'all');
+							setRarityFilter(event.target.value as ItemBaseRarity | 'all');
 						}}
 					>
 						<option value='all'>所有稀有度</option>
@@ -346,7 +353,8 @@ function BlacksmithCatalogPage() {
 							>
 								{visibleItems.map((item) => {
 									const rarityStyle = RARITY_CONFIG[item.rarity];
-									const CategoryIcon = CATEGORY_STYLES[item.category].icon;
+									const categoryStyle = getCategoryStyle(item.category);
+									const CategoryIcon = categoryStyle.icon;
 									return (
 										<button
 											key={item.sourceKey}
@@ -371,7 +379,7 @@ function BlacksmithCatalogPage() {
 											<div className={`relative shrink-0 overflow-hidden border ${displayMode === 'list' ? 'h-8 w-8 rounded-md' : 'h-14 w-14 rounded-lg'} ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}>
 												<Package className={`absolute inset-0 m-auto text-stone-500 ${displayMode === 'list' ? 'h-4 w-4' : 'h-6 w-6'}`} />
 												<img
-													src={getBlacksmithIconUrl(item.icon)}
+													src={getBlacksmithIconUrl(item.icon ?? './images/package.webp')}
 													alt=''
 													loading='lazy'
 													decoding='async'
@@ -387,7 +395,7 @@ function BlacksmithCatalogPage() {
 														<span className={`truncate font-serif text-sm font-bold ${rarityStyle.text} group-hover:text-amber-100`}>
 															{item.name}
 														</span>
-														<span className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-0.5 text-[10px] leading-none ${CATEGORY_STYLES[item.category].badge}`}>
+														<span className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-0.5 text-[10px] leading-none ${categoryStyle.badge}`}>
 															<CategoryIcon aria-hidden='true' className='h-2.5 w-2.5' />
 															{CATEGORY_LABELS[item.category]}
 														</span>
@@ -413,7 +421,7 @@ function BlacksmithCatalogPage() {
 														{item.name}
 													</span>
 													<span className='mt-1 flex flex-wrap items-center gap-1'>
-														<span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${CATEGORY_STYLES[item.category].badge}`}>
+														<span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${categoryStyle.badge}`}>
 															<CategoryIcon aria-hidden='true' className='h-3 w-3' />
 															{CATEGORY_LABELS[item.category]}
 														</span>
@@ -528,7 +536,7 @@ function BlacksmithCatalogPage() {
 										<div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${RARITY_CONFIG[selectedItem.rarity].border} bg-stone-950`}>
 											<Package className='absolute inset-0 m-auto h-7 w-7 text-stone-500' />
 											<img
-												src={getBlacksmithIconUrl(selectedItem.icon)}
+												src={getBlacksmithIconUrl(selectedItem.icon ?? './images/package.webp')}
 												alt=''
 												className='absolute inset-0 h-full w-full object-cover'
 												onError={(event) => {
@@ -544,7 +552,7 @@ function BlacksmithCatalogPage() {
 												{selectedItem.name}
 											</h2>
 											<div className='mt-2 flex flex-wrap items-center gap-1.5'>
-												<span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] ${CATEGORY_STYLES[selectedItem.category].badge}`}>
+												<span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] ${getCategoryStyle(selectedItem.category).badge}`}>
 													{CATEGORY_LABELS[selectedItem.category]}
 												</span>
 												<span
@@ -553,7 +561,7 @@ function BlacksmithCatalogPage() {
 												>
 													{RARITY_CONFIG[selectedItem.rarity].label}
 												</span>
-												{selectedItem.requiresAttunement && (
+												{selectedItem.isRequireAttunement && (
 													<span className='inline-flex items-center gap-1 rounded border border-purple-500/60 bg-purple-950/80 px-1.5 py-0.5 text-[10px] text-purple-200'>
 														<Sparkles aria-hidden='true' className='h-3 w-3' />
 														需要調諧
@@ -588,25 +596,24 @@ function BlacksmithCatalogPage() {
 									</div>
 									<div className='rounded-md border border-stone-800 bg-stone-950/80 p-3'>
 										<p className='text-stone-500'>調諧</p>
-										<p className={`mt-1 ${selectedItem.requiresAttunement ? 'text-purple-200' : 'text-stone-200'}`}>
-											{selectedItem.requiresAttunement ? '需要' : '不需要'}
+										<p className={`mt-1 ${selectedItem.isRequireAttunement ? 'text-purple-200' : 'text-stone-200'}`}>
+											{selectedItem.isRequireAttunement ? '需要' : '不需要'}
 										</p>
 									</div>
 								</div>
 
 								{selectedItem.category === 'Weapon' &&
-									(selectedItem.weaponMastery ||
-										(selectedItem.weaponProperties?.length ?? 0) > 0) && (
+									(selectedItem.weaponProperties.mastery ||
+										selectedItem.weaponProperties.properties.length > 0) && (
 										<div className='mt-4 rounded-md border border-amber-800/50 bg-amber-950/20 p-3'>
-											{selectedItem.weaponMastery && (
+											{selectedItem.weaponProperties.mastery && (
 												<p className='text-xs text-amber-200'>
-													武器精通：{getWeaponMasteryLabel(selectedItem.weaponMastery)}
+													武器精通：{getWeaponMasteryLabel(selectedItem.weaponProperties.mastery)}
 												</p>
 											)}
-											{selectedItem.weaponProperties &&
-												selectedItem.weaponProperties.length > 0 && (
+											{selectedItem.weaponProperties.properties.length > 0 && (
 													<div className='mt-2 flex flex-wrap gap-1'>
-														{selectedItem.weaponProperties.map((property) => (
+														{selectedItem.weaponProperties.properties.map((property) => (
 															<span
 																key={property}
 																className='rounded border border-amber-700/50 bg-amber-900/40 px-1.5 py-0.5 text-[10px] text-amber-200'
@@ -620,16 +627,20 @@ function BlacksmithCatalogPage() {
 									)}
 
 								{(selectedItem.category === 'Armor'
-									? selectedItem.ac
-									: selectedItem.damage) != null && (
+									? selectedItem.armorProperties.ac
+									: selectedItem.category === 'Weapon'
+										? selectedItem.weaponProperties.damage
+										: null) != null && (
 									<p className='mt-4 rounded-md border border-stone-800 bg-stone-950/80 px-3 py-2 text-sm'>
 										<span className='text-stone-500'>
 											{selectedItem.category === 'Armor' ? '護甲值：' : '傷害：'}
 										</span>
 										<span className='font-mono text-stone-200'>
 											{selectedItem.category === 'Armor'
-												? selectedItem.ac
-												: selectedItem.damage}
+												? selectedItem.armorProperties.ac
+												: selectedItem.category === 'Weapon'
+													? selectedItem.weaponProperties.damage
+													: ''}
 										</span>
 									</p>
 								)}
@@ -639,7 +650,7 @@ function BlacksmithCatalogPage() {
 										物品描述
 									</h3>
 									<p className='mt-2 whitespace-pre-wrap text-sm leading-relaxed text-stone-200'>
-										{selectedItem.description || '此物品沒有附加描述。'}
+										{selectedItem.effects || '此物品沒有附加描述。'}
 									</p>
 								</div>
 								<div className='mt-4'>

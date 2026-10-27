@@ -1,6 +1,31 @@
-export type Rarity =
-	'Common' | 'Uncommon' | 'Rare' | 'VeryRare' | 'Legendary' | 'Artifact';
-export type ItemCategory = 'Weapon' | 'Armor' | 'Consumable' | 'Misc';
+export type ItemBaseCategory =
+	| 'Weapon'
+	| 'Armor'
+	| 'Potion'
+	| 'Poison'
+	| 'Ring'
+	| 'Rod'
+	| 'Scroll'
+	| 'Staff'
+	| 'Wand'
+	| 'WondrousItem'
+	| 'TradeGood'
+	| 'Gemstone'
+	| 'Tool'
+	| 'AdventureGear'
+	| 'FoodAndDrink'
+	| 'Mount'
+	| 'Vehicle'
+	| 'Misc';
+
+export type ItemBaseRarity =
+	| 'Common'
+	| 'Uncommon'
+	| 'Rare'
+	| 'VeryRare'
+	| 'Legendary'
+	| 'Artifact';
+
 export interface BlacksmithCatalogDefinition {
 	catalogId: string;
 	title: string;
@@ -21,70 +46,21 @@ export interface BlacksmithLookupEntry {
 	searchTerms: string[];
 }
 
-interface BlacksmithItemBase {
+type BlacksmithCatalogMetadata = {
 	catalogId: string;
 	catalogTitle: string;
 	itemId: string;
 	sourceKey: string;
-	name: string;
-	subTypes: string[];
-	rarity: InventoryItem['rarity'];
-	icon: string;
-	weight: number;
-	valueGp: number;
-	requiresAttunement: InventoryItem['requiresAttunement'];
-	description: string;
 	source: string;
 	aliases: string[];
 	searchTerms: string[];
-}
+};
 
-export type BlacksmithItem = BlacksmithItemBase &
-	(
-		| { category: 'Armor'; ac: string | null; damage?: never }
-		| {
-				category: 'Weapon';
-				damage: string | null;
-				ac?: never;
-				weaponProperties?: string[];
-				weaponMastery?: string;
-		  }
-		| {
-				category: 'Consumable' | 'Misc';
-				damage: string | null;
-				ac?: never;
-				weaponProperties?: never;
-				weaponMastery?: never;
-		  }
-	);
-
-export interface BlacksmithTemplate {
-	id: string;
-	ownerId: string;
-	name: string;
-	category: ItemCategory;
-	subType: string;
-	rarity: Rarity;
-	icon: string;
-	damage: string | null;
-	mastery: WeaponMasteryKey;
-	ac: string | null;
-	weight: number;
-	valueGp: number;
-	requiresAttunement: boolean;
-	isHomebrew: boolean;
-	maxCharges: number;
-	effects: string;
-	flavor: string;
-	dmNotes: string;
-	isEquippable: boolean;
-	isConsumable: boolean;
-	isImportant: boolean;
-	affixes: ItemAffix[];
-	isShared: boolean;
-	createdAt: string;
-	updatedAt: string;
-}
+export type BlacksmithItem = AllItem &
+	BlacksmithCatalogMetadata & {
+		icon?: string | null;
+		flavor?: string | null;
+	};
 
 export type WeaponMasteryKey =
 	| 'None'
@@ -96,6 +72,7 @@ export type WeaponMasteryKey =
 	| 'Slow'
 	| 'Topple'
 	| 'Vex';
+export type WeaponItemMastery = Exclude<WeaponMasteryKey, 'None'>;
 export type WeaponMasteryInfo = { name: string; desc: string };
 export type CurrencyType = 'pp' | 'gp' | 'ep' | 'sp' | 'cp';
 export type ViewMode = 'player' | 'dm';
@@ -119,8 +96,8 @@ export type CampaignShopRefreshCandidate =
 			source: string;
 			param: {
 				search?: string;
-				rarity?: Rarity;
-				category?: ItemCategory;
+				rarity?: ItemBaseRarity;
+				category?: ItemBaseCategory;
 			};
 	  };
 
@@ -185,52 +162,100 @@ export type ItemAffix = {
 	isHidden?: boolean; // 是否對玩家隱藏，直到 DM 揭露
 };
 
-export type InventoryItem = {
+export type ItemBase = {
+	name: string;
+	category: ItemBaseCategory;
+	subTypes: string[];
+	rarity: ItemBaseRarity;
+	icon?: string | null;
+	weight: number;
+	valueGp: number;
+	affixes: ItemAffix[];
+	effects: string;
+	flavor?: string | null;
+	dmNotes: string;
+	maxCharges?: number | null;
+	isEquippable: boolean;
+	isConsumable: boolean;
+	isRequireAttunement: boolean;
+};
+
+type GeneralItem = Omit<ItemBase, 'category'> & {
+	category: Exclude<ItemBaseCategory, 'Weapon' | 'Armor'>;
+};
+
+export type WeaponItem = Omit<ItemBase, 'category'> & {
+	category: 'Weapon';
+	weaponProperties: {
+		damage: string;
+		mastery?: WeaponItemMastery;
+		properties: string[];
+	};
+};
+
+export type ArmorItem = Omit<ItemBase, 'category'> & {
+	category: 'Armor';
+	armorProperties: {
+		ac: string;
+	};
+};
+
+export type AllItem = GeneralItem | WeaponItem | ArmorItem;
+
+export function getItemDamage(item: AllItem): string | null {
+	return item.category === 'Weapon' ? item.weaponProperties.damage : null;
+}
+
+export function getItemArmorClass(item: AllItem): string | null {
+	return item.category === 'Armor' ? item.armorProperties.ac : null;
+}
+
+export function getItemWeaponMastery(
+	item: AllItem,
+): WeaponItemMastery | null {
+	return item.category === 'Weapon' ? item.weaponProperties.mastery ?? null : null;
+}
+
+type InventoryItemState = {
 	id: string;
 	ownerId: string;
 	slot?: number;
-	name: string;
-	category: ItemCategory;
-	subType: string;
-	rarity: Rarity;
-	icon: string;
-	damage: string | null;
-	mastery: WeaponMasteryKey;
-	ac: string | null;
-	weight: number;
-	valueGp: number;
 	quantity: number;
 	equipped: boolean;
-	requiresAttunement: boolean;
 	attuned: boolean;
 	isHomebrew: boolean;
 	isIdentified: boolean;
 	charges: number;
 	maxCharges: number;
-	effects: string;
+	icon: string;
 	flavor: string;
-	dmNotes: string;
 	playerNotes?: string;
 	isPrivate?: boolean;
-	isEquippable?: boolean;
-	isConsumable?: boolean;
-	isImportant?: boolean;
-	affixes?: ItemAffix[];
+	isImportant: boolean;
 };
 
-export type CampaignShopItemSnapshot = Omit<
-	InventoryItem,
-	| 'id'
-	| 'ownerId'
-	| 'slot'
-	| 'quantity'
-	| 'equipped'
-	| 'attuned'
-	| 'isIdentified'
-	| 'charges'
-	| 'playerNotes'
-	| 'isPrivate'
->;
+export type InventoryItem = AllItem & InventoryItemState;
+
+export type BlacksmithTemplate = AllItem & {
+	id: string;
+	ownerId: string;
+	isHomebrew: boolean;
+	isImportant: boolean;
+	isShared: boolean;
+	createdAt: string;
+	updatedAt: string;
+	icon: string;
+	flavor: string;
+	maxCharges: number;
+};
+
+export type CampaignShopItemSnapshot = AllItem & {
+	isHomebrew: boolean;
+	isImportant: boolean;
+	icon: string;
+	flavor: string;
+	maxCharges: number;
+};
 
 export interface CampaignShop {
 	id: string;
@@ -292,17 +317,22 @@ export type Character = {
 
 export type HomebrewForm = {
 	name: string;
-	category: ItemCategory;
-	subType: string;
-	rarity: Rarity;
+	category: ItemBaseCategory;
+	subTypes: string[];
+	rarity: ItemBaseRarity;
 	icon: string;
-	damage: string;
-	mastery: WeaponMasteryKey;
-	ac: string;
+	weaponProperties: {
+		damage: string;
+		mastery: WeaponItemMastery | '';
+		properties: string[];
+	};
+	armorProperties: {
+		ac: string;
+	};
 	weight: string;
 	valueGp: string;
 	quantity: string;
-	requiresAttunement: boolean;
+	isRequireAttunement: boolean;
 	isIdentified: boolean;
 	maxCharges: string;
 	effects: string;
@@ -327,16 +357,8 @@ export type RarityStyle = {
 };
 
 export function resolveItemFlags(item: InventoryItem) {
-	const isEquippable =
-		item.isEquippable !== undefined
-			? item.isEquippable
-			: item.category === 'Weapon' ||
-				item.category === 'Armor' ||
-				item.requiresAttunement;
-	const isConsumable =
-		item.isConsumable !== undefined
-			? item.isConsumable
-			: item.category === 'Consumable';
+	const isEquippable = item.isEquippable;
+	const isConsumable = item.isConsumable;
 	const isImportant = Boolean(item.isImportant);
 	return { isEquippable, isConsumable, isImportant };
 }
@@ -356,10 +378,15 @@ export function canStackItems(a: InventoryItem, b: InventoryItem): boolean {
 	const sameBasic =
 		a.name.trim() === b.name.trim() &&
 		a.category === b.category &&
-		a.subType.trim() === b.subType.trim() &&
+		a.subTypes.join('\u0000') === b.subTypes.join('\u0000') &&
 		a.rarity === b.rarity &&
 		a.weight === b.weight &&
 		a.valueGp === b.valueGp &&
+		a.isRequireAttunement === b.isRequireAttunement &&
+		JSON.stringify(a.category === 'Weapon' ? a.weaponProperties : null) ===
+			JSON.stringify(b.category === 'Weapon' ? b.weaponProperties : null) &&
+		JSON.stringify(a.category === 'Armor' ? a.armorProperties : null) ===
+			JSON.stringify(b.category === 'Armor' ? b.armorProperties : null) &&
 		a.isIdentified === b.isIdentified &&
 		Boolean(a.isPrivate) === Boolean(b.isPrivate);
 

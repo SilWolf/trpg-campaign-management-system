@@ -1,34 +1,47 @@
-import { RARITY_CONFIG } from '@/data';
+import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import type {
+	ArmorItem,
 	BlacksmithCatalogDefinition,
 	BlacksmithCatalogIndex,
 	BlacksmithItem,
 	BlacksmithLookupEntry,
-	ItemCategory,
-	Rarity,
+	ItemBaseCategory,
+	ItemAffix,
+	ItemBaseRarity,
+	WeaponItem,
+	WeaponItemMastery,
 } from '@/types';
 
-export const BLACKSMITH_CATEGORY_LABELS: Record<ItemCategory, string> = {
-	Weapon: '武器',
-	Armor: '護甲',
-	Consumable: '消耗品',
-	Misc: '雜物',
-};
+export const BLACKSMITH_CATEGORY_LABELS = ITEM_CATEGORY_LABELS;
 
 export interface BlacksmithCatalogFilters {
 	search?: string;
-	rarity?: Rarity | 'all';
-	category?: ItemCategory | 'all';
+	rarity?: ItemBaseRarity | 'all';
+	category?: ItemBaseCategory | 'all';
 }
 
-const SCHEMA_VERSION = 3;
-const CATEGORIES: readonly ItemCategory[] = [
+const SCHEMA_VERSION = 4;
+const CATEGORIES: readonly ItemBaseCategory[] = [
 	'Weapon',
 	'Armor',
-	'Consumable',
+	'Potion',
+	'Poison',
+	'Ring',
+	'Rod',
+	'Scroll',
+	'Staff',
+	'Wand',
+	'WondrousItem',
+	'TradeGood',
+	'Gemstone',
+	'Tool',
+	'AdventureGear',
+	'FoodAndDrink',
+	'Mount',
+	'Vehicle',
 	'Misc',
 ];
-const RARITIES: readonly Rarity[] = [
+const RARITIES: readonly ItemBaseRarity[] = [
 	'Common',
 	'Uncommon',
 	'Rare',
@@ -36,23 +49,50 @@ const RARITIES: readonly Rarity[] = [
 	'Legendary',
 	'Artifact',
 ];
+const WEAPON_MASTERIES: readonly WeaponItemMastery[] = [
+	'Cleave',
+	'Graze',
+	'Nick',
+	'Push',
+	'Sap',
+	'Slow',
+	'Topple',
+	'Vex',
+];
+const SOURCE_WEAPON_MASTERIES: Readonly<Record<string, WeaponItemMastery>> = {
+	'精通: 失衡': 'Sap',
+	'精通: 侵擾': 'Vex',
+	'精通: 迅擊': 'Nick',
+	'精通: 擦掠': 'Graze',
+	'精通: 橫掃': 'Cleave',
+	'精通: 推離': 'Push',
+	'精通: 削弱': 'Sap',
+	'精通: 緩速': 'Slow',
+};
 const INDEX_KEYS = ['schemaVersion', 'catalogs'];
 const CATALOG_KEYS = ['catalogId', 'title', 'itemsFile', 'lookupFile'];
 const ITEM_FILE_KEYS = ['schemaVersion', 'catalogId', 'items'];
 const ITEM_KEYS = [
 	'itemId',
 	'name',
-	'rarity',
-	'requiresAttunement',
-	'weight',
-	'description',
-	'source',
 	'category',
 	'subTypes',
-	'valueGp',
+	'rarity',
 	'icon',
+	'weight',
+	'valueGp',
+	'affixes',
+	'effects',
+	'flavor',
+	'dmNotes',
+	'maxCharges',
+	'isEquippable',
+	'isConsumable',
+	'isRequireAttunement',
+	'source',
 ];
-const WEAPON_ITEM_KEYS = ['weaponProperties', 'weaponMastery'];
+const WEAPON_ITEM_KEYS = ['weaponProperties'];
+const ARMOR_ITEM_KEYS = ['armorProperties'];
 const LOOKUP_KEYS = ['schemaVersion', 'catalogId', 'items'];
 const LOOKUP_ENTRY_KEYS = [
 	'sourceKey',
@@ -62,12 +102,16 @@ const LOOKUP_ENTRY_KEYS = [
 	'searchTerms',
 ];
 
-function isItemCategory(value: string): value is ItemCategory {
+function isItemCategory(value: string): value is ItemBaseCategory {
 	return CATEGORIES.some((category) => category === value);
 }
 
-function isRarity(value: string): value is Rarity {
+function isRarity(value: string): value is ItemBaseRarity {
 	return RARITIES.some((rarity) => rarity === value);
+}
+
+function isWeaponMastery(value: string): value is WeaponItemMastery {
+	return WEAPON_MASTERIES.some((mastery) => mastery === value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -102,6 +146,26 @@ function readString(value: unknown, label: string): string {
 	return value;
 }
 
+function readNullableString(
+	value: unknown,
+	label: string,
+): string | null | undefined {
+	if (value === undefined || value === null) return value;
+	return readString(value, label);
+}
+
+function readNonNegativeNumber(value: unknown, label: string): number {
+	if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+		throw new Error(`${label} 必須是非負有限數字。`);
+	}
+	return value;
+}
+
+function readBoolean(value: unknown, label: string): boolean {
+	if (typeof value !== 'boolean') throw new Error(`${label} 必須是布林值。`);
+	return value;
+}
+
 function readStringArray(value: unknown, label: string): string[] {
 	if (
 		!Array.isArray(value) ||
@@ -112,12 +176,25 @@ function readStringArray(value: unknown, label: string): string[] {
 	return value;
 }
 
-function readNonEmptyStringArray(value: unknown, label: string): string[] {
-	const entries = readStringArray(value, label);
-	if (entries.length === 0 || entries.some((entry) => entry.trim().length === 0)) {
-		throw new Error(`${label} 必須是包含非空字串的陣列。`);
-	}
-	return entries;
+function readAffixes(value: unknown, label: string): ItemAffix[] {
+	if (!Array.isArray(value)) throw new Error(`${label} 必須是陣列。`);
+	return value.map((entry, index) => {
+		const affixLabel = `${label}[${index}]`;
+		const affix = readJsonRecord(entry, affixLabel);
+		const expectedKeys = ['id', 'name', 'desc', 'isHidden'];
+		if (Object.keys(affix).some((key) => !expectedKeys.includes(key))) {
+			throw new Error(`${affixLabel} 含有不支援的欄位。`);
+		}
+		if (affix.isHidden !== undefined && typeof affix.isHidden !== 'boolean') {
+			throw new Error(`${affixLabel}.isHidden 必須是布林值。`);
+		}
+		return {
+			id: readNonEmptyString(affix.id, `${affixLabel}.id`),
+			name: readString(affix.name, `${affixLabel}.name`),
+			desc: readString(affix.desc, `${affixLabel}.desc`),
+			...(affix.isHidden === undefined ? {} : { isHidden: affix.isHidden }),
+		};
+	});
 }
 
 function readCatalogId(value: unknown, label: string): string {
@@ -214,10 +291,10 @@ function readItemFile(
 		const record = readJsonRecord(item, `「${catalog.title}」第 ${index + 1} 筆物品`);
 		const expectedKeys =
 			record.category === 'Weapon'
-				? [...ITEM_KEYS, 'damage', ...WEAPON_ITEM_KEYS]
+				? [...ITEM_KEYS, ...WEAPON_ITEM_KEYS]
 				: record.category === 'Armor'
-					? [...ITEM_KEYS, 'ac']
-					: [...ITEM_KEYS, 'damage'];
+					? [...ITEM_KEYS, ...ARMOR_ITEM_KEYS]
+					: ITEM_KEYS;
 		if (!hasExactKeys(record, expectedKeys)) {
 			throw new Error(`「${catalog.title}」第 ${index + 1} 筆物品欄位不符來源合約。`);
 		}
@@ -274,7 +351,7 @@ function adaptCatalogItems(
 	}
 
 	const itemIds = new Set<string>();
-	const items = itemRecords.map((record, index) => {
+	const items: BlacksmithItem[] = itemRecords.map((record, index) => {
 		const label = `「${catalog.title}」第 ${index + 1} 筆物品`;
 		const itemId = readNonEmptyString(record.itemId, `${label} itemId`);
 		if (itemIds.has(itemId)) {
@@ -300,28 +377,24 @@ function adaptCatalogItems(
 		if (!isRarity(rarity)) {
 			throw new Error(`${label} rarity 不受支援：${rarity}`);
 		}
-		const weight = record.weight;
-		const valueGp = record.valueGp;
-		if (typeof weight !== 'number' || !Number.isFinite(weight) || weight < 0) {
-			throw new Error(`${label} weight 必須是非負有限數字。`);
-		}
+		const icon = readNullableString(record.icon, `${label} icon`);
 		if (
-			typeof valueGp !== 'number' ||
-			!Number.isInteger(valueGp) ||
-			valueGp < 0
-		) {
-			throw new Error(`${label} valueGp 必須是非負整數。`);
-		}
-		if (typeof record.requiresAttunement !== 'boolean') {
-			throw new Error(`${label} requiresAttunement 必須是布林值。`);
-		}
-		const icon = readNonEmptyString(record.icon, `${label} icon`);
-		if (
-			!icon.startsWith('./images/') ||
-			icon.includes('\\') ||
-			icon.split('/').includes('..')
+			typeof icon === 'string' &&
+			(!icon.startsWith('./images/') ||
+				icon.includes('\\') ||
+				icon.split('/').includes('..'))
 		) {
 			throw new Error(`${label} icon 必須是安全的 ./images/ 相對路徑。`);
+		}
+		const maxCharges = record.maxCharges;
+		if (
+			maxCharges !== null &&
+			maxCharges !== undefined &&
+			(typeof maxCharges !== 'number' ||
+				!Number.isSafeInteger(maxCharges) ||
+				maxCharges < 0)
+		) {
+			throw new Error(`${label} maxCharges 必須是非負整數、null 或省略。`);
 		}
 		const baseItem = {
 			catalogId: catalog.catalogId,
@@ -329,47 +402,92 @@ function adaptCatalogItems(
 			itemId,
 			sourceKey: lookup.sourceKey,
 			name,
-			subTypes: readNonEmptyStringArray(record.subTypes, `${label} subTypes`),
+			subTypes: readStringArray(record.subTypes, `${label} subTypes`),
 			rarity,
 			icon,
-			weight,
-			valueGp,
-			requiresAttunement: record.requiresAttunement,
-			description: readString(record.description, `${label} description`),
+			weight: readNonNegativeNumber(record.weight, `${label} weight`),
+			valueGp: readNonNegativeNumber(record.valueGp, `${label} valueGp`),
+			affixes: readAffixes(record.affixes, `${label} affixes`),
+			effects: readString(record.effects, `${label} effects`),
+			flavor: readNullableString(record.flavor, `${label} flavor`),
+			dmNotes: readString(record.dmNotes, `${label} dmNotes`),
+			maxCharges,
+			isEquippable: readBoolean(record.isEquippable, `${label} isEquippable`),
+			isConsumable: readBoolean(record.isConsumable, `${label} isConsumable`),
+			isRequireAttunement: readBoolean(
+				record.isRequireAttunement,
+				`${label} isRequireAttunement`,
+			),
 			source: readString(record.source, `${label} source`),
 			aliases: lookup.aliases,
 			searchTerms: lookup.searchTerms,
 		};
 		if (category === 'Armor') {
-			return {
+			const armorProperties = readJsonRecord(
+				record.armorProperties,
+				`${label} armorProperties`,
+			);
+			if (!hasExactKeys(armorProperties, ['ac'])) {
+				throw new Error(`${label} armorProperties 必須只包含 ac。`);
+			}
+			const armor: BlacksmithItem & ArmorItem = {
 				...baseItem,
 				category,
-				ac:
-					record.ac === null
-						? null
-						: readString(record.ac, `${label} ac`),
+				armorProperties: {
+					ac: readNonEmptyString(
+						armorProperties.ac,
+						`${label} armorProperties.ac`,
+					),
+				},
 			};
+			return armor;
 		}
-		const damage =
-			record.damage === null
-				? null
-				: readString(record.damage, `${label} damage`);
 		if (category === 'Weapon') {
-			return {
+			const weaponProperties = readJsonRecord(
+				record.weaponProperties,
+				`${label} weaponProperties`,
+			);
+			const validWeaponKeys = ['damage', 'mastery', 'properties'];
+			if (
+				Object.keys(weaponProperties).some((key) => !validWeaponKeys.includes(key)) ||
+				!Object.hasOwn(weaponProperties, 'damage') ||
+				!Object.hasOwn(weaponProperties, 'properties')
+			) {
+				throw new Error(`${label} weaponProperties 欄位不符來源合約。`);
+			}
+			const sourceMastery =
+				weaponProperties.mastery === undefined
+					? undefined
+					: readNonEmptyString(
+							weaponProperties.mastery,
+							`${label} weaponProperties.mastery`,
+						);
+			const mastery =
+				sourceMastery === undefined
+					? undefined
+					: SOURCE_WEAPON_MASTERIES[sourceMastery] ??
+						(isWeaponMastery(sourceMastery) ? sourceMastery : undefined);
+			if (sourceMastery !== undefined && mastery === undefined) {
+				throw new Error(`${label} 武器精通不受支援：${sourceMastery}`);
+			}
+			const weapon: BlacksmithItem & WeaponItem = {
 				...baseItem,
 				category,
-				damage,
-				weaponProperties: readStringArray(
-					record.weaponProperties,
-					`${label} weaponProperties`,
-				),
-				weaponMastery: readNonEmptyString(
-					record.weaponMastery,
-					`${label} weaponMastery`,
-				),
+				weaponProperties: {
+					damage: readNonEmptyString(
+						weaponProperties.damage,
+						`${label} weaponProperties.damage`,
+					),
+					...(mastery ? { mastery } : {}),
+					properties: readStringArray(
+						weaponProperties.properties,
+						`${label} weaponProperties.properties`,
+					),
+				},
 			};
+			return weapon;
 		}
-		return { ...baseItem, category, damage };
+		return { ...baseItem, category };
 	});
 
 	if (lookupById.size !== itemIds.size) {
@@ -388,7 +506,8 @@ function searchableText(item: BlacksmithItem): string {
 		RARITY_CONFIG[item.rarity].label,
 		item.catalogTitle,
 		item.source,
-		item.description,
+		item.effects,
+		item.flavor ?? '',
 		...item.aliases,
 		...item.searchTerms,
 	]

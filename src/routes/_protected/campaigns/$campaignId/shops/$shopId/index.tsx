@@ -11,7 +11,7 @@ import {
 	ShoppingBag,
 	Store,
 } from 'lucide-react';
-import { RARITY_CONFIG } from '@/data';
+import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import { loadCampaignShopItems, loadCampaignShops } from '@/lib/campaignShops';
@@ -20,7 +20,13 @@ import { Button } from '@/components/ui';
 import ReactMarkdown from 'react-markdown';
 import ItemIcon from '../../-parts/ItemIcon';
 import { ShopTransactionsPanel } from '../-parts/ShopTransactionsPanel';
-import type { CampaignShop, CampaignShopItem, ItemCategory } from '@/types';
+import {
+	getItemArmorClass,
+	getItemDamage,
+	type CampaignShop,
+	type CampaignShopItem,
+	type ItemBaseCategory,
+} from '@/types';
 
 export const Route = createFileRoute(
 	'/_protected/campaigns/$campaignId/shops/$shopId/',
@@ -28,12 +34,7 @@ export const Route = createFileRoute(
 	component: CampaignShopDetail,
 });
 
-const CATEGORY_LABELS: Record<ItemCategory, string> = {
-	Weapon: '武器',
-	Armor: '護甲',
-	Consumable: '消耗品',
-	Misc: '雜物',
-};
+const CATEGORY_LABELS: Record<ItemBaseCategory, string> = ITEM_CATEGORY_LABELS;
 
 const ITEM_EFFECTS_MAX_HEIGHT = 200;
 
@@ -517,27 +518,27 @@ function CampaignShopDetail() {
 										<p className='mt-1 text-xs text-stone-400'>
 											{CATEGORY_LABELS[selectedItem.itemSnapshot.category]}・
 											{RARITY_CONFIG[selectedItem.itemSnapshot.rarity].label}
-											{selectedItem.itemSnapshot.subType
-												? `・${selectedItem.itemSnapshot.subType}`
+											{selectedItem.itemSnapshot.subTypes.length > 0
+												? `・${selectedItem.itemSnapshot.subTypes.join('、')}`
 												: ''}
 										</p>
 									</div>
 								</div>
 
 								<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
-									{selectedItem.itemSnapshot.damage && (
+									{getItemDamage(selectedItem.itemSnapshot) && (
 										<div>
 											<p className='text-[11px] text-stone-500'>傷害</p>
 											<p className='font-mono text-amber-200'>
-												{selectedItem.itemSnapshot.damage}
+												{getItemDamage(selectedItem.itemSnapshot)}
 											</p>
 										</div>
 									)}
-									{selectedItem.itemSnapshot.ac && (
+									{getItemArmorClass(selectedItem.itemSnapshot) && (
 										<div>
 											<p className='text-[11px] text-stone-500'>護甲等級</p>
 											<p className='font-mono text-sky-200'>
-												AC {selectedItem.itemSnapshot.ac}
+												AC {getItemArmorClass(selectedItem.itemSnapshot)}
 											</p>
 										</div>
 									)}
@@ -559,7 +560,7 @@ function CampaignShopDetail() {
 											{selectedItem.stockAvailable}
 										</p>
 									</div>
-									{selectedItem.itemSnapshot.requiresAttunement && (
+									{selectedItem.itemSnapshot.isRequireAttunement && (
 										<div className='self-end text-xs text-purple-300'>
 											需同調
 										</div>

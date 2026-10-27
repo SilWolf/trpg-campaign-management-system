@@ -167,9 +167,13 @@ test('官方目錄物品可選擇 DM 戰役與角色後匯入', async ({ page })
 			p_campaign_id: 'dm-campaign',
 			p_owner_id: 'dm-character',
 			p_item: expect.objectContaining({
-				name: '午夜之淚',
 				is_homebrew: false,
-				requires_attunement: false,
+				item_base: expect.objectContaining({
+					name: '午夜之淚',
+					category: 'Poison',
+					subTypes: ['冒險用品', '毒藥 (服用)'],
+					isRequireAttunement: false,
+				}),
 			}),
 			p_quantity: 3,
 		},
@@ -181,7 +185,7 @@ test('官方目錄物品可選擇 DM 戰役與角色後匯入', async ({ page })
 	expect(
 		(mocks.blacksmithImportRequests[0] as { p_item: Record<string, unknown> })
 			.p_item,
-	).toHaveProperty('sub_type');
+	).not.toHaveProperty('sub_types');
 });
 
 test('匯入 RPC 失敗時保留視窗並顯示實際錯誤', async ({ page }) => {

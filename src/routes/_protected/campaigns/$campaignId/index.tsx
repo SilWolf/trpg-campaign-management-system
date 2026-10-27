@@ -296,7 +296,7 @@ function CampaignInventoryPage() {
 		return (
 			!searchQuery.trim() ||
 			displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			item.subType.toLowerCase().includes(searchQuery.toLowerCase())
+			item.subTypes.join(' ').toLowerCase().includes(searchQuery.toLowerCase())
 		);
 	};
 

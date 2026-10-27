@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 3,
-  "catalogs": [
-    {
-      "catalogId": "dnd-2024-srd-5.2",
-      "title": "D&D 2024 SRD 5.2",
-      "itemsFile": "./catalogs/dnd-2024-srd-5.2.items.json",
-      "lookupFile": "./catalogs/dnd-2024-srd-5.2.lookup.json"
-    }
-  ]
+	"schemaVersion": 4,
+	"catalogs": [
+		{
+			"catalogId": "dnd-2024-srd-5.2",
+			"title": "D&D 2024 SRD 5.2",
+			"itemsFile": "./catalogs/dnd-2024-srd-5.2.items.json",
+			"lookupFile": "./catalogs/dnd-2024-srd-5.2.lookup.json"
+		}
+	]
 }
