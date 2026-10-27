@@ -154,6 +154,43 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 				},
 			],
 		};
+		const catalogCandidate = {
+			...snapshot,
+			catalogId: 'official-catalog',
+			catalogTitle: '官方目錄',
+			itemId: 'longsword',
+			sourceKey: 'official-catalog:longsword',
+			source: 'SRD',
+			aliases: [],
+			searchTerms: [],
+		};
+		const encodedCatalogPolicy =
+			converters.toDbCampaignShopRefreshPolicy({
+				flags: { keepItemsOnRefresh: false },
+				rules: [
+					{
+						possibleItemsOrFilters: [
+							catalogCandidate,
+							{
+								source: 'official-catalog',
+								param: { category: 'Potion' as const },
+							},
+						],
+						pickCount: null,
+						stockAvailable: { min: 1, max: 1 },
+					},
+				],
+			});
+		const decodedCatalogShop = converters.fromDbCampaignShop({
+			id: 'catalog-shop-id',
+			campaign_id: 'campaign-text-id',
+			name: '目錄商品測試店',
+			background_image_url: null,
+			is_active: true,
+			refresh_policy: encodedCatalogPolicy,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-02T00:00:00Z',
+		});
 		const encodedShop = converters.toDbCampaignShop({
 			campaignId: 'campaign-text-id',
 			name: '武器店',
@@ -281,6 +318,10 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			decodedPotion,
 			encodedBlacksmith,
 			decodedBlacksmith,
+			encodedCatalogPolicy,
+			decodedCatalogCandidate:
+				decodedCatalogShop.refreshPolicy.rules[0]
+					.possibleItemsOrFilters[0],
 			encodedShop,
 			decodedShop,
 			legacyShop,
@@ -331,6 +372,34 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		},
 	});
 	expect(data.encodedShop.refresh_policy).toEqual(data.decodedShop.refreshPolicy);
+	expect(data.encodedCatalogPolicy).toMatchObject({
+		rules: [
+			{
+				possibleItemsOrFilters: [
+					{
+						category: 'Weapon',
+						description: '描述',
+						requiresAttunement: false,
+						damage: '1d8',
+						ac: null,
+						item_base: {
+							category: 'Weapon',
+							isRequireAttunement: false,
+						},
+					},
+					{
+						source: 'official-catalog',
+						param: { category: 'Potion' },
+					},
+				],
+			},
+		],
+	});
+	expect(data.decodedCatalogCandidate).toMatchObject({
+		catalogId: 'official-catalog',
+		itemId: 'longsword',
+		category: 'Weapon',
+	});
 	expect(data.legacyShop.refreshPolicy).toEqual({
 		flags: { keepItemsOnRefresh: false },
 		rules: [],

@@ -4,9 +4,11 @@ import {
 	fromDbCampaignShopOrder,
 	supabase,
 	toDbCampaignShop,
+	toDbCampaignShopRefreshPolicy,
 	toDbCampaignShopItem,
 } from '@/lib/supabase';
 import {
+	CAMPAIGN_RULEBOOKS_SOURCE,
 	normalizeCampaignShopRefreshPolicy,
 } from '@/lib/campaignShopRefresh';
 import { loadBlacksmithCatalogDefinitions } from '@/lib/blacksmithCatalog';
@@ -51,7 +53,10 @@ async function validateRefreshPolicy(
 	const catalogs = await loadBlacksmithCatalogDefinitions();
 	return normalizeCampaignShopRefreshPolicy(
 		policy,
-		new Set(catalogs.map((catalog) => catalog.catalogId)),
+		new Set([
+			...catalogs.map((catalog) => catalog.catalogId),
+			CAMPAIGN_RULEBOOKS_SOURCE,
+		]),
 	);
 }
 
@@ -89,7 +94,10 @@ export async function saveCampaignShop(
 					background_image_url: shop.backgroundImageUrl,
 					is_active: shop.isActive,
 					...(refreshPolicy
-						? { refresh_policy: refreshPolicy }
+						? {
+								refresh_policy:
+									toDbCampaignShopRefreshPolicy(refreshPolicy),
+							}
 						: {}),
 				})
 				.eq('id', id)
@@ -114,7 +122,9 @@ export async function saveCampaignShopRefreshPolicy(
 	const refreshPolicy = await validateRefreshPolicy(policy);
 	const { data, error } = await requireSupabase()
 		.from('campaign_shops')
-		.update({ refresh_policy: refreshPolicy })
+		.update({
+			refresh_policy: toDbCampaignShopRefreshPolicy(refreshPolicy),
+		})
 		.eq('id', shopId)
 		.eq('campaign_id', campaignId)
 		.select()

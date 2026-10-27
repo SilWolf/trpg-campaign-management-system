@@ -42,6 +42,7 @@ const CATEGORIES: readonly ItemBaseCategory[] = [
 	'Misc',
 ];
 const MAX_STOCK = 2_147_483_647;
+export const CAMPAIGN_RULEBOOKS_SOURCE = '__campaign_rulebooks__';
 
 export interface CampaignShopRefreshSelection {
 	item: BlacksmithItem;
@@ -227,7 +228,11 @@ function normalizeCandidate(
 	) {
 		throw new Error(`${field} 必須是完整目錄商品或有效的官方目錄篩選器。`);
 	}
-	if (catalogIds && !catalogIds.has(value.source)) {
+	if (
+		catalogIds &&
+		value.source !== CAMPAIGN_RULEBOOKS_SOURCE &&
+		!catalogIds.has(value.source)
+	) {
 		throw new Error(`${field} 指定了不存在的官方目錄「${value.source}」。`);
 	}
 
@@ -337,7 +342,7 @@ export async function resolveCampaignShopRefreshCandidates(
 		}),
 	);
 
-	const seenItemIds = new Set<string>();
+	const seenSourceKeys = new Set<string>();
 	const candidatesByRule = policy.rules.map(() => [] as BlacksmithItem[]);
 	for (const [ruleIndex, rule] of policy.rules.entries()) {
 		for (const candidate of rule.possibleItemsOrFilters) {
@@ -349,14 +354,14 @@ export async function resolveCampaignShopRefreshCandidates(
 							candidate.param,
 						);
 			for (const item of matches) {
-				if (seenItemIds.has(item.itemId)) continue;
-				seenItemIds.add(item.itemId);
+				if (seenSourceKeys.has(item.sourceKey)) continue;
+				seenSourceKeys.add(item.sourceKey);
 				candidatesByRule[ruleIndex].push(item);
 			}
 		}
 	}
 
-	const seenSelectedIds = new Set<string>();
+	const seenSelectedSourceKeys = new Set<string>();
 	const selections: CampaignShopRefreshSelection[] = [];
 	for (const [ruleIndex, rule] of policy.rules.entries()) {
 		const candidates = candidatesByRule[ruleIndex];
@@ -367,8 +372,8 @@ export async function resolveCampaignShopRefreshCandidates(
 					? Math.min(rule.pickCount, candidates.length)
 					: sampleRangeCount(rule.pickCount, candidates.length, random);
 		for (const item of sampleWithoutReplacement(candidates, pickCount, random)) {
-			if (seenSelectedIds.has(item.itemId)) continue;
-			seenSelectedIds.add(item.itemId);
+			if (seenSelectedSourceKeys.has(item.sourceKey)) continue;
+			seenSelectedSourceKeys.add(item.sourceKey);
 			selections.push({
 				item,
 				ruleIndex,
@@ -454,7 +459,7 @@ export function buildCampaignShopRefreshPreview(
 		throw new Error('刷新預覽的商店版本無效，請重新載入並產生預覽。');
 	}
 	const policy = normalizeCampaignShopRefreshPolicy(policyValue, catalogIds);
-	const selectedIds = new Set<string>();
+	const selectedSourceKeys = new Set<string>();
 	for (const selection of selections) {
 		const item = normalizeCandidate(
 			selection.item,
@@ -463,7 +468,7 @@ export function buildCampaignShopRefreshPreview(
 		);
 		if (
 			!('itemId' in item) ||
-			selectedIds.has(item.itemId) ||
+			selectedSourceKeys.has(item.sourceKey) ||
 			!Number.isSafeInteger(selection.ruleIndex) ||
 			selection.ruleIndex < 0 ||
 			selection.ruleIndex >= policy.rules.length ||
@@ -473,7 +478,7 @@ export function buildCampaignShopRefreshPreview(
 		) {
 			throw new Error('刷新預覽包含無效或重複的候選商品資料。');
 		}
-		selectedIds.add(item.itemId);
+		selectedSourceKeys.add(item.sourceKey);
 	}
 
 	const selectedBySource = new Map(

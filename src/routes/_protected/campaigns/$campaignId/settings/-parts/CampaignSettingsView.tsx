@@ -1,6 +1,7 @@
 import type { FormEvent, KeyboardEvent } from 'react';
-import { Settings, Shield, UserRound } from 'lucide-react';
+import { Settings, Shield, Store, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { CampaignShopSettingsPanel } from './CampaignShopSettingsPanel';
 import {
 	type AccessLevel,
 	type Character,
@@ -22,6 +23,8 @@ interface CampaignSettingsViewProps {
 	notice: string | null;
 	campaignName: string;
 	setCampaignName: (name: string) => void;
+	officialCatalogIds: string[];
+	onSaveOfficialCatalogIds: (catalogIds: string[]) => Promise<void>;
 	inviteCode: string;
 	copied: boolean;
 	setCopied: (copied: boolean) => void;
@@ -72,6 +75,8 @@ export function CampaignSettingsView({
 	notice,
 	campaignName,
 	setCampaignName,
+	officialCatalogIds,
+	onSaveOfficialCatalogIds,
 	inviteCode,
 	copied,
 	setCopied,
@@ -220,6 +225,28 @@ export function CampaignSettingsView({
 					<UserRound className='w-3.5 h-3.5 text-purple-300' />
 					<span>角色</span>
 				</Button>
+
+				<Button
+					id='campaign-settings-tab-shops'
+					data-testid='campaign-settings-tab-shops'
+					data-tab-value='shops'
+					role='tab'
+					aria-selected={activeTab === 'shops'}
+					aria-controls='campaign-settings-panel'
+					tabIndex={activeTab === 'shops' ? 0 : -1}
+					type='button'
+					onClick={() => setActiveTab('shops')}
+					variant='ghost'
+					size='sm'
+					className={`shrink-0 ${
+						activeTab === 'shops'
+							? 'bg-cyan-900 text-cyan-100 border border-cyan-500/70 shadow'
+							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+					}`}
+				>
+					<Store className='w-3.5 h-3.5 text-cyan-300' />
+					<span>商店</span>
+				</Button>
 			</div>
 
 			<section
@@ -246,6 +273,14 @@ export function CampaignSettingsView({
 					onSendEmailInvite={onSendEmailInvite}
 					onDeleteCampaign={onDeleteCampaign}
 				/>
+
+				{activeTab === 'shops' && (
+					<CampaignShopSettingsPanel
+						isDm={isDm}
+						selectedCatalogIds={officialCatalogIds}
+						onSave={onSaveOfficialCatalogIds}
+					/>
+				)}
 
 				{activeTab === 'characters' && (
 					<AllCharactersSettingsdPanel

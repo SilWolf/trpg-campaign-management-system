@@ -38,6 +38,7 @@ export async function mockSupabase(
 	page: Page,
 	options: {
 		campaignSettingsRole?: CampaignSettingsRole;
+		campaignOfficialCatalogIds?: string[];
 		campaignInventoryRole?: CampaignSettingsRole;
 		createCampaignError?: string;
 		blankCampaign?: boolean;
@@ -66,6 +67,8 @@ export async function mockSupabase(
 		>;
 	} = {},
 ) {
+	let currentCampaignOfficialCatalogIds =
+		options.campaignOfficialCatalogIds ?? ['dnd-2024-srd-5.2'];
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
@@ -865,6 +868,7 @@ export async function mockSupabase(
 						? '背包隔離測試戰役'
 						: '隔離測試戰役',
 					invite_code: 'TEST42',
+					official_catalog_ids: currentCampaignOfficialCatalogIds,
 				},
 			});
 			return;
@@ -991,7 +995,15 @@ export async function mockSupabase(
 				url.pathname === '/rest/v1/campaigns' &&
 				(method === 'PATCH' || method === 'POST')
 			) {
-				campaignUpdates.push(request.postDataJSON());
+				const body = request.postDataJSON() as Record<string, unknown>;
+				campaignUpdates.push(body);
+				if (Array.isArray(body.official_catalog_ids)) {
+					currentCampaignOfficialCatalogIds = body.official_catalog_ids as string[];
+					await route.fulfill({
+						json: { official_catalog_ids: body.official_catalog_ids },
+					});
+					return;
+				}
 			}
 			if (method === 'GET') {
 				await route.fulfill({ json: [] });
@@ -1013,5 +1025,8 @@ export async function mockSupabase(
 		campaignUpdates,
 		blacksmithImportRequests,
 		campaignShopRpcRequests,
+		setCampaignOfficialCatalogIds: (catalogIds: string[]) => {
+			currentCampaignOfficialCatalogIds = catalogIds;
+		},
 	};
 }

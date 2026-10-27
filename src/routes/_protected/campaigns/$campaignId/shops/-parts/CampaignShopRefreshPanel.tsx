@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, Check, Plus, RotateCw, Trash2 } from 'lucide-react';
+import { AlertCircle, Check, Plus, RotateCw, Trash2, X } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import {
 	BLACKSMITH_CATEGORY_LABELS,
@@ -7,6 +8,7 @@ import {
 	loadBlacksmithCatalogs,
 } from '@/lib/blacksmithCatalog';
 import {
+	CAMPAIGN_RULEBOOKS_SOURCE,
 	buildCampaignShopRefreshPreview,
 	createDefaultCampaignShopRefreshPolicy,
 	resolveCampaignShopRefreshCandidates,
@@ -16,6 +18,7 @@ import {
 	saveCampaignShopRefreshPolicy,
 } from '@/lib/campaignShops';
 import { Button, Input } from '@/components/ui';
+import { supabase } from '@/lib/supabase';
 import type {
 	BlacksmithCatalogDefinition,
 	BlacksmithItem,
@@ -69,6 +72,41 @@ const RARITIES: readonly ItemBaseRarity[] = [
 const CATEGORIES: readonly ItemBaseCategory[] = Object.keys(
 	ITEM_CATEGORY_LABELS,
 ) as ItemBaseCategory[];
+
+async function loadCurrentCampaignCatalogIds(
+	campaignId: string,
+	definitions: readonly BlacksmithCatalogDefinition[],
+): Promise<string[]> {
+	if (!supabase) {
+		throw new Error('無法連線至戰役資料庫，請先完成登入與環境設定。');
+	}
+	const { data, error } = await supabase
+		.from('campaigns')
+		.select('official_catalog_ids')
+		.eq('id', campaignId)
+		.single();
+	if (error) throw error;
+
+	const catalogIds = data.official_catalog_ids;
+	if (
+		!Array.isArray(catalogIds) ||
+		!catalogIds.every((catalogId: unknown) => typeof catalogId === 'string')
+	) {
+		throw new Error('戰役商店規則書設定格式無效。');
+	}
+	const availableIds = new Set(
+		definitions.map((definition) => definition.catalogId),
+	);
+	const unavailableIds = catalogIds.filter(
+		(catalogId: string) => !availableIds.has(catalogId),
+	);
+	if (unavailableIds.length > 0) {
+		throw new Error(
+			`戰役設定包含目前不存在的官方規則書：${unavailableIds.join('、')}`,
+		);
+	}
+	return catalogIds;
+}
 
 function getErrorMessage(error: unknown, fallback: string): string {
 	if (error instanceof Error) return error.message;
@@ -170,6 +208,7 @@ export function CampaignShopRefreshPanel({
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
 	const deleteRuleDialogRef = useRef<HTMLDialogElement>(null);
+	const previewDialogRef = useRef<HTMLDialogElement>(null);
 
 	useEffect(() => {
 		const dialog = deleteRuleDialogRef.current;
@@ -177,6 +216,13 @@ export function CampaignShopRefreshPanel({
 		if (deletingRuleIndex !== null && !dialog.open) dialog.showModal();
 		if (deletingRuleIndex === null && dialog.open) dialog.close();
 	}, [deletingRuleIndex]);
+
+	useEffect(() => {
+		const dialog = previewDialogRef.current;
+		if (!dialog) return;
+		if (preview && !dialog.open) dialog.showModal();
+		if (!preview && dialog.open) dialog.close();
+	}, [preview]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -238,8 +284,15 @@ export function CampaignShopRefreshPanel({
 	};
 
 	const handleDraftCatalogChange = async (ruleIndex: number, catalogId: string) => {
-		updateDraft(ruleIndex, { catalogId, itemId: '' });
+		updateDraft(ruleIndex, {
+			catalogId,
+			itemId: '',
+			...(catalogId === CAMPAIGN_RULEBOOKS_SOURCE ? { kind: 'filter' } : {}),
+		});
 		setErrorMessage(null);
+		if (!catalogId || catalogId === CAMPAIGN_RULEBOOKS_SOURCE) {
+			return;
+		}
 		try {
 			await loadCatalog(catalogId);
 		} catch (error) {
@@ -253,8 +306,12 @@ export function CampaignShopRefreshPanel({
 			setErrorMessage('請先選擇官方目錄。');
 			return;
 		}
-		let candidate: CampaignShopRefreshCandidate;
+		let candidates: CampaignShopRefreshCandidate[];
 		if (draft.kind === 'item') {
+			if (draft.catalogId === CAMPAIGN_RULEBOOKS_SOURCE) {
+				setErrorMessage('「此戰役的規則書」僅支援官方目錄篩選器。');
+				return;
+			}
 			const item = catalogItems[draft.catalogId]?.find(
 				(entry) => entry.itemId === draft.itemId,
 			);
@@ -262,20 +319,29 @@ export function CampaignShopRefreshPanel({
 				setErrorMessage('請選擇已載入的有效官方目錄商品。');
 				return;
 			}
-			candidate = item;
+			candidates = [item];
 		} else {
-			candidate = {
-				source: draft.catalogId,
-				param: {
-					...(draft.search.trim() ? { search: draft.search.trim() } : {}),
-					...(draft.rarity ? { rarity: draft.rarity } : {}),
-					...(draft.category ? { category: draft.category } : {}),
-				},
+			const param = {
+				...(draft.search.trim() ? { search: draft.search.trim() } : {}),
+				...(draft.rarity ? { rarity: draft.rarity } : {}),
+				...(draft.category ? { category: draft.category } : {}),
 			};
+			candidates = [
+				{
+					source:
+						draft.catalogId === CAMPAIGN_RULEBOOKS_SOURCE
+							? CAMPAIGN_RULEBOOKS_SOURCE
+							: draft.catalogId,
+					param,
+				},
+			];
 		}
 		updateRule(ruleIndex, (rule) => ({
 			...rule,
-			possibleItemsOrFilters: [...rule.possibleItemsOrFilters, candidate],
+			possibleItemsOrFilters: [
+				...rule.possibleItemsOrFilters,
+				...candidates,
+			],
 		}));
 		updateDraft(ruleIndex, { ...EMPTY_DRAFT, catalogId: draft.catalogId });
 		setErrorMessage(null);
@@ -313,14 +379,34 @@ export function CampaignShopRefreshPanel({
 		setNotice(null);
 		setConfirmEmptyRefresh(false);
 		try {
+			const currentCatalogIds = await loadCurrentCampaignCatalogIds(
+				campaignId,
+				definitions,
+			);
+			const currentPolicy: CampaignShopRefreshPolicy = {
+				...savedPolicy,
+				rules: savedPolicy.rules.map((rule) => ({
+					...rule,
+					possibleItemsOrFilters: rule.possibleItemsOrFilters.flatMap(
+						(candidate) =>
+							!('itemId' in candidate) &&
+							candidate.source === CAMPAIGN_RULEBOOKS_SOURCE
+								? currentCatalogIds.map((source) => ({
+										source,
+										param: candidate.param,
+									}))
+								: [candidate],
+					),
+				})),
+			};
 			const selections = await resolveCampaignShopRefreshCandidates(
-				savedPolicy,
+				currentPolicy,
 				catalogIds,
 				loadBlacksmithCatalogs,
 			);
 			setPreview(
 				buildCampaignShopRefreshPreview(
-					savedPolicy,
+					currentPolicy,
 					selections,
 					shop.updatedAt,
 					items,
@@ -370,6 +456,11 @@ export function CampaignShopRefreshPanel({
 		}
 	};
 
+	const closePreview = () => {
+		setPreview(null);
+		setConfirmEmptyRefresh(false);
+	};
+
 	return (
 		<section
 			className='rounded-lg border border-purple-900/70 bg-stone-900/50 p-4'
@@ -384,19 +475,9 @@ export function CampaignShopRefreshPanel({
 						先儲存政策，再產生不會寫入資料庫的預覽。只有確認刷新才會以單一交易套用變更。
 					</p>
 				</div>
-				<Button
-					type='button'
-					variant='secondary'
-					disabled={isSaving || isLoadingCatalogs || !isPolicyDirty}
-					onClick={() => void savePolicy()}
-					className='border border-purple-800/70 bg-purple-950/40 text-purple-200'
-				>
-					<Check className='h-4 w-4' />
-					{isSaving ? '儲存中…' : '儲存政策'}
-				</Button>
 			</div>
 
-			{errorMessage && (
+			{errorMessage && !preview && (
 				<div role='alert' className='mt-4 flex gap-2 rounded-md border border-red-800/70 bg-red-950/30 p-3 text-sm text-red-200'>
 					<AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
 					<span>{errorMessage}</span>
@@ -465,7 +546,7 @@ export function CampaignShopRefreshPanel({
 											<p className='min-w-0 text-stone-300'>
 												{isCatalogItem(candidate)
 													? `${candidate.catalogTitle}・${candidate.name}`
-													: `${candidate.source}・篩選：${candidate.param.search || '不限文字'}／${candidate.param.rarity ? RARITY_CONFIG[candidate.param.rarity].label : '不限稀有度'}／${candidate.param.category ? BLACKSMITH_CATEGORY_LABELS[candidate.param.category] : '不限分類'}`}
+													: `${candidate.source === CAMPAIGN_RULEBOOKS_SOURCE ? '此戰役的規則書' : definitions.find((definition) => definition.catalogId === candidate.source)?.title ?? candidate.source}・篩選：${candidate.param.search || '不限文字'}／${candidate.param.rarity ? RARITY_CONFIG[candidate.param.rarity].label : '不限稀有度'}／${candidate.param.category ? BLACKSMITH_CATEGORY_LABELS[candidate.param.category] : '不限分類'}`}
 											</p>
 											<Button
 												type='button'
@@ -496,12 +577,17 @@ export function CampaignShopRefreshPanel({
 									<select
 										data-testid={`refresh-candidate-kind-${ruleIndex}`}
 										value={draft.kind}
-										onChange={(event) =>
+										onChange={(event) => {
+											const kind = event.target.value as CandidateDraft['kind'];
 											updateDraft(ruleIndex, {
-												kind: event.target.value as CandidateDraft['kind'],
+												kind,
 												itemId: '',
-											})
-										}
+												...(kind === 'item' &&
+												draft.catalogId === CAMPAIGN_RULEBOOKS_SOURCE
+													? { catalogId: '' }
+													: {}),
+											});
+										}}
 										className={`mt-1 ${INPUT_CLASS}`}
 									>
 										<option value='item'>指定官方商品</option>
@@ -520,12 +606,27 @@ export function CampaignShopRefreshPanel({
 										className={`mt-1 ${INPUT_CLASS}`}
 									>
 										<option value=''>選擇目錄</option>
+										<option
+											value={CAMPAIGN_RULEBOOKS_SOURCE}
+										>
+											此戰役的規則書
+										</option>
 										{definitions.map((definition) => (
 											<option key={definition.catalogId} value={definition.catalogId}>
 												{definition.title}
 											</option>
 										))}
 									</select>
+									<p className='mt-1 leading-relaxed text-[11px] text-stone-500'>
+										如要修改戰役的規則書，請前往
+										<Link
+											to='/campaigns/$campaignId/settings'
+											params={{ campaignId }}
+											className='mx-1 text-cyan-300 underline underline-offset-2 hover:text-cyan-200'
+										>
+											戰役設定的商店分頁
+										</Link>
+									</p>
 								</label>
 								{draft.kind === 'item' ? (
 									<label className='text-xs text-stone-400 md:col-span-2'>
@@ -621,64 +722,142 @@ export function CampaignShopRefreshPanel({
 				<p className='text-xs text-stone-500'>
 					{isPolicyDirty ? '尚有未儲存的政策變更。' : '目前政策已儲存，可產生刷新預覽。'}
 				</p>
-				<Button type='button' disabled={isGenerating || isSaving || isPolicyDirty || isLoadingCatalogs} onClick={() => void generatePreview()} className='bg-amber-700 text-amber-50 hover:bg-amber-600'>
-					<RotateCw className='h-4 w-4' />
-					{isGenerating ? '產生預覽中…' : '預覽刷新'}
-				</Button>
+				<div className='flex flex-wrap items-center justify-end gap-2'>
+					<Button
+						type='button'
+						variant='secondary'
+						disabled={isSaving || isLoadingCatalogs || !isPolicyDirty}
+						onClick={() => void savePolicy()}
+						className='border border-purple-800/70 bg-purple-950/40 text-purple-200'
+					>
+						<Check className='h-4 w-4' />
+						{isSaving ? '儲存中…' : '儲存政策'}
+					</Button>
+					<Button type='button' disabled={isGenerating || isSaving || isPolicyDirty || isLoadingCatalogs} onClick={() => void generatePreview()} className='bg-amber-700 text-amber-50 hover:bg-amber-600'>
+						<RotateCw className='h-4 w-4' />
+						{isGenerating ? '產生預覽中…' : '預覽刷新'}
+					</Button>
+				</div>
 			</div>
 
-			{preview && (
-				<div className='mt-5 rounded-md border border-amber-800/70 bg-amber-950/20 p-3'>
-					<div className='flex flex-wrap items-start justify-between gap-3'>
-						<div>
-							<h3 className='font-serif text-lg font-bold text-amber-200'>刷新預覽</h3>
-							<p className='mt-1 text-xs text-stone-400'>
-								新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、補貨 {preview.entries.filter((entry) => entry.action === 'restock').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、刪除 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
+			<dialog
+				ref={previewDialogRef}
+				aria-labelledby='shop-refresh-preview-title'
+				data-testid='shop-refresh-preview-dialog'
+				onClose={closePreview}
+				onCancel={(event) => {
+					if (isGenerating || isApplying) event.preventDefault();
+				}}
+				className='m-auto max-h-[90dvh] w-[min(48rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-amber-800/70 bg-stone-950 p-0 text-stone-100 shadow-2xl backdrop:bg-black/80'
+			>
+				{preview && (
+					<div className='p-4 sm:p-5'>
+						<div className='flex flex-wrap items-start justify-between gap-3'>
+							<div>
+								<h2
+									id='shop-refresh-preview-title'
+									className='font-serif text-lg font-bold text-amber-200'
+								>
+									刷新預覽
+								</h2>
+								<p className='mt-1 text-xs text-stone-400'>
+									新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、補貨 {preview.entries.filter((entry) => entry.action === 'restock').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、刪除 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
+								</p>
+							</div>
+							<div className='flex items-center gap-2'>
+								<Button
+									type='button'
+									variant='secondary'
+									disabled={isGenerating || isApplying}
+									onClick={() => void generatePreview()}
+									className='border border-amber-800/70 bg-stone-950 text-amber-200'
+								>
+									<RotateCw className='h-4 w-4' />
+									重新隨機
+								</Button>
+								<Button
+									type='button'
+									variant='ghost'
+									aria-label='關閉刷新預覽'
+									disabled={isGenerating || isApplying}
+									onClick={closePreview}
+									className='text-stone-400 hover:text-stone-100'
+								>
+									<X className='h-4 w-4' />
+								</Button>
+							</div>
+						</div>
+						{errorMessage && (
+							<div
+								role='alert'
+								className='mt-3 flex gap-2 rounded-md border border-red-800/70 bg-red-950/30 p-3 text-sm text-red-200'
+							>
+								<AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
+								<span>{errorMessage}</span>
+							</div>
+						)}
+						{preview.entries.length > 0 && (
+							<div className='mt-3 max-h-80 divide-y divide-stone-800 overflow-y-auto rounded border border-stone-800'>
+								{preview.entries.map((entry) => (
+									<div
+										key={entry.key}
+										className='flex items-center justify-between gap-3 px-3 py-2 text-sm'
+									>
+										<div className='min-w-0'>
+											<p className='truncate text-stone-200'>{entry.name}</p>
+											<p className='text-xs text-stone-500'>
+												{entry.sourceTitle}・規則{' '}
+												{entry.ruleIndex === null ? '—' : entry.ruleIndex + 1}・
+												{BLACKSMITH_CATEGORY_LABELS[entry.category]}・
+												{RARITY_CONFIG[entry.rarity].label}
+											</p>
+										</div>
+										<div className='shrink-0 text-right'>
+											<p className={`font-semibold ${actionClass(entry.action)}`}>
+												{actionLabel(entry.action)}
+											</p>
+											<p className='font-mono text-xs text-stone-400'>
+												{entry.unitPriceGp} gp ・庫存 {entry.stockAvailable}
+											</p>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+						{preview.changes.length === 0 && (
+							<p
+								className={`mt-3 rounded border p-3 text-sm ${
+									preview.keepItemsOnRefresh
+										? 'border-amber-900/70 bg-amber-950/30 text-amber-200'
+										: 'border-red-900/70 bg-red-950/30 text-red-200'
+								}`}
+							>
+								{preview.keepItemsOnRefresh
+									? '本次沒有選中商品，保留模式不會變更既有商品；請再次確認後才會送出空操作。'
+									: '本次沒有選中商品。清除模式確認後仍會刪除既有商品及其關聯訂單；請再次確認後才會套用。'}
 							</p>
+						)}
+						<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/40 pt-3'>
+							<p className='text-xs text-stone-500'>
+								確認後會呼叫單一交易 RPC。預覽過期或失敗時不會部分套用，且可保留預覽重試。
+							</p>
+							<Button
+								type='button'
+								variant='danger'
+								disabled={isApplying || isGenerating}
+								onClick={() => void applyPreview()}
+							>
+								<Check className='h-4 w-4' />
+								{isApplying
+									? '刷新中…'
+									: confirmEmptyRefresh
+										? '再次確認零項刷新'
+										: '確認刷新'}
+							</Button>
 						</div>
-						<Button type='button' variant='secondary' disabled={isGenerating || isApplying} onClick={() => void generatePreview()} className='border border-amber-800/70 bg-stone-950 text-amber-200'>
-							<RotateCw className='h-4 w-4' />
-							重新隨機
-						</Button>
 					</div>
-					{preview.entries.length > 0 && (
-						<div className='mt-3 max-h-80 divide-y divide-stone-800 overflow-y-auto rounded border border-stone-800'>
-							{preview.entries.map((entry) => (
-								<div key={entry.key} className='flex items-center justify-between gap-3 px-3 py-2 text-sm'>
-									<div className='min-w-0'>
-										<p className='truncate text-stone-200'>{entry.name}</p>
-										<p className='text-xs text-stone-500'>{entry.sourceTitle}・規則 {entry.ruleIndex === null ? '—' : entry.ruleIndex + 1}・{BLACKSMITH_CATEGORY_LABELS[entry.category]}・{RARITY_CONFIG[entry.rarity].label}</p>
-									</div>
-									<div className='shrink-0 text-right'>
-										<p className={`font-semibold ${actionClass(entry.action)}`}>{actionLabel(entry.action)}</p>
-										<p className='font-mono text-xs text-stone-400'>{entry.unitPriceGp} gp ・庫存 {entry.stockAvailable}</p>
-									</div>
-								</div>
-							))}
-						</div>
-					)}
-					{preview.changes.length === 0 && (
-						<p
-							className={`mt-3 rounded border p-3 text-sm ${
-								preview.keepItemsOnRefresh
-									? 'border-amber-900/70 bg-amber-950/30 text-amber-200'
-									: 'border-red-900/70 bg-red-950/30 text-red-200'
-							}`}
-						>
-							{preview.keepItemsOnRefresh
-								? '本次沒有選中商品，保留模式不會變更既有商品；請再次確認後才會送出空操作。'
-								: '本次沒有選中商品。清除模式確認後仍會刪除既有商品及其關聯訂單；請再次確認後才會套用。'}
-						</p>
-					)}
-					<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/40 pt-3'>
-						<p className='text-xs text-stone-500'>確認後會呼叫單一交易 RPC。預覽過期或失敗時不會部分套用，且可保留預覽重試。</p>
-						<Button type='button' variant='danger' disabled={isApplying || isGenerating} onClick={() => void applyPreview()}>
-							<Check className='h-4 w-4' />
-							{isApplying ? '刷新中…' : confirmEmptyRefresh ? '再次確認零項刷新' : '確認刷新'}
-						</Button>
-					</div>
-				</div>
-			)}
+				)}
+			</dialog>
 			<dialog
 				ref={deleteRuleDialogRef}
 				aria-labelledby='delete-refresh-rule-title'

@@ -44,6 +44,28 @@ test('DM 可更新戰役設定與玩家配額，並取得邀請操作回饋', as
 	expect(requests).toContain('POST /functions/v1/invite-player');
 });
 
+test('DM 可在商店分頁多選戰役官方規則書', async ({ page }) => {
+	const { campaignUpdates } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignOfficialCatalogIds: [],
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(campaignSettingsUrl);
+
+	await page.getByTestId('campaign-settings-tab-shops').click();
+	const panel = page.getByTestId('campaign-shop-settings');
+	await expect(panel).toBeVisible();
+	const srdCatalog = page.getByTestId(
+		'campaign-official-catalog-dnd-2024-srd-5.2',
+	);
+	await srdCatalog.check();
+	await panel.getByRole('button', { name: '儲存設定' }).click();
+	await expect(panel.getByRole('status')).toContainText('設定已儲存');
+	expect(campaignUpdates).toContainEqual({
+		official_catalog_ids: ['dnd-2024-srd-5.2'],
+	});
+});
+
 test('一般成員只能檢視 Campaign 設定，且不能修改自己的權限列', async ({
 	page,
 }) => {

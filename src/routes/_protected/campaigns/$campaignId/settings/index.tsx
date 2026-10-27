@@ -13,6 +13,7 @@ import {
 	type DbInventoryItem,
 } from '@/lib/supabase';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
+import { loadBlacksmithCatalogDefinitions } from '@/lib/blacksmithCatalog';
 import {
 	CAMP_CHEST_ID,
 	canStackItems,
@@ -42,6 +43,7 @@ function CampaignSettingsPage() {
 	const [isSavingNewCharacter, setIsSavingNewCharacter] = useState(false);
 
 	const [campaignName, setCampaignName] = useState('');
+	const [officialCatalogIds, setOfficialCatalogIds] = useState<string[]>([]);
 	const [inviteCode, setInviteCode] = useState('');
 	const [copied, setCopied] = useState(false);
 	const [notice, setNotice] = useState<string | null>(null);
@@ -72,6 +74,14 @@ function CampaignSettingsPage() {
 			if (campData) {
 				setCampaignName(campData.name);
 				setInviteCode(campData.invite_code || '無');
+				setOfficialCatalogIds(
+					Array.isArray(campData.official_catalog_ids) &&
+						campData.official_catalog_ids.every(
+							(catalogId: unknown) => typeof catalogId === 'string',
+						)
+						? campData.official_catalog_ids
+						: [],
+				);
 			}
 
 			// 取得戰役成員與邀請接受狀態
@@ -273,6 +283,43 @@ function CampaignSettingsPage() {
 			setNotice('✨ 戰役設定已成功更新！');
 			setTimeout(() => setNotice(null), 3000);
 		}
+	};
+
+	const handleSaveOfficialCatalogIds = async (catalogIds: string[]) => {
+		if (!isDm) {
+			throw new Error('只有 DM 可以修改戰役商店規則書。');
+		}
+		if (!supabase) {
+			throw new Error('離線模式無法儲存戰役商店規則書設定。');
+		}
+
+		const definitions = await loadBlacksmithCatalogDefinitions();
+		const availableCatalogIds = new Set(
+			definitions.map((definition) => definition.catalogId),
+		);
+		if (
+			new Set(catalogIds).size !== catalogIds.length ||
+			catalogIds.some((catalogId) => !availableCatalogIds.has(catalogId))
+		) {
+			throw new Error('所選官方規則書無效，請重新載入後再試。');
+		}
+
+		const { data, error } = await supabase
+			.from('campaigns')
+			.update({ official_catalog_ids: catalogIds })
+			.eq('id', campaignId)
+			.select('official_catalog_ids')
+			.single();
+		if (error) throw error;
+		if (
+			!Array.isArray(data.official_catalog_ids) ||
+			!data.official_catalog_ids.every(
+				(catalogId: unknown) => typeof catalogId === 'string',
+			)
+		) {
+			throw new Error('資料庫回傳的官方規則書設定格式無效。');
+		}
+		setOfficialCatalogIds(data.official_catalog_ids);
 	};
 
 	// DM 更新個別玩家的「可創建角色數量上限」
@@ -796,6 +843,8 @@ function CampaignSettingsPage() {
 				notice={notice}
 				campaignName={campaignName}
 				setCampaignName={setCampaignName}
+				officialCatalogIds={officialCatalogIds}
+				onSaveOfficialCatalogIds={handleSaveOfficialCatalogIds}
 				inviteCode={inviteCode}
 				copied={copied}
 				setCopied={setCopied}

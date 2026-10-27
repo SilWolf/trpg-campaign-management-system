@@ -271,6 +271,14 @@ function serializeCampaignShopRefreshPolicy(
 	};
 }
 
+export function toDbCampaignShopRefreshPolicy(
+	policy: CampaignShopRefreshPolicy | undefined,
+): unknown {
+	return serializeCampaignShopRefreshPolicy(
+		normalizeCampaignShopRefreshPolicy(policy),
+	);
+}
+
 // 若未設定環境變數則為 null，自動退回單機模式
 export const supabase =
 	supabaseUrl && supabaseAnonKey
@@ -337,9 +345,7 @@ export const toDbCampaignShop = (
 	name: shop.name,
 	background_image_url: shop.backgroundImageUrl,
 	is_active: shop.isActive,
-	refresh_policy: serializeCampaignShopRefreshPolicy(
-		normalizeCampaignShopRefreshPolicy(shop.refreshPolicy),
-	),
+	refresh_policy: toDbCampaignShopRefreshPolicy(shop.refreshPolicy),
 });
 
 export const fromDbCampaignShop = (row: DbCampaignShop): CampaignShop => ({

@@ -5,11 +5,16 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 	const result = await page.evaluate(async () => {
 		const refresh = await import('/src/lib/campaignShopRefresh.ts');
 		const catalog = await import('/src/lib/blacksmithCatalog.ts');
-		const makeItem = (itemId: string, name: string) => ({
-			catalogId: 'core-rules',
-			catalogTitle: '核心規則',
+		const makeItem = (
+			itemId: string,
+			name: string,
+			catalogId = 'core-rules',
+			catalogTitle = '核心規則',
+		) => ({
+			catalogId,
+			catalogTitle,
 			itemId,
-			sourceKey: `core-rules:${itemId}`,
+			sourceKey: `${catalogId}:${itemId}`,
 			name,
 			subTypes: ['軍用武器'],
 			rarity: 'Rare' as const,
@@ -180,6 +185,40 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 				async () => items.slice(0, 2),
 				() => stockRandomValues[stockRandomIndex++] ?? 0,
 			);
+		const additionalCatalogItem = makeItem(
+			'longsword',
+			'異界長劍',
+			'additional-rules',
+			'附加規則',
+		);
+		const multiCatalogPolicy = {
+			flags: { keepItemsOnRefresh: false },
+			rules: [
+				{
+					possibleItemsOrFilters: [
+						{ source: 'core-rules', param: { search: '長劍' } },
+						{ source: 'additional-rules', param: { search: '異界長劍' } },
+					],
+					pickCount: null,
+					stockAvailable: { min: 1, max: 1 },
+				},
+			],
+		};
+		const multiCatalogSelections =
+			await refresh.resolveCampaignShopRefreshCandidates(
+				multiCatalogPolicy,
+				new Set(['core-rules', 'additional-rules']),
+				async (catalogId: string) =>
+					catalogId === 'core-rules' ? [items[0]] : [additionalCatalogItem],
+				() => 0,
+			);
+		const multiCatalogPreview = refresh.buildCampaignShopRefreshPreview(
+			multiCatalogPolicy,
+			multiCatalogSelections,
+			'2026-01-02T00:00:00Z',
+			[],
+			new Set(['core-rules', 'additional-rules']),
+		);
 		return {
 			restoredCatalogItem:
 				'itemId' in restoredCandidate
@@ -210,6 +249,9 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 					stockAvailable,
 				}),
 			),
+			multiCatalogSourceIds: multiCatalogPreview.changes.map(
+				(change) => change.sourceId,
+			),
 		};
 	});
 
@@ -237,6 +279,10 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 	expect(result.independentStocks).toEqual([
 		{ itemId: 'longsword', stockAvailable: 2 },
 		{ itemId: 'greatsword', stockAvailable: 0 },
+	]);
+	expect(result.multiCatalogSourceIds).toEqual([
+		'core-rules:longsword',
+		'additional-rules:longsword',
 	]);
 });
 

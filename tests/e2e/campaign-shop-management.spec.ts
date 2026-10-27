@@ -83,11 +83,15 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 	const panel = page.getByTestId('shop-refresh-panel');
 	await expect(panel).toBeVisible();
 	await panel.getByRole('button', { name: '新增規則' }).click();
+	await expect(
+		panel.getByRole('link', { name: '戰役設定的商店分頁' }),
+	).toHaveAttribute('href', '/campaigns/settings-campaign/settings');
 	const catalogSelector = panel.getByTestId('refresh-catalog-0');
 	await expect(catalogSelector).toBeVisible();
 	await panel.getByTestId('refresh-candidate-kind-0').selectOption('filter');
-	await catalogSelector.selectOption({ index: 1 });
+	await catalogSelector.selectOption('__campaign_rulebooks__');
 	await panel.getByTestId('refresh-add-candidate-0').click();
+	await expect(panel.getByText(/此戰役的規則書・篩選/)).toBeVisible();
 	await panel.getByRole('button', { name: '儲存政策' }).click();
 	await expect(panel.getByRole('status')).toContainText('刷新政策已儲存');
 
@@ -95,6 +99,12 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible({
 		timeout: 15_000,
 	});
+	const previewDialog = panel.getByRole('dialog', { name: '刷新預覽' });
+	await expect(previewDialog).toBeVisible();
+	await previewDialog.getByRole('button', { name: '關閉刷新預覽' }).click();
+	await expect(previewDialog).not.toBeVisible();
+	await panel.getByRole('button', { name: '預覽刷新' }).click();
+	await expect(previewDialog).toBeVisible({ timeout: 15_000 });
 	expect(
 		requests.filter((request) =>
 			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
@@ -107,6 +117,34 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
 		),
 	).toBe(true);
+});
+
+test('產生刷新預覽時會重新讀取戰役最新規則書設定', async ({ page }) => {
+	const { setCampaignOfficialCatalogIds } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+
+	const panel = page.getByTestId('shop-refresh-panel');
+	await panel.getByRole('button', { name: '新增規則' }).click();
+	await panel.getByTestId('refresh-candidate-kind-0').selectOption('filter');
+	await panel
+		.getByTestId('refresh-catalog-0')
+		.selectOption('__campaign_rulebooks__');
+	await panel.getByTestId('refresh-add-candidate-0').click();
+	await panel.getByRole('button', { name: '儲存政策' }).click();
+	await expect(panel.getByRole('status')).toContainText('刷新政策已儲存');
+
+	setCampaignOfficialCatalogIds([]);
+	await panel.getByRole('button', { name: '預覽刷新' }).click();
+	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible({
+		timeout: 15_000,
+	});
+	await expect(
+		panel.getByText(/本次沒有選中商品。清除模式確認後仍會刪除既有商品/),
+	).toBeVisible();
 });
 
 test('刪除刷新規則前會要求在危險確認視窗再次確認', async ({ page }) => {

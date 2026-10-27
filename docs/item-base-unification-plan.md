@@ -160,7 +160,7 @@ type ArmorItem = Omit<ItemBase, 'category'> & {
 1. 已讓 `CampaignShopItemSnapshot` 在建立、載入、刷新、編輯售價／庫存、訂單紀錄與購買交付的整條前端流程維持相同 canonical 欄位形狀。
 2. 已更新 `CampaignShopRefreshCandidate`、篩選政策解析器及候選生成器，使用完整 `ItemBaseCategory` 集合。為兼容目前 SQL refresh validator，商店 refresh policy 傳輸時保留舊版檢查欄位並附上 canonical `item_base`；讀回時以 canonical base 還原。
 3. 商店快照的 DB JSON 同時保留必要 legacy 欄位及 canonical `item_base`；新增購買交付 RPC 依 canonical 快照保存新 inventory `item_base`，數量／擁有者仍由交易 RPC 設定。
-4. 相關快照／刷新單元 E2E 已通過；需在隔離 Supabase 環境驗證 policy constraint、刷新 RPC、購買交付與回滾，未部署前不宣稱資料庫端驗收完成。
+4. 本次執行 `npm run test:e2e -- tests/e2e/campaign-shop-data.spec.ts tests/e2e/campaign-shop-refresh.spec.ts tests/e2e/campaign-shop-purchase.spec.ts`，16 項通過；`npm run typecheck` 通過，`npm run lint` 0 errors（`$shopId.tsx` 有一項既存 unused-eslint-disable warning）。測試使用前端／Supabase mock，僅驗證前端流程與資料合約；仍需在維護者確認的隔離 Supabase 環境驗證 policy constraint、刷新 RPC、購買交付及交易回滾，未部署前不宣稱資料庫端驗收完成。
 
 ### 階段五：測試、驗收與部署
 
@@ -170,6 +170,15 @@ type ArmorItem = Omit<ItemBase, 'category'> & {
 4. 業務測試：官方目錄匯入、鍛造樣板匯入、背包堆疊／裝備／消耗、商店刷新、下單與交付皆可正常運作，且角色私有／公開可見性及營地箱規則不變。
 5. 執行專案既有的 `npm run typecheck`、`npm run lint`、相關 unit／E2E 測試及 `npm run build`。若有 SQL 驗證，僅在維護者確認的隔離 Supabase 專案執行；本規劃不授權連線正式環境或部署。
 6. 上線前核對 migration history、空資料表假設、RLS、Realtime 及商店快照 JSON 格式。測試替身通過不能視為真實資料庫驗收。
+
+### 階段五執行紀錄（2026-10-27）
+
+- `npm run typecheck` 通過。
+- `npm run lint` 通過，0 errors；`src/routes/_protected/campaigns/$campaignId/shops/$shopId.tsx` 有 1 項既存 unused-eslint-disable warning。
+- `npm run validate:blacksmith-source` 通過：537 筆目錄物品及 537 筆 lookup 對照。
+- `npm run test:e2e` 通過：61 項；測試以 Playwright／Supabase mock 驗證前端流程與資料合約，不代表真實資料庫、RLS、Realtime 或交易回滾已驗收。
+- `npm run build` 通過，production Vite bundle 建置完成。
+- 階段五本機檢查完成；隔離 Supabase 驗收及部署尚未執行。須先由維護者確認目標專案、migration history、空資料表前提及執行授權，再驗證 migration、RPC、RLS、Realtime 與交易回滾；不可據本次 mock 測試宣稱已部署或完成資料庫驗收。
 
 ## 不變更的行為與風險控制
 
