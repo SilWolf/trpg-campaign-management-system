@@ -250,6 +250,7 @@ export type BlacksmithTemplate = AllItem & {
 };
 
 export type CampaignShopItemSnapshot = AllItem & {
+	isIdentified?: boolean;
 	isHomebrew: boolean;
 	isImportant: boolean;
 	icon: string;

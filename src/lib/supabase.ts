@@ -395,6 +395,7 @@ export interface DbCampaignShopItemSnapshot {
 	is_equippable?: boolean | null;
 	is_consumable?: boolean | null;
 	is_important?: boolean | null;
+	is_identified?: boolean | null;
 	affixes?: AllItem['affixes'] | null;
 	item_base?: unknown;
 }
@@ -437,6 +438,7 @@ const fromDbCampaignShopItemSnapshot = (
 		maxCharges: base.maxCharges ?? 0,
 		isHomebrew: Boolean(snapshot?.is_homebrew),
 		isImportant: Boolean(snapshot?.is_important),
+		isIdentified: snapshot?.is_identified !== false,
 	};
 };
 
@@ -462,6 +464,7 @@ const toDbCampaignShopItemSnapshot = (
 	is_equippable: snapshot.isEquippable,
 	is_consumable: snapshot.isConsumable,
 	is_important: Boolean(snapshot.isImportant),
+	is_identified: snapshot.isIdentified !== false,
 	affixes: snapshot.affixes,
 	item_base: serializeItemBase(snapshot),
 });

@@ -3,6 +3,7 @@ import {
 	AlertCircle,
 	Check,
 	Clock3,
+	HelpCircle,
 	Minus,
 	Plus,
 	ShoppingBag,
@@ -115,6 +116,15 @@ function formatGpFromCp(totalCp: number): string {
 		minimumFractionDigits: 0,
 		maximumFractionDigits: 2,
 	});
+}
+
+function getItemDisplayName(
+	itemSnapshot: CampaignShopOrder['itemSnapshot'],
+	isDm: boolean,
+): string {
+	return !isDm && itemSnapshot.isIdentified === false
+		? '未鑑定的物品'
+		: itemSnapshot.name;
 }
 
 function formatDate(value: string): string {
@@ -572,7 +582,14 @@ export function ShopTransactionsPanel({
 						)}
 
 						<div className='max-h-64 space-y-2 overflow-y-auto'>
-							{cartItems.map(({ item, quantity: lineQuantity }) => (
+							{cartItems.map(({ item, quantity: lineQuantity }) => {
+								const displayName = getItemDisplayName(
+									item.itemSnapshot,
+									isDm,
+								);
+								const isMasked =
+									!isDm && item.itemSnapshot.isIdentified === false;
+								return (
 								<div
 									key={item.id}
 									data-testid={`shop-checkout-item-${item.id}`}
@@ -587,14 +604,18 @@ export function ShopTransactionsPanel({
 											className='relative h-10 w-10 shrink-0 overflow-hidden rounded border border-stone-700 bg-stone-950'
 											data-testid={`shop-checkout-item-icon-${item.id}`}
 										>
-											<ItemIcon
-												iconName={item.itemSnapshot.icon}
-												className='h-6 w-6 text-stone-300'
-											/>
+											{isMasked ? (
+												<HelpCircle className='h-6 w-6 text-purple-400' />
+											) : (
+												<ItemIcon
+													iconName={item.itemSnapshot.icon}
+													className='h-6 w-6 text-stone-300'
+												/>
+											)}
 										</div>
 										<div className='min-w-0'>
 											<p className='font-serif font-bold text-stone-100'>
-												{item.itemSnapshot.name}
+												{displayName}
 											</p>
 											<p className='mt-1 text-xs text-stone-400'>
 												單價{' '}
@@ -610,7 +631,7 @@ export function ShopTransactionsPanel({
 													type='button'
 													variant='secondary'
 													size='sm'
-													aria-label={`減少${item.itemSnapshot.name}數量`}
+													aria-label={`減少${displayName}數量`}
 													disabled={lineQuantity === 0 || isSubmittingPurchase}
 													onClick={() =>
 														onCartQuantityChange?.(
@@ -632,7 +653,7 @@ export function ShopTransactionsPanel({
 													type='button'
 													variant='secondary'
 													size='sm'
-													aria-label={`增加${item.itemSnapshot.name}數量`}
+													aria-label={`增加${displayName}數量`}
 													disabled={
 														lineQuantity >= item.stockAvailable ||
 														isSubmittingPurchase
@@ -665,7 +686,8 @@ export function ShopTransactionsPanel({
 										gp
 									</p>
 								</div>
-							))}
+								);
+							})}
 						</div>
 
 						<div className='grid gap-3 sm:grid-cols-2'>
@@ -824,7 +846,8 @@ export function ShopTransactionsPanel({
 								<option value=''>選擇商品</option>
 								{activeItems.map((item) => (
 									<option key={item.id} value={item.id}>
-										{item.itemSnapshot.name}・{item.unitPriceGp} gp・庫存{' '}
+										{getItemDisplayName(item.itemSnapshot, isDm)}・
+										{item.unitPriceGp} gp・庫存{' '}
 										{item.stockAvailable}
 										{item.requiresApproval ? '・需審查' : ''}
 									</option>
@@ -976,7 +999,10 @@ export function ShopTransactionsPanel({
 													{group.orders
 														.map(
 															(entry) =>
-																`${entry.itemSnapshot.name}${entry.quantity === 1 ? '' : `x${entry.quantity}`}`,
+																`${getItemDisplayName(
+																	entry.itemSnapshot,
+																	isDm,
+																)}${entry.quantity === 1 ? '' : `x${entry.quantity}`}`,
 														)
 														.join(', ')}
 												</p>
@@ -987,7 +1013,7 @@ export function ShopTransactionsPanel({
 															key={entry.id}
 															className='font-serif font-bold text-stone-100'
 														>
-															{entry.itemSnapshot.name}
+															{getItemDisplayName(entry.itemSnapshot, isDm)}
 														</p>
 													))}
 												</div>

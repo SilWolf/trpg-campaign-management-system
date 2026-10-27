@@ -93,6 +93,7 @@ type ItemForm = {
 	isEquippable: boolean;
 	isConsumable: boolean;
 	isImportant: boolean;
+	isUnidentified: boolean;
 	affixesJson: string;
 	unitPriceGp: string;
 	stockAvailable: string;
@@ -129,6 +130,7 @@ const EMPTY_ITEM: ItemForm = {
 	isEquippable: false,
 	isConsumable: false,
 	isImportant: false,
+	isUnidentified: false,
 	affixesJson: '[]',
 	unitPriceGp: '1',
 	stockAvailable: '0',
@@ -186,6 +188,7 @@ function itemFormFromSnapshot(
 		isEquippable: Boolean(snapshot.isEquippable),
 		isConsumable: Boolean(snapshot.isConsumable),
 		isImportant: Boolean(snapshot.isImportant),
+		isUnidentified: snapshot.isIdentified === false,
 		affixesJson: JSON.stringify(snapshot.affixes ?? [], null, 2),
 		unitPriceGp: String(item?.unitPriceGp ?? Math.max(snapshot.valueGp, 0.01)),
 		stockAvailable: String(item?.stockAvailable ?? 0),
@@ -627,6 +630,7 @@ function CampaignShopsPage() {
 			maxCharges: base.maxCharges ?? 0,
 			isHomebrew: editingItem?.itemSnapshot.isHomebrew ?? true,
 			isImportant: itemForm.isImportant,
+			isIdentified: !itemForm.isUnidentified,
 		};
 		return { name, unitPriceGp, stockAvailable, itemSnapshot };
 	};
@@ -1555,6 +1559,11 @@ function CampaignShopsPage() {
 													['isEquippable', '可裝備', 'accent-amber-500'],
 													['isConsumable', '消耗品', 'accent-amber-500'],
 													['isImportant', '重要物品', 'accent-amber-500'],
+													[
+														'isUnidentified',
+														'以未鑑定狀態列出',
+														'accent-purple-500',
+													],
 													[
 														'requiresApproval',
 														'購買需要 DM 審查',

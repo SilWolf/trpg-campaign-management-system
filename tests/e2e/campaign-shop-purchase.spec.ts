@@ -73,6 +73,43 @@ test('玩家可用有修改權的錢包直接購買並查看公開紀錄', async
 	await expect(page.getByTestId('shop-order-row')).not.toContainText('私人暗袋');
 });
 
+test('未鑑定商品在商店與購買紀錄隱藏內容並保留未鑑定狀態', async ({
+	page,
+}) => {
+	await mockSupabase(page, {
+		campaignSettingsRole: 'player',
+		campaignShopSeed: true,
+		campaignShopItemUnidentified: true,
+		campaignShopWalletGp: 100,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(shopUrl);
+
+	await expect(
+		page.getByRole('button', { name: '查看未鑑定的物品' }).first(),
+	).toBeVisible();
+	await expect(page.getByTestId('shop-item-details')).toContainText(
+		'未鑑定的物品',
+	);
+	await expect(page.getByTestId('shop-item-details')).not.toContainText(
+		'治療藥水',
+	);
+	await addToCart(page, '未鑑定的物品');
+	await openCheckout(page);
+	await expect(
+		page.getByTestId('shop-checkout-item-shop-item-direct'),
+	).toContainText('未鑑定的物品');
+	await expect(
+		page.getByTestId('shop-checkout-item-shop-item-direct'),
+	).not.toContainText('治療藥水');
+	await page.getByLabel('結帳角色').selectOption('settings-character');
+	await page.getByTestId('shop-checkout-confirm').click();
+
+	await expect(page.getByRole('status')).toContainText('結帳完成');
+	await expect(page.getByTestId('shop-order-title')).toHaveText('未鑑定的物品');
+	await expect(page.getByTestId('shop-order-title')).not.toContainText('治療藥水');
+});
+
 test('結帳視窗顯示商品圖示、可調整數量並只送出正數商品', async ({
 	page,
 }) => {

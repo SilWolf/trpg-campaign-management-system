@@ -4,6 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import {
 	ChevronLeft,
 	ChevronRight,
+	HelpCircle,
 	Image,
 	Minus,
 	Pencil,
@@ -60,8 +61,8 @@ function CampaignShopDetail() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const visibleItems = useMemo(
-		() => items.filter((item) => isDm || item.isActive),
-		[isDm, items],
+		() => items.filter((item) => item.isActive),
+		[items],
 	);
 	const pageSize = 10;
 	const pageCount = Math.max(1, Math.ceil(visibleItems.length / pageSize));
@@ -105,6 +106,16 @@ function CampaignShopDetail() {
 		visibleItems.find((item) => item.id === selectedItemId) ??
 		visibleItems[0] ??
 		null;
+	const selectedItemIsMasked =
+		selectedItem?.itemSnapshot.isIdentified === false;
+	const selectedItemDisplayName = selectedItemIsMasked
+		? '未鑑定的物品'
+		: (selectedItem?.itemSnapshot.name ?? '');
+	const selectedItemRarityStyle = selectedItem
+		? selectedItemIsMasked
+			? RARITY_CONFIG.Uncommon
+			: RARITY_CONFIG[selectedItem.itemSnapshot.rarity]
+		: RARITY_CONFIG.Common;
 	const isItemEffectsExpanded =
 		selectedItem !== null && expandedItemEffectsId === selectedItem.id;
 	const hasLongItemEffects =
@@ -223,7 +234,7 @@ function CampaignShopDetail() {
 		);
 	}
 
-	if (!shop || (!isDm && !shop.isActive)) {
+	if (!shop || !shop.isActive) {
 		return (
 			<main className='rounded-lg border border-stone-800 bg-stone-900/60 p-8 text-center'>
 				<Store className='mx-auto mb-3 h-8 w-8 text-stone-600' />
@@ -314,7 +325,13 @@ function CampaignShopDetail() {
 								{paginatedItems.map((item) => {
 									const isSelected = selectedItem?.id === item.id;
 									const quantity = cartQuantities[item.id] ?? 0;
-									const rarityStyle = RARITY_CONFIG[item.itemSnapshot.rarity];
+									const isMasked = item.itemSnapshot.isIdentified === false;
+									const displayName = isMasked
+										? '未鑑定的物品'
+										: item.itemSnapshot.name;
+									const rarityStyle = isMasked
+										? RARITY_CONFIG.Uncommon
+										: RARITY_CONFIG[item.itemSnapshot.rarity];
 									const canAdd =
 										shop.isActive &&
 										item.isActive &&
@@ -329,7 +346,7 @@ function CampaignShopDetail() {
 											<Button
 												type='button'
 												variant='ghost'
-												aria-label={`查看${item.itemSnapshot.name}`}
+												aria-label={`查看${displayName}`}
 												aria-pressed={isSelected}
 												onClick={() => setSelectedItemId(item.id)}
 												className={`flex min-w-0 flex-1 items-center justify-between gap-3 rounded-none px-3 py-2 text-left ${
@@ -344,25 +361,36 @@ function CampaignShopDetail() {
 														className={`relative h-9 w-9 shrink-0 overflow-hidden rounded border bg-stone-950 ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
 														data-testid='shop-item-icon'
 													>
-														<ItemIcon
-															iconName={item.itemSnapshot.icon}
-															className='h-6 w-6 text-stone-300'
-														/>
+														{isMasked ? (
+															<HelpCircle className='h-6 w-6 text-purple-400' />
+														) : (
+															<ItemIcon
+																iconName={item.itemSnapshot.icon}
+																className='h-6 w-6 text-stone-300'
+															/>
+														)}
 													</div>
 													<div className='min-w-0'>
 														<h3
 															className={`truncate font-serif text-sm font-bold ${rarityStyle.text}`}
 														>
-															{item.itemSnapshot.name}
+															{displayName}
 														</h3>
 														<p className='mt-1 truncate text-xs text-stone-500'>
-															{CATEGORY_LABELS[item.itemSnapshot.category]}・
-															<span
-																data-testid='shop-item-rarity'
-																className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
-															>
-																{rarityStyle.label}
-															</span>
+															{isMasked ? (
+																<span className='text-purple-300'>未鑑定</span>
+															) : (
+																<>
+																	{CATEGORY_LABELS[item.itemSnapshot.category]}
+																	・
+																	<span
+																		data-testid='shop-item-rarity'
+																		className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
+																	>
+																		{rarityStyle.label}
+																	</span>
+																</>
+															)}
 														</p>
 													</div>
 												</div>
@@ -374,11 +402,6 @@ function CampaignShopDetail() {
 														庫存 {item.stockAvailable}
 													</span>
 												</div>
-												{isDm && !item.isActive && (
-													<span className='text-[11px] text-stone-500'>
-														停用
-													</span>
-												)}
 												{item.requiresApproval && (
 													<span className='text-[11px] text-amber-300'>
 														需 DM 審查
@@ -387,13 +410,13 @@ function CampaignShopDetail() {
 											</Button>
 											<div
 												className='flex shrink-0 items-center justify-center gap-2 px-3'
-												aria-label={`${item.itemSnapshot.name}購買數量`}
+												aria-label={`${displayName}購買數量`}
 											>
 												<Button
 													type='button'
 													variant='secondary'
 													size='sm'
-													aria-label={`-1 ${item.itemSnapshot.name}`}
+													aria-label={`-1 ${displayName}`}
 													disabled={quantity === 0}
 													onClick={() =>
 														setCartQuantities((current) => ({
@@ -418,7 +441,7 @@ function CampaignShopDetail() {
 													type='button'
 													variant='secondary'
 													size='sm'
-													aria-label={`+1 ${item.itemSnapshot.name}`}
+													aria-label={`+1 ${displayName}`}
 													disabled={!canAdd}
 													onClick={() =>
 														setCartQuantities((current) => ({
@@ -501,53 +524,63 @@ function CampaignShopDetail() {
 							<>
 								<div className='flex items-start gap-3 border-b border-stone-800 pb-4'>
 									<div
-										className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-gradient-to-b ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].border} ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].bg} ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].glow}`}
+										className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-gradient-to-b ${selectedItemRarityStyle.border} ${selectedItemRarityStyle.bg} ${selectedItemRarityStyle.glow}`}
 										data-testid='shop-item-detail-icon'
 									>
-										<ItemIcon
-											iconName={selectedItem.itemSnapshot.icon}
-											className='h-8 w-8 text-stone-300'
-										/>
+										{selectedItemIsMasked ? (
+											<HelpCircle className='h-8 w-8 text-purple-400' />
+										) : (
+											<ItemIcon
+												iconName={selectedItem.itemSnapshot.icon}
+												className='h-8 w-8 text-stone-300'
+											/>
+										)}
 									</div>
 									<div className='min-w-0'>
 										<h3
-											className={`font-serif text-xl font-bold ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].text}`}
+											className={`font-serif text-xl font-bold ${selectedItemRarityStyle.text}`}
 										>
-											{selectedItem.itemSnapshot.name}
+											{selectedItemDisplayName}
 										</h3>
 										<p className='mt-1 text-xs text-stone-400'>
-											{CATEGORY_LABELS[selectedItem.itemSnapshot.category]}・
-											{RARITY_CONFIG[selectedItem.itemSnapshot.rarity].label}
-											{selectedItem.itemSnapshot.subTypes.length > 0
-												? `・${selectedItem.itemSnapshot.subTypes.join('、')}`
-												: ''}
+											{selectedItemIsMasked
+												? '未鑑定'
+												: `${CATEGORY_LABELS[selectedItem.itemSnapshot.category]}・${selectedItemRarityStyle.label}${
+														selectedItem.itemSnapshot.subTypes.length > 0
+															? `・${selectedItem.itemSnapshot.subTypes.join('、')}`
+															: ''
+													}`}
 										</p>
 									</div>
 								</div>
 
 								<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
-									{getItemDamage(selectedItem.itemSnapshot) && (
+									{!selectedItemIsMasked &&
+										getItemDamage(selectedItem.itemSnapshot) && (
+											<div>
+												<p className='text-[11px] text-stone-500'>傷害</p>
+												<p className='font-mono text-amber-200'>
+													{getItemDamage(selectedItem.itemSnapshot)}
+												</p>
+											</div>
+										)}
+									{!selectedItemIsMasked &&
+										getItemArmorClass(selectedItem.itemSnapshot) && (
+											<div>
+												<p className='text-[11px] text-stone-500'>護甲等級</p>
+												<p className='font-mono text-sky-200'>
+													AC {getItemArmorClass(selectedItem.itemSnapshot)}
+												</p>
+											</div>
+										)}
+									{!selectedItemIsMasked && (
 										<div>
-											<p className='text-[11px] text-stone-500'>傷害</p>
-											<p className='font-mono text-amber-200'>
-												{getItemDamage(selectedItem.itemSnapshot)}
+											<p className='text-[11px] text-stone-500'>重量</p>
+											<p className='font-mono text-stone-200'>
+												{selectedItem.itemSnapshot.weight} lb
 											</p>
 										</div>
 									)}
-									{getItemArmorClass(selectedItem.itemSnapshot) && (
-										<div>
-											<p className='text-[11px] text-stone-500'>護甲等級</p>
-											<p className='font-mono text-sky-200'>
-												AC {getItemArmorClass(selectedItem.itemSnapshot)}
-											</p>
-										</div>
-									)}
-									<div>
-										<p className='text-[11px] text-stone-500'>重量</p>
-										<p className='font-mono text-stone-200'>
-											{selectedItem.itemSnapshot.weight} lb
-										</p>
-									</div>
 									<div>
 										<p className='text-[11px] text-stone-500'>商店價格</p>
 										<p className='font-mono text-amber-300'>
@@ -560,14 +593,15 @@ function CampaignShopDetail() {
 											{selectedItem.stockAvailable}
 										</p>
 									</div>
-									{selectedItem.itemSnapshot.isRequireAttunement && (
-										<div className='self-end text-xs text-purple-300'>
-											需同調
-										</div>
-									)}
+									{!selectedItemIsMasked &&
+										selectedItem.itemSnapshot.isRequireAttunement && (
+											<div className='self-end text-xs text-purple-300'>
+												需同調
+											</div>
+										)}
 								</div>
 
-								{selectedItem.itemSnapshot.flavor && (
+								{!selectedItemIsMasked && selectedItem.itemSnapshot.flavor && (
 									<div className='border-b border-stone-800 py-3'>
 										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
 											物品描述
@@ -579,7 +613,11 @@ function CampaignShopDetail() {
 										</div>
 									</div>
 								)}
-								{selectedItem.itemSnapshot.effects && (
+								{selectedItemIsMasked ? (
+									<div className='border-b border-stone-800 py-3 text-sm italic text-purple-300'>
+										此物品散發著晦澀難明的魔法波動，無法得知其確切能力。
+									</div>
+								) : selectedItem.itemSnapshot.effects ? (
 									<div className='border-b border-stone-800 py-3'>
 										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
 											物品效果
@@ -616,27 +654,23 @@ function CampaignShopDetail() {
 											</Button>
 										)}
 									</div>
-								)}
-								{(selectedItem.itemSnapshot.affixes ?? [])
-									.filter((affix) => isDm || !affix.isHidden)
-									.map((affix) => (
-										<div
-											key={affix.id}
-											className='border-b border-stone-800 py-3 last:border-0'
-										>
-											<h4 className='mb-1 text-xs font-semibold text-purple-300'>
-												{affix.name}
-											</h4>
-											<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
-												<ReactMarkdown>{affix.desc}</ReactMarkdown>
+								) : null}
+								{!selectedItemIsMasked &&
+									(selectedItem.itemSnapshot.affixes ?? [])
+										.filter((affix) => !affix.isHidden)
+										.map((affix) => (
+											<div
+												key={affix.id}
+												className='border-b border-stone-800 py-3 last:border-0'
+											>
+												<h4 className='mb-1 text-xs font-semibold text-purple-300'>
+													{affix.name}
+												</h4>
+												<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+													<ReactMarkdown>{affix.desc}</ReactMarkdown>
+												</div>
 											</div>
-										</div>
-									))}
-								{isDm && !selectedItem.isActive && (
-									<p className='mt-3 text-xs text-stone-500'>
-										此商品目前已停用。
-									</p>
-								)}
+										))}
 								{selectedItem.requiresApproval && (
 									<p className='mt-3 text-xs text-purple-300'>
 										此商品購買需要 DM 審查。
@@ -683,7 +717,6 @@ function CampaignShopDetail() {
 					campaignId={campaignId}
 					shop={shop}
 					items={visibleItems}
-					isDm={isDm}
 					canManageOrders={false}
 					userId={user.id}
 					showPurchaseForm={false}

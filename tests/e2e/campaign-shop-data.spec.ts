@@ -39,6 +39,25 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			requiresApproval: false,
 			isActive: true,
 		});
+		const unidentifiedSnapshot = { ...snapshot, isIdentified: false };
+		const encodedUnidentified = converters.toDbCampaignShopItem({
+			campaignId: 'campaign-text-id',
+			shopId: 'shop-text-id',
+			itemSnapshot: unidentifiedSnapshot,
+			sourceType: 'manual',
+			sourceId: null,
+			unitPriceGp: 15,
+			stockAvailable: 1,
+			requiresApproval: false,
+			isActive: true,
+		});
+		const decodedUnidentified = converters.fromDbCampaignShopItem({
+			id: 'unidentified-shop-item',
+			...encodedUnidentified,
+			stock_reserved: 0,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-02T00:00:00Z',
+		});
 		const inventoryItem = {
 			...snapshot,
 			id: 'item-text-id',
@@ -309,6 +328,8 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		);
 		return {
 			encoded,
+			encodedUnidentified,
+			decodedUnidentified,
 			encodedInventory,
 			decodedInventory,
 			decodedInventoryWithLegacyMaxCharges,
@@ -418,6 +439,11 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			},
 		},
 	});
+	expect(data.encodedUnidentified.item_snapshot).toMatchObject({
+		is_identified: false,
+	});
+	expect(data.decodedUnidentified.itemSnapshot.isIdentified).toBe(false);
+	expect(data.legacyItem.itemSnapshot.isIdentified).toBe(true);
 	expect(data.decodedItem.itemSnapshot).toMatchObject({
 		subTypes: ['軍用武器'],
 		valueGp: 15,

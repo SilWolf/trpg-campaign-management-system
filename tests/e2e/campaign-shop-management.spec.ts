@@ -72,6 +72,48 @@ test('DM 可從鍛造工坊選擇來源並加入商店', async ({ page }) => {
 	await expect(page.getByTestId('shop-item-card')).toHaveCount(3);
 });
 
+test('DM 可將商品設定為未鑑定狀態並保存到商店快照', async ({ page }) => {
+	await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+	});
+	await seedAuthenticatedSession(page);
+	const writes: { itemSnapshot?: { is_identified?: boolean } }[] = [];
+	page.on('request', (request) => {
+		if (
+			request.method() === 'PATCH' &&
+			request.url().includes('/rest/v1/campaign_shop_items')
+		) {
+			writes.push(
+				request.postDataJSON() as {
+					item_snapshot?: { is_identified?: boolean };
+				},
+			);
+		}
+	});
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+	await page.getByRole('button', { name: '編輯治療藥水', exact: true }).click();
+
+	const unidentifiedCheckbox = page.getByRole('checkbox', {
+		name: '以未鑑定狀態列出',
+	});
+	await expect(unidentifiedCheckbox).not.toBeChecked();
+	await unidentifiedCheckbox.check();
+	await page
+		.getByTestId('shop-item-editor')
+		.getByRole('button', { name: '儲存商品' })
+		.click();
+
+	await expect(
+		page.getByRole('status').filter({ hasText: '商品設定已更新' }),
+	).toBeVisible();
+	expect(writes).toContainEqual(
+		expect.objectContaining({
+			item_snapshot: expect.objectContaining({ is_identified: false }),
+		}),
+	);
+});
+
 test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async ({
 	page,
 }) => {

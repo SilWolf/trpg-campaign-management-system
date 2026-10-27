@@ -51,6 +51,7 @@ export async function mockSupabase(
 		campaignShopItemIcon?: string;
 		campaignShopItemRarity?: Rarity;
 		campaignShopItemEffects?: string;
+		campaignShopItemUnidentified?: boolean;
 		campaignShopItemCount?: number;
 		campaignShopWalletGp?: number;
 		campaignShopWalletAccess?: { public: number; private: number };
@@ -93,6 +94,9 @@ export async function mockSupabase(
 		category: 'Consumable',
 		rarity: options.campaignShopItemRarity ?? 'Common',
 		icon: options.campaignShopItemIcon ?? 'FlaskConical',
+		...(options.campaignShopItemUnidentified
+			? { is_identified: false }
+			: {}),
 		...(options.campaignShopItemEffects
 			? { effects: options.campaignShopItemEffects }
 			: {}),
@@ -118,7 +122,13 @@ export async function mockSupabase(
 					id: 'shop-item-review',
 					campaign_id: 'settings-campaign',
 					shop_id: 'mock-shop-1',
-					item_snapshot: { ...shopItemSnapshot, name: '治療藥水（需審查）' },
+					item_snapshot: {
+						...shopItemSnapshot,
+						name: '治療藥水（需審查）',
+						...(options.campaignShopItemUnidentified
+							? { is_identified: true }
+							: {}),
+					},
 					source_type: 'manual',
 					source_id: null,
 					unit_price_gp: 3,
@@ -143,6 +153,9 @@ export async function mockSupabase(
 						item_snapshot: {
 							...shopItemSnapshot,
 							name: `測試商品 ${index + 3}`,
+							...(options.campaignShopItemUnidentified
+								? { is_identified: true }
+								: {}),
 						},
 						source_type: 'manual',
 						source_id: null,
