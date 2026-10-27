@@ -150,8 +150,10 @@ type ArmorItem = Omit<ItemBase, 'category'> & {
 1. 已更新 `src/lib/supabase.ts` 的 `DbInventoryItem`、`DbBlacksmithItem`、`DbCampaignShopItemSnapshot` 及雙向轉換器；canonical JSON 與舊 snake_case DB 投影有明確轉換邊界。
 2. 新資料庫 canonical 欄位使用 `item_base jsonb`，內容與前端 `AllItem` 同為 camelCase；既有扁平欄位暫留為相容投影，避免舊 RPC／客戶端立即失效。Weapon／Armor 的必填屬性存在 canonical JSON 的 `weaponProperties`／`armorProperties` 中。
 3. 已同步 `blacksmith_items`、`inventory_items` 的新欄位 schema，以及商店 `item_snapshot` 寫入格式；商店與訂單快照仍是值複製，不新增來源表外鍵。
-4. 已新增 [`20261028000000_item_base_unification.sql`](../supabase/migrations/20261028000000_item_base_unification.sql)：新增 nullable `item_base`、更新分類檢查、讓舊寫入以 trigger 產生相容 canonical base，並更新範例建團、鍛造匯入與商店購買 RPC 一併保存新結構。Migration 不回填或逐列轉換既有資料，符合相關資料表已清空的假設；若目標環境不符合此前提，必須先由維護者確認並另行規劃資料修復。
-5. 已統一轉換器的可選文字、圖示、最大充能及附魔陣列處理；canonical 格式錯誤及缺少武器傷害／護甲 AC 時會明確回報，不以 `Misc` 或空特化欄位偽裝成功。
+4. 已新增 [`20261028000000_item_base_unification.sql`](../supabase/migrations/20261028000000_item_base_unification.sql)：新增 nullable `item_base`、更新分類檢查、讓舊格式 insert／update 以 trigger 維持 canonical base，並更新範例建團、鍛造匯入與商店購買 RPC 一併保存新結構。Migration 以 `is_valid_item_base` 約束 canonical JSON 格式；必要函式權限涵蓋 authenticated 寫入及 service-role RPC。Migration 不回填或逐列轉換既有資料，符合相關資料表已清空的假設；若目標環境不符合此前提，必須先由維護者確認並另行規劃資料修復。
+5. 已統一轉換器的可選文字、圖示、最大充能及附魔陣列處理；canonical 格式錯誤及缺少武器傷害／護甲 AC 時會明確回報，不以 `Misc` 或空特化欄位偽裝成功。舊 `Consumable` 分類轉成 `AdventureGear` 時保留 `isConsumable` 語意，讀取 canonical `maxCharges` 時也不會被舊投影覆寫。
+6. 已擴充商店序列化測試，涵蓋 Weapon／Armor／Potion canonical round-trip、分數 GP，以及新 canonical 欄位優先於舊投影。
+7. 本機驗證通過：`npm run typecheck`、`npm run build`、`npm run test:e2e -- tests/e2e/campaign-shop-data.spec.ts`（2 項通過）；`npm run lint` 0 errors，另有一個未修改商店路由的既存 unused-eslint-disable warning。資料庫 migration 尚未於 Supabase 環境執行或驗收。
 
 ### 階段四：商店與刷新流程遷移
 

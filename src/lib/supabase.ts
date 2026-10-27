@@ -194,9 +194,7 @@ function createLegacyItemBase(row: {
 		maxCharges: Number(row.max_charges ?? 0),
 		isEquippable: Boolean(row.is_equippable),
 		isConsumable:
-			row.is_consumable !== undefined && row.is_consumable !== null
-				? Boolean(row.is_consumable)
-				: row.category === 'Consumable',
+			Boolean(row.is_consumable) || row.category === 'Consumable',
 		isRequireAttunement: Boolean(row.requires_attunement),
 	};
 	if (category === 'Weapon') {
@@ -652,7 +650,7 @@ export const fromDbItem = (row: DbInventoryItem): InventoryItem => {
 		slot: Number(row.slot),
 		icon: base.icon ?? 'Package',
 		flavor: base.flavor ?? '',
-		maxCharges: Number(row.max_charges ?? base.maxCharges ?? 0),
+		maxCharges: Number(base.maxCharges ?? row.max_charges ?? 0),
 		quantity: Number(row.quantity),
 		equipped: Boolean(row.equipped),
 		attuned: Boolean(row.attuned),

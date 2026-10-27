@@ -57,6 +57,77 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		};
 		const encodedInventory = converters.toDbItem(inventoryItem);
 		const decodedInventory = converters.fromDbItem(encodedInventory);
+		const decodedInventoryWithLegacyMaxCharges = converters.fromDbItem({
+			...encodedInventory,
+			max_charges: 9,
+		});
+		const armorSnapshot = {
+			name: '鱗甲',
+			category: 'Armor' as const,
+			subTypes: ['中型護甲'],
+			rarity: 'Uncommon' as const,
+			icon: 'Shield',
+			armorProperties: { ac: '14 + 敏捷調整值（最高 2）' },
+			weight: 45,
+			valueGp: 123.45,
+			isRequireAttunement: false,
+			isHomebrew: true,
+			maxCharges: 0,
+			effects: '',
+			flavor: '',
+			dmNotes: '',
+			isEquippable: true,
+			isConsumable: false,
+			isImportant: false,
+			affixes: [],
+		};
+		const encodedArmor = converters.toDbCampaignShopItem({
+			campaignId: 'campaign-text-id',
+			shopId: 'shop-text-id',
+			itemSnapshot: armorSnapshot,
+			sourceType: 'manual',
+			sourceId: null,
+			unitPriceGp: 123.45,
+			stockAvailable: 1,
+			requiresApproval: false,
+			isActive: true,
+		});
+		const decodedArmor = converters.fromDbCampaignShopItem({
+			id: 'armor-shop-item',
+			...encodedArmor,
+			stock_reserved: 0,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-02T00:00:00Z',
+		});
+		const potionSnapshot = {
+			...armorSnapshot,
+			name: '治療藥水',
+			category: 'Potion' as const,
+			subTypes: ['藥水'],
+			weight: 0.5,
+			valueGp: 2.5,
+			isEquippable: false,
+			isConsumable: true,
+			armorProperties: undefined,
+		};
+		const encodedPotion = converters.toDbCampaignShopItem({
+			campaignId: 'campaign-text-id',
+			shopId: 'shop-text-id',
+			itemSnapshot: potionSnapshot,
+			sourceType: 'manual',
+			sourceId: null,
+			unitPriceGp: 2.5,
+			stockAvailable: 2,
+			requiresApproval: false,
+			isActive: true,
+		});
+		const decodedPotion = converters.fromDbCampaignShopItem({
+			id: 'potion-shop-item',
+			...encodedPotion,
+			stock_reserved: 0,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-02T00:00:00Z',
+		});
 		const blacksmithTemplate = {
 			...snapshot,
 			id: 'template-text-id',
@@ -154,6 +225,25 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			created_at: '2026-01-01T00:00:00Z',
 			updated_at: '2026-01-01T00:00:00Z',
 		});
+		const legacyConsumableItem = converters.fromDbCampaignShopItem({
+			id: 'legacy-consumable-item-id',
+			campaign_id: 'campaign-text-id',
+			shop_id: 'shop-text-id',
+			item_snapshot: {
+				name: '舊消耗品',
+				category: 'Consumable',
+				is_consumable: false,
+			},
+			source_type: 'manual',
+			source_id: null,
+			unit_price_gp: 1,
+			stock_available: 1,
+			stock_reserved: 0,
+			requires_approval: false,
+			is_active: true,
+			created_at: '2026-01-01T00:00:00Z',
+			updated_at: '2026-01-01T00:00:00Z',
+		});
 		const statuses = [
 			'completed',
 			'pending',
@@ -184,6 +274,11 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			encoded,
 			encodedInventory,
 			decodedInventory,
+			decodedInventoryWithLegacyMaxCharges,
+			encodedArmor,
+			decodedArmor,
+			encodedPotion,
+			decodedPotion,
 			encodedBlacksmith,
 			decodedBlacksmith,
 			encodedShop,
@@ -193,6 +288,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			invalidStockError,
 			decodedItem,
 			legacyItem,
+			legacyConsumableItem,
 			decodedStatuses,
 			decodedCheckoutId: converters.fromDbCampaignShopOrder({
 				id: 'order-in-checkout',
@@ -282,6 +378,26 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			properties: ['Versatile'],
 		},
 	});
+	expect(data.decodedInventoryWithLegacyMaxCharges.maxCharges).toBe(0);
+	expect(data.encodedArmor.item_snapshot?.item_base).toMatchObject({
+		category: 'Armor',
+		valueGp: 123.45,
+		armorProperties: { ac: '14 + 敏捷調整值（最高 2）' },
+	});
+	expect(data.decodedArmor.itemSnapshot).toMatchObject({
+		category: 'Armor',
+		subTypes: ['中型護甲'],
+		valueGp: 123.45,
+		armorProperties: { ac: '14 + 敏捷調整值（最高 2）' },
+	});
+	expect(data.encodedPotion.item_snapshot?.item_base).toMatchObject({
+		category: 'Potion',
+		isConsumable: true,
+	});
+	expect(data.decodedPotion.itemSnapshot).toMatchObject({
+		category: 'Potion',
+		isConsumable: true,
+	});
 	expect(data.decodedBlacksmith).toMatchObject({
 		id: 'template-text-id',
 		category: 'Weapon',
@@ -306,6 +422,10 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			valueGp: 0,
 			affixes: [],
 		},
+	});
+	expect(data.legacyConsumableItem.itemSnapshot).toMatchObject({
+		category: 'AdventureGear',
+		isConsumable: true,
 	});
 	expect(data.decodedStatuses).toEqual([
 		'completed',

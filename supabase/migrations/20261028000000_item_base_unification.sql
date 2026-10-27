@@ -61,8 +61,147 @@ SET search_path = pg_catalog, public
 AS $populate_legacy_item_base$
 DECLARE
 	v_category text;
+	v_base jsonb;
 	v_properties jsonb;
 BEGIN
+	IF TG_OP = 'UPDATE'
+		AND NEW.item_base IS NOT DISTINCT FROM OLD.item_base
+		AND NEW.item_base IS NOT NULL THEN
+		v_base := OLD.item_base;
+		IF NEW.name IS DISTINCT FROM OLD.name THEN
+			v_base := jsonb_set(v_base, '{name}', to_jsonb(NEW.name), true);
+		END IF;
+		IF NEW.category IS DISTINCT FROM OLD.category THEN
+			v_category := CASE
+				WHEN NEW.category = 'Consumable' THEN 'AdventureGear'
+				ELSE NEW.category
+			END;
+			v_base := (v_base - 'weaponProperties' - 'armorProperties')
+				|| jsonb_build_object('category', v_category);
+		END IF;
+		IF NEW.sub_type IS DISTINCT FROM OLD.sub_type THEN
+			v_base := jsonb_set(
+				v_base,
+				'{subTypes}',
+				CASE
+					WHEN COALESCE(NEW.sub_type, '') = '' THEN '[]'::jsonb
+					ELSE jsonb_build_array(NEW.sub_type)
+				END,
+				true
+			);
+		END IF;
+		IF NEW.rarity IS DISTINCT FROM OLD.rarity THEN
+			v_base := jsonb_set(v_base, '{rarity}', to_jsonb(NEW.rarity), true);
+		END IF;
+		IF NEW.icon IS DISTINCT FROM OLD.icon THEN
+			v_base := jsonb_set(v_base, '{icon}', to_jsonb(NEW.icon), true);
+		END IF;
+		IF NEW.weight IS DISTINCT FROM OLD.weight THEN
+			v_base := jsonb_set(v_base, '{weight}', to_jsonb(NEW.weight), true);
+		END IF;
+		IF NEW.value_gp IS DISTINCT FROM OLD.value_gp THEN
+			v_base := jsonb_set(v_base, '{valueGp}', to_jsonb(NEW.value_gp), true);
+		END IF;
+		IF NEW.affixes IS DISTINCT FROM OLD.affixes THEN
+			v_base := jsonb_set(
+				v_base,
+				'{affixes}',
+				COALESCE(NEW.affixes, '[]'::jsonb),
+				true
+			);
+		END IF;
+		IF NEW.effects IS DISTINCT FROM OLD.effects THEN
+			v_base := jsonb_set(v_base, '{effects}', to_jsonb(NEW.effects), true);
+		END IF;
+		IF NEW.flavor IS DISTINCT FROM OLD.flavor THEN
+			v_base := jsonb_set(v_base, '{flavor}', to_jsonb(NEW.flavor), true);
+		END IF;
+		IF NEW.dm_notes IS DISTINCT FROM OLD.dm_notes THEN
+			v_base := jsonb_set(v_base, '{dmNotes}', to_jsonb(NEW.dm_notes), true);
+		END IF;
+		IF NEW.max_charges IS DISTINCT FROM OLD.max_charges THEN
+			v_base := jsonb_set(
+				v_base,
+				'{maxCharges}',
+				to_jsonb(NEW.max_charges),
+				true
+			);
+		END IF;
+		IF NEW.is_equippable IS DISTINCT FROM OLD.is_equippable THEN
+			v_base := jsonb_set(
+				v_base,
+				'{isEquippable}',
+				to_jsonb(NEW.is_equippable),
+				true
+			);
+		END IF;
+		IF NEW.is_consumable IS DISTINCT FROM OLD.is_consumable
+			OR NEW.category IS DISTINCT FROM OLD.category THEN
+			v_base := jsonb_set(
+				v_base,
+				'{isConsumable}',
+				to_jsonb(NEW.is_consumable OR NEW.category = 'Consumable'),
+				true
+			);
+		END IF;
+		IF NEW.requires_attunement IS DISTINCT FROM OLD.requires_attunement THEN
+			v_base := jsonb_set(
+				v_base,
+				'{isRequireAttunement}',
+				to_jsonb(NEW.requires_attunement),
+				true
+			);
+		END IF;
+
+		IF v_base ->> 'category' = 'Weapon'
+			AND (
+				NEW.category IS DISTINCT FROM OLD.category
+				OR NEW.damage IS DISTINCT FROM OLD.damage
+				OR NEW.mastery IS DISTINCT FROM OLD.mastery
+			) THEN
+			v_properties := COALESCE(
+				v_base -> 'weaponProperties',
+				'{"properties": []}'::jsonb
+			);
+			v_properties := jsonb_set(
+				v_properties,
+				'{damage}',
+				to_jsonb(NEW.damage),
+				true
+			);
+			IF NEW.mastery IS NULL OR NEW.mastery = 'None' THEN
+				v_properties := v_properties - 'mastery';
+			ELSE
+				v_properties := jsonb_set(
+					v_properties,
+					'{mastery}',
+					to_jsonb(NEW.mastery),
+					true
+				);
+			END IF;
+			v_base := jsonb_set(
+				v_base,
+				'{weaponProperties}',
+				v_properties,
+				true
+			);
+		ELSIF v_base ->> 'category' = 'Armor'
+			AND (
+				NEW.category IS DISTINCT FROM OLD.category
+				OR NEW.ac IS DISTINCT FROM OLD.ac
+			) THEN
+			v_base := jsonb_set(
+				v_base,
+				'{armorProperties}',
+				jsonb_build_object('ac', NEW.ac),
+				true
+			);
+		END IF;
+
+		NEW.item_base := v_base;
+		RETURN NEW;
+	END IF;
+
 	IF NEW.item_base IS NOT NULL THEN
 		RETURN NEW;
 	END IF;
@@ -88,7 +227,7 @@ BEGIN
 		'dmNotes', COALESCE(NEW.dm_notes, ''),
 		'maxCharges', NEW.max_charges,
 		'isEquippable', NEW.is_equippable,
-		'isConsumable', NEW.is_consumable,
+		'isConsumable', NEW.is_consumable OR NEW.category = 'Consumable',
 		'isRequireAttunement', NEW.requires_attunement
 	);
 
@@ -114,11 +253,19 @@ END
 $populate_legacy_item_base$;
 
 CREATE TRIGGER inventory_items_populate_item_base
-	BEFORE INSERT OR UPDATE OF item_base ON public.inventory_items
+	BEFORE INSERT OR UPDATE OF
+		item_base, name, category, sub_type, rarity, icon, damage, mastery, ac,
+		weight, value_gp, requires_attunement, max_charges, effects, flavor,
+		dm_notes, is_equippable, is_consumable, affixes
+	ON public.inventory_items
 	FOR EACH ROW EXECUTE FUNCTION public.populate_legacy_item_base();
 
 CREATE TRIGGER blacksmith_items_populate_item_base
-	BEFORE INSERT OR UPDATE OF item_base ON public.blacksmith_items
+	BEFORE INSERT OR UPDATE OF
+		item_base, name, category, sub_type, rarity, icon, damage, mastery, ac,
+		weight, value_gp, requires_attunement, max_charges, effects, flavor,
+		dm_notes, is_equippable, is_consumable, affixes
+	ON public.blacksmith_items
 	FOR EACH ROW EXECUTE FUNCTION public.populate_legacy_item_base();
 
 CREATE OR REPLACE FUNCTION public.is_valid_item_base(p_item_base jsonb)
@@ -244,8 +391,18 @@ $is_valid_item_base$;
 
 REVOKE ALL ON FUNCTION public.is_valid_item_base(jsonb)
 	FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.is_valid_item_base(jsonb)
+GRANT EXECUTE ON FUNCTION public.is_valid_blacksmith_affixes(jsonb)
 	TO service_role;
+GRANT EXECUTE ON FUNCTION public.is_valid_item_base(jsonb)
+	TO authenticated, service_role;
+
+ALTER TABLE public.inventory_items
+	ADD CONSTRAINT inventory_items_item_base_valid_check
+	CHECK (item_base IS NULL OR public.is_valid_item_base(item_base));
+
+ALTER TABLE public.blacksmith_items
+	ADD CONSTRAINT blacksmith_items_item_base_valid_check
+	CHECK (item_base IS NULL OR public.is_valid_item_base(item_base));
 
 CREATE OR REPLACE FUNCTION public.create_campaign_from_seed(
 	p_name text,
