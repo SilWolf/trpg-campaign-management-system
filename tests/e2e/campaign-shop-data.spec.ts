@@ -54,10 +54,22 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		const decodedUnidentified = converters.fromDbCampaignShopItem({
 			id: 'unidentified-shop-item',
 			...encodedUnidentified,
+			is_identified: false,
 			stock_reserved: 0,
 			created_at: '2026-01-01T00:00:00Z',
 			updated_at: '2026-01-02T00:00:00Z',
 		});
+		const revealedUnidentified = converters.fromDbCampaignShopItem(
+			{
+				id: 'unidentified-shop-item',
+				...encodedUnidentified,
+				is_identified: false,
+				stock_reserved: 0,
+				created_at: '2026-01-01T00:00:00Z',
+				updated_at: '2026-01-02T00:00:00Z',
+			},
+			true,
+		);
 		const inventoryItem = {
 			...snapshot,
 			id: 'item-text-id',
@@ -330,6 +342,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			encoded,
 			encodedUnidentified,
 			decodedUnidentified,
+			revealedUnidentified,
 			encodedInventory,
 			decodedInventory,
 			decodedInventoryWithLegacyMaxCharges,
@@ -431,18 +444,24 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		sub_type: '軍用武器',
 		value_gp: 15,
 		is_equippable: true,
-		item_base: {
-			weaponProperties: {
-				damage: '1d8',
-				mastery: 'Sap',
-				properties: ['Versatile'],
-			},
+		weaponProperties: {
+			damage: '1d8',
+			mastery: 'Sap',
+			properties: ['Versatile'],
 		},
 	});
+	expect(data.encoded.item_snapshot).not.toHaveProperty('item_base');
 	expect(data.encodedUnidentified.item_snapshot).toMatchObject({
 		is_identified: false,
+		weaponProperties: { damage: '1d8', properties: ['Versatile'] },
 	});
+	expect(data.encodedUnidentified.item_snapshot).not.toHaveProperty('item_base');
 	expect(data.decodedUnidentified.itemSnapshot.isIdentified).toBe(false);
+	expect(data.revealedUnidentified.itemSnapshot).toMatchObject({
+		isIdentified: false,
+		name: '長劍',
+		weaponProperties: { damage: '1d8', properties: ['Versatile'] },
+	});
 	expect(data.legacyItem.itemSnapshot.isIdentified).toBe(true);
 	expect(data.decodedItem.itemSnapshot).toMatchObject({
 		subTypes: ['軍用武器'],
@@ -474,21 +493,23 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		},
 	});
 	expect(data.decodedInventoryWithLegacyMaxCharges.maxCharges).toBe(0);
-	expect(data.encodedArmor.item_snapshot?.item_base).toMatchObject({
+	expect(data.encodedArmor.item_snapshot).toMatchObject({
 		category: 'Armor',
 		valueGp: 123.45,
 		armorProperties: { ac: '14 + 敏捷調整值（最高 2）' },
 	});
+	expect(data.encodedArmor.item_snapshot).not.toHaveProperty('item_base');
 	expect(data.decodedArmor.itemSnapshot).toMatchObject({
 		category: 'Armor',
 		subTypes: ['中型護甲'],
 		valueGp: 123.45,
 		armorProperties: { ac: '14 + 敏捷調整值（最高 2）' },
 	});
-	expect(data.encodedPotion.item_snapshot?.item_base).toMatchObject({
+	expect(data.encodedPotion.item_snapshot).toMatchObject({
 		category: 'Potion',
 		isConsumable: true,
 	});
+	expect(data.encodedPotion.item_snapshot).not.toHaveProperty('item_base');
 	expect(data.decodedPotion.itemSnapshot).toMatchObject({
 		category: 'Potion',
 		isConsumable: true,

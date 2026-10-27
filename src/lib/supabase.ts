@@ -396,14 +396,21 @@ export interface DbCampaignShopItemSnapshot {
 	is_important?: boolean | null;
 	is_identified?: boolean | null;
 	affixes?: AllItem['affixes'] | null;
+	valueGp?: number;
+	isEquippable?: boolean;
+	isConsumable?: boolean;
+	isRequireAttunement?: boolean;
+	weaponProperties?: Extract<AllItem, { category: 'Weapon' }>['weaponProperties'];
+	armorProperties?: Extract<AllItem, { category: 'Armor' }>['armorProperties'];
 	item_base?: unknown;
 }
 
 const fromDbCampaignShopItemSnapshot = (
 	snapshot: Partial<DbCampaignShopItemSnapshot> | null | undefined,
 	isIdentified = snapshot?.is_identified !== false,
+	revealUnidentifiedDefinition = false,
 ): CampaignShopItemSnapshot => {
-	if (!isIdentified) {
+	if (!isIdentified && !revealUnidentifiedDefinition) {
 		const category = ITEM_BASE_CATEGORIES.includes(
 			snapshot?.category as ItemBaseCategory,
 		)
@@ -449,34 +456,35 @@ const fromDbCampaignShopItemSnapshot = (
 		}
 		return { ...common, category };
 	}
-	const canonical = snapshot?.item_base == null
-		? null
-		: readCanonicalItemBase(snapshot.item_base);
+	const canonical =
+		snapshot?.item_base == null
+			? readCanonicalItemBase(snapshot)
+			: readCanonicalItemBase(snapshot.item_base);
 	if (snapshot?.item_base != null && !canonical) {
 		throw new Error('商店快照中的 item_base 格式無效。');
 	}
-	const base =
-		canonical ??
-		createLegacyItemBase({
-			name: snapshot?.name ?? '',
-			category: snapshot?.category ?? 'Misc',
-			sub_type: snapshot?.sub_type,
-			rarity: snapshot?.rarity,
-			icon: snapshot?.icon,
-			damage: snapshot?.damage,
-			mastery: snapshot?.mastery,
-			ac: snapshot?.ac,
-			weight: snapshot?.weight,
-			value_gp: snapshot?.value_gp,
-			requires_attunement: snapshot?.requires_attunement,
-			max_charges: snapshot?.max_charges,
-			effects: snapshot?.effects,
-			flavor: snapshot?.flavor,
-			dm_notes: snapshot?.dm_notes,
-			is_equippable: snapshot?.is_equippable,
-			is_consumable: snapshot?.is_consumable,
-			affixes: snapshot?.affixes,
-		});
+	const base = canonical
+		? serializeItemBase(canonical)
+		: createLegacyItemBase({
+				name: snapshot?.name ?? '',
+				category: snapshot?.category ?? 'Misc',
+				sub_type: snapshot?.sub_type,
+				rarity: snapshot?.rarity,
+				icon: snapshot?.icon,
+				damage: snapshot?.damage,
+				mastery: snapshot?.mastery,
+				ac: snapshot?.ac,
+				weight: snapshot?.weight,
+				value_gp: snapshot?.value_gp,
+				requires_attunement: snapshot?.requires_attunement,
+				max_charges: snapshot?.max_charges,
+				effects: snapshot?.effects,
+				flavor: snapshot?.flavor,
+				dm_notes: snapshot?.dm_notes,
+				is_equippable: snapshot?.is_equippable,
+				is_consumable: snapshot?.is_consumable,
+				affixes: snapshot?.affixes,
+			});
 	return {
 		...base,
 		icon: base.icon ?? 'Package',
@@ -484,36 +492,38 @@ const fromDbCampaignShopItemSnapshot = (
 		maxCharges: base.maxCharges ?? 0,
 		isHomebrew: Boolean(snapshot?.is_homebrew),
 		isImportant: Boolean(snapshot?.is_important),
-		isIdentified: snapshot?.is_identified !== false,
+		isIdentified,
 	};
 };
 
 const toDbCampaignShopItemSnapshot = (
 	snapshot: CampaignShopItemSnapshot,
-): DbCampaignShopItemSnapshot => ({
-	name: snapshot.name,
-	category: legacyDbCategory(snapshot),
-	sub_type: snapshot.subTypes[0] ?? '',
-	rarity: snapshot.rarity,
-	icon: snapshot.icon,
-	damage: getItemDamage(snapshot),
-	mastery: getItemWeaponMastery(snapshot) ?? 'None',
-	ac: getItemArmorClass(snapshot),
-	weight: snapshot.weight,
-	value_gp: snapshot.valueGp,
-	requires_attunement: snapshot.isRequireAttunement,
-	is_homebrew: snapshot.isHomebrew,
-	max_charges: snapshot.maxCharges,
-	effects: snapshot.effects,
-	flavor: snapshot.flavor,
-	dm_notes: snapshot.dmNotes,
-	is_equippable: snapshot.isEquippable,
-	is_consumable: snapshot.isConsumable,
-	is_important: Boolean(snapshot.isImportant),
-	is_identified: snapshot.isIdentified !== false,
-	affixes: snapshot.affixes,
-	item_base: serializeItemBase(snapshot),
-});
+): DbCampaignShopItemSnapshot => {
+	const legacyProjection: DbCampaignShopItemSnapshot = {
+		name: snapshot.name,
+		category: legacyDbCategory(snapshot),
+		sub_type: snapshot.subTypes[0] ?? '',
+		rarity: snapshot.rarity,
+		icon: snapshot.icon,
+		damage: getItemDamage(snapshot),
+		mastery: getItemWeaponMastery(snapshot) ?? 'None',
+		ac: getItemArmorClass(snapshot),
+		weight: snapshot.weight,
+		value_gp: snapshot.valueGp,
+		requires_attunement: snapshot.isRequireAttunement,
+		is_homebrew: snapshot.isHomebrew,
+		max_charges: snapshot.maxCharges,
+		effects: snapshot.effects,
+		flavor: snapshot.flavor,
+		dm_notes: snapshot.dmNotes,
+		is_equippable: snapshot.isEquippable,
+		is_consumable: snapshot.isConsumable,
+		is_important: Boolean(snapshot.isImportant),
+		is_identified: snapshot.isIdentified !== false,
+		affixes: snapshot.affixes,
+	};
+	return Object.assign(legacyProjection, serializeItemBase(snapshot));
+};
 
 export const toDbCampaignShopItem = (
 	item: Pick<
@@ -547,6 +557,7 @@ export const toDbCampaignShopItem = (
 
 export const fromDbCampaignShopItem = (
 	row: DbCampaignShopItem,
+	revealUnidentifiedDefinition = false,
 ): CampaignShopItem => ({
 	id: row.id,
 	campaignId: row.campaign_id,
@@ -554,6 +565,7 @@ export const fromDbCampaignShopItem = (
 	itemSnapshot: fromDbCampaignShopItemSnapshot(
 		row.item_snapshot,
 		row.is_identified,
+		revealUnidentifiedDefinition,
 	),
 	isIdentified: Boolean(row.is_identified),
 	unitPriceGp: Number(row.unit_price_gp),
@@ -564,6 +576,11 @@ export const fromDbCampaignShopItem = (
 	createdAt: row.created_at,
 	updatedAt: row.updated_at,
 });
+
+export interface DbCampaignShopItemDefinition {
+	item_id: string;
+	item_snapshot: Partial<DbCampaignShopItemSnapshot> | null;
+}
 
 export interface DbCampaignShopOrder {
 	id: string;

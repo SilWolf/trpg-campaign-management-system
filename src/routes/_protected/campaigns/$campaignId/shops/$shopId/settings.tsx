@@ -341,8 +341,8 @@ function CampaignShopsPage() {
 			setShopItems([]);
 			return;
 		}
-		setShopItems(await loadCampaignShopItems(campaignId, shopId));
-	}, [campaignId, shopId]);
+		setShopItems(await loadCampaignShopItems(campaignId, shopId, isDm));
+	}, [campaignId, isDm, shopId]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -380,7 +380,7 @@ function CampaignShopsPage() {
 			};
 		}
 		Promise.resolve()
-			.then(() => loadCampaignShopItems(campaignId, shopId))
+			.then(() => loadCampaignShopItems(campaignId, shopId, isDm))
 			.then((nextItems) => {
 				if (isMounted) setShopItems(nextItems);
 			})
@@ -392,7 +392,7 @@ function CampaignShopsPage() {
 		return () => {
 			isMounted = false;
 		};
-	}, [campaignId, isGuest, shopId]);
+	}, [campaignId, isDm, isGuest, shopId]);
 
 	useEffect(() => {
 		if (!isDm || !user?.id || isGuest) return;
@@ -523,10 +523,6 @@ function CampaignShopsPage() {
 	};
 
 	const startItemEdit = (item: CampaignShopItem) => {
-		if (!item.isIdentified) {
-			toast.error('未鑑定商品無法在客戶端載入真實定義；請刪除後重新新增。');
-			return;
-		}
 		setEditingItem(item);
 		setItemForm(itemFormFromSnapshot(item.itemSnapshot, item));
 		setDeleteConfirmationItemId(null);
@@ -978,6 +974,11 @@ function CampaignShopsPage() {
 																		<h3 className='truncate font-serif text-sm font-bold text-stone-100'>
 																			{item.itemSnapshot.name}
 																		</h3>
+																		{!item.isIdentified && (
+																			<span className='text-[11px] font-semibold text-purple-300'>
+																				未鑑定
+																			</span>
+																		)}
 																		<p className='mt-1 truncate text-xs text-stone-500'>
 																			{
 																				CATEGORY_LABELS[
@@ -1115,6 +1116,11 @@ function CampaignShopsPage() {
 														<h3 className='font-serif text-xl font-bold text-amber-100'>
 															{selectedItem.itemSnapshot.name}
 														</h3>
+														{!selectedItem.isIdentified && (
+															<span className='mt-1 inline-block text-xs font-semibold text-purple-300'>
+																未鑑定
+															</span>
+														)}
 														<p className='mt-1 text-xs text-stone-400'>
 															{
 																CATEGORY_LABELS[

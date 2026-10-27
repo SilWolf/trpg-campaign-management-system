@@ -78,7 +78,7 @@ test('DM 可將商品設定為未鑑定狀態並保存到商店快照', async ({
 		campaignShopSeed: true,
 	});
 	await seedAuthenticatedSession(page);
-	const writes: { p_item_snapshot?: { is_identified?: boolean } }[] = [];
+	const writes: { p_item_snapshot?: Record<string, unknown> }[] = [];
 	page.on('request', (request) => {
 		if (
 			request.method() === 'POST' &&
@@ -86,7 +86,7 @@ test('DM 可將商品設定為未鑑定狀態並保存到商店快照', async ({
 		) {
 			writes.push(
 				request.postDataJSON() as {
-					p_item_snapshot?: { is_identified?: boolean };
+					p_item_snapshot?: Record<string, unknown>;
 				},
 			);
 		}
@@ -112,6 +112,49 @@ test('DM 可將商品設定為未鑑定狀態並保存到商店快照', async ({
 			p_item_snapshot: expect.objectContaining({ is_identified: false }),
 		}),
 	);
+	expect(writes[0].p_item_snapshot).not.toHaveProperty('item_base');
+});
+
+test('DM 可在商店設定查看並編輯未鑑定商品的真實定義', async ({ page }) => {
+	await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+		campaignShopItemUnidentified: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+
+	const editButton = page.getByRole('button', {
+		name: '編輯治療藥水',
+		exact: true,
+	});
+	await expect(editButton).toBeVisible();
+	const itemCard = page.getByTestId('shop-item-card').filter({
+		hasText: '治療藥水',
+	});
+	await expect(itemCard.getByText('未鑑定', { exact: true })).toBeVisible();
+	await page.getByRole('button', { name: '查看治療藥水', exact: true }).click();
+	await expect(
+		page.getByTestId('shop-item-details').getByText('未鑑定', { exact: true }),
+	).toBeVisible();
+	await editButton.click();
+
+	await expect(page.getByLabel('商品名稱')).toHaveValue('治療藥水');
+	const unidentifiedCheckbox = page.getByRole('checkbox', {
+		name: '以未鑑定狀態列出',
+	});
+	await expect(unidentifiedCheckbox).toBeChecked();
+	await unidentifiedCheckbox.uncheck();
+	await page
+		.getByTestId('shop-item-editor')
+		.getByRole('button', { name: '儲存商品' })
+		.click();
+	await expect(
+		page.getByRole('status').filter({ hasText: '商品設定已更新' }),
+	).toBeVisible();
+	await editButton.click();
+	await expect(page.getByLabel('商品名稱')).toHaveValue('治療藥水');
+	await expect(unidentifiedCheckbox).not.toBeChecked();
 });
 
 test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async ({

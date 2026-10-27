@@ -73,7 +73,7 @@ test('玩家可用有修改權的錢包直接購買並查看公開紀錄', async
 	await expect(page.getByTestId('shop-order-row')).not.toContainText('私人暗袋');
 });
 
-test('未鑑定商品在商店與購買紀錄隱藏內容並保留未鑑定狀態', async ({
+test('未鑑定商品在商店依類別顯示名稱且隱藏稀有度與內容', async ({
 	page,
 }) => {
 	await mockSupabase(page, {
@@ -85,16 +85,30 @@ test('未鑑定商品在商店與購買紀錄隱藏內容並保留未鑑定狀�
 	await seedAuthenticatedSession(page);
 	await page.goto(shopUrl);
 
+	const itemCard = page.getByTestId('shop-item-card').first();
 	await expect(
-		page.getByRole('button', { name: '查看未鑑定的物品' }).first(),
+		page.getByRole('button', { name: '查看未鑑定的藥水' }).first(),
 	).toBeVisible();
-	await expect(page.getByTestId('shop-item-details')).toContainText(
-		'未鑑定的物品',
-	);
+	await expect(itemCard).toContainText('未鑑定的藥水');
+	await expect(itemCard.getByTestId('shop-item-rarity')).toHaveCount(0);
+	const details = page.getByTestId('shop-item-details');
+	await expect(details).toContainText('未鑑定的藥水');
+	await expect(details).not.toContainText('普通');
 	await expect(page.getByTestId('shop-item-details')).not.toContainText(
 		'治療藥水',
 	);
-	await addToCart(page, '未鑑定的物品');
+	await expect(details.locator('h3')).toHaveClass(/text-stone-100/);
+	await expect(details.locator('h3')).not.toHaveClass(/text-(emerald|blue|purple|amber)-/);
+	const detailIcon = details.getByTestId('shop-item-detail-icon');
+	await expect(detailIcon).not.toHaveClass(
+		/border-(emerald|blue|purple|amber)-/,
+	);
+	await expect(detailIcon).toHaveCSS('align-items', 'center');
+	await expect(detailIcon).toHaveCSS('justify-content', 'center');
+	const listIcon = itemCard.getByTestId('shop-item-icon');
+	await expect(listIcon).toHaveCSS('align-items', 'center');
+	await expect(listIcon).toHaveCSS('justify-content', 'center');
+	await addToCart(page, '未鑑定的藥水');
 	await openCheckout(page);
 	await expect(
 		page.getByTestId('shop-checkout-item-shop-item-direct'),
@@ -108,6 +122,23 @@ test('未鑑定商品在商店與購買紀錄隱藏內容並保留未鑑定狀�
 	await expect(page.getByRole('status')).toContainText('結帳完成');
 	await expect(page.getByTestId('shop-order-title')).toHaveText('未鑑定的物品');
 	await expect(page.getByTestId('shop-order-title')).not.toContainText('治療藥水');
+});
+
+test('DM 查看未鑑定商品時也不顯示稀有度標籤', async ({ page }) => {
+	await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+		campaignShopItemUnidentified: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(shopUrl);
+
+	await expect(page.getByTestId('shop-item-card').first()).toContainText(
+		'未鑑定的藥水',
+	);
+	await expect(
+		page.getByTestId('shop-item-card').first().getByTestId('shop-item-rarity'),
+	).toHaveCount(0);
 });
 
 test('結帳視窗顯示商品圖示、可調整數量並只送出正數商品', async ({

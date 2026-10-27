@@ -43,6 +43,14 @@ const CATEGORY_LABELS: Record<ItemBaseCategory, string> = ITEM_CATEGORY_LABELS;
 
 const ITEM_EFFECTS_MAX_HEIGHT = 200;
 
+function isUnidentifiedShopItem(item: CampaignShopItem): boolean {
+	return (
+		!item.isIdentified ||
+		item.itemSnapshot.isIdentified === false ||
+		item.itemSnapshot.name === '未鑑定物品'
+	);
+}
+
 function CampaignShopDetail() {
 	const { campaignId, shopId } = Route.useParams();
 	const { isDm } = useUserCampaignRole(campaignId);
@@ -110,14 +118,14 @@ function CampaignShopDetail() {
 		visibleItems.find((item) => item.id === selectedItemId) ??
 		visibleItems[0] ??
 		null;
-	const selectedItemIsMasked =
-		selectedItem?.isIdentified === false;
-	const selectedItemDisplayName = selectedItemIsMasked
-		? '未鑑定的物品'
+	const selectedItemIsUnidentified =
+		selectedItem !== null && isUnidentifiedShopItem(selectedItem);
+	const selectedItemDisplayName = selectedItemIsUnidentified
+		? `未鑑定的${CATEGORY_LABELS[selectedItem.itemSnapshot.category]}`
 		: (selectedItem?.itemSnapshot.name ?? '');
 	const selectedItemRarityStyle = selectedItem
-		? selectedItemIsMasked
-			? RARITY_CONFIG.Uncommon
+		? selectedItemIsUnidentified
+			? RARITY_CONFIG.Common
 			: RARITY_CONFIG[selectedItem.itemSnapshot.rarity]
 		: RARITY_CONFIG.Common;
 	const isItemEffectsExpanded =
@@ -329,10 +337,12 @@ function CampaignShopDetail() {
 								{paginatedItems.map((item) => {
 									const isSelected = selectedItem?.id === item.id;
 									const quantity = cartQuantities[item.id] ?? 0;
-									const isMasked = !isDm && !item.isIdentified;
-									const displayName = isMasked
-										? '未鑑定的物品'
-										: item.itemSnapshot.name;
+									const isUnidentified = isUnidentifiedShopItem(item);
+									const isMasked = !isDm && isUnidentified;
+									const displayName =
+										isMasked || item.itemSnapshot.name === '未鑑定物品'
+											? `未鑑定的${CATEGORY_LABELS[item.itemSnapshot.category]}`
+											: item.itemSnapshot.name;
 									const rarityStyle = isMasked
 										? RARITY_CONFIG.Uncommon
 										: RARITY_CONFIG[item.itemSnapshot.rarity];
@@ -362,7 +372,7 @@ function CampaignShopDetail() {
 											>
 												<div className='flex min-w-0 flex-1 items-center gap-2'>
 													<div
-														className={`relative h-9 w-9 shrink-0 overflow-hidden rounded border bg-stone-950 ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
+														className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded border bg-stone-950 ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
 														data-testid='shop-item-icon'
 													>
 														{isMasked ? (
@@ -386,13 +396,17 @@ function CampaignShopDetail() {
 															) : (
 																<>
 																	{CATEGORY_LABELS[item.itemSnapshot.category]}
-																	・
-																	<span
-																		data-testid='shop-item-rarity'
-																		className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
-																	>
-																		{rarityStyle.label}
-																	</span>
+																	{!isUnidentified && (
+																		<>
+																			・
+																			<span
+																				data-testid='shop-item-rarity'
+																				className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
+																			>
+																				{rarityStyle.label}
+																			</span>
+																		</>
+																	)}
 																</>
 															)}
 														</p>
@@ -528,11 +542,11 @@ function CampaignShopDetail() {
 							<>
 								<div className='flex items-start gap-3 border-b border-stone-800 pb-4'>
 									<div
-										className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-gradient-to-b ${selectedItemRarityStyle.border} ${selectedItemRarityStyle.bg} ${selectedItemRarityStyle.glow}`}
+										className={`relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-gradient-to-b ${selectedItemRarityStyle.border} ${selectedItemRarityStyle.bg} ${selectedItemRarityStyle.glow}`}
 										data-testid='shop-item-detail-icon'
 									>
-										{selectedItemIsMasked ? (
-											<HelpCircle className='h-8 w-8 text-purple-400' />
+										{selectedItemIsUnidentified ? (
+											<HelpCircle className='h-8 w-8 text-stone-400' />
 										) : (
 											<ItemIcon
 												iconName={selectedItem.itemSnapshot.icon}
@@ -542,12 +556,16 @@ function CampaignShopDetail() {
 									</div>
 									<div className='min-w-0'>
 										<h3
-											className={`font-serif text-xl font-bold ${selectedItemRarityStyle.text}`}
+											className={`font-serif text-xl font-bold ${
+												selectedItemIsUnidentified
+													? 'text-stone-100'
+													: selectedItemRarityStyle.text
+											}`}
 										>
 											{selectedItemDisplayName}
 										</h3>
 										<p className='mt-1 text-xs text-stone-400'>
-											{selectedItemIsMasked
+											{selectedItemIsUnidentified
 												? '未鑑定'
 												: `${CATEGORY_LABELS[selectedItem.itemSnapshot.category]}・${selectedItemRarityStyle.label}${
 														selectedItem.itemSnapshot.subTypes.length > 0
@@ -559,7 +577,7 @@ function CampaignShopDetail() {
 								</div>
 
 								<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
-									{!selectedItemIsMasked &&
+									{!selectedItemIsUnidentified &&
 										getItemDamage(selectedItem.itemSnapshot) && (
 											<div>
 												<p className='text-[11px] text-stone-500'>傷害</p>
@@ -568,7 +586,7 @@ function CampaignShopDetail() {
 												</p>
 											</div>
 										)}
-									{!selectedItemIsMasked &&
+									{!selectedItemIsUnidentified &&
 										getItemArmorClass(selectedItem.itemSnapshot) && (
 											<div>
 												<p className='text-[11px] text-stone-500'>護甲等級</p>
@@ -577,7 +595,7 @@ function CampaignShopDetail() {
 												</p>
 											</div>
 										)}
-									{!selectedItemIsMasked && (
+									{!selectedItemIsUnidentified && (
 										<div>
 											<p className='text-[11px] text-stone-500'>重量</p>
 											<p className='font-mono text-stone-200'>
@@ -597,7 +615,7 @@ function CampaignShopDetail() {
 											{selectedItem.stockAvailable}
 										</p>
 									</div>
-									{!selectedItemIsMasked &&
+									{!selectedItemIsUnidentified &&
 										selectedItem.itemSnapshot.isRequireAttunement && (
 											<div className='self-end text-xs text-purple-300'>
 												需同調
@@ -605,7 +623,7 @@ function CampaignShopDetail() {
 										)}
 								</div>
 
-								{!selectedItemIsMasked && selectedItem.itemSnapshot.flavor && (
+								{!selectedItemIsUnidentified && selectedItem.itemSnapshot.flavor && (
 									<div className='border-b border-stone-800 py-3'>
 										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
 											物品描述
@@ -617,7 +635,7 @@ function CampaignShopDetail() {
 										</div>
 									</div>
 								)}
-								{selectedItemIsMasked ? (
+								{selectedItemIsUnidentified ? (
 									<div className='border-b border-stone-800 py-3 text-sm italic text-purple-300'>
 										此物品散發著晦澀難明的魔法波動，無法得知其確切能力。
 									</div>
@@ -659,7 +677,7 @@ function CampaignShopDetail() {
 										)}
 									</div>
 								) : null}
-								{!selectedItemIsMasked &&
+								{!selectedItemIsUnidentified &&
 									(selectedItem.itemSnapshot.affixes ?? [])
 										.filter((affix) => !affix.isHidden)
 										.map((affix) => (

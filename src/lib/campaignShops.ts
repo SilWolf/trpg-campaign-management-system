@@ -6,6 +6,7 @@ import {
 	toDbCampaignShop,
 	toDbCampaignShopRefreshPolicy,
 	toDbCampaignShopItem,
+	type DbCampaignShopItemDefinition,
 } from '@/lib/supabase';
 import {
 	CAMPAIGN_RULEBOOKS_SOURCE,
@@ -233,6 +234,7 @@ export async function saveCampaignShopRefreshPolicy(
 export async function loadCampaignShopItems(
 	campaignId: string,
 	shopId: string,
+	revealUnidentifiedDefinitions = false,
 ): Promise<CampaignShopItem[]> {
 	const { data, error } = await requireSupabase()
 		.from('campaign_shop_items')
@@ -241,7 +243,46 @@ export async function loadCampaignShopItems(
 		.eq('shop_id', shopId)
 		.order('created_at', { ascending: true });
 	if (error) throw error;
-	return (data ?? []).map(fromDbCampaignShopItem);
+	const rows = data ?? [];
+	const unidentifiedRows = rows.filter((row) => row.is_identified === false);
+	const definitions = new Map<
+		string,
+		DbCampaignShopItemDefinition['item_snapshot']
+	>();
+	if (revealUnidentifiedDefinitions && unidentifiedRows.length > 0) {
+		const { data: definitionRows, error: definitionsError } =
+			await requireSupabase().rpc('load_campaign_shop_item_definitions', {
+				p_campaign_id: campaignId,
+				p_shop_id: shopId,
+			});
+		if (definitionsError) throw definitionsError;
+		if (!Array.isArray(definitionRows)) {
+			throw new Error('商店私有商品定義服務回傳了無效資料。');
+		}
+		for (const definition of definitionRows as DbCampaignShopItemDefinition[]) {
+			if (
+				typeof definition.item_id !== 'string' ||
+				!definition.item_snapshot ||
+				typeof definition.item_snapshot !== 'object'
+			) {
+				throw new Error('商店私有商品定義資料格式無效。');
+			}
+			definitions.set(definition.item_id, definition.item_snapshot);
+		}
+	}
+	return rows.map((row) => {
+		if (row.is_identified === false && revealUnidentifiedDefinitions) {
+			const definition = definitions.get(row.id);
+			if (!definition) {
+				throw new Error(`未鑑定商品 ${row.id} 缺少 DM 私有定義。`);
+			}
+			return fromDbCampaignShopItem(
+				{ ...row, item_snapshot: definition },
+				true,
+			);
+		}
+		return fromDbCampaignShopItem(row);
+	});
 }
 
 export async function createCampaignShopItems(
@@ -365,7 +406,14 @@ export async function refreshCampaignShopItems(
 			requiresApproval: false,
 			isActive: true,
 		});
-		return { ...item, source_id: change.sourceId };
+		return {
+			...item,
+			item_snapshot: {
+				...item.item_snapshot,
+				item_base: change.itemSnapshot,
+			},
+			source_id: change.sourceId,
+		};
 	});
 
 	const { data, error } = await requireSupabase().rpc(

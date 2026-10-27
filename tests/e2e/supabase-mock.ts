@@ -89,19 +89,32 @@ export async function mockSupabase(
 				},
 			]
 		: [];
-	const shopItemSnapshot = {
-		...(options.campaignShopItemUnidentified
-			? { category: 'Potion', subTypes: ['藥水'], weight: 0.5 }
-			: {
-					name: '治療藥水',
-					category: 'Consumable',
-					rarity: options.campaignShopItemRarity ?? 'Common',
-					icon: options.campaignShopItemIcon ?? 'FlaskConical',
-					...(options.campaignShopItemEffects
-						? { effects: options.campaignShopItemEffects }
-						: {}),
-				}),
+	const shopItemDefinition = {
+		name: '治療藥水',
+		category: 'Potion',
+		subTypes: ['藥水'],
+		rarity: options.campaignShopItemRarity ?? 'Common',
+		icon: options.campaignShopItemIcon ?? 'FlaskConical',
+		weight: 0.5,
+		valueGp: 2,
+		affixes: [],
+		isEquippable: false,
+		isConsumable: true,
+		isRequireAttunement: false,
+		maxCharges: 0,
+		...(options.campaignShopItemEffects
+			? { effects: options.campaignShopItemEffects }
+			: { effects: '' }),
+		flavor: '',
+		dmNotes: '',
 	};
+	const shopItemSnapshot = options.campaignShopItemUnidentified
+		? {
+				category: shopItemDefinition.category,
+				subTypes: shopItemDefinition.subTypes,
+				weight: shopItemDefinition.weight,
+			}
+		: shopItemDefinition;
 	const campaignShopItems: Record<string, unknown>[] = options.campaignShopSeed
 		? [
 				{
@@ -109,6 +122,9 @@ export async function mockSupabase(
 					campaign_id: 'settings-campaign',
 					shop_id: 'mock-shop-1',
 					item_snapshot: shopItemSnapshot,
+					item_identified_snapshot: options.campaignShopItemUnidentified
+						? shopItemDefinition
+						: null,
 					is_identified: !options.campaignShopItemUnidentified,
 					unit_price_gp: 2,
 					stock_available: 4,
@@ -745,6 +761,7 @@ export async function mockSupabase(
 			url.pathname.startsWith('/rest/v1/rpc/') &&
 			[
 				'save_campaign_shop_item',
+				'load_campaign_shop_item_definitions',
 				'purchase_campaign_shop_item',
 				'request_campaign_shop_item',
 				'checkout_campaign_shop_cart',
@@ -765,6 +782,22 @@ export async function mockSupabase(
 				await route.fulfill({ status: 400, json: { message: rpcError } });
 				return;
 			}
+			if (rpcName === 'load_campaign_shop_item_definitions') {
+				await route.fulfill({
+					json: campaignShopItems
+						.filter(
+							(item) =>
+								item.campaign_id === body.p_campaign_id &&
+								item.shop_id === body.p_shop_id &&
+								item.is_identified === false,
+						)
+						.map((item) => ({
+							item_id: item.id,
+							item_snapshot: item.item_identified_snapshot,
+						})),
+				});
+				return;
+			}
 			if (rpcName === 'save_campaign_shop_item') {
 				const itemId =
 					typeof body.p_item_id === 'string'
@@ -772,11 +805,24 @@ export async function mockSupabase(
 						: `mock-shop-item-${nextShopItemId++}`;
 				const snapshot = body.p_item_snapshot as Record<string, unknown>;
 				const isIdentified = snapshot.is_identified !== false;
-				const base = snapshot.item_base as Record<string, unknown> | undefined;
+				const nestedBase = snapshot.item_base as
+					| Record<string, unknown>
+					| undefined;
+				const base = nestedBase ?? snapshot;
+				const fullSnapshot = {
+					...Object.fromEntries(
+						Object.entries(snapshot).filter(
+							([key]) => key !== 'is_identified' && key !== 'item_base',
+						),
+					),
+					...Object.fromEntries(
+						Object.entries(base).filter(
+							([key]) => key !== 'is_identified' && key !== 'item_base',
+						),
+					),
+				};
 				const rowSnapshot = isIdentified
-					? Object.fromEntries(
-							Object.entries(snapshot).filter(([key]) => key !== 'is_identified'),
-						)
+					? fullSnapshot
 					: {
 							category: base?.category ?? 'Misc',
 							subTypes: base?.subTypes ?? [],
@@ -787,6 +833,7 @@ export async function mockSupabase(
 					campaign_id: body.p_campaign_id,
 					shop_id: body.p_shop_id,
 					item_snapshot: rowSnapshot,
+					item_identified_snapshot: isIdentified ? null : fullSnapshot,
 					is_identified: isIdentified,
 					unit_price_gp: body.p_unit_price_gp,
 					stock_available: body.p_stock_available,
@@ -823,11 +870,25 @@ export async function mockSupabase(
 				}
 				for (const rawChange of changes) {
 					const change = rawChange as Record<string, unknown>;
+					const snapshot = change.item_snapshot as Record<string, unknown>;
+					const base = snapshot.item_base as
+						| Record<string, unknown>
+						| undefined;
 					campaignShopItems.push({
 						id: `shop-refresh-item-${nextShopItemId++}`,
 						campaign_id: body.p_campaign_id,
 						shop_id: body.p_shop_id,
-						item_snapshot: change.item_snapshot,
+						item_snapshot: base
+							? {
+									...Object.fromEntries(
+										Object.entries(snapshot).filter(
+											([key]) =>
+												key !== 'item_base' && key !== 'is_identified',
+										),
+									),
+									...base,
+								}
+							: snapshot,
 						is_identified: true,
 						unit_price_gp: change.unit_price_gp,
 						stock_available: change.stock_available,
