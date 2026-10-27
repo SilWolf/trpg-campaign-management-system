@@ -888,25 +888,18 @@ export default function ItemTooltip({
 													<Edit3 className='w-3.5 h-3.5' />
 													<span>DM 編輯物品</span>
 												</Button>
-												<Button
-													type='button'
-													variant='secondary'
-													size='sm'
-													onClick={() => toggleIdentify(inspectedItem)}
-													className='px-3 py-1.5 rounded text-xs font-medium bg-purple-950/90 hover:bg-purple-900 border border-purple-500/70 text-purple-200 flex items-center gap-1.5 cursor-pointer'
-												>
-													{inspectedItem.isIdentified ? (
-														<>
-															<EyeOff className='w-3.5 h-3.5' />
-															<span>設為未鑑定</span>
-														</>
-													) : (
-														<>
-															<Eye className='w-3.5 h-3.5' />
-															<span>向玩家揭露鑑定</span>
-														</>
-													)}
-												</Button>
+												{!inspectedItem.isIdentified && (
+													<Button
+														type='button'
+														variant='secondary'
+														size='sm'
+														onClick={() => void toggleIdentify(inspectedItem)}
+														className='px-3 py-1.5 rounded text-xs font-medium bg-purple-950/90 hover:bg-purple-900 border border-purple-500/70 text-purple-200 flex items-center gap-1.5 cursor-pointer'
+													>
+														<Eye className='w-3.5 h-3.5' />
+														<span>向玩家揭露鑑定</span>
+													</Button>
+												)}
 											</div>
 
 											<Button

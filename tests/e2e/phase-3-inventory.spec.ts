@@ -74,7 +74,7 @@ test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', as
 	await page.getByTestId('inventory-consume-item').click();
 	await expect
 		.poll(() =>
-			requests.some((request) => request.startsWith('POST /rest/v1/inventory_items')),
+			requests.some((request) => request.startsWith('PATCH /rest/v1/inventory_items')),
 		)
 		.toBe(true);
 

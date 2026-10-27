@@ -1,6 +1,6 @@
 # 戰役商店：手動部署與隔離環境驗收
 
-本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql`、`20261027000000_campaign_shop_cart_checkout.sql`、`20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql`，以及後續的 `20261028000000_item_base_unification.sql`、`20261028000001_campaign_shop_refresh_categories.sql`、`20261028000002_campaign_official_catalogs.sql`、`20261028000003_campaign_shop_refresh_latest_rulebooks.sql`、`20261028000004_campaign_shop_unidentified_items.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理；第四個 migration 新增刷新政策欄位與驗證，以及 DM 專用的原子刷新 RPC；第五個 migration 讓刷新清除模式在同一交易內實際刪除退役商品，並回報刪除數量；第六個 migration 新增 `inventory_items.item_base` 與 `blacksmith_items.item_base` canonical JSON、擴充分類約束，並更新範例建團、鍛造匯入及購買交付 RPC 保存巢狀屬性。第七個 migration 更新刷新政策驗證，讓篩選器接受新版物品分類；第八個 migration 在 `campaigns.official_catalog_ids` 儲存每個戰役可用的官方規則書 ID，並以 CHECK constraint 驗證清單形狀與 ID 格式；第九個 migration 讓「此戰役的規則書」候選以動態標記儲存，於每次預覽重新讀取最新戰役目錄設定，並於刷新 RPC 中依最新設定展開來源；第十個 migration 讓商店商品快照保存鑑定狀態，並在結帳交付時沿用該狀態。第六個 migration 不回填既有資料，部署前仍須由維護者確認規劃中的空資料表前提。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
+本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql`、`20261027000000_campaign_shop_cart_checkout.sql`、`20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql`，以及後續的 `20261028000000_item_base_unification.sql`、`20261028000001_campaign_shop_refresh_categories.sql`、`20261028000002_campaign_official_catalogs.sql`、`20261028000003_campaign_shop_refresh_latest_rulebooks.sql`、`20261028000004_campaign_shop_unidentified_items.sql`、`20261029000000_unidentified_item_security.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理；第四個 migration 新增刷新政策欄位與驗證，以及 DM 專用的原子刷新 RPC；第五個 migration 讓刷新清除模式在同一交易內實際刪除退役商品，並回報刪除數量；第六個 migration 新增 `inventory_items.item_base` 與 `blacksmith_items.item_base` canonical JSON、擴充分類約束，並更新範例建團、鍛造匯入及購買交付 RPC 保存巢狀屬性。第七個 migration 更新刷新政策驗證，讓篩選器接受新版物品分類；第八個 migration 在 `campaigns.official_catalog_ids` 儲存每個戰役可用的官方規則書 ID，並以 CHECK constraint 驗證清單形狀與 ID 格式；第九個 migration 讓「此戰役的規則書」候選以動態標記儲存，於每次預覽重新讀取最新戰役目錄設定，並於刷新 RPC 中依最新設定展開來源；第十個 migration 讓商店商品快照保存鑑定狀態，並在結帳交付時沿用該狀態；第十一次 migration 新增未鑑定物品的秘密快照、資料庫交易與欄位授權。第六個 migration 不回填既有資料，部署前仍須由維護者確認規劃中的空資料表前提。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
 
 ## Migration 依賴與範圍
 
@@ -24,6 +24,9 @@
 - `20261028000004_campaign_shop_unidentified_items.sql` 更新結帳交付函式，依商品快照中的 `is_identified` 建立背包物品；舊快照缺少欄位時預設為已鑑定。未鑑定狀態儲存在商品 JSON 快照，不新增資料表欄位。
 - `authenticated` 可執行的購買、建立待審、購物車結帳、核准、拒絕及取消 RPC；`anon` 與 `PUBLIC` 不可執行。資料表仍由 grants 與 RLS 一起限制。
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 的 `supabase_realtime` publication 設定。付款輔助表不屬於公開訂單，也不應加入 Realtime。
+- `20261029000000_unidentified_item_security.sql` 將 `item_identified_snapshot` 留在資料庫，將未鑑定商品、背包列及待審訂單的公開快照遮罩；撤銷秘密資料表的 table-level `SELECT`，只授予公開欄位，並以 service-role-only 鑑定 RPC、DM-only 商店商品寫入 RPC 及安全 Broadcast 取代直接讀寫／整列事件。Migration 將三張含私有快照的資料表移出 `postgres_changes` publication，並要求有有效 `item_base` 才能安全回填。
+
+**未鑑定物品 migration 尚未部署，且目前不可單獨部署。**其權限收斂會中斷舊版商店直接寫入及整列 Realtime；須先完成規劃書階段二的 Edge Function、安全 projection、Broadcast listener，以及可保留秘密快照的拆堆／移轉流程。來源欄位 `source_type/source_id` 目前保留，待刷新 RPC 與客戶端同步改版後再移除。
 
 ## 部署前安全檢查
 
@@ -42,7 +45,7 @@
    supabase db push --linked
    ```
 
-5. 驗證 migration history 已記錄 `20261026000000`、`20261026000001`、`20261027000000`、`20261027000001`、`20261027000002`、`20261028000000`、`20261028000001`、`20261028000002`、`20261028000003` 與 `20261028000004`，檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
+5. 驗證 migration history 已記錄 `20261026000000`、`20261026000001`、`20261027000000`、`20261027000001`、`20261027000002`、`20261028000000`、`20261028000001`、`20261028000002`、`20261028000003`、`20261028000004`，以及在階段二相容呼叫端完成後才可套用的 `20261029000000`；檢視套用輸出及下方資料庫檢查。若套用中止或部分狀態不明，停止後續測試並由維護者依 Supabase migration history 處理；不要直接重跑或手動標記已套用。
 6. 隔離驗收通過並取得維護者核准後，才依相同檢查流程安排正式環境部署。正式部署前確認備份、回復方案、維護窗口，以及任何並行 migration。
 
 本功能沒有新增 Edge Function 或 secrets。不可為此部署把 service-role key 放入前端、測試替身或版本控制。

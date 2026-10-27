@@ -52,7 +52,6 @@ export interface CampaignShopRefreshSelection {
 
 export type CampaignShopRefreshPreviewAction =
 	| 'create'
-	| 'restock'
 	| 'keep'
 	| 'delete';
 
@@ -435,8 +434,8 @@ function makePreviewEntry(
 		action,
 		itemId: null,
 		catalogId: null,
-		sourceTitle: item.sourceType === 'catalog' ? '官方目錄' : '既有商品',
-		sourceId: item.sourceId,
+		sourceTitle: '既有商品',
+		sourceId: null,
 		ruleIndex: null,
 		name: item.itemSnapshot.name,
 		rarity: item.itemSnapshot.rarity,
@@ -481,37 +480,10 @@ export function buildCampaignShopRefreshPreview(
 		selectedSourceKeys.add(item.sourceKey);
 	}
 
-	const selectedBySource = new Map(
-		selections.map((selection) => [
-			`${selection.item.catalogId}:${selection.item.itemId}`,
-			selection,
-		]),
-	);
-	const existingBySource = new Map<string, CampaignShopItem[]>();
-	for (const item of existingItems) {
-		if (item.sourceType !== 'catalog' || !item.sourceId) continue;
-		const matching = existingBySource.get(item.sourceId) ?? [];
-		matching.push(item);
-		existingBySource.set(item.sourceId, matching);
-	}
-
 	const entries: CampaignShopRefreshPreviewEntry[] = [];
 	if (policy.flags.keepItemsOnRefresh) {
 		for (const item of existingItems) {
-			const selected =
-				item.sourceType === 'catalog' && item.sourceId
-				? selectedBySource.get(item.sourceId)
-				: undefined;
-			if (!selected) {
-				entries.push(makePreviewEntry(item, 'keep'));
-				continue;
-			}
-			const matches = existingBySource.get(item.sourceId ?? '') ?? [];
-			if (matches.length > 1) {
-				throw new Error(
-					`商店內存在重複的目錄來源商品「${item.sourceId}」，無法安全補貨。`,
-				);
-			}
+			entries.push(makePreviewEntry(item, 'keep'));
 		}
 	} else {
 		for (const item of existingItems) {
@@ -523,17 +495,8 @@ export function buildCampaignShopRefreshPreview(
 	for (const selection of selections) {
 		const { item, ruleIndex, stockAvailable } = selection;
 		const sourceId = `${item.catalogId}:${item.itemId}`;
-		const matching = existingBySource.get(sourceId) ?? [];
-		if (policy.flags.keepItemsOnRefresh && matching.length > 1) {
-			throw new Error(
-				`商店內存在重複的目錄來源商品「${sourceId}」，無法安全補貨。`,
-			);
-		}
-		const existing = policy.flags.keepItemsOnRefresh
-			? matching[0]
-			: undefined;
 		const itemSnapshot = blacksmithItemToCampaignShopSnapshot(item);
-		const unitPriceGp = existing?.unitPriceGp ?? Math.max(item.valueGp, 0.01);
+		const unitPriceGp = Math.max(item.valueGp, 0.01);
 		if (
 			!Number.isFinite(unitPriceGp) ||
 			unitPriceGp < 0.01 ||
@@ -542,22 +505,20 @@ export function buildCampaignShopRefreshPreview(
 		) {
 			throw new Error(`商品「${item.name}」的刷新售價不符合商店金額限制。`);
 		}
-		const entrySnapshot = existing?.itemSnapshot ?? itemSnapshot;
 		entries.push({
 			key: `catalog:${sourceId}`,
-			action: existing ? 'restock' : 'create',
+			action: 'create',
 			itemId: item.itemId,
 			catalogId: item.catalogId,
 			sourceTitle: item.catalogTitle,
 			sourceId,
 			ruleIndex,
-			name: entrySnapshot.name,
-			rarity: entrySnapshot.rarity,
-			category: entrySnapshot.category,
+			name: itemSnapshot.name,
+			rarity: itemSnapshot.rarity,
+			category: itemSnapshot.category,
 			unitPriceGp,
 			stockAvailable,
-			itemSnapshot: entrySnapshot,
-			...(existing ? { existingItemId: existing.id } : {}),
+			itemSnapshot,
 		});
 		changes.push({
 			sourceId,

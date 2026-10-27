@@ -12,7 +12,6 @@ import {
 	type CampaignShop,
 	type CampaignShopItem,
 	type CampaignShopItemSnapshot,
-	type CampaignShopItemSourceType,
 	type CampaignShopOrder,
 	type CampaignShopOrderStatus,
 	type CampaignShopRefreshPolicy,
@@ -364,8 +363,7 @@ export interface DbCampaignShopItem {
 	campaign_id: string;
 	shop_id: string;
 	item_snapshot: Partial<DbCampaignShopItemSnapshot> | null;
-	source_type: CampaignShopItemSourceType;
-	source_id: string | null;
+	is_identified: boolean;
 	unit_price_gp: number | string;
 	stock_available: number;
 	stock_reserved: number;
@@ -378,6 +376,7 @@ export interface DbCampaignShopItem {
 export interface DbCampaignShopItemSnapshot {
 	name?: string;
 	category?: string;
+	subTypes?: string[];
 	sub_type?: string | null;
 	rarity?: string | null;
 	icon?: string | null;
@@ -402,7 +401,54 @@ export interface DbCampaignShopItemSnapshot {
 
 const fromDbCampaignShopItemSnapshot = (
 	snapshot: Partial<DbCampaignShopItemSnapshot> | null | undefined,
+	isIdentified = snapshot?.is_identified !== false,
 ): CampaignShopItemSnapshot => {
+	if (!isIdentified) {
+		const category = ITEM_BASE_CATEGORIES.includes(
+			snapshot?.category as ItemBaseCategory,
+		)
+			? (snapshot?.category as ItemBaseCategory)
+			: 'Misc';
+		const common = {
+			name: '未鑑定物品',
+			subTypes: Array.isArray(snapshot?.subTypes)
+				? snapshot.subTypes.filter((value): value is string => typeof value === 'string')
+				: [],
+			rarity: 'Common' as const,
+			icon: 'HelpCircle',
+			weight:
+				typeof snapshot?.weight === 'number' && Number.isFinite(snapshot.weight)
+					? snapshot.weight
+					: 0,
+			valueGp: 0,
+			affixes: [],
+			effects: '',
+			flavor: '',
+			dmNotes: '',
+			maxCharges: 0,
+			isEquippable: false,
+			isConsumable: false,
+			isRequireAttunement: false,
+			isHomebrew: false,
+			isImportant: false,
+			isIdentified: false,
+		};
+		if (category === 'Weapon') {
+			return {
+				...common,
+				category,
+				weaponProperties: { damage: '未鑑定', properties: [] },
+			};
+		}
+		if (category === 'Armor') {
+			return {
+				...common,
+				category,
+				armorProperties: { ac: '未鑑定' },
+			};
+		}
+		return { ...common, category };
+	}
 	const canonical = snapshot?.item_base == null
 		? null
 		: readCanonicalItemBase(snapshot.item_base);
@@ -475,8 +521,6 @@ export const toDbCampaignShopItem = (
 		| 'campaignId'
 		| 'shopId'
 		| 'itemSnapshot'
-		| 'sourceType'
-		| 'sourceId'
 		| 'unitPriceGp'
 		| 'stockAvailable'
 		| 'requiresApproval'
@@ -487,8 +531,6 @@ export const toDbCampaignShopItem = (
 	| 'campaign_id'
 	| 'shop_id'
 	| 'item_snapshot'
-	| 'source_type'
-	| 'source_id'
 	| 'unit_price_gp'
 	| 'stock_available'
 	| 'requires_approval'
@@ -497,8 +539,6 @@ export const toDbCampaignShopItem = (
 	campaign_id: item.campaignId,
 	shop_id: item.shopId,
 	item_snapshot: toDbCampaignShopItemSnapshot(item.itemSnapshot),
-	source_type: item.sourceType,
-	source_id: item.sourceId,
 	unit_price_gp: item.unitPriceGp,
 	stock_available: item.stockAvailable,
 	requires_approval: item.requiresApproval,
@@ -511,9 +551,11 @@ export const fromDbCampaignShopItem = (
 	id: row.id,
 	campaignId: row.campaign_id,
 	shopId: row.shop_id,
-	itemSnapshot: fromDbCampaignShopItemSnapshot(row.item_snapshot),
-	sourceType: row.source_type,
-	sourceId: row.source_id ?? null,
+	itemSnapshot: fromDbCampaignShopItemSnapshot(
+		row.item_snapshot,
+		row.is_identified,
+	),
+	isIdentified: Boolean(row.is_identified),
 	unitPriceGp: Number(row.unit_price_gp),
 	stockAvailable: Number(row.stock_available),
 	stockReserved: Number(row.stock_reserved ?? 0),
@@ -537,6 +579,7 @@ export interface DbCampaignShopOrder {
 	total_price_gp: number | string;
 	status: CampaignShopOrderStatus;
 	requires_approval: boolean;
+	is_identified: boolean;
 	created_at: string;
 	updated_at: string;
 	reviewed_at: string | null;
@@ -551,7 +594,10 @@ export const fromDbCampaignShopOrder = (
 	shopId: row.shop_id,
 	shopItemId: row.shop_item_id,
 	characterId: row.character_id,
-	itemSnapshot: fromDbCampaignShopItemSnapshot(row.item_snapshot),
+	itemSnapshot: fromDbCampaignShopItemSnapshot(
+		row.item_snapshot,
+		row.is_identified,
+	),
 	shopNameSnapshot: row.shop_name_snapshot,
 	unitPriceGp: Number(row.unit_price_gp),
 	quantity: Number(row.quantity),

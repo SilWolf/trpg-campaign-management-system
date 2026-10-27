@@ -140,28 +140,24 @@ function displayRange(range: CampaignShopRefreshRange, fallbackMax: string) {
 }
 
 function actionLabel(
-	action: 'create' | 'restock' | 'keep' | 'delete',
+	action: 'create' | 'keep' | 'delete',
 ) {
 	switch (action) {
 		case 'create':
 			return '新增';
-		case 'restock':
-			return '補貨';
 		case 'keep':
 			return '保留';
 		case 'delete':
-			return '刪除';
+			return '停用';
 	}
 }
 
 function actionClass(
-	action: 'create' | 'restock' | 'keep' | 'delete',
+	action: 'create' | 'keep' | 'delete',
 ) {
 	switch (action) {
 		case 'create':
 			return 'text-emerald-300';
-		case 'restock':
-			return 'text-cyan-300';
 		case 'keep':
 			return 'text-stone-400';
 		case 'delete':
@@ -448,7 +444,7 @@ export function CampaignShopRefreshPanel({
 			setPreview(null);
 			setConfirmEmptyRefresh(false);
 			toast.success(
-				`店舖刷新完成：新增 ${result.created} 項、補貨 ${result.restocked} 項、刪除 ${result.deleted} 項。`,
+				`店舖刷新完成：新增 ${result.created} 項、停用 ${result.deleted} 項。`,
 			);
 			try {
 				await Promise.all([onReloadShops(), onReloadItems()]);
@@ -514,7 +510,7 @@ export function CampaignShopRefreshPanel({
 				<span>
 					<span className='font-semibold text-stone-100'>保留既有商品</span>
 					<span className='mt-1 block text-xs text-stone-500'>
-						啟用時只補貨或新增選中商品；關閉時，刷新前商品及其關聯訂單會刪除，再新增本次選中的商品。
+						啟用時保留既有商品，並將本次選中的商品另行新增（不會依來源自動補貨或合併）；關閉時，刷新前商品會停用、庫存歸零，歷史訂單保留，再新增本次選中的商品。
 					</span>
 				</span>
 			</label>
@@ -771,7 +767,7 @@ export function CampaignShopRefreshPanel({
 									刷新預覽
 								</h2>
 								<p className='mt-1 text-xs text-stone-400'>
-									新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、補貨 {preview.entries.filter((entry) => entry.action === 'restock').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、刪除 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
+									新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、停用 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
 								</p>
 							</div>
 							<div className='flex items-center gap-2'>
@@ -844,7 +840,7 @@ export function CampaignShopRefreshPanel({
 							>
 								{preview.keepItemsOnRefresh
 									? '本次沒有選中商品，保留模式不會變更既有商品；請再次確認後才會送出空操作。'
-									: '本次沒有選中商品。清除模式確認後仍會刪除既有商品及其關聯訂單；請再次確認後才會套用。'}
+									: '本次沒有選中商品。清除模式確認後仍會停用既有商品並將庫存歸零，歷史訂單會保留；請再次確認後才會套用。'}
 							</p>
 						)}
 						<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/40 pt-3'>

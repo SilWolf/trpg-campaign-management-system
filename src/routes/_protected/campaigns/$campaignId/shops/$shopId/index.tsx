@@ -15,7 +15,11 @@ import {
 import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
-import { loadCampaignShopItems, loadCampaignShops } from '@/lib/campaignShops';
+import {
+	loadCampaignShopItems,
+	loadCampaignShops,
+	subscribeCampaignSecureChanges,
+} from '@/lib/campaignShops';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui';
 import ReactMarkdown from 'react-markdown';
@@ -107,7 +111,7 @@ function CampaignShopDetail() {
 		visibleItems[0] ??
 		null;
 	const selectedItemIsMasked =
-		selectedItem?.itemSnapshot.isIdentified === false;
+		selectedItem?.isIdentified === false;
 	const selectedItemDisplayName = selectedItemIsMasked
 		? '未鑑定的物品'
 		: (selectedItem?.itemSnapshot.name ?? '');
@@ -184,21 +188,21 @@ function CampaignShopDetail() {
 				},
 				() => void reload(),
 			)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'campaign_shop_items',
-					filter: `campaign_id=eq.${campaignId}`,
-				},
-				() => void reload(),
-			)
 			.subscribe();
+		const secureChannel = subscribeCampaignSecureChanges(
+			campaignId,
+			() => void reload(),
+			(error) => {
+				if (isMounted) {
+					setErrorMessage(error.message || '商店安全同步頻道連線失敗。');
+				}
+			},
+		);
 
 		return () => {
 			isMounted = false;
 			if (channel) void supabase?.removeChannel(channel);
+			secureChannel();
 		};
 	}, [campaignId, isGuest, shopId]);
 
@@ -325,7 +329,7 @@ function CampaignShopDetail() {
 								{paginatedItems.map((item) => {
 									const isSelected = selectedItem?.id === item.id;
 									const quantity = cartQuantities[item.id] ?? 0;
-									const isMasked = item.itemSnapshot.isIdentified === false;
+									const isMasked = !isDm && !item.isIdentified;
 									const displayName = isMasked
 										? '未鑑定的物品'
 										: item.itemSnapshot.name;
@@ -717,6 +721,7 @@ function CampaignShopDetail() {
 					campaignId={campaignId}
 					shop={shop}
 					items={visibleItems}
+					isDm={isDm}
 					canManageOrders={false}
 					userId={user.id}
 					showPurchaseForm={false}

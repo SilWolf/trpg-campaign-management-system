@@ -286,7 +286,7 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 	]);
 });
 
-test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪除', async ({
+test('刷新預覽保留舊商品版本，並將來源商品列為新增而非補貨', async ({
 	page,
 }) => {
 	await page.goto('/');
@@ -327,8 +327,7 @@ test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪�
 			campaignId: 'campaign-1',
 			shopId: 'shop-1',
 			itemSnapshot: snapshot,
-			sourceType: 'catalog' as const,
-			sourceId: 'core-rules:longsword',
+			isIdentified: true,
 			unitPriceGp: 20,
 			stockAvailable: 3,
 			stockReserved: 2,
@@ -340,8 +339,6 @@ test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪�
 		const manual = {
 			...existing,
 			id: 'existing-manual',
-			sourceType: 'manual' as const,
-			sourceId: null,
 			itemSnapshot: { ...snapshot, name: '手工商品' },
 		};
 		const selections = [
@@ -390,8 +387,9 @@ test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪�
 	});
 
 	expect(previews.keep.entries).toEqual([
+		{ action: 'keep', name: '長劍', stockAvailable: 3 },
 		{ action: 'keep', name: '手工商品', stockAvailable: 3 },
-		{ action: 'restock', name: '長劍', stockAvailable: 5 },
+		{ action: 'create', name: '長劍', stockAvailable: 5 },
 	]);
 	expect(previews.keep.expectedItems).toEqual([
 		{ id: 'existing-long-sword', updatedAt: '2026-01-02T00:00:00Z' },
@@ -399,7 +397,7 @@ test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪�
 	]);
 	expect(previews.keep.change).toMatchObject({
 		sourceId: 'core-rules:longsword',
-		unitPriceGp: 20,
+		unitPriceGp: 15,
 		stockAvailable: 5,
 	});
 	expect(previews.clear).toEqual([

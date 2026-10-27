@@ -66,7 +66,7 @@ test('DM 可從鍛造工坊選擇來源並加入商店', async ({ page }) => {
 	await expect(page.getByTestId('shop-item-editor')).toHaveCount(0);
 	expect(
 		requests.some((request) =>
-			request.startsWith('POST /rest/v1/campaign_shop_items'),
+			request.startsWith('POST /rest/v1/rpc/save_campaign_shop_item'),
 		),
 	).toBe(true);
 	await expect(page.getByTestId('shop-item-card')).toHaveCount(3);
@@ -78,15 +78,15 @@ test('DM 可將商品設定為未鑑定狀態並保存到商店快照', async ({
 		campaignShopSeed: true,
 	});
 	await seedAuthenticatedSession(page);
-	const writes: { itemSnapshot?: { is_identified?: boolean } }[] = [];
+	const writes: { p_item_snapshot?: { is_identified?: boolean } }[] = [];
 	page.on('request', (request) => {
 		if (
-			request.method() === 'PATCH' &&
-			request.url().includes('/rest/v1/campaign_shop_items')
+			request.method() === 'POST' &&
+			request.url().includes('/rest/v1/rpc/save_campaign_shop_item')
 		) {
 			writes.push(
 				request.postDataJSON() as {
-					item_snapshot?: { is_identified?: boolean };
+					p_item_snapshot?: { is_identified?: boolean };
 				},
 			);
 		}
@@ -109,7 +109,7 @@ test('DM 可將商品設定為未鑑定狀態並保存到商店快照', async ({
 	).toBeVisible();
 	expect(writes).toContainEqual(
 		expect.objectContaining({
-			item_snapshot: expect.objectContaining({ is_identified: false }),
+			p_item_snapshot: expect.objectContaining({ is_identified: false }),
 		}),
 	);
 });
@@ -191,7 +191,7 @@ test('產生刷新預覽時會重新讀取戰役最新規則書設定', async ({
 		timeout: 15_000,
 	});
 	await expect(
-		panel.getByText(/本次沒有選中商品。清除模式確認後仍會刪除既有商品/),
+		panel.getByText(/本次沒有選中商品。清除模式確認後仍會停用既有商品並將庫存歸零/),
 	).toBeVisible();
 });
 
@@ -246,7 +246,7 @@ test('零候選刷新需要二次確認才會呼叫 RPC', async ({ page }) => {
 	const panel = page.getByTestId('shop-refresh-panel');
 	await panel.getByRole('button', { name: '預覽刷新' }).click();
 	await expect(
-		panel.getByText(/本次沒有選中商品。清除模式確認後仍會刪除既有商品及其關聯訂單/),
+		panel.getByText(/本次沒有選中商品。清除模式確認後仍會停用既有商品並將庫存歸零，歷史訂單會保留/),
 	).toBeVisible({ timeout: 15_000 });
 
 	await panel.getByRole('button', { name: '確認刷新' }).click();
@@ -260,8 +260,11 @@ test('零候選刷新需要二次確認才會呼叫 RPC', async ({ page }) => {
 	).toHaveLength(0);
 
 	await panel.getByRole('button', { name: '再次確認零項刷新' }).click();
-	await expect(page.getByRole('status').filter({ hasText: '刪除 2 項' })).toBeVisible();
-	await expect(page.getByTestId('shop-item-card')).toHaveCount(0);
+	await expect(page.getByRole('status').filter({ hasText: '停用 2 項' })).toBeVisible();
+	const shopItems = page.getByTestId('shop-item-card');
+	await expect(shopItems).toHaveCount(2);
+	await expect(shopItems.nth(0)).toContainText('停用');
+	await expect(shopItems.nth(1)).toContainText('停用');
 	expect(
 		requests.filter((request) =>
 			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),

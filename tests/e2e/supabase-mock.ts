@@ -90,16 +90,17 @@ export async function mockSupabase(
 			]
 		: [];
 	const shopItemSnapshot = {
-		name: '治療藥水',
-		category: 'Consumable',
-		rarity: options.campaignShopItemRarity ?? 'Common',
-		icon: options.campaignShopItemIcon ?? 'FlaskConical',
 		...(options.campaignShopItemUnidentified
-			? { is_identified: false }
-			: {}),
-		...(options.campaignShopItemEffects
-			? { effects: options.campaignShopItemEffects }
-			: {}),
+			? { category: 'Potion', subTypes: ['藥水'], weight: 0.5 }
+			: {
+					name: '治療藥水',
+					category: 'Consumable',
+					rarity: options.campaignShopItemRarity ?? 'Common',
+					icon: options.campaignShopItemIcon ?? 'FlaskConical',
+					...(options.campaignShopItemEffects
+						? { effects: options.campaignShopItemEffects }
+						: {}),
+				}),
 	};
 	const campaignShopItems: Record<string, unknown>[] = options.campaignShopSeed
 		? [
@@ -108,8 +109,7 @@ export async function mockSupabase(
 					campaign_id: 'settings-campaign',
 					shop_id: 'mock-shop-1',
 					item_snapshot: shopItemSnapshot,
-					source_type: 'manual',
-					source_id: null,
+					is_identified: !options.campaignShopItemUnidentified,
 					unit_price_gp: 2,
 					stock_available: 4,
 					stock_reserved: 0,
@@ -125,12 +125,8 @@ export async function mockSupabase(
 					item_snapshot: {
 						...shopItemSnapshot,
 						name: '治療藥水（需審查）',
-						...(options.campaignShopItemUnidentified
-							? { is_identified: true }
-							: {}),
 					},
-					source_type: 'manual',
-					source_id: null,
+					is_identified: true,
 					unit_price_gp: 3,
 					stock_available: 4,
 					stock_reserved: 0,
@@ -153,12 +149,8 @@ export async function mockSupabase(
 						item_snapshot: {
 							...shopItemSnapshot,
 							name: `測試商品 ${index + 3}`,
-							...(options.campaignShopItemUnidentified
-								? { is_identified: true }
-								: {}),
 						},
-						source_type: 'manual',
-						source_id: null,
+						is_identified: true,
 						unit_price_gp: index + 4,
 						stock_available: 4,
 						stock_reserved: 0,
@@ -422,6 +414,94 @@ export async function mockSupabase(
 		}
 
 		if (
+			url.pathname === '/functions/v1/campaign-shop-purchase' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as {
+				campaignId: string;
+				shopId: string;
+				characterId: string;
+				walletType: string;
+				items: { shopItemId: string; quantity: number }[];
+			};
+			functionRequests.push({ name: 'campaign-shop-purchase', body });
+			const rpcBody = {
+				p_campaign_id: body.campaignId,
+				p_shop_id: body.shopId,
+				p_character_id: body.characterId,
+				p_wallet_type: body.walletType,
+				p_items: body.items.map((item) => ({
+					shop_item_id: item.shopItemId,
+					quantity: item.quantity,
+				})),
+			};
+			campaignShopRpcRequests.push({
+				name: 'checkout_campaign_shop_cart',
+				body: rpcBody,
+			});
+			const rpcError = options.campaignShopRpcErrors?.checkout_campaign_shop_cart;
+			if (rpcError) {
+				await route.fulfill({ status: 400, json: { error: rpcError } });
+				return;
+			}
+			const checkoutId = `mock-shop-checkout-${nextShopOrderId++}`;
+			const requiresApproval = body.items.some((line) =>
+				campaignShopItems.find((item) => item.id === line.shopItemId)
+					?.requires_approval,
+			);
+			for (const line of body.items) {
+				const item = campaignShopItems.find(
+					(row) => row.id === line.shopItemId,
+				);
+				if (!item || Number(item.stock_available) < line.quantity) {
+					await route.fulfill({
+						status: 409,
+						json: { error: '商品不存在或庫存不足。' },
+					});
+					return;
+				}
+				item.stock_available = Number(item.stock_available) - line.quantity;
+				if (requiresApproval) {
+					item.stock_reserved = Number(item.stock_reserved) + line.quantity;
+				}
+				campaignShopOrders.push({
+					id: `mock-shop-order-${nextShopOrderId++}`,
+					checkout_id: checkoutId,
+					campaign_id: body.campaignId,
+					shop_id: item.shop_id,
+					shop_item_id: item.id,
+					character_id: body.characterId,
+					item_snapshot: item.item_snapshot,
+					is_identified: item.is_identified,
+					shop_name_snapshot: '灰港冒險者商會',
+					unit_price_gp: item.unit_price_gp,
+					quantity: line.quantity,
+					total_price_gp: Number(item.unit_price_gp) * line.quantity,
+					status: requiresApproval ? 'pending' : 'completed',
+					requires_approval: requiresApproval,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+					reviewed_at: null,
+				});
+			}
+			await route.fulfill({ json: { checkoutId } });
+			return;
+		}
+
+		if (
+			url.pathname === '/functions/v1/identify-inventory-item' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as {
+				campaignId: string;
+				itemId: string;
+			};
+			functionRequests.push({ name: 'identify-inventory-item', body });
+			await route.fulfill({ json: { itemId: body.itemId } });
+			return;
+		}
+
+		if (
 			url.pathname === '/rest/v1/rpc/join_campaign_by_invite_code' &&
 			method === 'POST'
 		) {
@@ -573,11 +653,29 @@ export async function mockSupabase(
 					: campaignShopItems;
 			const matchesCampaign = (row: Record<string, unknown>) => {
 				const filter = url.searchParams.get('campaign_id');
-				return !filter || String(row.campaign_id) === filter.slice('eq.'.length);
+				const id = url.searchParams.get('id')?.slice('eq.'.length);
+				const shopId = url.searchParams.get('shop_id')?.slice('eq.'.length);
+				return (
+					(!filter || String(row.campaign_id) === filter.slice('eq.'.length)) &&
+					(!id || String(row.id) === id) &&
+					(!shopId || String(row.shop_id) === shopId)
+				);
 			};
 			if (method === 'GET') {
+				const filteredRows = rows.filter(matchesCampaign);
+				if (
+					request.headers().accept?.includes(
+						'application/vnd.pgrst.object+json',
+					)
+				) {
+					await route.fulfill({
+						json: filteredRows[0] ?? null,
+						status: filteredRows.length === 1 ? 200 : 406,
+					});
+					return;
+				}
 				await route.fulfill({
-					json: rows.filter(matchesCampaign),
+					json: filteredRows,
 				});
 				return;
 			}
@@ -646,6 +744,7 @@ export async function mockSupabase(
 		if (
 			url.pathname.startsWith('/rest/v1/rpc/') &&
 			[
+				'save_campaign_shop_item',
 				'purchase_campaign_shop_item',
 				'request_campaign_shop_item',
 				'checkout_campaign_shop_cart',
@@ -666,47 +765,70 @@ export async function mockSupabase(
 				await route.fulfill({ status: 400, json: { message: rpcError } });
 				return;
 			}
+			if (rpcName === 'save_campaign_shop_item') {
+				const itemId =
+					typeof body.p_item_id === 'string'
+						? body.p_item_id
+						: `mock-shop-item-${nextShopItemId++}`;
+				const snapshot = body.p_item_snapshot as Record<string, unknown>;
+				const isIdentified = snapshot.is_identified !== false;
+				const base = snapshot.item_base as Record<string, unknown> | undefined;
+				const rowSnapshot = isIdentified
+					? Object.fromEntries(
+							Object.entries(snapshot).filter(([key]) => key !== 'is_identified'),
+						)
+					: {
+							category: base?.category ?? 'Misc',
+							subTypes: base?.subTypes ?? [],
+							weight: base?.weight ?? 0,
+						};
+				const saved = {
+					id: itemId,
+					campaign_id: body.p_campaign_id,
+					shop_id: body.p_shop_id,
+					item_snapshot: rowSnapshot,
+					is_identified: isIdentified,
+					unit_price_gp: body.p_unit_price_gp,
+					stock_available: body.p_stock_available,
+					stock_reserved: 0,
+					requires_approval: body.p_requires_approval,
+					is_active: body.p_is_active,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				};
+				const existingIndex = campaignShopItems.findIndex(
+					(item) => item.id === itemId,
+				);
+				if (existingIndex < 0) campaignShopItems.push(saved);
+				else campaignShopItems[existingIndex] = saved;
+				await route.fulfill({ json: itemId });
+				return;
+			}
 			if (rpcName === 'refresh_campaign_shop_items') {
 				const changes = Array.isArray(body.p_changes) ? body.p_changes : [];
 				const keepItems = body.p_keep_items === true;
 				let deleted = 0;
 				if (!keepItems) {
-					for (let index = campaignShopItems.length - 1; index >= 0; index--) {
-						const item = campaignShopItems[index];
+					for (const item of campaignShopItems) {
 						if (
 							item.campaign_id === body.p_campaign_id &&
-							item.shop_id === body.p_shop_id
+							item.shop_id === body.p_shop_id &&
+							(item.is_active === true || Number(item.stock_available) > 0)
 						) {
-							campaignShopItems.splice(index, 1);
+							item.is_active = false;
+							item.stock_available = 0;
 							deleted += 1;
 						}
 					}
 				}
 				for (const rawChange of changes) {
 					const change = rawChange as Record<string, unknown>;
-					const sourceId =
-						typeof change.source_id === 'string' ? change.source_id : '';
-					const existing = keepItems
-						? campaignShopItems.find(
-								(item) =>
-									item.campaign_id === body.p_campaign_id &&
-									item.shop_id === body.p_shop_id &&
-									item.source_type === 'catalog' &&
-									item.source_id === sourceId,
-							)
-						: undefined;
-					if (existing) {
-						existing.stock_available = change.stock_available;
-						existing.updated_at = new Date().toISOString();
-						continue;
-					}
 					campaignShopItems.push({
 						id: `shop-refresh-item-${nextShopItemId++}`,
 						campaign_id: body.p_campaign_id,
 						shop_id: body.p_shop_id,
 						item_snapshot: change.item_snapshot,
-						source_type: 'catalog',
-						source_id: sourceId,
+						is_identified: true,
 						unit_price_gp: change.unit_price_gp,
 						stock_available: change.stock_available,
 						stock_reserved: 0,
@@ -719,7 +841,6 @@ export async function mockSupabase(
 				await route.fulfill({
 					json: {
 						created: changes.length,
-						restocked: 0,
 						deleted,
 					},
 				});
@@ -754,6 +875,7 @@ export async function mockSupabase(
 					shop_item_id: item.id,
 					character_id: body.p_character_id,
 					item_snapshot: item.item_snapshot,
+					is_identified: item.is_identified,
 					shop_name_snapshot: '灰港冒險者商會',
 					unit_price_gp: item.unit_price_gp,
 					quantity,
@@ -808,6 +930,7 @@ export async function mockSupabase(
 						shop_item_id: item.id,
 						character_id: body.p_character_id,
 						item_snapshot: item.item_snapshot,
+						is_identified: item.is_identified,
 						shop_name_snapshot: '灰港冒險者商會',
 						unit_price_gp: item.unit_price_gp,
 						quantity,

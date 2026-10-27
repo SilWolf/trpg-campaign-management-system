@@ -65,6 +65,7 @@ function CampaignInventoryPage() {
 		campChestCurrency,
 		setCampChestCurrency,
 		syncStatus,
+		isRemoteCampaign,
 	} = useCampaignSync(
 		campaignId,
 		INITIAL_CHARACTERS,
@@ -301,6 +302,9 @@ function CampaignInventoryPage() {
 	};
 
 	const actions = useInventoryActions({
+		campaignId,
+		isDm,
+		isRemoteCampaign,
 		characters,
 		setCharacters,
 		campChestCurrency,

@@ -18,6 +18,11 @@ import {
 } from '@/types';
 import type { ToastKind } from '@/components/ui/ToastViewport';
 import { getItemImageUrl, ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
+import { identifyInventoryItem } from '@/lib/campaignShops';
+import {
+	splitInventoryStack,
+	transferInventoryStack,
+} from '@/lib/inventoryTransactions';
 
 const DEFAULT_FORM: HomebrewForm = {
 	name: '',
@@ -89,6 +94,9 @@ function formToAllItem(form: HomebrewForm): AllItem {
 }
 
 interface UseInventoryActionsProps {
+	campaignId: string;
+	isDm: boolean;
+	isRemoteCampaign: boolean;
 	characters: Character[];
 	setCharacters: Dispatch<SetStateAction<Character[]>>;
 	campChestCurrency: Record<CurrencyType, number>;
@@ -108,6 +116,9 @@ interface UseInventoryActionsProps {
 }
 
 export function useInventoryActions({
+	campaignId,
+	isDm,
+	isRemoteCampaign,
 	characters,
 	setCharacters,
 	campChestCurrency,
@@ -154,15 +165,20 @@ export function useInventoryActions({
 		);
 	};
 
-	const toggleIdentify = (item: InventoryItem) => {
-		setItems((prev) =>
-			prev.map((i) =>
-				i.id === item.id ? { ...i, isIdentified: !i.isIdentified } : i,
-			),
-		);
-		showToast(
-			`${!item.isIdentified ? '👁️ 已向玩家揭露真實屬性' : '🔒 已設為未鑑定狀態'}：${item.name}`,
-		);
+	const toggleIdentify = async (item: InventoryItem) => {
+		if (!isDm || item.isIdentified) {
+			showToast('只有該戰役 DM 可以鑑定尚未揭露的物品。', 'warning');
+			return;
+		}
+		try {
+			await identifyInventoryItem(campaignId, item.id);
+			showToast(`👁️ 已完成鑑定，正在同步公開物品資料：${item.name}`);
+		} catch (error) {
+			showToast(
+				error instanceof Error ? error.message : '物品鑑定失敗，請稍後重試。',
+				'error',
+			);
+		}
 	};
 
 	const updatePlayerNotes = (item: InventoryItem, notes: string) => {
@@ -216,6 +232,17 @@ export function useInventoryActions({
 			showToast(`已使用 1 個 ${item.name}`);
 		} else if (action === 'split' && item.quantity > 1) {
 			const half = Math.floor(item.quantity / 2);
+			if (isRemoteCampaign) {
+				void splitInventoryStack(campaignId, item.id, half)
+					.then(() => showToast(`已拆分出 ${half} 個 ${item.name}`))
+					.catch((error: unknown) =>
+						showToast(
+							error instanceof Error ? error.message : '拆分物品失敗。',
+							'error',
+						),
+					);
+				return;
+			}
 			const remain = item.quantity - half;
 			const newClone: InventoryItem = {
 				...item,
@@ -242,6 +269,25 @@ export function useInventoryActions({
 			Math.min(item.quantity, transferQty ?? item.quantity),
 		);
 		const isPartial = qty < item.quantity;
+		if (isRemoteCampaign) {
+			void transferInventoryStack(campaignId, item.id, targetCharId, qty)
+				.then(() => {
+					const targetCharName =
+						targetCharId === CAMP_CHEST_ID
+							? '🏕️ 營地儲物箱'
+							: characters.find((character) => character.id === targetCharId)?.name;
+					showToast(
+						`📦 已將 ${qty} 個「${item.name}」移交至 ${targetCharName ?? '指定角色'}`,
+					);
+				})
+				.catch((error: unknown) =>
+					showToast(
+						error instanceof Error ? error.message : '移轉物品失敗。',
+						'error',
+					),
+				);
+			return;
+		}
 		const targetCharName =
 			targetCharId === CAMP_CHEST_ID
 				? '🏕️ 營地儲物箱'

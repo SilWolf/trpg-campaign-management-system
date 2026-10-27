@@ -29,6 +29,10 @@ import {
 	type CharacterPermission,
 	type InventoryItem,
 } from '@/types';
+import {
+	INVENTORY_ITEM_SELECT,
+	subscribeCampaignSecureChanges,
+} from '@/lib/campaignShops';
 
 const EMPTY_CURRENCY: CampaignCurrency = {
 	pp: 0,
@@ -83,6 +87,7 @@ export function useCampaignSync(
 	// 1. 初始化資料拉取
 	useEffect(() => {
 		if (!supabase || !isRemoteCampaign || !campaignId) return;
+		const client = supabase;
 		let isMounted = true;
 		lastQueuedCurrency.current = null;
 		// 切換戰役時先清掉上一個戰役的畫面資料，避免跨戰役短暫殘留。
@@ -111,7 +116,7 @@ export function useCampaignSync(
 					supabase.from('characters').select('*').eq('campaign_id', campaignId),
 					supabase
 						.from('inventory_items')
-						.select('*')
+						.select(INVENTORY_ITEM_SELECT)
 						.eq('campaign_id', campaignId),
 					supabase
 						.from('character_permissions')
@@ -186,32 +191,6 @@ export function useCampaignSync(
 				{
 					event: '*',
 					schema: 'public',
-					table: 'inventory_items',
-					filter: `campaign_id=eq.${campaignId}`,
-				},
-				(payload) => {
-					if (
-						payload.eventType === 'INSERT' ||
-						payload.eventType === 'UPDATE'
-					) {
-						const updatedItem = fromDbItem(payload.new as DbInventoryItem);
-						setItemsState((prev) => {
-							const exists = prev.some((i) => i.id === updatedItem.id);
-							return exists
-								? prev.map((i) => (i.id === updatedItem.id ? updatedItem : i))
-								: [...prev, updatedItem];
-						});
-					} else if (payload.eventType === 'DELETE') {
-						const deletedId = (payload.old as { id: string }).id;
-						setItemsState((prev) => prev.filter((i) => i.id !== deletedId));
-					}
-				},
-			)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
 					table: 'character_permissions',
 					filter: `campaign_id=eq.${campaignId}`,
 				},
@@ -255,10 +234,33 @@ export function useCampaignSync(
 				},
 			)
 			.subscribe();
+		const secureChannel = subscribeCampaignSecureChanges(
+			campaignId,
+			() => {
+				void (async () => {
+					const { data, error } = await client
+						.from('inventory_items')
+						.select(INVENTORY_ITEM_SELECT)
+						.eq('campaign_id', campaignId);
+					if (error) throw error;
+					if (isMounted) {
+						setItemsState(((data ?? []) as DbInventoryItem[]).map(fromDbItem));
+					}
+				})().catch((error: unknown) => {
+					console.error('戰役安全資料同步失敗：', error);
+					if (isMounted) setSyncStatus('error');
+				});
+			},
+			(error) => {
+				console.error('戰役安全同步頻道失敗：', error);
+				if (isMounted) setSyncStatus('error');
+			},
+		);
 
 		return () => {
 			isMounted = false;
 			supabase?.removeChannel(channel);
+			secureChannel();
 		};
 	}, [campaignId, isRemoteCampaign, initialCharacters, initialItems]);
 
@@ -356,6 +358,12 @@ export function useCampaignSync(
 						const old = prev.find((p) => p.id === item.id);
 						return !old || JSON.stringify(old) !== JSON.stringify(item);
 					});
+					const insertedItems = upserted.filter(
+						(item) => !prev.some((existing) => existing.id === item.id),
+					);
+					const updatedItems = upserted.filter((item) =>
+						prev.some((existing) => existing.id === item.id),
+					);
 
 					const syncItems = async () => {
 						if (deletedIds.length > 0) {
@@ -367,8 +375,8 @@ export function useCampaignSync(
 							if (error) throw error;
 						}
 
-						if (upserted.length > 0) {
-							const payload = upserted.map((item) => ({
+						if (insertedItems.length > 0) {
+							const payload = insertedItems.map((item) => ({
 								...toDbItem(
 									item.ownerId === CAMP_CHEST_ID
 										? { ...item, isPrivate: false }
@@ -378,7 +386,22 @@ export function useCampaignSync(
 							}));
 							const { error } = await client
 								.from('inventory_items')
-								.upsert(payload);
+								.insert(payload);
+							if (error) throw error;
+						}
+						for (const item of updatedItems) {
+							const dbItem = toDbItem(
+								item.ownerId === CAMP_CHEST_ID
+									? { ...item, isPrivate: false }
+									: item,
+							);
+							const { id, is_identified, ...updatePayload } = dbItem;
+							void is_identified;
+							const { error } = await client
+								.from('inventory_items')
+								.update(updatePayload)
+								.eq('id', id)
+								.eq('campaign_id', campaignId);
 							if (error) throw error;
 						}
 					};
@@ -439,5 +462,6 @@ export function useCampaignSync(
 		campChestCurrency,
 		setCampChestCurrency,
 		syncStatus,
+		isRemoteCampaign,
 	};
 }

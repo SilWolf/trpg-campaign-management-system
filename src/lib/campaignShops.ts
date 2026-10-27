@@ -22,6 +22,7 @@ import type {
 	CampaignShopRefreshResult,
 	CampaignShopWalletType,
 } from '@/types';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type CampaignShopValues = Pick<
 	CampaignShop,
@@ -32,8 +33,6 @@ export type CampaignShopValues = Pick<
 export type CampaignShopItemValues = Pick<
 	CampaignShopItem,
 	| 'itemSnapshot'
-	| 'sourceType'
-	| 'sourceId'
 	| 'unitPriceGp'
 	| 'stockAvailable'
 	| 'requiresApproval'
@@ -45,6 +44,26 @@ function requireSupabase() {
 		throw new Error('商店雲端資料需要設定 Supabase，請先完成登入與環境設定。');
 	}
 	return supabase;
+}
+
+async function throwEdgeFunctionError(error: Error): Promise<never> {
+	if ('context' in error && error.context instanceof Response) {
+		let body: unknown;
+		try {
+			body = await error.context.clone().json();
+		} catch {
+			throw error;
+		}
+		if (
+			typeof body === 'object' &&
+			body !== null &&
+			'error' in body &&
+			typeof body.error === 'string'
+		) {
+			throw new Error(body.error);
+		}
+	}
+	throw error;
 }
 
 async function validateRefreshPolicy(
@@ -60,8 +79,86 @@ async function validateRefreshPolicy(
 	);
 }
 
+const SHOP_ITEM_SELECT =
+	'id,campaign_id,shop_id,item_snapshot,is_identified,unit_price_gp,stock_available,stock_reserved,requires_approval,is_active,created_at,updated_at';
+export const INVENTORY_ITEM_SELECT =
+	'id,owner_id,slot,name,category,sub_type,rarity,icon,damage,mastery,ac,weight,value_gp,quantity,equipped,requires_attunement,attuned,is_homebrew,is_identified,charges,max_charges,effects,flavor,dm_notes,player_notes,is_private,is_equippable,is_consumable,is_important,affixes,item_base';
 const ORDER_SELECT =
-	'id,checkout_id,campaign_id,shop_id,shop_item_id,character_id,item_snapshot,shop_name_snapshot,unit_price_gp,quantity,total_price_gp,status,requires_approval,created_at,updated_at,reviewed_at';
+	'id,checkout_id,campaign_id,shop_id,shop_item_id,character_id,item_snapshot,shop_name_snapshot,unit_price_gp,quantity,total_price_gp,status,requires_approval,created_at,updated_at,reviewed_at,is_identified';
+
+type SecureChangeListener = {
+	onChange: (change: { rowId: string; action: string }) => void;
+	onError: (error: Error) => void;
+};
+
+const secureChangeChannels = new Map<
+	string,
+	{ channel: RealtimeChannel; listeners: Set<SecureChangeListener> }
+>();
+
+export function subscribeCampaignSecureChanges(
+	campaignId: string,
+	onChange: (change: { rowId: string; action: string }) => void,
+	onError: (error: Error) => void,
+): () => void {
+	const listener = { onChange, onError };
+	let subscription = secureChangeChannels.get(campaignId);
+	if (!subscription) {
+		const listeners = new Set<SecureChangeListener>();
+		const channel = requireSupabase()
+			.channel(`campaign:${campaignId}:secure-data`, {
+			config: { private: true },
+		})
+		.on(
+			'broadcast',
+			{ event: 'campaign_data_changed' },
+			({ payload }: { payload: unknown }) => {
+				if (
+					typeof payload !== 'object' ||
+					payload === null ||
+					!('campaign_id' in payload) ||
+					payload.campaign_id !== campaignId ||
+					!('row_id' in payload) ||
+					typeof payload.row_id !== 'string' ||
+					!('action' in payload) ||
+					typeof payload.action !== 'string'
+				) {
+					for (const registered of listeners) {
+						registered.onError(new Error('戰役安全同步通知格式無效。'));
+					}
+					return;
+				}
+				for (const registered of listeners) {
+					registered.onChange({
+						rowId: payload.row_id,
+						action: payload.action,
+					});
+				}
+			},
+		)
+		.subscribe((status, error) => {
+			if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+				for (const registered of listeners) {
+					registered.onError(
+						error ?? new Error(`戰役安全同步頻道狀態：${status}`),
+					);
+				}
+			}
+		});
+		subscription = { channel, listeners };
+		secureChangeChannels.set(campaignId, subscription);
+	}
+	subscription.listeners.add(listener);
+	return () => {
+		const current = secureChangeChannels.get(campaignId);
+		if (!current) return;
+		current.listeners.delete(listener);
+		if (current.listeners.size === 0) {
+			secureChangeChannels.delete(campaignId);
+			void supabase?.removeChannel(current.channel);
+		}
+	};
+}
 
 export async function loadCampaignShops(
 	campaignId: string,
@@ -139,7 +236,7 @@ export async function loadCampaignShopItems(
 ): Promise<CampaignShopItem[]> {
 	const { data, error } = await requireSupabase()
 		.from('campaign_shop_items')
-		.select('*')
+		.select(SHOP_ITEM_SELECT)
 		.eq('campaign_id', campaignId)
 		.eq('shop_id', shopId)
 		.order('created_at', { ascending: true });
@@ -153,15 +250,11 @@ export async function createCampaignShopItems(
 	items: CampaignShopItemValues[],
 ): Promise<CampaignShopItem[]> {
 	if (items.length === 0) return [];
-	const rows = items.map((item) =>
-		toDbCampaignShopItem({ campaignId, shopId, ...item }),
-	);
-	const { data, error } = await requireSupabase()
-		.from('campaign_shop_items')
-		.insert(rows)
-		.select();
-	if (error) throw error;
-	return (data ?? []).map(fromDbCampaignShopItem);
+	const created: CampaignShopItem[] = [];
+	for (const item of items) {
+		created.push(await saveCampaignShopItem(campaignId, shopId, item));
+	}
+	return created;
 }
 
 export async function saveCampaignShopItem(
@@ -172,31 +265,30 @@ export async function saveCampaignShopItem(
 ): Promise<CampaignShopItem> {
 	const client = requireSupabase();
 	const item = { campaignId, shopId, ...values };
-	const result = id
-		? await client
-				.from('campaign_shop_items')
-				.update({
-					item_snapshot: toDbCampaignShopItem(item).item_snapshot,
-					source_type: item.sourceType,
-					source_id: item.sourceId,
-					unit_price_gp: item.unitPriceGp,
-					stock_available: item.stockAvailable,
-					requires_approval: item.requiresApproval,
-					is_active: item.isActive,
-				})
-				.eq('id', id)
-				.eq('campaign_id', campaignId)
-				.eq('shop_id', shopId)
-				.select()
-				.single()
-		: await client
-				.from('campaign_shop_items')
-				.insert(toDbCampaignShopItem(item))
-				.select()
-				.single();
-	const { data, error } = result;
+	const row = toDbCampaignShopItem(item);
+	const { data, error } = await client.rpc('save_campaign_shop_item', {
+		p_campaign_id: campaignId,
+		p_shop_id: shopId,
+		p_item_id: id ?? null,
+		p_item_snapshot: row.item_snapshot,
+		p_unit_price_gp: item.unitPriceGp,
+		p_stock_available: item.stockAvailable,
+		p_requires_approval: item.requiresApproval,
+		p_is_active: item.isActive,
+	});
 	if (error) throw error;
-	return fromDbCampaignShopItem(data);
+	if (typeof data !== 'string' || data.length === 0) {
+		throw new Error('商店商品儲存服務回傳了無效的識別碼。');
+	}
+	const { data: savedRow, error: loadError } = await client
+		.from('campaign_shop_items')
+		.select(SHOP_ITEM_SELECT)
+		.eq('id', data)
+		.eq('campaign_id', campaignId)
+		.eq('shop_id', shopId)
+		.single();
+	if (loadError) throw loadError;
+	return fromDbCampaignShopItem(savedRow);
 }
 
 export async function deleteCampaignShopItem(
@@ -264,17 +356,16 @@ export async function refreshCampaignShopItems(
 		) {
 			throw new Error('刷新預覽包含無效的商品價格或庫存。');
 		}
-		return toDbCampaignShopItem({
+		const item = toDbCampaignShopItem({
 			campaignId,
 			shopId,
 			itemSnapshot: change.itemSnapshot,
-			sourceType: 'catalog',
-			sourceId: change.sourceId,
 			unitPriceGp: change.unitPriceGp,
 			stockAvailable: change.stockAvailable,
 			requiresApproval: false,
 			isActive: true,
 		});
+		return { ...item, source_id: change.sourceId };
 	});
 
 	const { data, error } = await requireSupabase().rpc(
@@ -301,14 +392,12 @@ export async function refreshCampaignShopItems(
 		typeof data !== 'object' ||
 		data === null ||
 		!Number.isSafeInteger(data.created) ||
-		!Number.isSafeInteger(data.restocked) ||
 		!Number.isSafeInteger(data.deleted)
 	) {
 		throw new Error('商店刷新服務回傳了無效的結果。');
 	}
 	return {
 		created: data.created,
-		restocked: data.restocked,
 		deleted: data.deleted,
 	};
 }
@@ -327,9 +416,6 @@ export async function loadCampaignShopOrders(
 
 async function callOrderRpc(
 	name:
-		| 'purchase_campaign_shop_item'
-		| 'request_campaign_shop_item'
-		| 'checkout_campaign_shop_cart'
 		| 'approve_campaign_shop_order'
 		| 'reject_campaign_shop_order'
 		| 'cancel_campaign_shop_order',
@@ -360,38 +446,29 @@ async function callOrderRpc(
 
 type PurchaseDetails = {
 	campaignId: string;
+	shopId: string;
 	shopItemId: string;
 	characterId: string;
 	walletType: CampaignShopWalletType;
 	quantity: number;
 };
 
-function toPurchaseArgs(details: PurchaseDetails) {
-	return {
-		p_campaign_id: details.campaignId,
-		p_shop_item_id: details.shopItemId,
-		p_character_id: details.characterId,
-		p_wallet_type: details.walletType,
-		p_quantity: details.quantity,
-	};
-}
-
 export function purchaseCampaignShopItem(
 	details: PurchaseDetails,
 ): Promise<string> {
-	return callOrderRpc(
-		'purchase_campaign_shop_item',
-		toPurchaseArgs(details),
-	);
+	return checkoutCampaignShopCart({
+		campaignId: details.campaignId,
+		shopId: details.shopId,
+		characterId: details.characterId,
+		walletType: details.walletType,
+		items: [{ shopItemId: details.shopItemId, quantity: details.quantity }],
+	});
 }
 
 export function requestCampaignShopItem(
 	details: PurchaseDetails,
 ): Promise<string> {
-	return callOrderRpc(
-		'request_campaign_shop_item',
-		toPurchaseArgs(details),
-	);
+	return purchaseCampaignShopItem(details);
 }
 
 export function checkoutCampaignShopCart(
@@ -400,16 +477,37 @@ export function checkoutCampaignShopCart(
 		items: { shopItemId: string; quantity: number }[];
 	},
 ): Promise<string> {
-	return callOrderRpc('checkout_campaign_shop_cart', {
-		p_campaign_id: details.campaignId,
-		p_shop_id: details.shopId,
-		p_character_id: details.characterId,
-		p_wallet_type: details.walletType,
-		p_items: details.items.map((item) => ({
-			shop_item_id: item.shopItemId,
-			quantity: item.quantity,
-		})),
-	});
+	const client = requireSupabase();
+	return client.functions
+		.invoke<{ checkoutId: string }>('campaign-shop-purchase', {
+			body: {
+				campaignId: details.campaignId,
+				shopId: details.shopId,
+				characterId: details.characterId,
+				walletType: details.walletType,
+				items: details.items,
+			},
+		})
+		.then(({ data, error }) => {
+			if (error) return throwEdgeFunctionError(error);
+			if (!data || typeof data.checkoutId !== 'string' || !data.checkoutId) {
+				throw new Error('購買服務回傳了無效的交易識別碼。');
+			}
+			return data.checkoutId;
+		});
+}
+
+export async function identifyInventoryItem(
+	campaignId: string,
+	itemId: string,
+): Promise<void> {
+	const { data, error } = await requireSupabase().functions.invoke<{
+		itemId: string;
+	}>('identify-inventory-item', { body: { campaignId, itemId } });
+	if (error) await throwEdgeFunctionError(error);
+	if (!data || data.itemId !== itemId) {
+		throw new Error('鑑定服務回傳了無效的物品識別碼。');
+	}
 }
 
 export function approveCampaignShopOrder(orderId: string): Promise<string> {

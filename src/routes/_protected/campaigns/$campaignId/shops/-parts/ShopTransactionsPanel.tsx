@@ -19,6 +19,7 @@ import {
 	purchaseCampaignShopItem,
 	rejectCampaignShopOrder,
 	requestCampaignShopItem,
+	subscribeCampaignSecureChanges,
 } from '@/lib/campaignShops';
 import { supabase } from '@/lib/supabase';
 import type {
@@ -372,25 +373,17 @@ export function ShopTransactionsPanel({
 
 	useEffect(() => {
 		if (!supabase) return;
-		const channel = supabase
-			.channel(`campaign-shop-orders-${campaignId}`)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'campaign_shop_orders',
-					filter: `campaign_id=eq.${campaignId}`,
-				},
-				() => {
-					void reloadOrders().catch((error: unknown) =>
-						setErrorMessage(getErrorMessage(error, '同步訂單紀錄失敗。')),
-					);
-				},
-			)
-			.subscribe();
+		const channel = subscribeCampaignSecureChanges(
+			campaignId,
+			() => {
+				void reloadOrders().catch((error: unknown) =>
+					setErrorMessage(getErrorMessage(error, '同步訂單紀錄失敗。')),
+				);
+			},
+			(error) => setErrorMessage(getErrorMessage(error, '安全同步頻道連線失敗。')),
+		);
 		return () => {
-			void supabase?.removeChannel(channel);
+			channel();
 		};
 	}, [campaignId, reloadOrders]);
 
@@ -447,6 +440,7 @@ export function ShopTransactionsPanel({
 		try {
 			const details = {
 				campaignId,
+				shopId: shop.id,
 				shopItemId: selectedItem.id,
 				characterId: selectedCharacter.id,
 				walletType: effectiveWalletType,
@@ -588,7 +582,7 @@ export function ShopTransactionsPanel({
 									isDm,
 								);
 								const isMasked =
-									!isDm && item.itemSnapshot.isIdentified === false;
+									!isDm && !item.isIdentified;
 								return (
 								<div
 									key={item.id}

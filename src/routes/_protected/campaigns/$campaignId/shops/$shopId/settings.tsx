@@ -34,6 +34,7 @@ import {
 	loadCampaignShopItems,
 	loadCampaignShops,
 	saveCampaignShopItem,
+	subscribeCampaignSecureChanges,
 	type CampaignShopItemValues,
 } from '@/lib/campaignShops';
 import {
@@ -57,7 +58,6 @@ import type {
 	CampaignShop,
 	CampaignShopItem,
 	CampaignShopItemSnapshot,
-	CampaignShopItemSourceType,
 	ItemBaseCategory,
 	ItemAffix,
 	ItemBaseRarity,
@@ -107,8 +107,7 @@ interface ImportSource {
 	key: string;
 	name: string;
 	detail: string;
-	sourceType: Exclude<CampaignShopItemSourceType, 'manual'>;
-	sourceId: string;
+	sourceType: 'catalog' | 'blacksmith';
 	snapshot: CampaignShopItemSnapshot;
 }
 
@@ -415,7 +414,6 @@ function CampaignShopsPage() {
 											name: item.name,
 											detail: `${definition.title}・${CATEGORY_LABELS[item.category]}`,
 											sourceType: 'catalog',
-											sourceId: `${item.catalogId}:${item.itemId}`,
 											snapshot: blacksmithItemToCampaignShopSnapshot(item),
 										}),
 									),
@@ -434,7 +432,6 @@ function CampaignShopsPage() {
 						name: template.name,
 						detail: '我的樣板',
 						sourceType: 'blacksmith' as const,
-						sourceId: template.id,
 						snapshot: snapshotFromTemplate(template),
 					})),
 					...templates.shared.map((template) => ({
@@ -442,7 +439,6 @@ function CampaignShopsPage() {
 						name: template.name,
 						detail: '分享樣板',
 						sourceType: 'blacksmith' as const,
-						sourceId: template.id,
 						snapshot: snapshotFromTemplate(template),
 					})),
 				];
@@ -479,23 +475,19 @@ function CampaignShopsPage() {
 					);
 				},
 			)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'campaign_shop_items',
-					filter: `campaign_id=eq.${campaignId}`,
-				},
-				() => {
-					void reloadItems().catch((error: unknown) =>
-						setErrorMessage(getErrorMessage(error, '同步商品資料失敗。')),
-					);
-				},
-			)
 			.subscribe();
+		const secureChannel = subscribeCampaignSecureChanges(
+			campaignId,
+			() => {
+				void reloadItems().catch((error: unknown) =>
+					setErrorMessage(getErrorMessage(error, '同步商品資料失敗。')),
+				);
+			},
+			(error) => setErrorMessage(getErrorMessage(error, '安全同步頻道連線失敗。')),
+		);
 		return () => {
 			void supabase?.removeChannel(channel);
+			secureChannel();
 		};
 	}, [campaignId, isGuest, reloadItems, reloadShops]);
 
@@ -531,6 +523,10 @@ function CampaignShopsPage() {
 	};
 
 	const startItemEdit = (item: CampaignShopItem) => {
+		if (!item.isIdentified) {
+			toast.error('未鑑定商品無法在客戶端載入真實定義；請刪除後重新新增。');
+			return;
+		}
 		setEditingItem(item);
 		setItemForm(itemFormFromSnapshot(item.itemSnapshot, item));
 		setDeleteConfirmationItemId(null);
@@ -644,8 +640,6 @@ function CampaignShopsPage() {
 			if (editingItem) {
 				values = {
 					itemSnapshot,
-					sourceType: editingItem.sourceType,
-					sourceId: editingItem.sourceId,
 					unitPriceGp,
 					stockAvailable,
 					requiresApproval: itemForm.requiresApproval,
@@ -710,8 +704,6 @@ function CampaignShopsPage() {
 		try {
 			await saveCampaignShopItem(campaignId, selectedShop.id, {
 				itemSnapshot,
-				sourceType: source.sourceType,
-				sourceId: source.sourceId,
 				unitPriceGp,
 				stockAvailable: 0,
 				requiresApproval: false,

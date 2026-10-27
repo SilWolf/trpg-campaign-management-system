@@ -416,7 +416,9 @@ test('核准 RPC 失敗時待審訂單仍保留原狀', async ({ page }) => {
 	await page.goto(`${shopUrl}/settings`);
 	await page.getByRole('button', { name: '核准' }).click();
 
-	await expect(page.getByRole('alert')).toContainText(
+	await expect(
+		page.getByRole('region', { name: '操作通知' }).getByRole('alert'),
+	).toContainText(
 		'錢包餘額不足，無法完成交易。',
 	);
 	await expect(page.getByTestId('shop-order-row')).toContainText('待審查');

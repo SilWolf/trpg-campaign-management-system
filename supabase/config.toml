@@ -2,3 +2,9 @@ project_id = "trpg-campaign-management-system"
 
 [functions.create-campaign]
 verify_jwt = true
+
+[functions.campaign-shop-purchase]
+verify_jwt = true
+
+[functions.identify-inventory-item]
+verify_jwt = true

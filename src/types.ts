@@ -76,7 +76,6 @@ export type WeaponItemMastery = Exclude<WeaponMasteryKey, 'None'>;
 export type WeaponMasteryInfo = { name: string; desc: string };
 export type CurrencyType = 'pp' | 'gp' | 'ep' | 'sp' | 'cp';
 export type ViewMode = 'player' | 'dm';
-export type CampaignShopItemSourceType = 'catalog' | 'blacksmith' | 'manual';
 export type CampaignShopOrderStatus =
 	| 'completed'
 	| 'pending'
@@ -128,7 +127,6 @@ export interface CampaignShopRefreshItemChange {
 
 export interface CampaignShopRefreshResult {
 	created: number;
-	restocked: number;
 	deleted: number;
 }
 
@@ -274,8 +272,7 @@ export interface CampaignShopItem {
 	campaignId: string;
 	shopId: string;
 	itemSnapshot: CampaignShopItemSnapshot;
-	sourceType: CampaignShopItemSourceType;
-	sourceId: string | null;
+	isIdentified: boolean;
 	unitPriceGp: number;
 	stockAvailable: number;
 	stockReserved: number;
