@@ -16,6 +16,7 @@ import {
 	type ItemAffix,
 	type ItemBaseRarity,
 } from '@/types';
+import type { ToastKind } from '@/components/ui/ToastViewport';
 import { getItemImageUrl, ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 
 const DEFAULT_FORM: HomebrewForm = {
@@ -103,7 +104,7 @@ interface UseInventoryActionsProps {
 	currentBagTab: 'public' | 'private';
 	setBagTab: Dispatch<SetStateAction<'public' | 'private'>>;
 	setSelectedItemId: Dispatch<SetStateAction<string>>;
-	showToast: (message: string) => void;
+	showToast: (message: string, kind?: ToastKind) => void;
 }
 
 export function useInventoryActions({
@@ -139,7 +140,10 @@ export function useInventoryActions({
 
 	const toggleAttune = (item: InventoryItem) => {
 		if (!item.attuned && attunedCount >= 3) {
-			showToast('⚠️ 同調失敗：D&D 5R 規則每名角色最多只能同調 3 件魔法物品！');
+			showToast(
+				'同調失敗：D&D 5R 規則每名角色最多只能同調 3 件魔法物品！',
+				'warning',
+			);
 			return;
 		}
 		setItems((prev) =>
@@ -455,7 +459,7 @@ export function useInventoryActions({
 		const actualAmount = Math.min(available, amount);
 
 		if (actualAmount <= 0) {
-			showToast('⚠️ 該幣種餘額不足，無法轉移！');
+			showToast('該幣種餘額不足，無法轉移！', 'warning');
 			return;
 		}
 
@@ -504,7 +508,7 @@ export function useInventoryActions({
 		const actualAmount = Math.min(available, amount);
 
 		if (actualAmount <= 0) {
-			showToast('⚠️ 該幣種餘額不足，無法轉出！');
+			showToast('該幣種餘額不足，無法轉出！', 'warning');
 			return;
 		}
 
@@ -606,7 +610,8 @@ export function useInventoryActions({
 
 		if (eachShare <= 0) {
 			showToast(
-				`⚠️ 公庫的 ${coinType.toUpperCase()} 不足平分給 ${partyMembers.length} 名隊員！`,
+				`公庫的 ${coinType.toUpperCase()} 不足平分給 ${partyMembers.length} 名隊員！`,
+				'warning',
 			);
 			return;
 		}
@@ -647,7 +652,7 @@ export function useInventoryActions({
 			(character) => character.id !== CAMP_CHEST_ID,
 		);
 		if (realCharacters.length <= 1) {
-			showToast('⚠️ 戰役中至少需保留一名冒險者角色！');
+			showToast('戰役中至少需保留一名冒險者角色！', 'warning');
 			return;
 		}
 		const targetChar = characters.find((c) => c.id === charId);
@@ -750,7 +755,7 @@ export function useInventoryActions({
 			newItemForm.icon.startsWith(ITEM_IMAGE_ICON_PREFIX) &&
 			!getItemImageUrl(newItemForm.icon)
 		) {
-			showToast('圖片網址必須使用 HTTPS。');
+			showToast('圖片網址必須使用 HTTPS。', 'warning');
 			return;
 		}
 
@@ -758,7 +763,10 @@ export function useInventoryActions({
 		try {
 			baseItem = formToAllItem(newItemForm);
 		} catch (error) {
-			showToast(error instanceof Error ? error.message : '物品資料無效。');
+			showToast(
+				error instanceof Error ? error.message : '物品資料無效。',
+				'warning',
+			);
 			return;
 		}
 		const inventoryBase: AllItem & {

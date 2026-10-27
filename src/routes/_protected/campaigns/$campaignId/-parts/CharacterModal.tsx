@@ -3,6 +3,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { CAMP_CHEST_ID, type Character } from '@/types';
 import { UserPlus, Save, X, Shield } from 'lucide-react';
 import { Button, Input, Select } from '@/components/ui';
+import { useConfirm } from '@/contexts/FeedbackContext';
 
 interface CharacterModalProps {
 	isOpen: boolean;
@@ -41,6 +42,7 @@ export default function CharacterModal({
 	onSave,
 	onDelete,
 }: CharacterModalProps) {
+	const confirm = useConfirm();
 	const [name, setName] = useState('');
 	const [title, setTitle] = useState('');
 	const [str, setStr] = useState(10);
@@ -208,15 +210,16 @@ export default function CharacterModal({
 							<Button
 								type='button'
 								variant='danger'
-								onClick={() => {
-									if (
-										window.confirm(
-											`確定要移除角色「${character.name}」嗎？\n（該角色身上的所有物品與公開/私人金幣將自動打包移入「🏕️ 營地儲物箱」）`,
-										)
-									) {
-										onDelete(character.id);
-										onClose();
-									}
+								onClick={async () => {
+									const confirmed = await confirm({
+										title: '移除角色',
+										message: `確定要移除角色「${character.name}」嗎？該角色身上的所有物品與公開／私人金幣將自動打包移入「營地儲物箱」。`,
+										confirmLabel: '移除角色',
+										variant: 'danger',
+									});
+									if (!confirmed) return;
+									onDelete(character.id);
+									onClose();
 								}}
 								className='px-3 py-2 rounded bg-red-950/80 hover:bg-red-900 border border-red-700/60 text-red-200 font-medium transition cursor-pointer'
 							>

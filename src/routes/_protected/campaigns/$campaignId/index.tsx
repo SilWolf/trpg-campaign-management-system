@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Drawer } from 'vaul';
-import { Sparkles, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import AppHeader from './-parts/AppHeader';
 import CharacterStatusBar from './-parts/CharacterStatusBar';
@@ -28,6 +28,8 @@ import {
 	type ViewMode,
 } from '@/types';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
+import { useToast } from '@/contexts/FeedbackContext';
+import type { ToastKind } from '@/components/ui/ToastViewport';
 
 export const Route = createFileRoute('/_protected/campaigns/$campaignId/')({
 	beforeLoad: async () => {
@@ -40,6 +42,7 @@ function CampaignInventoryPage() {
 	const { campaignId } = Route.useParams();
 	const { isDm, user } = useUserCampaignRole(campaignId);
 	const { isGuest } = useAuth();
+	const toast = useToast();
 
 	const [viewMode, setViewMode] = useState<ViewMode>('player');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
@@ -97,11 +100,8 @@ function CampaignInventoryPage() {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [countCoinWeight, setCountCoinWeight] = useState(true);
 	const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
-	const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-	const showToast = (message: string) => {
-		setToastMessage(message);
-		setTimeout(() => setToastMessage(null), 3000);
+	const showToast = (message: string, kind: ToastKind = 'success') => {
+		toast[kind](message);
 	};
 
 	const activeCharacter = useMemo(() => {
@@ -325,13 +325,6 @@ function CampaignInventoryPage() {
 			className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden'
 		>
 			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.14),_rgba(12,10,9,0.95)_70%)]' />
-
-			{toastMessage && (
-				<div className='fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 border border-amber-500/80 text-amber-200 px-5 py-2.5 rounded-md shadow-[0_0_25px_rgba(245,158,11,0.35)] flex items-center gap-2.5 text-sm font-medium animate-bounce'>
-					<Sparkles className='w-4 h-4 text-amber-400 shrink-0' />
-					<span>{toastMessage}</span>
-				</div>
-			)}
 
 			<AppHeader
 				isDm={isDm}

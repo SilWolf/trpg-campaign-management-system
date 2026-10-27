@@ -8,7 +8,7 @@
 2. **Confirm Dialog**：以應用程式內的非同步確認介面取代 `window.confirm`，呈現清楚的動作語意與危險程度。
 3. **逐步取代分散的操作通知**：將大部分非同步操作完成或失敗後的頁面內通知改用全域 Toast；保留需要留在操作位置的表單驗證、登入狀態及長期重要訊息。
 
-目前進度：Phase 1「建立共用基礎」已完成；Phase 2 與 Phase 3 尚未開始。本次未遷移現有頁面通知或 `window.confirm`，亦未執行 Supabase Schema、Edge Function 或部署變更。
+目前進度：Phase 1「建立共用基礎」與 Phase 2「遷移現有 Toast 與 Confirm」已完成；Phase 3「回歸與收尾」尚未開始。本次僅調整前端回饋呈現與 E2E 測試，未執行 Supabase Schema、Edge Function 或部署變更。
 
 ## 現況盤點
 
@@ -139,17 +139,21 @@ type Confirm = (options: ConfirmOptions) => Promise<boolean>;
 
 ### Phase 2：遷移現有 Toast 與 Confirm
 
-- 先遷移背包頁和 `useInventoryActions`，驗證 Hook 型別、元件呈現與營地箱操作通知。
-- 再依「戰役大廳／個人資料 → 鍛造工坊／黑鐵匠匯入 → 商店／戰役設定」遷移操作結果。
-- 移除被完整取代的區域 `notice`／`message` state 與逾時清除邏輯；仍有載入或驗證用途的 state 不一併刪除。
-- 將三個角色／戰役重要操作的 `window.confirm` 改成 Promise API，保證取消路徑不執行原操作。
-- 搜尋全專案殘留的 `showToast`、成功結果區域通知及 `window.confirm`，逐筆確認其用途及是否應遷移；不做無條件字串取代。
+- [x] 背包頁及 `useInventoryActions` 改用全域 Toast；移除頁面自有通知狀態、手動計時器與舊彈跳提示，規則限制及輸入錯誤改用 warning 類型。
+- [x] 戰役大廳、個人資料、鍛造樣板與黑鐵匠匯入的操作結果改用全域 Toast；表單驗證、載入錯誤與匯入前置條件維持原位。
+- [x] 商店交易、訂單、刷新、商店目錄與戰役商店設定的操作結果改用全域 Toast；結帳前驗證、刷新預覽／套用錯誤及重要同步失敗仍留在操作區。
+- [x] 戰役與角色設定的儲存、邀請、權限與角色操作結果改用全域 Toast；保留配額／權限驗證、本機暫存提示及角色轉移的部分成功／回復失敗資訊。
+- [x] 移除已由全域 Toast 取代的區域成功訊息、狀態與逾時清除；載入、驗證與需持續參照的錯誤狀態保留。
+- [x] 角色移除、戰役永久刪除及角色擁有權轉移改用 `useConfirm()` Promise API；取消、Escape 或遮罩關閉不執行後續操作。移除戰役最後一名角色時改用全域 warning。
+- [x] 更新受影響 E2E 的 Toast 與 Confirm 定位方式；全專案搜尋確認沒有殘留 `window.confirm`、`window.alert` 或 `alert()` 呼叫。
+- 驗證結果：`npm run typecheck` 通過；`npm run lint` 通過（0 errors，另有既存的 `$shopId.tsx` 未使用 ESLint disable 警告）；`npm run build` 通過；`npm run test:e2e` 通過（64 項）。
 
 ### Phase 3：回歸與收尾
 
-- 補上可重複操作的 Playwright E2E 情境，並更新受影響測試的可存取角色／可見文案定位。
-- 以型別檢查、Lint、建置及相關 E2E 驗證改動。
-- 更新相關元件文件或測試說明；維持 Supabase 同步、RLS、Realtime 及交易語意不變。
+- [x] 新增 `tests/e2e/global-feedback.spec.ts`，覆蓋 Toast 三則可見上限、排隊補位、手動關閉、逾時、錯誤 alert 語意與手機版溢位；Confirm 預設取消焦點、Escape／遮罩取消，以及確認後僅執行一次刪除。
+- [x] 更新受影響測試使用可存取角色與可見文案定位，並擴充 Supabase 測試替身以重複驗證儲存錯誤 Toast。
+- [x] 以型別檢查、Lint、建置及完整 E2E 套件驗證；未變更 Supabase 同步、RLS、Realtime 或交易語意。
+- 驗證結果：`npm run typecheck` 通過；`npm run lint` 通過（0 errors，另有既存的 `$shopId.tsx` 未使用 ESLint disable 警告）；`npm run build` 通過；`npm run test:e2e` 通過（67 項）。
 
 ## 驗收標準
 

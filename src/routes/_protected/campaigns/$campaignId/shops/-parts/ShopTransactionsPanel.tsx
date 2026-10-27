@@ -9,6 +9,7 @@ import {
 	X,
 } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
+import { useToast } from '@/contexts/FeedbackContext';
 import {
 	approveCampaignShopOrder,
 	cancelCampaignShopOrder,
@@ -138,6 +139,7 @@ export function ShopTransactionsPanel({
 	onCartQuantityChange,
 	onCheckoutComplete,
 }: ShopTransactionsPanelProps) {
+	const toast = useToast();
 	const [characters, setCharacters] = useState<PurchasableCharacter[]>([]);
 	const [characterNames, setCharacterNames] = useState<Map<string, string>>(
 		() => new Map(),
@@ -155,7 +157,6 @@ export function ShopTransactionsPanel({
 	const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
 	const [isSubmittingPurchase, setIsSubmittingPurchase] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [notice, setNotice] = useState<string | null>(null);
 	const checkoutDialogRef = useRef<HTMLDialogElement>(null);
 
 	const activeItems = useMemo(
@@ -397,13 +398,21 @@ export function ShopTransactionsPanel({
 	) => {
 		setBusyOrderId(orderId);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			await action();
-			await reloadOrders();
-			setNotice(successMessage);
+			toast.success(successMessage);
+			try {
+				await reloadOrders();
+			} catch (error) {
+				toast.error(
+					`操作已完成，但無法重新載入最新紀錄：${getErrorMessage(
+						error,
+						'同步訂單資料失敗。',
+					)}`,
+				);
+			}
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '處理購買請求失敗。'));
+			toast.error(getErrorMessage(error, '處理購買請求失敗。'));
 		} finally {
 			setBusyOrderId(null);
 		}
@@ -425,7 +434,6 @@ export function ShopTransactionsPanel({
 		}
 		setIsSubmittingPurchase(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			const details = {
 				campaignId,
@@ -436,14 +444,23 @@ export function ShopTransactionsPanel({
 			};
 			if (selectedItem.requiresApproval) {
 				await requestCampaignShopItem(details);
-				setNotice('購買請求已送出；核准前不會扣款，商品庫存已保留。');
+				toast.success('購買請求已送出；核准前不會扣款，商品庫存已保留。');
 			} else {
 				await purchaseCampaignShopItem(details);
-				setNotice('購買完成，商品已加入角色公開背包。');
+				toast.success('購買完成，商品已加入角色公開背包。');
 			}
-			await reload();
+			try {
+				await reload();
+			} catch (error) {
+				toast.error(
+					`交易已成立，但無法重新載入最新紀錄：${getErrorMessage(
+						error,
+						'同步購物資料失敗。',
+					)}`,
+				);
+			}
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '送出購買失敗，請稍後重試。'));
+			toast.error(getErrorMessage(error, '送出購買失敗，請稍後重試。'));
 		} finally {
 			setIsSubmittingPurchase(false);
 		}
@@ -466,7 +483,6 @@ export function ShopTransactionsPanel({
 		}
 		setIsSubmittingPurchase(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			await checkoutCampaignShopCart({
 				campaignId,
@@ -480,7 +496,7 @@ export function ShopTransactionsPanel({
 			});
 			onCheckoutComplete?.();
 			onCheckoutOpenChange?.(false);
-			setNotice(
+			toast.success(
 				cartHasApproval
 					? '購買請求已送出；整筆交易待 DM 審查，核准前不會扣款。'
 					: '結帳完成，商品已加入角色公開背包。',
@@ -488,7 +504,7 @@ export function ShopTransactionsPanel({
 			try {
 				await reload();
 			} catch (error) {
-				setErrorMessage(
+				toast.error(
 					`交易已成立，但無法重新載入最新紀錄：${getErrorMessage(
 						error,
 						'同步購物資料失敗。',
@@ -496,7 +512,7 @@ export function ShopTransactionsPanel({
 				);
 			}
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '結帳失敗，請稍後重試。'));
+			toast.error(getErrorMessage(error, '結帳失敗，請稍後重試。'));
 		} finally {
 			setIsSubmittingPurchase(false);
 		}
@@ -513,15 +529,6 @@ export function ShopTransactionsPanel({
 					<span>{errorMessage}</span>
 				</div>
 			)}
-			{notice && (
-				<div
-					role='status'
-					className='rounded-md border border-emerald-800/70 bg-emerald-950/30 p-3 text-sm text-emerald-200'
-				>
-					{notice}
-				</div>
-			)}
-
 			{cartItems && (
 				<dialog
 					ref={checkoutDialogRef}

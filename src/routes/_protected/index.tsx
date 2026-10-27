@@ -7,7 +7,6 @@ import {
 	Swords,
 	Users,
 	X,
-	Sparkles,
 	UserCog,
 	Hammer,
 } from 'lucide-react';
@@ -15,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase, toDbItem } from '@/lib/supabase';
 import { INITIAL_CHARACTERS, INITIAL_ITEMS } from '@/data';
 import { Button, Input, Select } from '@/components/ui';
+import { useToast } from '@/contexts/FeedbackContext';
 
 export const Route = createFileRoute('/_protected/')({
 	component: CampaignLobbyPage,
@@ -34,12 +34,12 @@ interface Campaign {
 function CampaignLobbyPage() {
 	const navigate = useNavigate();
 	const { user, isGuest, signOut } = useAuth();
+	const toast = useToast();
 	const [dialog, setDialog] = useState<LobbyDialog>(null);
 	const [campaignName, setCampaignName] = useState('');
 	const [campaignTemplate, setCampaignTemplate] =
 		useState<CampaignTemplate>('sample');
 	const [inviteCode, setInviteCode] = useState('');
-	const [notice, setNotice] = useState<string | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -87,9 +87,10 @@ function CampaignLobbyPage() {
 	const handleSignOut = async () => {
 		try {
 			await signOut();
+			toast.success('已成功登出。');
 			await navigate({ to: '/login' });
 		} catch (error) {
-			setErrorMessage(
+			toast.error(
 				error instanceof Error ? error.message : '登出失敗，請稍後再試。',
 			);
 		}
@@ -188,6 +189,11 @@ function CampaignLobbyPage() {
 			// 3. 清理狀態並跳轉至新戰役背包
 			closeDialog();
 			setCampaignName('');
+			toast.success(
+				campaignTemplate === 'sample'
+					? '範例戰役已建立。'
+					: '空白戰役已建立。',
+			);
 			await navigate({
 				to: '/campaigns/$campaignId',
 				params: { campaignId: newCampaignId },
@@ -230,6 +236,7 @@ function CampaignLobbyPage() {
 
 			closeDialog();
 			setInviteCode('');
+			toast.success('已成功加入戰役。');
 			await navigate({
 				to: '/campaigns/$campaignId',
 				params: { campaignId: data.campaign_id },
@@ -303,12 +310,6 @@ function CampaignLobbyPage() {
 					</div>
 				</header>
 
-				{notice && (
-					<div className='mb-5 rounded-md border border-amber-800/70 bg-amber-950/40 px-4 py-3 text-sm text-amber-200 flex items-center gap-2'>
-						<Sparkles className='w-4 h-4 text-amber-400 shrink-0' />
-						<span>{notice}</span>
-					</div>
-				)}
 				{errorMessage && (
 					<div
 						data-testid='lobby-error'
@@ -339,7 +340,6 @@ function CampaignLobbyPage() {
 							onClick={() => {
 								setDialog('create');
 								setCampaignTemplate('sample');
-								setNotice(null);
 								setErrorMessage(null);
 							}}
 							className='gap-2 border-purple-500/60 bg-purple-950/70 px-3 py-2 text-xs text-purple-200 shadow hover:border-purple-300 hover:bg-purple-950'
@@ -353,7 +353,6 @@ function CampaignLobbyPage() {
 							variant='secondary'
 							onClick={() => {
 								setDialog('join');
-								setNotice(null);
 								setErrorMessage(null);
 							}}
 							className='gap-2 px-3 py-2 text-xs'
@@ -388,7 +387,6 @@ function CampaignLobbyPage() {
 								onClick={() => {
 									setDialog('create');
 									setCampaignTemplate('sample');
-									setNotice(null);
 									setErrorMessage(null);
 								}}
 								className='mt-5 gap-2 border border-amber-500/60 bg-amber-700/80 px-4 py-2 text-sm text-amber-50 shadow hover:border-amber-300 hover:bg-amber-600'

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PackagePlus, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/FeedbackContext';
 import {
 	toDbBlacksmithImportDefinition,
 	toBlacksmithImportDefinition,
@@ -42,6 +43,7 @@ export function BlacksmithImportButton({
 	className = '',
 }: BlacksmithImportButtonProps) {
 	const { user, isGuest } = useAuth();
+	const toast = useToast();
 	const [isOpen, setIsOpen] = useState(false);
 	const [campaigns, setCampaigns] = useState<CampaignOption[]>([]);
 	const [characters, setCharacters] = useState<CharacterOption[]>([]);
@@ -52,7 +54,6 @@ export function BlacksmithImportButton({
 	const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
 	const [isImporting, setIsImporting] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const client = supabase;
@@ -151,7 +152,6 @@ export function BlacksmithImportButton({
 
 		setIsImporting(true);
 		setErrorMessage(null);
-		setSuccessMessage(null);
 		try {
 			const { error } = await supabase.rpc('import_blacksmith_item', {
 				p_campaign_id: campaignId,
@@ -170,11 +170,12 @@ export function BlacksmithImportButton({
 					? '營地儲物箱'
 					: (characters.find((character) => character.id === ownerId)?.name ??
 						'角色');
-			setSuccessMessage(
+			toast.success(
 				`已將 ${parsedQuantity} 個「${source.name}」匯入「${campaignName}」的「${ownerName}」。`,
 			);
+			setIsOpen(false);
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '匯入失敗，請稍後重試。'));
+			toast.error(getErrorMessage(error, '匯入失敗，請稍後重試。'));
 		} finally {
 			setIsImporting(false);
 		}
@@ -189,7 +190,6 @@ export function BlacksmithImportButton({
 				disabled={!canImport}
 				onClick={() => {
 					setErrorMessage(null);
-					setSuccessMessage(null);
 					setIsOpen(true);
 				}}
 				className={`inline-flex items-center justify-center gap-2 rounded-md border border-cyan-700/70 bg-cyan-950/50 px-3 py-2 text-sm font-semibold text-cyan-200 hover:border-cyan-500 hover:bg-cyan-900/50 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
@@ -308,21 +308,15 @@ export function BlacksmithImportButton({
 								{errorMessage}
 							</p>
 						)}
-						{successMessage && (
-							<p role='status' className='rounded-md bg-emerald-950/50 p-3 text-sm text-emerald-200'>
-								{successMessage}
-							</p>
-						)}
-
 						<footer className='flex justify-end gap-2'>
 							<button
 								type='button'
 								onClick={() => setIsOpen(false)}
 								className='rounded-md border border-stone-700 px-4 py-2 text-sm text-stone-300 hover:bg-stone-900'
 							>
-								{successMessage ? '完成' : '取消'}
+								取消
 							</button>
-							{!successMessage && canImport && (
+							{canImport && (
 								<button
 									type='button'
 									onClick={() => void handleImport()}

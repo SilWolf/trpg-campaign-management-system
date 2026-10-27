@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Check, Plus, RotateCw, Trash2, X } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
+import { useToast } from '@/contexts/FeedbackContext';
 import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import {
 	BLACKSMITH_CATEGORY_LABELS,
@@ -181,6 +182,7 @@ export function CampaignShopRefreshPanel({
 	onReloadShops,
 	onReloadItems,
 }: CampaignShopRefreshPanelProps) {
+	const toast = useToast();
 	const [policy, setPolicy] = useState<CampaignShopRefreshPolicy>(
 		shop.refreshPolicy ?? createDefaultCampaignShopRefreshPolicy(),
 	);
@@ -206,7 +208,6 @@ export function CampaignShopRefreshPanel({
 		null,
 	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [notice, setNotice] = useState<string | null>(null);
 	const deleteRuleDialogRef = useRef<HTMLDialogElement>(null);
 	const previewDialogRef = useRef<HTMLDialogElement>(null);
 
@@ -350,7 +351,6 @@ export function CampaignShopRefreshPanel({
 	const savePolicy = async () => {
 		setIsSaving(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			const saved = await saveCampaignShopRefreshPolicy(
 				campaignId,
@@ -360,10 +360,19 @@ export function CampaignShopRefreshPanel({
 			setPolicy(saved.refreshPolicy);
 			setSavedPolicy(saved.refreshPolicy);
 			setPreview(null);
-			await onReloadShops();
-			setNotice('店舖刷新政策已儲存。');
+			toast.success('店舖刷新政策已儲存。');
+			try {
+				await onReloadShops();
+			} catch (error) {
+				setErrorMessage(
+					`刷新政策已儲存，但無法重新載入商店資料：${getErrorMessage(
+						error,
+						'同步商店資料失敗。',
+					)}`,
+				);
+			}
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '儲存刷新政策失敗。'));
+			toast.error(getErrorMessage(error, '儲存刷新政策失敗。'));
 		} finally {
 			setIsSaving(false);
 		}
@@ -376,7 +385,6 @@ export function CampaignShopRefreshPanel({
 		}
 		setIsGenerating(true);
 		setErrorMessage(null);
-		setNotice(null);
 		setConfirmEmptyRefresh(false);
 		try {
 			const currentCatalogIds = await loadCurrentCampaignCatalogIds(
@@ -428,7 +436,6 @@ export function CampaignShopRefreshPanel({
 		}
 		setIsApplying(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			const result = await refreshCampaignShopItems(
 				campaignId,
@@ -438,12 +445,21 @@ export function CampaignShopRefreshPanel({
 				preview.keepItemsOnRefresh,
 				preview.changes,
 			);
-			await Promise.all([onReloadShops(), onReloadItems()]);
 			setPreview(null);
 			setConfirmEmptyRefresh(false);
-			setNotice(
+			toast.success(
 				`店舖刷新完成：新增 ${result.created} 項、補貨 ${result.restocked} 項、刪除 ${result.deleted} 項。`,
 			);
+			try {
+				await Promise.all([onReloadShops(), onReloadItems()]);
+			} catch (error) {
+				setErrorMessage(
+					`店舖刷新已套用，但無法重新載入最新資料：${getErrorMessage(
+						error,
+						'同步商店資料失敗。',
+					)}`,
+				);
+			}
 		} catch (error) {
 			setErrorMessage(
 				getErrorMessage(
@@ -483,12 +499,6 @@ export function CampaignShopRefreshPanel({
 					<span>{errorMessage}</span>
 				</div>
 			)}
-			{notice && (
-				<p role='status' className='mt-4 rounded-md border border-emerald-800/70 bg-emerald-950/30 p-3 text-sm text-emerald-200'>
-					{notice}
-				</p>
-			)}
-
 			<label className='mt-4 flex cursor-pointer items-start gap-3 rounded-md border border-stone-800 bg-stone-950/50 p-3 text-sm text-stone-300'>
 				<input
 					type='checkbox'

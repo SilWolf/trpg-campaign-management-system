@@ -2,10 +2,11 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route。 */
 import { useState, useEffect, type FormEvent } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { User, Mail, Save, Sparkles, AlertCircle } from 'lucide-react';
+import { User, Mail, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Input } from '@/components/ui';
+import { useToast } from '@/contexts/FeedbackContext';
 
 export const Route = createFileRoute('/_protected/settings/profile/')({
 	component: UserProfilePage,
@@ -13,11 +14,10 @@ export const Route = createFileRoute('/_protected/settings/profile/')({
 
 function UserProfilePage() {
 	const { user } = useAuth();
+	const toast = useToast();
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState<string | null>(null);
-	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	// 當用戶資料載入時，初始化表單狀態
 	useEffect(() => {
@@ -32,8 +32,6 @@ function UserProfilePage() {
 	const handleUpdateProfile = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setLoading(true);
-		setMessage(null);
-		setErrorMessage(null);
 
 		try {
 			if (!supabase || !user) throw new Error('尚未登入。');
@@ -54,9 +52,9 @@ function UserProfilePage() {
 			});
 			if (profileError) throw profileError;
 
-			setMessage('✨ 個人資料已成功更新！');
+			toast.success('個人資料已成功更新！');
 		} catch (error) {
-			setErrorMessage(error instanceof Error ? error.message : '更新失敗。');
+			toast.error(error instanceof Error ? error.message : '更新失敗。');
 		} finally {
 			setLoading(false);
 		}
@@ -76,27 +74,6 @@ function UserProfilePage() {
 					在此管理您的帳號顯示名稱與電子郵件信箱。
 				</p>
 			</div>
-
-			{message && (
-				<div
-					data-testid='profile-success'
-					className='mb-5 rounded-md border border-emerald-800/70 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-300 flex items-center gap-2'
-				>
-					<Sparkles className='w-4 h-4 text-emerald-400 shrink-0' />
-					<span>{message}</span>
-				</div>
-			)}
-
-			{errorMessage && (
-				<div
-					data-testid='profile-error'
-					role='alert'
-					className='mb-5 rounded-md border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-300 flex items-center gap-2'
-				>
-					<AlertCircle className='w-4 h-4 text-red-400 shrink-0' />
-					<span>{errorMessage}</span>
-				</div>
-			)}
 
 			<form
 				onSubmit={handleUpdateProfile}

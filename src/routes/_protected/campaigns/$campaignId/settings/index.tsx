@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route. */
 import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useConfirm, useToast } from '@/contexts/FeedbackContext';
 import {
 	supabase,
 	fromDbCampaignCurrency,
@@ -36,6 +37,8 @@ function CampaignSettingsPage() {
 	const navigate = useNavigate();
 	const { campaignId } = Route.useParams();
 	const { user, isDm } = useUserCampaignRole(campaignId);
+	const confirm = useConfirm();
+	const toast = useToast();
 
 	const [activeTab, setActiveTab] = useState('general');
 	const [activeCharacterId, setActiveCharacterId] = useState('');
@@ -278,10 +281,11 @@ function CampaignSettingsPage() {
 			.eq('id', campaignId);
 
 		if (error) {
-			setNotice('儲存失敗：' + error.message);
+			setNotice(null);
+			toast.error('儲存失敗：' + error.message);
 		} else {
-			setNotice('✨ 戰役設定已成功更新！');
-			setTimeout(() => setNotice(null), 3000);
+			setNotice(null);
+			toast.success('戰役設定已成功更新！');
 		}
 	};
 
@@ -344,10 +348,11 @@ function CampaignSettingsPage() {
 				.eq('user_id', memberUserId);
 
 			if (error) {
-				setNotice('更新玩家角色上限失敗：' + error.message);
+				setNotice(null);
+				toast.error('更新玩家角色上限失敗：' + error.message);
 			} else {
-				setNotice('✨ 已更新該玩家的可創建角色數量上限！');
-				setTimeout(() => setNotice(null), 2500);
+				setNotice(null);
+				toast.success('已更新該玩家的可創建角色數量上限！');
 			}
 		}
 	};
@@ -372,8 +377,9 @@ function CampaignSettingsPage() {
 			});
 			if (error) throw error;
 
-			setNotice(
-				`✨ 已成功透過 Supabase Auth 向 ${inviteEmail} 發送官方邀請信！`,
+			setNotice(null);
+			toast.success(
+				`已成功透過 Supabase Auth 向 ${inviteEmail} 發送官方邀請信！`,
 			);
 			setAllMembers((prev) => [
 				...prev,
@@ -387,18 +393,22 @@ function CampaignSettingsPage() {
 				},
 			]);
 			setInviteEmail('');
-			setTimeout(() => setNotice(null), 3000);
 		} catch (err) {
-			setNotice(
+			setNotice(null);
+			toast.error(
 				'發送邀請失敗：' + (err instanceof Error ? err.message : '未知錯誤'),
 			);
 		}
 	};
 
 	const handleDeleteCampaign = async () => {
-		const confirmed = window.confirm(
-			'⚠️ 警告：確定要永久刪除此戰役嗎？\n此動作將會一併刪除該戰役底下的所有冒險者角色、背包物品與公庫資料，且無法復原！',
-		);
+		const confirmed = await confirm({
+			title: '永久刪除戰役',
+			message:
+				'確定要永久刪除此戰役嗎？此動作將一併刪除該戰役底下的所有冒險者角色、背包物品與公庫資料，且無法復原。',
+			confirmLabel: '永久刪除戰役',
+			variant: 'danger',
+		});
 		if (!confirmed) return;
 
 		try {
@@ -409,11 +419,21 @@ function CampaignSettingsPage() {
 					.eq('id', campaignId);
 				if (error) throw error;
 			}
-			await navigate({ to: '/' });
 		} catch (error) {
-			setNotice(
+			toast.error(
 				'刪除戰役失敗：' +
 					(error instanceof Error ? error.message : '未知錯誤'),
+			);
+			return;
+		}
+		toast.success('戰役已永久刪除。');
+		try {
+			await navigate({ to: '/' });
+		} catch (error) {
+			toast.error(
+				`戰役已刪除，但無法返回戰役大廳：${
+					error instanceof Error ? error.message : '未知錯誤'
+				}`,
 			);
 		}
 	};
@@ -447,13 +467,14 @@ function CampaignSettingsPage() {
 				.eq('campaign_id', campaignId);
 
 			if (error) {
-				setNotice('更新角色資料失敗：' + error.message);
+				setNotice(null);
+				toast.error('更新角色資料失敗：' + error.message);
 				return;
 			}
 		}
 
-		setNotice(`✨ 角色「${updatedChar.name}」基本資料已更新！`);
-		setTimeout(() => setNotice(null), 3000);
+		setNotice(null);
+		toast.success(`角色「${updatedChar.name}」基本資料已更新！`);
 	};
 
 	const handleTransferCharacter = async (char: Character, targetUserId: string) => {
@@ -470,13 +491,12 @@ function CampaignSettingsPage() {
 			return;
 		}
 
-		if (
-			!window.confirm(
-				`確定將「${char.name}」的擁有權轉移給 ${targetMember.identifier} 嗎？\n對方將取得此角色的完整控制權，原擁有者的個別權限設定將被移除。`,
-			)
-		) {
-			return;
-		}
+		const confirmed = await confirm({
+			title: '轉移角色擁有權',
+			message: `確定將「${char.name}」的擁有權轉移給 ${targetMember.identifier} 嗎？對方將取得此角色的完整控制權，原擁有者的個別權限設定將被移除。`,
+			confirmLabel: '轉移角色',
+		});
+		if (!confirmed) return;
 
 		try {
 			const { data: updatedCharacter, error: ownerError } = await supabase
@@ -579,10 +599,13 @@ function CampaignSettingsPage() {
 				),
 				updatedPermission,
 			]);
-			setNotice(`✨ 已將「${char.name}」的擁有權轉移給 ${targetMember.identifier}。`);
-			setTimeout(() => setNotice(null), 3500);
+			setNotice(null);
+			toast.success(
+				`已將「${char.name}」的擁有權轉移給 ${targetMember.identifier}。`,
+			);
 		} catch (error) {
-			setNotice(
+			setNotice(null);
+			toast.error(
 				'轉移角色擁有權失敗：' +
 					(error instanceof Error ? error.message : '未知錯誤'),
 			);
@@ -657,7 +680,8 @@ function CampaignSettingsPage() {
 				{ onConflict: 'character_id,user_id' },
 			);
 			if (error) {
-				setNotice('權限儲存失敗：' + error.message);
+				setNotice(null);
+				toast.error('權限儲存失敗：' + error.message);
 			}
 		}
 	};
@@ -666,13 +690,16 @@ function CampaignSettingsPage() {
 		if (!myPermForSelectedChar.canDeleteCharacter) return;
 		const realChars = campaignCharacters.filter((c) => c.id !== CAMP_CHEST_ID);
 		if (realChars.length <= 1) {
-			alert('⚠️ 戰役中至少需保留一名冒險者角色！');
+			toast.warning('戰役中至少需保留一名冒險者角色！');
 			return;
 		}
 
-		const confirmed = window.confirm(
-			`⚠️ 確定要永久移除角色「${char.name}」嗎？\n該角色身上的所有公開/私人物品與雙錢包貨幣，將全數自動併入「🏕️ 營地儲物箱」！`,
-		);
+		const confirmed = await confirm({
+			title: '移除角色並收納遺物',
+			message: `確定要永久移除角色「${char.name}」嗎？該角色身上的所有公開／私人物品與雙錢包貨幣，將全數自動併入營地儲物箱。`,
+			confirmLabel: '移除角色',
+			variant: 'danger',
+		});
 		if (!confirmed) return;
 
 		try {
@@ -783,12 +810,13 @@ function CampaignSettingsPage() {
 						character.id !== char.id && character.id !== CAMP_CHEST_ID,
 				)?.id ?? '',
 			);
-			setNotice(
-				`🏕️ 已移除角色「${char.name}」，其裝備與雙錢包已全數移入營地儲物箱！`,
+			setNotice(null);
+			toast.success(
+				`已移除角色「${char.name}」，其裝備與雙錢包已全數移入營地儲物箱。`,
 			);
-			setTimeout(() => setNotice(null), 3500);
 		} catch (err) {
-			setNotice(
+			setNotice(null);
+			toast.error(
 				'移除角色失敗：' + (err instanceof Error ? err.message : '未知錯誤'),
 			);
 		}
@@ -820,10 +848,11 @@ function CampaignSettingsPage() {
 			setCampaignCharacters((previous) => [...previous, createdCharacter]);
 			setActiveTab('characters');
 			setActiveCharacterId(createdCharacter.id);
-			setNotice(`✨ 已新增角色「${createdCharacter.name}」！`);
-			setTimeout(() => setNotice(null), 3000);
+			setNotice(null);
+			toast.success(`已新增角色「${createdCharacter.name}」！`);
 		} catch (error) {
-			setNotice(
+			setNotice(null);
+			toast.error(
 				'新增角色失敗：' +
 					(error instanceof Error ? error.message : '未知錯誤'),
 			);

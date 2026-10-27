@@ -19,9 +19,9 @@ test('DM 可更新戰役設定與玩家配額，並取得邀請操作回饋', as
 
 	await page.getByLabel('戰役名稱').fill('更新後的測試戰役');
 	await page.getByRole('button', { name: '儲存變更' }).click();
-	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
-		'戰役設定已成功更新',
-	);
+	await expect(
+		page.getByRole('status').filter({ hasText: '戰役設定已成功更新' }),
+	).toBeVisible();
 	expect(requests.some((request) => request.startsWith('PATCH /rest/v1/campaigns'))).toBe(
 		true,
 	);
@@ -38,9 +38,9 @@ test('DM 可更新戰役設定與玩家配額，並取得邀請操作回饋', as
 
 	await page.getByLabel('受邀玩家電子郵件').fill('invitee@example.test');
 	await page.getByRole('button', { name: '發送邀請' }).click();
-	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
-		'已成功透過 Supabase Auth',
-	);
+	await expect(
+		page.getByRole('status').filter({ hasText: '已成功透過 Supabase Auth' }),
+	).toBeVisible();
 	expect(requests).toContain('POST /functions/v1/invite-player');
 });
 
@@ -60,7 +60,9 @@ test('DM 可在商店分頁多選戰役官方規則書', async ({ page }) => {
 	);
 	await srdCatalog.check();
 	await panel.getByRole('button', { name: '儲存設定' }).click();
-	await expect(panel.getByRole('status')).toContainText('設定已儲存');
+	await expect(
+		page.getByRole('status').filter({ hasText: '設定已儲存' }),
+	).toBeVisible();
 	expect(campaignUpdates).toContainEqual({
 		official_catalog_ids: ['dnd-2024-srd-5.2'],
 	});
@@ -114,8 +116,10 @@ test('Campaign 設定頁籤支援鍵盤操作，角色移轉確認可取消', as
 	await characterTab.click();
 	await expect(page.getByTestId('campaign-settings-panel')).toBeVisible();
 
-	page.once('dialog', (dialog) => dialog.dismiss());
 	await page.getByTestId('character-transfer').click();
+	const transferDialog = page.getByRole('dialog', { name: '轉移角色擁有權' });
+	await expect(transferDialog).toBeVisible();
+	await transferDialog.getByRole('button', { name: '取消' }).click();
 	await expect
 		.poll(() =>
 			requests.some((request) =>
@@ -149,9 +153,11 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 	const characterName = page.getByLabel('角色名稱 *');
 	await characterName.fill('更新後的角色');
 	await page.getByRole('button', { name: '儲存角色基本資料' }).click();
-	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
-		'角色「更新後的角色」基本資料已更新',
-	);
+	await expect(
+		page
+			.getByRole('status')
+			.filter({ hasText: '角色「更新後的角色」基本資料已更新' }),
+	).toBeVisible();
 	expect(
 		requests.some((request) => request.startsWith('PATCH /rest/v1/characters')),
 	).toBe(true);
@@ -169,11 +175,12 @@ test('設定表單會驗證必填欄位，角色與權限更新保留原操作�
 		)
 		.toBe(true);
 
-	page.once('dialog', async (dialog) => {
-		expect(dialog.type()).toBe('confirm');
-		await dialog.dismiss();
-	});
 	await page.getByTestId('character-delete').click();
+	const deleteDialog = page.getByRole('dialog', {
+		name: '移除角色並收納遺物',
+	});
+	await expect(deleteDialog).toBeVisible();
+	await deleteDialog.getByRole('button', { name: '取消' }).click();
 	expect(requests.some((request) => request.startsWith('DELETE '))).toBe(false);
 });
 
@@ -188,9 +195,9 @@ test('DM 可在角色分頁新增冒險者角色', async ({ page }) => {
 	await characterForm.getByLabel('角色名稱 *').fill('新建立的冒險者');
 	await characterForm.getByRole('button', { name: '儲存角色' }).click();
 
-	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
-		'已新增角色「新建立的冒險者」',
-	);
+	await expect(
+		page.getByRole('status').filter({ hasText: '已新增角色「新建立的冒險者」' }),
+	).toBeVisible();
 	expect(
 		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
 	).toBe(true);
@@ -210,12 +217,14 @@ test('移除角色時將錢幣併入戰役營地箱且不建立虛擬角色列',
 
 	await page.getByTestId('campaign-settings-tab-characters').click();
 	await page.getByTestId('campaign-settings-tab-settings-character').click();
-	page.once('dialog', (dialog) => dialog.accept());
 	await page.getByTestId('character-delete').click();
+	const deleteDialog = page.getByRole('dialog', {
+		name: '移除角色並收納遺物',
+	});
+	await expect(deleteDialog).toBeVisible();
+	await deleteDialog.getByRole('button', { name: '移除角色' }).click();
 
-	await expect(page.getByTestId('campaign-settings-notice')).toContainText(
-		'已移除角色',
-	);
+	await expect(page.getByRole('status').filter({ hasText: '已移除角色' })).toBeVisible();
 	expect(
 		requests.some((request) => request.startsWith('PATCH /rest/v1/campaigns')),
 	).toBe(true);
@@ -235,13 +244,34 @@ test('永久刪除戰役前會要求確認，取消後停留在設定頁', async
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
-	page.once('dialog', async (dialog) => {
-		expect(dialog.type()).toBe('confirm');
-		await dialog.dismiss();
-	});
 	await page.getByRole('button', { name: '永久刪除此戰役' }).click();
+	const deleteCampaignDialog = page.getByRole('dialog', {
+		name: '永久刪除戰役',
+	});
+	await expect(deleteCampaignDialog).toBeVisible();
+	await deleteCampaignDialog.getByRole('button', { name: '取消' }).click();
 
 	await expect(page).toHaveURL(new RegExp(`${campaignSettingsUrl}$`));
+});
+
+test('確認永久刪除戰役後執行刪除並返回大廳', async ({ page }) => {
+	const { requests } = await mockSupabase(page, { campaignSettingsRole: 'dm' });
+	await seedAuthenticatedSession(page);
+	await page.goto(campaignSettingsUrl);
+
+	await page.getByRole('button', { name: '永久刪除此戰役' }).click();
+	const deleteCampaignDialog = page.getByRole('dialog', {
+		name: '永久刪除戰役',
+	});
+	await deleteCampaignDialog.getByRole('button', { name: '永久刪除戰役' }).click();
+
+	await expect(page).toHaveURL('/');
+	await expect(
+		page.getByRole('status').filter({ hasText: '戰役已永久刪除' }),
+	).toBeVisible();
+	expect(requests.some((request) => request.startsWith('DELETE /rest/v1/campaigns'))).toBe(
+		true,
+	);
 });
 
 test('Campaign 設定頁在窄螢幕沒有水平溢出', async ({ page }) => {

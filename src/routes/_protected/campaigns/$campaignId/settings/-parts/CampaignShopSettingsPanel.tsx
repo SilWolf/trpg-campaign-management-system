@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Check, Save } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { useToast } from '@/contexts/FeedbackContext';
 import {
 	loadBlacksmithCatalogDefinitions,
 } from '@/lib/blacksmithCatalog';
@@ -17,6 +18,7 @@ export function CampaignShopSettingsPanel({
 	selectedCatalogIds,
 	onSave,
 }: CampaignShopSettingsPanelProps) {
+	const toast = useToast();
 	const [definitions, setDefinitions] = useState<BlacksmithCatalogDefinition[]>(
 		[],
 	);
@@ -29,7 +31,6 @@ export function CampaignShopSettingsPanel({
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [notice, setNotice] = useState<string | null>(null);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -59,17 +60,15 @@ export function CampaignShopSettingsPanel({
 				? [...draftCatalogIds, catalogId]
 				: draftCatalogIds.filter((entry) => entry !== catalogId),
 		});
-		setNotice(null);
 	};
 
 	const saveSettings = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setIsSaving(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			await onSave(draftCatalogIds);
-			setNotice('戰役商店規則書設定已儲存。');
+			toast.success('戰役商店規則書設定已儲存。');
 		} catch (error) {
 			setErrorMessage(
 				error instanceof Error ? error.message : '儲存戰役商店規則書設定失敗。',
@@ -106,11 +105,6 @@ export function CampaignShopSettingsPanel({
 			{errorMessage && (
 				<p role='alert' className='mt-4 text-sm text-red-300'>
 					{errorMessage}
-				</p>
-			)}
-			{notice && (
-				<p role='status' className='mt-4 text-sm text-emerald-300'>
-					{notice}
 				</p>
 			)}
 			{invalidSelectedCatalogIds.length > 0 && (

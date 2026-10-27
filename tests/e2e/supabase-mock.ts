@@ -38,6 +38,7 @@ export async function mockSupabase(
 	page: Page,
 	options: {
 		campaignSettingsRole?: CampaignSettingsRole;
+		campaignSettingsSaveError?: string;
 		campaignOfficialCatalogIds?: string[];
 		campaignInventoryRole?: CampaignSettingsRole;
 		createCampaignError?: string;
@@ -859,6 +860,10 @@ export async function mockSupabase(
 				});
 				return;
 			}
+			if (!url.searchParams.has('id')) {
+				await route.fulfill({ json: [] });
+				return;
+			}
 			await route.fulfill({
 				json: {
 					id: campaignInventoryRole
@@ -997,6 +1002,13 @@ export async function mockSupabase(
 			) {
 				const body = request.postDataJSON() as Record<string, unknown>;
 				campaignUpdates.push(body);
+				if ('name' in body && options.campaignSettingsSaveError) {
+					await route.fulfill({
+						status: 400,
+						json: { message: options.campaignSettingsSaveError },
+					});
+					return;
+				}
 				if (Array.isArray(body.official_catalog_ids)) {
 					currentCampaignOfficialCatalogIds = body.official_catalog_ids as string[];
 					await route.fulfill({

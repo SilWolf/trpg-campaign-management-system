@@ -27,6 +27,7 @@ import {
 	WEAPON_MASTERIES,
 } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/FeedbackContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import {
 	deleteCampaignShopItem,
@@ -274,6 +275,7 @@ function CampaignShopsPage() {
 	const { campaignId, shopId } = Route.useParams();
 	const { isDm, loading: roleLoading } = useUserCampaignRole(campaignId);
 	const { user, isGuest } = useAuth();
+	const toast = useToast();
 	const [shops, setShops] = useState<CampaignShop[]>([]);
 	const [shopItems, setShopItems] = useState<CampaignShopItem[]>([]);
 	const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -293,7 +295,6 @@ function CampaignShopsPage() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [sourceError, setSourceError] = useState<string | null>(null);
-	const [notice, setNotice] = useState<string | null>(null);
 
 	const selectedShop = shops.find((shop) => shop.id === shopId) ?? null;
 	const visibleItems = shopItems;
@@ -497,10 +498,25 @@ function CampaignShopsPage() {
 
 	const handleShopSaved = async (shop: CampaignShop) => {
 		setIsSaving(true);
-		setNotice(null);
+		const successMessage =
+			shop.id === editingShop?.id ? '商店設定已更新。' : '商店已建立。';
 		try {
-			await reloadShops();
-			setNotice(shop.id === editingShop?.id ? '商店設定已更新。' : '商店已建立。');
+			setShops((current) =>
+				current.some((entry) => entry.id === shop.id)
+					? current.map((entry) => (entry.id === shop.id ? shop : entry))
+					: [shop, ...current],
+			);
+			toast.success(successMessage);
+			try {
+				await reloadShops();
+			} catch (error) {
+				toast.error(
+					`${successMessage}但無法重新載入商店資料：${getErrorMessage(
+						error,
+						'同步商店資料失敗。',
+					)}`,
+				);
+			}
 		} finally {
 			setIsSaving(false);
 		}
@@ -618,13 +634,11 @@ function CampaignShopsPage() {
 	const handleSaveItem = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!selectedShop) return;
-		setIsSaving(true);
-		setErrorMessage(null);
-		setNotice(null);
+		let values: CampaignShopItemValues | null = null;
 		try {
 			const { unitPriceGp, stockAvailable, itemSnapshot } = validateItemForm();
 			if (editingItem) {
-				const values: CampaignShopItemValues = {
+				values = {
 					itemSnapshot,
 					sourceType: editingItem.sourceType,
 					sourceId: editingItem.sourceId,
@@ -633,23 +647,42 @@ function CampaignShopsPage() {
 					requiresApproval: itemForm.requiresApproval,
 					isActive: itemForm.isActive,
 				};
+			}
+		} catch (error) {
+			setErrorMessage(getErrorMessage(error, '商品資料格式錯誤。'));
+			return;
+		}
+		setIsSaving(true);
+		setErrorMessage(null);
+		try {
+			if (editingItem && values) {
 				await saveCampaignShopItem(
 					campaignId,
 					selectedShop.id,
 					values,
 					editingItem.id,
 				);
-				setNotice('商品設定已更新。');
+				toast.success('商品設定已更新。');
 			}
-			await reloadItems();
-			setEditingItem(null);
-			setItemForm(EMPTY_ITEM);
-			setDeleteConfirmationItemId(null);
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '儲存商品失敗。'));
-		} finally {
+			toast.error(getErrorMessage(error, '儲存商品失敗。'));
 			setIsSaving(false);
+			return;
 		}
+		try {
+			await reloadItems();
+		} catch (error) {
+			toast.error(
+				`商品設定已儲存，但無法重新載入商品資料：${getErrorMessage(
+					error,
+					'同步商品資料失敗。',
+				)}`,
+			);
+		}
+		setEditingItem(null);
+		setItemForm(EMPTY_ITEM);
+		setDeleteConfirmationItemId(null);
+		setIsSaving(false);
 	};
 
 	const handleSourceImport = async (source: ImportSource) => {
@@ -670,7 +703,6 @@ function CampaignShopsPage() {
 		}
 		setIsSaving(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			await saveCampaignShopItem(campaignId, selectedShop.id, {
 				itemSnapshot,
@@ -681,10 +713,19 @@ function CampaignShopsPage() {
 				requiresApproval: false,
 				isActive: true,
 			});
-			await reloadItems();
-			setNotice(`「${source.name}」已加入商店。`);
+			toast.success(`「${source.name}」已加入商店。`);
+			try {
+				await reloadItems();
+			} catch (error) {
+				toast.error(
+					`「${source.name}」已加入商店，但無法重新載入商品資料：${getErrorMessage(
+						error,
+						'同步商品資料失敗。',
+					)}`,
+				);
+			}
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '加入商品失敗。'));
+			toast.error(getErrorMessage(error, '加入商品失敗。'));
 		} finally {
 			setIsSaving(false);
 		}
@@ -698,15 +739,26 @@ function CampaignShopsPage() {
 		if (!selectedShop) return;
 		setIsSaving(true);
 		setErrorMessage(null);
-		setNotice(null);
 		try {
 			await deleteCampaignShopItem(campaignId, selectedShop.id, item.id);
-			await reloadItems();
+			setShopItems((current) =>
+				current.filter((candidate) => candidate.id !== item.id),
+			);
 			setEditingItem(null);
 			setDeleteConfirmationItemId(null);
-			setNotice('商品與其關聯的訂單紀錄已刪除。');
+			toast.success('商品與其關聯的訂單紀錄已刪除。');
+			try {
+				await reloadItems();
+			} catch (error) {
+				toast.error(
+					`商品已刪除，但無法重新載入商品資料：${getErrorMessage(
+						error,
+						'同步商品資料失敗。',
+					)}`,
+				);
+			}
 		} catch (error) {
-			setErrorMessage(getErrorMessage(error, '刪除商品失敗。'));
+			toast.error(getErrorMessage(error, '刪除商品失敗。'));
 		} finally {
 			setIsSaving(false);
 		}
@@ -801,15 +853,6 @@ function CampaignShopsPage() {
 					<span>{errorMessage}</span>
 				</div>
 			)}
-			{notice && (
-				<div
-					role='status'
-					className='mb-4 rounded-md border border-emerald-800/70 bg-emerald-950/30 p-3 text-sm text-emerald-200'
-				>
-					{notice}
-				</div>
-			)}
-
 			{editingShop && (
 				<CampaignShopDialog
 					campaignId={campaignId}

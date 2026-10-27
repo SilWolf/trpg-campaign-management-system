@@ -5,6 +5,7 @@ import { AlertCircle, Eye, Hammer, Plus, RotateCw, Trash2 } from 'lucide-react';
 import { BlacksmithImportButton } from '@/components/blacksmith/BlacksmithImportButton';
 import { ITEM_CATEGORY_LABELS, RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/FeedbackContext';
 import {
 	deleteBlacksmithTemplate,
 	loadBlacksmithTemplates,
@@ -224,6 +225,7 @@ function createTemplateValues(form: EditorValues): BlacksmithTemplateValues {
 
 function BlacksmithWorkshopPage() {
 	const { user, isGuest } = useAuth();
+	const toast = useToast();
 	const [mine, setMine] = useState<BlacksmithTemplate[]>([]);
 	const [shared, setShared] = useState<BlacksmithTemplate[]>([]);
 	const [activeTab, setActiveTab] = useState<'mine' | 'shared'>('mine');
@@ -234,7 +236,6 @@ function BlacksmithWorkshopPage() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isSaving, setIsSaving] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [notice, setNotice] = useState<string | null>(null);
 	const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(
 		null,
 	);
@@ -330,9 +331,9 @@ function BlacksmithWorkshopPage() {
 				return [saved, ...updated];
 			});
 			setIsEditorOpen(false);
-			setNotice(editingId ? '鍛造樣板已更新。' : '鍛造樣板已保存。');
+			toast.success(editingId ? '鍛造樣板已更新。' : '鍛造樣板已保存。');
 		} catch (error) {
-			setErrorMessage(
+			toast.error(
 				error instanceof Error ? error.message : '保存失敗，請稍後重試。',
 			);
 		} finally {
@@ -351,9 +352,11 @@ function BlacksmithWorkshopPage() {
 			await deleteBlacksmithTemplate(item.id, user.id);
 			setMine((items) => items.filter((candidate) => candidate.id !== item.id));
 			setDeleteConfirmationId(null);
-			setNotice('鍛造樣板已刪除；其他冒險者的已匯入副本不會受到影響。');
+			toast.success(
+				'鍛造樣板已刪除；其他冒險者的已匯入副本不會受到影響。',
+			);
 		} catch (error) {
-			setErrorMessage(
+			toast.error(
 				error instanceof Error ? error.message : '刪除失敗，請稍後重試。',
 			);
 		}
@@ -406,26 +409,13 @@ function BlacksmithWorkshopPage() {
 					</div>
 				)}
 
-				{(errorMessage || notice) && (
+				{errorMessage && (
 					<div
-						role={errorMessage ? 'alert' : 'status'}
-						className={`mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
-							errorMessage
-								? 'border-red-800/70 bg-red-950/40 text-red-200'
-								: 'border-emerald-800/70 bg-emerald-950/30 text-emerald-200'
-						}`}
+						role='alert'
+						className='mb-5 flex items-center gap-2 rounded-lg border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-200'
 					>
-						{errorMessage && <AlertCircle className='h-4 w-4 shrink-0' />}
-						{errorMessage ?? notice}
-						{notice && (
-							<button
-								type='button'
-								className='ml-auto text-xs underline'
-								onClick={() => setNotice(null)}
-							>
-								關閉
-							</button>
-						)}
+						<AlertCircle className='h-4 w-4 shrink-0' />
+						{errorMessage}
 					</div>
 				)}
 

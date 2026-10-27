@@ -25,7 +25,9 @@ test('DM 可建立商店並從商品目錄開啟鍛造工坊匯入視窗', async
 	await expect(page.getByTestId('shop-name')).toHaveValue('灰港冒險者商會');
 	await page.getByTestId('shop-name').fill('灰港冒險者商會（翻新）');
 	await page.getByRole('button', { name: '儲存商店' }).click();
-	await expect(page.getByRole('status')).toContainText('商店設定已更新');
+	await expect(
+		page.getByRole('status').filter({ hasText: '商店設定已更新' }),
+	).toBeVisible();
 	await expect(
 		page.getByRole('heading', {
 			name: '灰港冒險者商會（翻新）',
@@ -60,7 +62,7 @@ test('DM 可從鍛造工坊選擇來源並加入商店', async ({ page }) => {
 	});
 	await page.getByRole('button', { name: '加入' }).first().click();
 
-	await expect(page.getByRole('status')).toContainText('已加入商店');
+	await expect(page.getByRole('status').filter({ hasText: '已加入商店' })).toBeVisible();
 	await expect(page.getByTestId('shop-item-editor')).toHaveCount(0);
 	expect(
 		requests.some((request) =>
@@ -93,7 +95,9 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 	await panel.getByTestId('refresh-add-candidate-0').click();
 	await expect(panel.getByText(/此戰役的規則書・篩選/)).toBeVisible();
 	await panel.getByRole('button', { name: '儲存政策' }).click();
-	await expect(panel.getByRole('status')).toContainText('刷新政策已儲存');
+	await expect(
+		page.getByRole('status').filter({ hasText: '刷新政策已儲存' }),
+	).toBeVisible();
 
 	await panel.getByRole('button', { name: '預覽刷新' }).click();
 	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible({
@@ -111,7 +115,7 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 		),
 	).toHaveLength(0);
 	await panel.getByRole('button', { name: '確認刷新' }).click();
-	await expect(panel.getByRole('status')).toContainText('店舖刷新完成');
+	await expect(page.getByRole('status').filter({ hasText: '店舖刷新完成' })).toBeVisible();
 	expect(
 		requests.some((request) =>
 			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
@@ -135,7 +139,9 @@ test('產生刷新預覽時會重新讀取戰役最新規則書設定', async ({
 		.selectOption('__campaign_rulebooks__');
 	await panel.getByTestId('refresh-add-candidate-0').click();
 	await panel.getByRole('button', { name: '儲存政策' }).click();
-	await expect(panel.getByRole('status')).toContainText('刷新政策已儲存');
+	await expect(
+		page.getByRole('status').filter({ hasText: '刷新政策已儲存' }),
+	).toBeVisible();
 
 	setCampaignOfficialCatalogIds([]);
 	await panel.getByRole('button', { name: '預覽刷新' }).click();
@@ -212,7 +218,7 @@ test('零候選刷新需要二次確認才會呼叫 RPC', async ({ page }) => {
 	).toHaveLength(0);
 
 	await panel.getByRole('button', { name: '再次確認零項刷新' }).click();
-	await expect(panel.getByRole('status')).toContainText('刪除 2 項');
+	await expect(page.getByRole('status').filter({ hasText: '刪除 2 項' })).toBeVisible();
 	await expect(page.getByTestId('shop-item-card')).toHaveCount(0);
 	expect(
 		requests.filter((request) =>
@@ -273,7 +279,7 @@ test('DM 可在商品對話框編輯鍛造欄位並刪除商品', async ({ page 
 	await editor.getByLabel('重量（磅）').fill('0.5');
 	await editor.getByRole('button', { name: '儲存商品' }).click();
 
-	await expect(page.getByRole('status')).toContainText('商品設定已更新');
+	await expect(page.getByRole('status').filter({ hasText: '商品設定已更新' })).toBeVisible();
 	await expect(page.getByText('恢復 2d4 + 2 點生命值。')).toBeVisible();
 	await editItemButton.click();
 	await page.getByRole('button', { name: '刪除商品' }).click();
@@ -282,7 +288,11 @@ test('DM 可在商品對話框編輯鍛造欄位並刪除商品', async ({ page 
 	).toBeVisible();
 	await page.getByRole('button', { name: '再次按下確認刪除' }).click();
 
-	await expect(page.getByRole('status')).toContainText('商品與其關聯的訂單紀錄已刪除');
+	await expect(
+		page
+			.getByRole('status')
+			.filter({ hasText: '商品與其關聯的訂單紀錄已刪除' }),
+	).toBeVisible();
 	await expect(page.getByTestId('shop-item-card')).toHaveCount(1);
 	expect(
 		requests.some((request) =>

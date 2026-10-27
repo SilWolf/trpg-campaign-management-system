@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Check, X } from 'lucide-react';
+import { useToast } from '@/contexts/FeedbackContext';
 import { saveCampaignShop, type CampaignShopValues } from '@/lib/campaignShops';
 import { Button, Input } from '@/components/ui';
 import type { CampaignShop } from '@/types';
@@ -20,6 +21,7 @@ export function CampaignShopDialog({
 	onClose,
 	onSaved,
 }: CampaignShopDialogProps) {
+	const toast = useToast();
 	const [name, setName] = useState(shop?.name ?? '');
 	const [backgroundImageUrl, setBackgroundImageUrl] = useState(
 		shop?.backgroundImageUrl ?? '',
@@ -70,7 +72,7 @@ export function CampaignShopDialog({
 			await onSaved(savedShop);
 			onClose();
 		} catch (error) {
-			setErrorMessage(
+			toast.error(
 				error instanceof Error ? error.message : '儲存商店失敗。',
 			);
 		} finally {
