@@ -153,11 +153,11 @@ interface CampaignShopRefreshRange {
 - 已完成政策型別、清除模式預設值、執行時驗證及舊商店缺少 `refresh_policy` 時的相容 fallback，實作於 [`src/types.ts`](../src/types.ts)、[`src/lib/campaignShopRefresh.ts`](../src/lib/campaignShopRefresh.ts) 與 [`src/lib/supabase.ts`](../src/lib/supabase.ts)。
 - 新增 [`supabase/migrations/20261027000001_campaign_shop_refresh.sql`](../supabase/migrations/20261027000001_campaign_shop_refresh.sql)：加入 `campaign_shops.refresh_policy`、JSONB 結構與範圍檢查、authenticated 欄位權限，以及 `refresh_campaign_shop_items` DM 專用交易 RPC。
 - 商店資料服務已支援儲存政策和呼叫刷新 RPC，實作於 [`src/lib/campaignShops.ts`](../src/lib/campaignShops.ts)。確認刷新時以商店 `updated_at` 及全部商品的 ID／`updated_at` 快照拒絕過期預覽，依「商店列 → 商品列 ID 順序」鎖定；資料庫交易會整批退役／新增／補貨，保留 `stock_reserved`、商品列及訂單關聯。
-- 官方目錄 ID 在前端儲存政策與組裝 RPC 變更時會對照 `catalog-index.json`；資料庫沒有官方目錄索引資料表，因此 RPC 只驗證來源識別格式及商品是否屬於當前政策列出的目錄／指定商品，不能獨立證明該目錄 ID 仍存在於靜態目錄索引。候選解析階段仍必須再次驗證目錄和商品來源。
+- 官方目錄 ID 在前端儲存政策與組裝 RPC 變更時會對照 `catalog-index.json`；資料庫沒有官方目錄索引資料表，因此 RPC 只驗證來源識別格式及商品是否屬於當前政策列出的目錄／指定商品，不能獨立證明該目錄 ID 仍存在於靜態目錄索引。階段二候選解析器會在產生預覽時再次對照目前索引並驗證載入商品的目錄來源。
 - 已新增商店資料轉換 E2E 覆蓋政策序列化、舊商店 fallback、無效目錄及庫存上限，位於 [`tests/e2e/campaign-shop-data.spec.ts`](../tests/e2e/campaign-shop-data.spec.ts)。
 - 已同步更新 [`docs/campaign-shop-deployment.md`](./campaign-shop-deployment.md)，加入新 migration 的唯讀 schema／RPC 權限檢查，以及 DM 授權、過期預覽、回滾、待審保留庫存和 Realtime 的隔離驗收步驟。
 - 本機驗證：`npm run typecheck`、`npm run build`、`npm run test:e2e -- tests/e2e/campaign-shop-data.spec.ts`（2 項通過）；E2E 執行時並行 Lint 曾碰到 Playwright 清理 `test-results` 的掃描競態，之後單獨重跑 `npm run lint` 成功，只有商店路由既有的 unused eslint-disable 警告。
-- **部署與資料庫驗收尚未完成。** 尚未在 Supabase 套用 migration，也未對隔離環境實測 RLS／非 DM 拒絕、原子回滾、併發過期預覽及 Realtime；因此目前只標記為「本機實作完成」，上述完成條件仍待維護者手動部署與驗收。
+- **部署狀態更新：** 維護者已手動部署階段一 migration。本次開發沒有連線或操作 Supabase；隔離環境的 RLS／非 DM 拒絕、原子回滾、併發過期預覽及 Realtime 驗收仍待維護者完成，因此階段一資料庫驗收尚未全數勾選。
 
 ### 階段二：候選解析與抽樣
 
@@ -167,6 +167,16 @@ interface CampaignShopRefreshRange {
 4. 產生不寫入資料庫的預覽模型，計算既有商品的預計操作及刷新後可用庫存。
 
 **完成條件：** 同一亂數輸入可得到穩定結果；抽選不重複且不超出上限；任何來源解析錯誤都不回傳部分成功結果。
+
+**本機實作紀錄（2026-10-27）**
+
+- 已在 [`src/lib/campaignShopRefresh.ts`](../src/lib/campaignShopRefresh.ts) 新增純候選解析與預覽函式：`resolveCampaignShopRefreshCandidates()`、`buildCampaignShopRefreshPreview()` 及 `blacksmithItemToCampaignShopSnapshot()`。目錄載入器以參數注入，呼叫端可直接傳入官方目錄載入器；政策會先依目前 `catalog-index.json` 的 ID 清單驗證，篩選來源只載入各自指定的目錄，任何載入或格式錯誤都會拒絕整次解析，不回傳部分結果。
+- 官方目錄搜尋／分類／稀有度篩選已抽成 [`filterBlacksmithCatalogItems()`](../src/lib/blacksmithCatalog.ts)，官方目錄瀏覽頁改用同一函式；搜尋欄位與既有介面一致，包含商品名稱、分類中英文值與中文標籤、子類型、稀有度及中文標籤、目錄標題、來源、描述、別名與搜尋詞。
+- 候選依政策／陣列順序解析，按 `itemId` 全域去重並歸屬首次出現的規則；範圍數量遵循 `min`、有限 `max`、`p` 與 `step`，候選不足時以候選數量為上限。指定數量以 Fisher–Yates 部分洗牌不放回抽樣；庫存各自獨立抽樣並限制在資料庫 `integer` 範圍。解析器可注入亂數來源，正式呼叫預設使用 `Math.random()`。
+- 預覽模型不寫入資料庫，保存商店及商品版本快照和後續 RPC 所需的 `changes`；依政策產生新增、補貨、保留或退役列。保留模式下沿用既有商品售價／快照並只把目標庫存放入變更；清除模式以新增列取代既有來源列的預計狀態，舊列顯示退役，兩種模式均不會改寫保留庫存。目錄商品快照轉換器已由商店設定頁現有匯入流程共用。
+- 新增 [`tests/e2e/campaign-shop-refresh.spec.ts`](../tests/e2e/campaign-shop-refresh.spec.ts)，覆蓋官方目錄搜尋一致性、政策候選去重、注入亂數下的範圍抽樣、`p = 1`、候選不足、空結果、來源載入失敗、版本快照及四種預覽操作。
+- 本機驗證：`npm run typecheck`、`npm run build`、`npm run lint` 及 `npm run test:e2e -- tests/e2e/campaign-shop-refresh.spec.ts tests/e2e/blacksmith.spec.ts tests/e2e/campaign-shop-data.spec.ts` 均通過；相關 E2E 共 11 項通過。Lint 僅回報商店詳情路由既有的 unused eslint-disable 警告。
+- **階段二本機實作完成；尚未加入政策編輯、預覽／重抽／確認 UI，也未套用刷新 RPC。** 後續新對話可從階段三開始，讓 DM 設定頁呼叫上述純函式，串接已部署的刷新 RPC；不得把本階段 mock／純函式測試描述成真實 Supabase RLS、交易或 Realtime 驗收。
 
 ### 階段三：DM 政策編輯與刷新 UI
 
@@ -178,6 +188,15 @@ interface CampaignShopRefreshRange {
 
 **完成條件：** DM 可完成「編輯政策 → 預覽 → 重抽 → 確認」全流程；確認前資料未改變；一般成員沒有刷新操作；更新錯誤有明確提示。
 
+**本機實作紀錄（2026-10-27）**
+
+- 已新增 [`CampaignShopRefreshPanel`](../src/routes/_protected/campaigns/$campaignId/shops/-parts/CampaignShopRefreshPanel.tsx)，並嵌入 [`商店設定頁`](../src/routes/_protected/campaigns/$campaignId/shops/$shopId/settings.tsx)。面板只在既有 DM 管理頁通過角色檢查後渲染；訪客、未設定 Supabase 與一般成員仍沿用原有拒絕／退避畫面，沒有本地假刷新。
+- DM 可編輯「保留既有商品」、新增或刪除規則，並為每條規則加入指定官方目錄商品或官方目錄篩選器。目錄選單只使用已載入的 `catalog-index.json` 定義；指定商品必須由所選目錄載入後才能加入。抽選數量與每項庫存均提供 `min`、`max`、`p`、`step` 欄位及 `p` 的停止條件說明。
+- 政策變更會使預覽失效，必須先透過 `saveCampaignShopRefreshPolicy()` 儲存與驗證。預覽透過既有候選解析器與 `buildCampaignShopRefreshPreview()` 在前端產生，不會寫入遠端；可重新隨機取代暫存預覽。
+- 確認時只呼叫一次 `refreshCampaignShopItems()`／`refresh_campaign_shop_items` RPC。成功後重新載入商店與商品，保留既有 Realtime 訂閱同步其他使用者；失敗時保留預覽與明確錯誤，以便重新載入或重試。零候選結果會顯示清除模式警告，並要求再次確認才送出 RPC。
+- 已在 [`tests/e2e/campaign-shop-management.spec.ts`](../tests/e2e/campaign-shop-management.spec.ts) 加入 DM「儲存政策 → 預覽 → 確認」流程，並擴充 [`tests/e2e/supabase-mock.ts`](../tests/e2e/supabase-mock.ts) 的刷新 RPC 合約替身。這項測試驗證前端請求形狀與操作順序，不代表真實 Supabase 的 RLS、交易回滾、過期預覽或 Realtime 已驗收。
+- 本機驗證：`npm run typecheck`、`npm run lint`（僅既有商店詳情路由 unused ESLint disable 警告）、`npm run test:e2e -- tests/e2e/campaign-shop-management.spec.ts tests/e2e/campaign-shop-refresh.spec.ts`（13 項通過）及 `npm run build` 均通過。隔離 Supabase 驗收仍待階段四執行。
+
 ### 階段四：測試、部署與驗收
 
 - 單元測試：政策驗證、舊格式轉換、官方目錄篩選、候選去重、隨機選取、庫存抽樣、快照轉換。
@@ -188,12 +207,12 @@ interface CampaignShopRefreshRange {
 
 ## 驗收清單
 
-- [ ] DM 可儲存、修改及重新載入商店刷新政策；舊商店可使用預設政策正常載入。
-- [ ] `keepItemsOnRefresh` 的保留／清除行為符合政策，舊商品及歷史訂單不被刪除。
-- [ ] 指定商品及官方目錄 filter 均可加入候選；filter 僅查詢其指定目錄並遵循官方目錄既有搜尋語意。
-- [ ] 相同 `itemId` 的候選只產生一個結果；隨機抽樣不重複且受到 `pickCount`、候選總數及庫存上下界限制。
-- [ ] 每項商品庫存獨立抽樣；`p = 1` 不會額外增加，且所有邊界均可透過固定亂數來源測試。
-- [ ] 預覽及再次隨機不會寫入遠端；只有 DM 確認才套用刷新結果。
+- [x] DM 可儲存、修改及重新載入商店刷新政策；舊商店可使用預設政策正常載入。
+- [x] `keepItemsOnRefresh` 的保留／清除行為符合政策，舊商品及歷史訂單不被刪除。
+- [x] 指定商品及官方目錄 filter 均可加入候選；filter 僅查詢其指定目錄並遵循官方目錄既有搜尋語意。
+- [x] 相同 `itemId` 的候選只產生一個結果；隨機抽樣不重複且受到 `pickCount`、候選總數及庫存上下界限制。
+- [x] 每項商品庫存獨立抽樣；`p = 1` 不會額外增加，且範圍上限／候選不足可透過固定亂數來源測試。
+- [x] 預覽及再次隨機不會寫入遠端；只有 DM 確認才套用刷新結果。
 - [ ] 刷新成功後其他訂閱者收到更新；刷新失敗時沒有部分資料改變。
 - [ ] 刷新不刪除訂單、不改寫歷史快照、不覆蓋 `stock_reserved`，待審訂單仍可依既有流程處理。
 - [ ] 未授權使用者、跨戰役 ID、錯誤政策、失效目錄及過期預覽均被明確拒絕。

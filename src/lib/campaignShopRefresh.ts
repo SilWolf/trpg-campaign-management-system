@@ -1,12 +1,18 @@
 import type {
 	BlacksmithItem,
+	CampaignShopItem,
+	CampaignShopItemSnapshot,
+	CampaignShopRefreshExpectedItem,
+	CampaignShopRefreshItemChange,
 	CampaignShopRefreshCandidate,
 	CampaignShopRefreshPolicy,
 	CampaignShopRefreshRange,
 	CampaignShopRefreshRule,
 	ItemCategory,
 	Rarity,
+	WeaponMasteryKey,
 } from '@/types';
+import { filterBlacksmithCatalogItems } from '@/lib/blacksmithCatalog';
 
 const RARITIES: readonly Rarity[] = [
 	'Common',
@@ -22,6 +28,55 @@ const CATEGORIES: readonly ItemCategory[] = [
 	'Consumable',
 	'Misc',
 ];
+const WEAPON_MASTERY_KEYS: ReadonlySet<string> = new Set([
+	'None',
+	'Cleave',
+	'Graze',
+	'Nick',
+	'Push',
+	'Sap',
+	'Slow',
+	'Topple',
+	'Vex',
+]);
+const MAX_STOCK = 2_147_483_647;
+
+export interface CampaignShopRefreshSelection {
+	item: BlacksmithItem;
+	ruleIndex: number;
+	stockAvailable: number;
+}
+
+export type CampaignShopRefreshPreviewAction =
+	| 'create'
+	| 'restock'
+	| 'keep'
+	| 'retire';
+
+export interface CampaignShopRefreshPreviewEntry {
+	key: string;
+	action: CampaignShopRefreshPreviewAction;
+	itemId: string | null;
+	catalogId: string | null;
+	sourceTitle: string;
+	sourceId: string | null;
+	ruleIndex: number | null;
+	name: string;
+	rarity: Rarity;
+	category: ItemCategory;
+	unitPriceGp: number;
+	stockAvailable: number;
+	itemSnapshot: CampaignShopItemSnapshot;
+	existingItemId?: string;
+}
+
+export interface CampaignShopRefreshPreview {
+	expectedShopUpdatedAt: string;
+	expectedItems: CampaignShopRefreshExpectedItem[];
+	keepItemsOnRefresh: boolean;
+	entries: CampaignShopRefreshPreviewEntry[];
+	changes: CampaignShopRefreshItemChange[];
+}
 
 export function createDefaultCampaignShopRefreshPolicy(): CampaignShopRefreshPolicy {
 	return {
@@ -59,10 +114,14 @@ function isBlacksmithItem(value: unknown): value is BlacksmithItem {
 	if (
 		typeof value.catalogId !== 'string' ||
 		value.catalogId.trim().length === 0 ||
+		value.catalogId.includes(':') ||
 		typeof value.catalogTitle !== 'string' ||
+		value.catalogTitle.trim().length === 0 ||
 		typeof value.itemId !== 'string' ||
 		value.itemId.trim().length === 0 ||
+		value.itemId.includes(':') ||
 		typeof value.sourceKey !== 'string' ||
+		value.sourceKey !== `${value.catalogId}:${value.itemId}` ||
 		value.sourceKey.trim().length === 0 ||
 		typeof value.name !== 'string' ||
 		value.name.trim().length === 0 ||
@@ -181,6 +240,318 @@ function normalizeCandidate(
 		normalizedParam.category = value.param.category as ItemCategory;
 	}
 	return { source: value.source, param: normalizedParam };
+}
+
+function readRandom(random: () => number): number {
+	const value = random();
+	if (!Number.isFinite(value) || value < 0 || value >= 1) {
+		throw new Error('亂數來源必須回傳大於或等於 0 且小於 1 的有限數字。');
+	}
+	return value;
+}
+
+function sampleRangeCount(
+	range: CampaignShopRefreshRange,
+	limit: number,
+	random: () => number,
+): number {
+	const min = range.min ?? 0;
+	const max = Math.min(range.max ?? limit, limit);
+	const probability = range.p ?? 1;
+	const step = range.step ?? 1;
+	let count = Math.min(min, max);
+
+	while (count < max && probability < 1) {
+		if (readRandom(random) < probability) break;
+		count = Math.min(count + step, max);
+	}
+	return count;
+}
+
+function sampleWithoutReplacement<T>(
+	items: readonly T[],
+	count: number,
+	random: () => number,
+): T[] {
+	if (count <= 0) return [];
+	if (count >= items.length) return [...items];
+	const pool = [...items];
+	for (let index = 0; index < count && index < pool.length - 1; index += 1) {
+		const selectedIndex =
+			index + Math.floor(readRandom(random) * (pool.length - index));
+		[pool[index], pool[selectedIndex]] = [pool[selectedIndex], pool[index]];
+	}
+	return pool.slice(0, count);
+}
+
+export async function resolveCampaignShopRefreshCandidates(
+	value: unknown,
+	catalogIds: ReadonlySet<string>,
+	loadCatalog: (catalogId: string) => Promise<BlacksmithItem[]>,
+	random: () => number = Math.random,
+): Promise<CampaignShopRefreshSelection[]> {
+	const policy = normalizeCampaignShopRefreshPolicy(value, catalogIds);
+	const filterSources = new Set<string>();
+	for (const rule of policy.rules) {
+		for (const candidate of rule.possibleItemsOrFilters) {
+			if (!('itemId' in candidate)) filterSources.add(candidate.source);
+		}
+	}
+
+	const catalogItems = new Map<string, BlacksmithItem[]>();
+	await Promise.all(
+		[...filterSources].map(async (catalogId) => {
+			const loadedItems = await loadCatalog(catalogId);
+			const validatedItems = loadedItems.map((item, index) => {
+				const validated = normalizeCandidate(
+					item,
+					`目錄「${catalogId}」第 ${index + 1} 筆商品`,
+					catalogIds,
+				);
+				if (
+					!('itemId' in validated) ||
+					validated.catalogId !== catalogId
+				) {
+					throw new Error(
+						`目錄「${catalogId}」回傳了無效或其他來源的商品。`,
+					);
+				}
+				return validated;
+			});
+			catalogItems.set(catalogId, validatedItems);
+		}),
+	);
+
+	const seenItemIds = new Set<string>();
+	const candidatesByRule = policy.rules.map(() => [] as BlacksmithItem[]);
+	for (const [ruleIndex, rule] of policy.rules.entries()) {
+		for (const candidate of rule.possibleItemsOrFilters) {
+			const matches =
+				'itemId' in candidate
+					? [candidate]
+					: filterBlacksmithCatalogItems(
+							catalogItems.get(candidate.source) ?? [],
+							candidate.param,
+						);
+			for (const item of matches) {
+				if (seenItemIds.has(item.itemId)) continue;
+				seenItemIds.add(item.itemId);
+				candidatesByRule[ruleIndex].push(item);
+			}
+		}
+	}
+
+	const seenSelectedIds = new Set<string>();
+	const selections: CampaignShopRefreshSelection[] = [];
+	for (const [ruleIndex, rule] of policy.rules.entries()) {
+		const candidates = candidatesByRule[ruleIndex];
+		const pickCount =
+			rule.pickCount === null || rule.pickCount === undefined
+				? candidates.length
+				: typeof rule.pickCount === 'number'
+					? Math.min(rule.pickCount, candidates.length)
+					: sampleRangeCount(rule.pickCount, candidates.length, random);
+		for (const item of sampleWithoutReplacement(candidates, pickCount, random)) {
+			if (seenSelectedIds.has(item.itemId)) continue;
+			seenSelectedIds.add(item.itemId);
+			selections.push({
+				item,
+				ruleIndex,
+				stockAvailable: sampleRangeCount(
+					rule.stockAvailable,
+					MAX_STOCK,
+					random,
+				),
+			});
+		}
+	}
+	return selections;
+}
+
+function isWeaponMasteryKey(value: string): value is WeaponMasteryKey {
+	return WEAPON_MASTERY_KEYS.has(value);
+}
+
+export function blacksmithItemToCampaignShopSnapshot(
+	item: BlacksmithItem,
+): CampaignShopItemSnapshot {
+	return {
+		name: item.name,
+		category: item.category,
+		subType: item.subTypes.join('、'),
+		rarity: item.rarity,
+		icon: item.icon,
+		damage: item.category === 'Armor' ? null : item.damage,
+		mastery:
+			item.category === 'Weapon' &&
+			item.weaponMastery &&
+			isWeaponMasteryKey(item.weaponMastery)
+				? item.weaponMastery
+				: 'None',
+		ac: item.category === 'Armor' ? item.ac : null,
+		weight: item.weight,
+		valueGp: item.valueGp,
+		requiresAttunement: item.requiresAttunement,
+		isHomebrew: false,
+		maxCharges: 0,
+		effects: item.description,
+		flavor: '',
+		dmNotes: '',
+		isEquippable: item.category === 'Weapon' || item.category === 'Armor',
+		isConsumable: item.category === 'Consumable',
+		isImportant: false,
+		affixes: [],
+	};
+}
+
+function makePreviewEntry(
+	item: CampaignShopItem,
+	action: 'keep' | 'retire',
+): CampaignShopRefreshPreviewEntry {
+	return {
+		key: `existing:${item.id}`,
+		action,
+		itemId: null,
+		catalogId: null,
+		sourceTitle: item.sourceType === 'catalog' ? '官方目錄' : '既有商品',
+		sourceId: item.sourceId,
+		ruleIndex: null,
+		name: item.itemSnapshot.name,
+		rarity: item.itemSnapshot.rarity,
+		category: item.itemSnapshot.category,
+		unitPriceGp: item.unitPriceGp,
+		stockAvailable: action === 'retire' ? 0 : item.stockAvailable,
+		itemSnapshot: item.itemSnapshot,
+		existingItemId: item.id,
+	};
+}
+
+export function buildCampaignShopRefreshPreview(
+	policyValue: unknown,
+	selections: readonly CampaignShopRefreshSelection[],
+	shopUpdatedAt: string,
+	existingItems: readonly CampaignShopItem[],
+	catalogIds?: ReadonlySet<string>,
+): CampaignShopRefreshPreview {
+	if (!Number.isFinite(Date.parse(shopUpdatedAt))) {
+		throw new Error('刷新預覽的商店版本無效，請重新載入並產生預覽。');
+	}
+	const policy = normalizeCampaignShopRefreshPolicy(policyValue, catalogIds);
+	const selectedIds = new Set<string>();
+	for (const selection of selections) {
+		const item = normalizeCandidate(
+			selection.item,
+			'刷新候選商品',
+			catalogIds,
+		);
+		if (
+			!('itemId' in item) ||
+			selectedIds.has(item.itemId) ||
+			!Number.isSafeInteger(selection.ruleIndex) ||
+			selection.ruleIndex < 0 ||
+			selection.ruleIndex >= policy.rules.length ||
+			!Number.isSafeInteger(selection.stockAvailable) ||
+			selection.stockAvailable < 0 ||
+			selection.stockAvailable > MAX_STOCK
+		) {
+			throw new Error('刷新預覽包含無效或重複的候選商品資料。');
+		}
+		selectedIds.add(item.itemId);
+	}
+
+	const selectedBySource = new Map(
+		selections.map((selection) => [
+			`${selection.item.catalogId}:${selection.item.itemId}`,
+			selection,
+		]),
+	);
+	const existingBySource = new Map<string, CampaignShopItem[]>();
+	for (const item of existingItems) {
+		if (item.sourceType !== 'catalog' || !item.sourceId) continue;
+		const matching = existingBySource.get(item.sourceId) ?? [];
+		matching.push(item);
+		existingBySource.set(item.sourceId, matching);
+	}
+
+	const entries: CampaignShopRefreshPreviewEntry[] = [];
+	if (policy.flags.keepItemsOnRefresh) {
+		for (const item of existingItems) {
+			const selected =
+				item.sourceType === 'catalog' && item.sourceId
+				? selectedBySource.get(item.sourceId)
+				: undefined;
+			if (!selected) {
+				entries.push(makePreviewEntry(item, 'keep'));
+				continue;
+			}
+			const matches = existingBySource.get(item.sourceId ?? '') ?? [];
+			if (matches.length > 1) {
+				throw new Error(
+					`商店內存在重複的目錄來源商品「${item.sourceId}」，無法安全補貨。`,
+				);
+			}
+		}
+	} else {
+		for (const item of existingItems) {
+			entries.push(makePreviewEntry(item, 'retire'));
+		}
+	}
+
+	const changes: CampaignShopRefreshItemChange[] = [];
+	for (const selection of selections) {
+		const { item, ruleIndex, stockAvailable } = selection;
+		const sourceId = `${item.catalogId}:${item.itemId}`;
+		const matching = existingBySource.get(sourceId) ?? [];
+		if (policy.flags.keepItemsOnRefresh && matching.length > 1) {
+			throw new Error(
+				`商店內存在重複的目錄來源商品「${sourceId}」，無法安全補貨。`,
+			);
+		}
+		const existing = policy.flags.keepItemsOnRefresh
+			? matching[0]
+			: undefined;
+		const itemSnapshot = blacksmithItemToCampaignShopSnapshot(item);
+		const unitPriceGp = existing?.unitPriceGp ?? Math.max(item.valueGp, 0.01);
+		if (
+			!Number.isFinite(unitPriceGp) ||
+			unitPriceGp < 0.01 ||
+			unitPriceGp >= 10_000_000_000 ||
+			Math.abs(unitPriceGp * 100 - Math.round(unitPriceGp * 100)) > 1e-8
+		) {
+			throw new Error(`商品「${item.name}」的刷新售價不符合商店金額限制。`);
+		}
+		const entrySnapshot = existing?.itemSnapshot ?? itemSnapshot;
+		entries.push({
+			key: `catalog:${sourceId}`,
+			action: existing ? 'restock' : 'create',
+			itemId: item.itemId,
+			catalogId: item.catalogId,
+			sourceTitle: item.catalogTitle,
+			sourceId,
+			ruleIndex,
+			name: entrySnapshot.name,
+			rarity: entrySnapshot.rarity,
+			category: entrySnapshot.category,
+			unitPriceGp,
+			stockAvailable,
+			itemSnapshot: entrySnapshot,
+			...(existing ? { existingItemId: existing.id } : {}),
+		});
+		changes.push({
+			sourceId,
+			itemSnapshot,
+			unitPriceGp,
+			stockAvailable,
+		});
+	}
+
+	return {
+		expectedShopUpdatedAt: shopUpdatedAt,
+		expectedItems: existingItems.map(({ id, updatedAt }) => ({ id, updatedAt })),
+		keepItemsOnRefresh: policy.flags.keepItemsOnRefresh,
+		entries,
+		changes,
+	};
 }
 
 function normalizeRule(

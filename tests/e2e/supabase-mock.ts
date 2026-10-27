@@ -59,7 +59,8 @@ export async function mockSupabase(
 				| 'checkout_campaign_shop_cart'
 				| 'approve_campaign_shop_order'
 				| 'reject_campaign_shop_order'
-				| 'cancel_campaign_shop_order',
+				| 'cancel_campaign_shop_order'
+				| 'refresh_campaign_shop_items',
 				string
 			>
 		>;
@@ -634,6 +635,7 @@ export async function mockSupabase(
 				'approve_campaign_shop_order',
 				'reject_campaign_shop_order',
 				'cancel_campaign_shop_order',
+				'refresh_campaign_shop_items',
 			].some((name) => url.pathname.endsWith(`/${name}`))
 		) {
 			const rpcName = url.pathname.split('/').pop() ?? '';
@@ -645,6 +647,25 @@ export async function mockSupabase(
 				];
 			if (rpcError) {
 				await route.fulfill({ status: 400, json: { message: rpcError } });
+				return;
+			}
+			if (rpcName === 'refresh_campaign_shop_items') {
+				const changes = Array.isArray(body.p_changes) ? body.p_changes : [];
+				const keepItems = body.p_keep_items === true;
+				if (!keepItems) {
+					for (const item of campaignShopItems) {
+						item.is_active = false;
+						item.stock_available = 0;
+						item.updated_at = new Date().toISOString();
+					}
+				}
+				await route.fulfill({
+					json: {
+						created: changes.length,
+						restocked: 0,
+						retired: keepItems ? 0 : campaignShopItems.length,
+					},
+				});
 				return;
 			}
 			if (

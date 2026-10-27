@@ -1,3 +1,4 @@
+import { RARITY_CONFIG } from '@/data';
 import type {
 	BlacksmithCatalogDefinition,
 	BlacksmithCatalogIndex,
@@ -6,6 +7,19 @@ import type {
 	ItemCategory,
 	Rarity,
 } from '@/types';
+
+export const BLACKSMITH_CATEGORY_LABELS: Record<ItemCategory, string> = {
+	Weapon: '武器',
+	Armor: '護甲',
+	Consumable: '消耗品',
+	Misc: '雜物',
+};
+
+export interface BlacksmithCatalogFilters {
+	search?: string;
+	rarity?: Rarity | 'all';
+	category?: ItemCategory | 'all';
+}
 
 const SCHEMA_VERSION = 3;
 const CATEGORIES: readonly ItemCategory[] = [
@@ -362,6 +376,41 @@ function adaptCatalogItems(
 		throw new Error(`「${catalog.title}」物品與 lookup 數量不一致。`);
 	}
 	return items;
+}
+
+function searchableText(item: BlacksmithItem): string {
+	return [
+		item.name,
+		item.category,
+		BLACKSMITH_CATEGORY_LABELS[item.category],
+		...item.subTypes,
+		item.rarity,
+		RARITY_CONFIG[item.rarity].label,
+		item.catalogTitle,
+		item.source,
+		item.description,
+		...item.aliases,
+		...item.searchTerms,
+	]
+		.join(' ')
+		.toLocaleLowerCase();
+}
+
+export function filterBlacksmithCatalogItems(
+	items: readonly BlacksmithItem[],
+	filters: BlacksmithCatalogFilters,
+): BlacksmithItem[] {
+	const normalizedQuery = filters.search?.trim().toLocaleLowerCase() ?? '';
+	return items.filter(
+		(item) =>
+			(!filters.category ||
+				filters.category === 'all' ||
+				item.category === filters.category) &&
+			(!filters.rarity ||
+				filters.rarity === 'all' ||
+				item.rarity === filters.rarity) &&
+			(!normalizedQuery || searchableText(item).includes(normalizedQuery)),
+	);
 }
 
 export function getBlacksmithIconUrl(icon: string): string {

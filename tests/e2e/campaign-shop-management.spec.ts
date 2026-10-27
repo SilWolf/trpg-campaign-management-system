@@ -70,6 +70,40 @@ test('DM 可從鍛造工坊選擇來源並加入商店', async ({ page }) => {
 	await expect(page.getByTestId('shop-item-card')).toHaveCount(3);
 });
 
+test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async ({
+	page,
+}) => {
+	const { requests } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+
+	const panel = page.getByTestId('shop-refresh-panel');
+	await expect(panel).toBeVisible();
+	await panel.getByRole('button', { name: '新增規則' }).click();
+	const catalogSelector = panel.getByTestId('refresh-catalog-0');
+	await expect(catalogSelector).toBeVisible();
+	await panel.getByTestId('refresh-candidate-kind-0').selectOption('filter');
+	await catalogSelector.selectOption({ index: 1 });
+	await panel.getByTestId('refresh-add-candidate-0').click();
+	await panel.getByRole('button', { name: '儲存政策' }).click();
+	await expect(panel.getByRole('status')).toContainText('刷新政策已儲存');
+
+	await panel.getByRole('button', { name: '預覽刷新' }).click();
+	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible({
+		timeout: 15_000,
+	});
+	await panel.getByRole('button', { name: '確認刷新' }).click();
+	await expect(panel.getByRole('status')).toContainText('店舖刷新完成');
+	expect(
+		requests.some((request) =>
+			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
+		),
+	).toBe(true);
+});
+
 test('DM 可在商品對話框編輯鍛造欄位並刪除商品', async ({ page }) => {
 	const { requests } = await mockSupabase(page, {
 		campaignSettingsRole: 'dm',

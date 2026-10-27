@@ -32,6 +32,9 @@ import {
 	type CampaignShopItemValues,
 } from '@/lib/campaignShops';
 import {
+	blacksmithItemToCampaignShopSnapshot,
+} from '@/lib/campaignShopRefresh';
+import {
 	loadBlacksmithCatalogDefinitions,
 	loadBlacksmithCatalogs,
 } from '@/lib/blacksmithCatalog';
@@ -40,10 +43,10 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Button, Input, Textarea } from '@/components/ui';
 import ReactMarkdown from 'react-markdown';
 import { CampaignShopDialog } from '../-parts/CampaignShopDialog';
+import { CampaignShopRefreshPanel } from '../-parts/CampaignShopRefreshPanel';
 import ItemIcon from '../../-parts/ItemIcon';
 import { ShopTransactionsPanel } from '../-parts/ShopTransactionsPanel';
 import type {
-	BlacksmithItem,
 	BlacksmithTemplate,
 	CampaignShop,
 	CampaignShopItem,
@@ -134,18 +137,6 @@ const CATEGORY_LABELS: Record<ItemCategory, string> = {
 	Misc: '雜物',
 };
 
-const WEAPON_MASTERY_KEYS: ReadonlySet<string> = new Set([
-	'None',
-	'Cleave',
-	'Graze',
-	'Nick',
-	'Push',
-	'Sap',
-	'Slow',
-	'Topple',
-	'Vex',
-]);
-
 const ITEM_CATEGORIES: { value: ItemCategory; label: string }[] = [
 	{ value: 'Weapon', label: '武器' },
 	{ value: 'Armor', label: '護甲' },
@@ -160,10 +151,6 @@ const ITEM_RARITIES: Rarity[] = [
 	'Legendary',
 	'Artifact',
 ];
-
-function isWeaponMasteryKey(value: string): value is WeaponMasteryKey {
-	return WEAPON_MASTERY_KEYS.has(value);
-}
 
 function itemFormFromSnapshot(
 	snapshot: CampaignShopItemSnapshot,
@@ -249,36 +236,6 @@ function snapshotFromTemplate(
 		isConsumable: template.isConsumable,
 		isImportant: template.isImportant,
 		affixes: template.affixes,
-	};
-}
-
-function snapshotFromCatalog(item: BlacksmithItem): CampaignShopItemSnapshot {
-	return {
-		name: item.name,
-		category: item.category,
-		subType: item.subTypes.join('、'),
-		rarity: item.rarity,
-		icon: item.icon,
-		damage: item.category === 'Armor' ? null : item.damage,
-		mastery:
-			item.category === 'Weapon' &&
-			item.weaponMastery &&
-			isWeaponMasteryKey(item.weaponMastery)
-				? item.weaponMastery
-				: 'None',
-		ac: item.category === 'Armor' ? item.ac : null,
-		weight: item.weight,
-		valueGp: item.valueGp,
-		requiresAttunement: item.requiresAttunement,
-		isHomebrew: false,
-		maxCharges: 0,
-		effects: item.description,
-		flavor: '',
-		dmNotes: '',
-		isEquippable: item.category === 'Weapon' || item.category === 'Armor',
-		isConsumable: item.category === 'Consumable',
-		isImportant: false,
-		affixes: [],
 	};
 }
 
@@ -437,7 +394,7 @@ function CampaignShopsPage() {
 											detail: `${definition.title}・${CATEGORY_LABELS[item.category]}`,
 											sourceType: 'catalog',
 											sourceId: `${item.catalogId}:${item.itemId}`,
-											snapshot: snapshotFromCatalog(item),
+											snapshot: blacksmithItemToCampaignShopSnapshot(item),
 										}),
 									),
 								),
@@ -862,6 +819,15 @@ function CampaignShopsPage() {
 									</Button>
 								</div>
 							</div>
+
+							<CampaignShopRefreshPanel
+								key={selectedShop.id}
+								campaignId={campaignId}
+								shop={selectedShop}
+								items={shopItems}
+								onReloadShops={reloadShops}
+								onReloadItems={reloadItems}
+							/>
 
 							<section className='rounded-lg border border-stone-800 bg-stone-900/50 p-4'>
 								<div className='mb-4 flex flex-wrap items-center justify-between gap-3'>

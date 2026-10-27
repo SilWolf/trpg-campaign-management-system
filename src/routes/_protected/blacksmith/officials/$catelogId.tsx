@@ -23,6 +23,8 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { BlacksmithImportButton } from '@/components/blacksmith/BlacksmithImportButton';
 import { RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
 import {
+	BLACKSMITH_CATEGORY_LABELS as CATEGORY_LABELS,
+	filterBlacksmithCatalogItems,
 	getBlacksmithIconUrl,
 	loadBlacksmithCatalogs,
 } from '@/lib/blacksmithCatalog';
@@ -34,12 +36,6 @@ export const Route = createFileRoute(
 	component: BlacksmithCatalogPage,
 });
 
-const CATEGORY_LABELS: Record<ItemCategory, string> = {
-	Weapon: '武器',
-	Armor: '護甲',
-	Consumable: '消耗品',
-	Misc: '雜物',
-};
 const RARITIES: Rarity[] = [
 	'Common',
 	'Uncommon',
@@ -69,24 +65,6 @@ const CATEGORY_STYLES: Record<
 		badge: 'border-stone-600/50 bg-stone-800 text-stone-300',
 	},
 };
-
-function searchableText(item: BlacksmithItem): string {
-	return [
-		item.name,
-		item.category,
-		CATEGORY_LABELS[item.category],
-		...item.subTypes,
-		item.rarity,
-		RARITY_CONFIG[item.rarity].label,
-		item.catalogTitle,
-		item.source,
-		item.description,
-		...item.aliases,
-		...item.searchTerms,
-	]
-		.join(' ')
-		.toLocaleLowerCase();
-}
 
 function getWeaponMasteryLabel(mastery: string): string {
 	return (
@@ -140,13 +118,11 @@ function BlacksmithCatalogPage() {
 		[items],
 	);
 	const filteredItems = useMemo(() => {
-		const normalizedQuery = query.trim().toLocaleLowerCase();
-		return items.filter(
-			(item) =>
-				(categoryFilter === 'all' || item.category === categoryFilter) &&
-				(rarityFilter === 'all' || item.rarity === rarityFilter) &&
-				(!normalizedQuery || searchableText(item).includes(normalizedQuery)),
-		);
+		return filterBlacksmithCatalogItems(items, {
+			search: query,
+			category: categoryFilter as ItemCategory | 'all',
+			rarity: rarityFilter,
+		});
 	}, [items, query, categoryFilter, rarityFilter]);
 	const pageSize = displayMode === 'grid' ? 18 : 10;
 	const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));

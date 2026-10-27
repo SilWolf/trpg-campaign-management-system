@@ -1,0 +1,671 @@
+import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, Check, Plus, RotateCw, Trash2 } from 'lucide-react';
+import { RARITY_CONFIG } from '@/data';
+import {
+	BLACKSMITH_CATEGORY_LABELS,
+	loadBlacksmithCatalogDefinitions,
+	loadBlacksmithCatalogs,
+} from '@/lib/blacksmithCatalog';
+import {
+	buildCampaignShopRefreshPreview,
+	createDefaultCampaignShopRefreshPolicy,
+	resolveCampaignShopRefreshCandidates,
+} from '@/lib/campaignShopRefresh';
+import {
+	refreshCampaignShopItems,
+	saveCampaignShopRefreshPolicy,
+} from '@/lib/campaignShops';
+import { Button, Input } from '@/components/ui';
+import type {
+	BlacksmithCatalogDefinition,
+	BlacksmithItem,
+	CampaignShop,
+	CampaignShopItem,
+	CampaignShopRefreshCandidate,
+	CampaignShopRefreshPolicy,
+	CampaignShopRefreshRange,
+	CampaignShopRefreshRule,
+	ItemCategory,
+	Rarity,
+} from '@/types';
+
+interface CampaignShopRefreshPanelProps {
+	campaignId: string;
+	shop: CampaignShop;
+	items: readonly CampaignShopItem[];
+	onReloadShops: () => Promise<void>;
+	onReloadItems: () => Promise<void>;
+}
+
+type CandidateDraft = {
+	kind: 'item' | 'filter';
+	catalogId: string;
+	itemId: string;
+	search: string;
+	rarity: Rarity | '';
+	category: ItemCategory | '';
+};
+
+const EMPTY_DRAFT: CandidateDraft = {
+	kind: 'item',
+	catalogId: '',
+	itemId: '',
+	search: '',
+	rarity: '',
+	category: '',
+};
+
+const INPUT_CLASS =
+	'w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-600 focus:border-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-600';
+
+const RARITIES: readonly Rarity[] = [
+	'Common',
+	'Uncommon',
+	'Rare',
+	'VeryRare',
+	'Legendary',
+	'Artifact',
+];
+const CATEGORIES: readonly ItemCategory[] = [
+	'Weapon',
+	'Armor',
+	'Consumable',
+	'Misc',
+];
+
+function getErrorMessage(error: unknown, fallback: string): string {
+	if (error instanceof Error) return error.message;
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		'message' in error &&
+		typeof error.message === 'string'
+	) {
+		return error.message;
+	}
+	return fallback;
+}
+
+function createRule(): CampaignShopRefreshRule {
+	return {
+		possibleItemsOrFilters: [],
+		pickCount: null,
+		stockAvailable: { min: 0, max: 1, p: 1, step: 1 },
+	};
+}
+
+function displayRange(range: CampaignShopRefreshRange, fallbackMax: string) {
+	return {
+		min: String(range.min ?? 0),
+		max: range.max === null ? '' : String(range.max ?? fallbackMax),
+		p: String(range.p ?? 1),
+		step: String(range.step ?? 1),
+	};
+}
+
+function actionLabel(
+	action: 'create' | 'restock' | 'keep' | 'retire',
+) {
+	switch (action) {
+		case 'create':
+			return '新增';
+		case 'restock':
+			return '補貨';
+		case 'keep':
+			return '保留';
+		case 'retire':
+			return '退役';
+	}
+}
+
+function actionClass(
+	action: 'create' | 'restock' | 'keep' | 'retire',
+) {
+	switch (action) {
+		case 'create':
+			return 'text-emerald-300';
+		case 'restock':
+			return 'text-cyan-300';
+		case 'keep':
+			return 'text-stone-400';
+		case 'retire':
+			return 'text-red-300';
+	}
+}
+
+function isCatalogItem(
+	candidate: CampaignShopRefreshCandidate,
+): candidate is BlacksmithItem {
+	return 'itemId' in candidate;
+}
+
+export function CampaignShopRefreshPanel({
+	campaignId,
+	shop,
+	items,
+	onReloadShops,
+	onReloadItems,
+}: CampaignShopRefreshPanelProps) {
+	const [policy, setPolicy] = useState<CampaignShopRefreshPolicy>(
+		shop.refreshPolicy ?? createDefaultCampaignShopRefreshPolicy(),
+	);
+	const [savedPolicy, setSavedPolicy] = useState<CampaignShopRefreshPolicy>(
+		shop.refreshPolicy ?? createDefaultCampaignShopRefreshPolicy(),
+	);
+	const [definitions, setDefinitions] = useState<BlacksmithCatalogDefinition[]>(
+		[],
+	);
+	const [catalogItems, setCatalogItems] = useState<Record<string, BlacksmithItem[]>>(
+		{},
+	);
+	const [drafts, setDrafts] = useState<Record<number, CandidateDraft>>({});
+	const [preview, setPreview] = useState<ReturnType<
+		typeof buildCampaignShopRefreshPreview
+	> | null>(null);
+	const [isLoadingCatalogs, setIsLoadingCatalogs] = useState(true);
+	const [isSaving, setIsSaving] = useState(false);
+	const [isGenerating, setIsGenerating] = useState(false);
+	const [isApplying, setIsApplying] = useState(false);
+	const [confirmEmptyRefresh, setConfirmEmptyRefresh] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [notice, setNotice] = useState<string | null>(null);
+
+	useEffect(() => {
+		let isMounted = true;
+		loadBlacksmithCatalogDefinitions()
+			.then((nextDefinitions) => {
+				if (isMounted) setDefinitions(nextDefinitions);
+			})
+			.catch((error: unknown) => {
+				if (isMounted) {
+					setErrorMessage(getErrorMessage(error, '載入官方目錄索引失敗。'));
+				}
+			})
+			.finally(() => {
+				if (isMounted) setIsLoadingCatalogs(false);
+			});
+		return () => {
+			isMounted = false;
+		};
+	}, []);
+
+	const catalogIds = useMemo(
+		() => new Set(definitions.map((definition) => definition.catalogId)),
+		[definitions],
+	);
+	const isPolicyDirty = JSON.stringify(policy) !== JSON.stringify(savedPolicy);
+
+	const loadCatalog = async (catalogId: string) => {
+		if (!catalogId || catalogItems[catalogId]) return;
+		const loadedItems = await loadBlacksmithCatalogs(catalogId);
+		setCatalogItems((current) => ({ ...current, [catalogId]: loadedItems }));
+	};
+
+	const updatePolicy = (nextPolicy: CampaignShopRefreshPolicy) => {
+		setPolicy(nextPolicy);
+		setPreview(null);
+		setConfirmEmptyRefresh(false);
+	};
+
+	const updateRule = (
+		ruleIndex: number,
+		update: (rule: CampaignShopRefreshRule) => CampaignShopRefreshRule,
+	) => {
+		updatePolicy({
+			...policy,
+			rules: policy.rules.map((rule, index) =>
+				index === ruleIndex ? update(rule) : rule,
+			),
+		});
+	};
+
+	const updateDraft = (
+		ruleIndex: number,
+		update: Partial<CandidateDraft>,
+	) => {
+		setDrafts((current) => ({
+			...current,
+			[ruleIndex]: { ...(current[ruleIndex] ?? EMPTY_DRAFT), ...update },
+		}));
+	};
+
+	const handleDraftCatalogChange = async (ruleIndex: number, catalogId: string) => {
+		updateDraft(ruleIndex, { catalogId, itemId: '' });
+		setErrorMessage(null);
+		try {
+			await loadCatalog(catalogId);
+		} catch (error) {
+			setErrorMessage(getErrorMessage(error, '載入官方目錄商品失敗。'));
+		}
+	};
+
+	const addCandidate = (ruleIndex: number) => {
+		const draft = drafts[ruleIndex] ?? EMPTY_DRAFT;
+		if (!draft.catalogId) {
+			setErrorMessage('請先選擇官方目錄。');
+			return;
+		}
+		let candidate: CampaignShopRefreshCandidate;
+		if (draft.kind === 'item') {
+			const item = catalogItems[draft.catalogId]?.find(
+				(entry) => entry.itemId === draft.itemId,
+			);
+			if (!item) {
+				setErrorMessage('請選擇已載入的有效官方目錄商品。');
+				return;
+			}
+			candidate = item;
+		} else {
+			candidate = {
+				source: draft.catalogId,
+				param: {
+					...(draft.search.trim() ? { search: draft.search.trim() } : {}),
+					...(draft.rarity ? { rarity: draft.rarity } : {}),
+					...(draft.category ? { category: draft.category } : {}),
+				},
+			};
+		}
+		updateRule(ruleIndex, (rule) => ({
+			...rule,
+			possibleItemsOrFilters: [...rule.possibleItemsOrFilters, candidate],
+		}));
+		updateDraft(ruleIndex, { ...EMPTY_DRAFT, catalogId: draft.catalogId });
+		setErrorMessage(null);
+	};
+
+	const savePolicy = async () => {
+		setIsSaving(true);
+		setErrorMessage(null);
+		setNotice(null);
+		try {
+			const saved = await saveCampaignShopRefreshPolicy(
+				campaignId,
+				shop.id,
+				policy,
+			);
+			setPolicy(saved.refreshPolicy);
+			setSavedPolicy(saved.refreshPolicy);
+			setPreview(null);
+			await onReloadShops();
+			setNotice('店舖刷新政策已儲存。');
+		} catch (error) {
+			setErrorMessage(getErrorMessage(error, '儲存刷新政策失敗。'));
+		} finally {
+			setIsSaving(false);
+		}
+	};
+
+	const generatePreview = async () => {
+		if (isPolicyDirty) {
+			setErrorMessage('請先儲存目前的刷新政策，才能產生預覽。');
+			return;
+		}
+		setIsGenerating(true);
+		setErrorMessage(null);
+		setNotice(null);
+		setConfirmEmptyRefresh(false);
+		try {
+			const selections = await resolveCampaignShopRefreshCandidates(
+				savedPolicy,
+				catalogIds,
+				loadBlacksmithCatalogs,
+			);
+			setPreview(
+				buildCampaignShopRefreshPreview(
+					savedPolicy,
+					selections,
+					shop.updatedAt,
+					items,
+					catalogIds,
+				),
+			);
+		} catch (error) {
+			setErrorMessage(getErrorMessage(error, '產生刷新預覽失敗。'));
+		} finally {
+			setIsGenerating(false);
+		}
+	};
+
+	const applyPreview = async () => {
+		if (!preview) return;
+		if (preview.changes.length === 0 && !confirmEmptyRefresh) {
+			setConfirmEmptyRefresh(true);
+			return;
+		}
+		setIsApplying(true);
+		setErrorMessage(null);
+		setNotice(null);
+		try {
+			const result = await refreshCampaignShopItems(
+				campaignId,
+				shop.id,
+				preview.expectedShopUpdatedAt,
+				preview.expectedItems,
+				preview.keepItemsOnRefresh,
+				preview.changes,
+			);
+			await Promise.all([onReloadShops(), onReloadItems()]);
+			setPreview(null);
+			setConfirmEmptyRefresh(false);
+			setNotice(
+				`店舖刷新完成：新增 ${result.created} 項、補貨 ${result.restocked} 項、退役 ${result.retired} 項。`,
+			);
+		} catch (error) {
+			setErrorMessage(
+				getErrorMessage(
+					error,
+					'套用刷新失敗。預覽已保留，請確認資料版本後重試。',
+				),
+			);
+		} finally {
+			setIsApplying(false);
+		}
+	};
+
+	return (
+		<section
+			className='rounded-lg border border-purple-900/70 bg-stone-900/50 p-4'
+			data-testid='shop-refresh-panel'
+		>
+			<div className='flex flex-wrap items-start justify-between gap-3 border-b border-stone-800 pb-4'>
+				<div>
+					<h2 className='font-serif text-xl font-bold text-purple-200'>
+						店舖刷新政策
+					</h2>
+					<p className='mt-1 max-w-3xl text-xs leading-relaxed text-stone-500'>
+						先儲存政策，再產生不會寫入資料庫的預覽。只有確認刷新才會以單一交易套用變更。
+					</p>
+				</div>
+				<Button
+					type='button'
+					variant='secondary'
+					disabled={isSaving || isLoadingCatalogs || !isPolicyDirty}
+					onClick={() => void savePolicy()}
+					className='border border-purple-800/70 bg-purple-950/40 text-purple-200'
+				>
+					<Check className='h-4 w-4' />
+					{isSaving ? '儲存中…' : '儲存政策'}
+				</Button>
+			</div>
+
+			{errorMessage && (
+				<div role='alert' className='mt-4 flex gap-2 rounded-md border border-red-800/70 bg-red-950/30 p-3 text-sm text-red-200'>
+					<AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
+					<span>{errorMessage}</span>
+				</div>
+			)}
+			{notice && (
+				<p role='status' className='mt-4 rounded-md border border-emerald-800/70 bg-emerald-950/30 p-3 text-sm text-emerald-200'>
+					{notice}
+				</p>
+			)}
+
+			<label className='mt-4 flex cursor-pointer items-start gap-3 rounded-md border border-stone-800 bg-stone-950/50 p-3 text-sm text-stone-300'>
+				<input
+					type='checkbox'
+					checked={policy.flags.keepItemsOnRefresh}
+					onChange={(event) =>
+						updatePolicy({
+							...policy,
+							flags: { keepItemsOnRefresh: event.target.checked },
+						})
+					}
+					className='mt-0.5 h-4 w-4 accent-purple-500'
+				/>
+				<span>
+					<span className='font-semibold text-stone-100'>保留既有商品</span>
+					<span className='mt-1 block text-xs text-stone-500'>
+						啟用時只補貨或新增選中商品；關閉時，刷新前商品會退役且可用庫存歸零，但商品列與訂單紀錄都會保留。
+					</span>
+				</span>
+			</label>
+
+			<div className='mt-4 space-y-4'>
+				{policy.rules.map((rule, ruleIndex) => {
+					const draft = drafts[ruleIndex] ?? EMPTY_DRAFT;
+					const pickRange =
+						typeof rule.pickCount === 'object' && rule.pickCount !== null
+							? displayRange(rule.pickCount, '')
+							: null;
+					const stockRange = displayRange(rule.stockAvailable, '1');
+					return (
+						<article key={ruleIndex} className='rounded-md border border-stone-800 bg-stone-950/40 p-3'>
+							<div className='flex items-center justify-between gap-3'>
+								<h3 className='font-serif font-bold text-purple-100'>
+									規則 {ruleIndex + 1}
+								</h3>
+								<Button
+									type='button'
+									variant='ghost'
+									size='sm'
+									onClick={() =>
+										updatePolicy({
+											...policy,
+											rules: policy.rules.filter((_, index) => index !== ruleIndex),
+										})
+									}
+									className='border border-red-900/70 text-red-300 hover:bg-red-950/40'
+								>
+									<Trash2 className='h-3.5 w-3.5' />
+									刪除規則
+								</Button>
+							</div>
+
+							<div className='mt-3 space-y-2'>
+								<p className='text-xs font-semibold text-stone-400'>候選商品與篩選器</p>
+								{rule.possibleItemsOrFilters.length === 0 ? (
+									<p className='rounded border border-dashed border-stone-700 p-2 text-xs text-stone-500'>
+										尚未加入候選；此規則不會產生商品。
+									</p>
+								) : (
+									rule.possibleItemsOrFilters.map((candidate, candidateIndex) => (
+										<div key={`${candidateIndex}-${isCatalogItem(candidate) ? candidate.sourceKey : candidate.source}`} className='flex items-center justify-between gap-3 rounded border border-stone-800 px-2 py-1.5 text-xs'>
+											<p className='min-w-0 text-stone-300'>
+												{isCatalogItem(candidate)
+													? `${candidate.catalogTitle}・${candidate.name}`
+													: `${candidate.source}・篩選：${candidate.param.search || '不限文字'}／${candidate.param.rarity ? RARITY_CONFIG[candidate.param.rarity].label : '不限稀有度'}／${candidate.param.category ? BLACKSMITH_CATEGORY_LABELS[candidate.param.category] : '不限分類'}`}
+											</p>
+											<Button
+												type='button'
+												variant='ghost'
+												size='sm'
+												aria-label={`移除規則 ${ruleIndex + 1} 的候選 ${candidateIndex + 1}`}
+												onClick={() =>
+													updateRule(ruleIndex, (current) => ({
+														...current,
+														possibleItemsOrFilters:
+															current.possibleItemsOrFilters.filter(
+																(_, index) => index !== candidateIndex,
+															),
+													}))
+												}
+												className='shrink-0 text-red-300'
+											>
+												<Trash2 className='h-3.5 w-3.5' />
+											</Button>
+										</div>
+									))
+								)}
+							</div>
+
+							<div className='mt-3 grid gap-2 rounded border border-stone-800 bg-stone-950/60 p-3 md:grid-cols-2'>
+								<label className='text-xs text-stone-400'>
+									候選類型
+									<select
+										data-testid={`refresh-candidate-kind-${ruleIndex}`}
+										value={draft.kind}
+										onChange={(event) =>
+											updateDraft(ruleIndex, {
+												kind: event.target.value as CandidateDraft['kind'],
+												itemId: '',
+											})
+										}
+										className={`mt-1 ${INPUT_CLASS}`}
+									>
+										<option value='item'>指定官方商品</option>
+										<option value='filter'>官方目錄篩選器</option>
+									</select>
+								</label>
+								<label className='text-xs text-stone-400'>
+									官方目錄
+									<select
+										data-testid={`refresh-catalog-${ruleIndex}`}
+										value={draft.catalogId}
+										disabled={isLoadingCatalogs}
+										onChange={(event) =>
+											void handleDraftCatalogChange(ruleIndex, event.target.value)
+										}
+										className={`mt-1 ${INPUT_CLASS}`}
+									>
+										<option value=''>選擇目錄</option>
+										{definitions.map((definition) => (
+											<option key={definition.catalogId} value={definition.catalogId}>
+												{definition.title}
+											</option>
+										))}
+									</select>
+								</label>
+								{draft.kind === 'item' ? (
+									<label className='text-xs text-stone-400 md:col-span-2'>
+										官方商品
+										<select
+											value={draft.itemId}
+											disabled={!draft.catalogId || !catalogItems[draft.catalogId]}
+											onChange={(event) =>
+												updateDraft(ruleIndex, { itemId: event.target.value })
+											}
+											className={`mt-1 ${INPUT_CLASS}`}
+										>
+											<option value=''>選擇商品</option>
+											{(catalogItems[draft.catalogId] ?? []).map((item) => (
+												<option key={item.itemId} value={item.itemId}>
+													{item.name}・{RARITY_CONFIG[item.rarity].label}
+												</option>
+											))}
+										</select>
+									</label>
+								) : (
+									<>
+										<label className='text-xs text-stone-400'>
+											搜尋文字
+											<Input value={draft.search} onChange={(event) => updateDraft(ruleIndex, { search: event.target.value })} className={`mt-1 ${INPUT_CLASS}`} />
+										</label>
+										<label className='text-xs text-stone-400'>
+											稀有度
+											<select value={draft.rarity} onChange={(event) => updateDraft(ruleIndex, { rarity: event.target.value as Rarity | '' })} className={`mt-1 ${INPUT_CLASS}`}>
+												<option value=''>不限</option>
+												{RARITIES.map((rarity) => <option key={rarity} value={rarity}>{RARITY_CONFIG[rarity].label}</option>)}
+											</select>
+										</label>
+										<label className='text-xs text-stone-400 md:col-span-2'>
+											分類
+											<select value={draft.category} onChange={(event) => updateDraft(ruleIndex, { category: event.target.value as ItemCategory | '' })} className={`mt-1 ${INPUT_CLASS}`}>
+												<option value=''>不限</option>
+												{CATEGORIES.map((category) => <option key={category} value={category}>{BLACKSMITH_CATEGORY_LABELS[category]}</option>)}
+											</select>
+										</label>
+									</>
+								)}
+								<Button type='button' variant='secondary' data-testid={`refresh-add-candidate-${ruleIndex}`} onClick={() => addCandidate(ruleIndex)} disabled={isLoadingCatalogs} className='border border-purple-800/70 bg-purple-950/40 text-purple-200 md:col-span-2'>
+									<Plus className='h-4 w-4' />
+									加入候選
+								</Button>
+							</div>
+
+							<div className='mt-3 grid gap-3 lg:grid-cols-2'>
+								<div className='rounded border border-stone-800 p-3'>
+									<div className='flex items-center justify-between gap-2'>
+										<p className='text-xs font-semibold text-stone-300'>抽選數量</p>
+										<label className='flex items-center gap-2 text-xs text-stone-400'>
+											<input type='checkbox' checked={pickRange !== null} onChange={(event) => updateRule(ruleIndex, (current) => ({ ...current, pickCount: event.target.checked ? { min: 0, max: null, p: 1, step: 1 } : null }))} className='accent-purple-500' />
+											限制隨機數量
+										</label>
+									</div>
+									{pickRange ? (
+										<div className='mt-2 grid grid-cols-2 gap-2'>
+											{(['min', 'max', 'p', 'step'] as const).map((field) => (
+												<label key={field} className='text-xs text-stone-500'>
+													{field === 'min' ? '最小值' : field === 'max' ? '最大值（空白不限）' : field === 'p' ? '停止機率 p' : '每次增加'}
+													<Input type='number' min={field === 'p' ? 0.000001 : 0} max={field === 'p' ? 1 : undefined} step={field === 'p' ? '0.01' : '1'} value={pickRange[field]} onChange={(event) => updateRule(ruleIndex, (current) => ({ ...current, pickCount: { ...(typeof current.pickCount === 'object' && current.pickCount !== null ? current.pickCount : {}), [field]: field === 'max' && !event.target.value ? null : Number(event.target.value) } }))} className={`mt-1 ${INPUT_CLASS}`} />
+												</label>
+											))}
+										</div>
+									) : <p className='mt-2 text-xs text-stone-500'>未限制時會選取此規則的全部去重候選。</p>}
+								</div>
+								<div className='rounded border border-stone-800 p-3'>
+									<p className='text-xs font-semibold text-stone-300'>每項可用庫存</p>
+									<div className='mt-2 grid grid-cols-2 gap-2'>
+										{(['min', 'max', 'p', 'step'] as const).map((field) => (
+											<label key={field} className='text-xs text-stone-500'>
+												{field === 'min' ? '最小值' : field === 'max' ? '最大值（空白不限）' : field === 'p' ? '停止機率 p' : '每次增加'}
+												<Input type='number' min={field === 'p' ? 0.000001 : 0} max={field === 'p' ? 1 : undefined} step={field === 'p' ? '0.01' : '1'} value={stockRange[field]} onChange={(event) => updateRule(ruleIndex, (current) => ({ ...current, stockAvailable: { ...current.stockAvailable, [field]: field === 'max' && !event.target.value ? null : Number(event.target.value) } }))} className={`mt-1 ${INPUT_CLASS}`} />
+											</label>
+										))}
+									</div>
+									<p className='mt-2 text-[11px] leading-relaxed text-stone-500'>從最小值開始；每次亂數結果大於或等於 p 才增加 step，直到達到最大值。p = 1 不會額外增加。</p>
+								</div>
+							</div>
+						</article>
+					);
+				})}
+			</div>
+
+			<Button type='button' variant='secondary' onClick={() => updatePolicy({ ...policy, rules: [...policy.rules, createRule()] })} className='mt-4 border border-stone-700 bg-stone-950 text-stone-300'>
+				<Plus className='h-4 w-4' />
+				新增規則
+			</Button>
+
+			<div className='mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-800 pt-4'>
+				<p className='text-xs text-stone-500'>
+					{isPolicyDirty ? '尚有未儲存的政策變更。' : '目前政策已儲存，可產生刷新預覽。'}
+				</p>
+				<Button type='button' disabled={isGenerating || isSaving || isPolicyDirty || isLoadingCatalogs} onClick={() => void generatePreview()} className='bg-amber-700 text-amber-50 hover:bg-amber-600'>
+					<RotateCw className='h-4 w-4' />
+					{isGenerating ? '產生預覽中…' : '預覽刷新'}
+				</Button>
+			</div>
+
+			{preview && (
+				<div className='mt-5 rounded-md border border-amber-800/70 bg-amber-950/20 p-3'>
+					<div className='flex flex-wrap items-start justify-between gap-3'>
+						<div>
+							<h3 className='font-serif text-lg font-bold text-amber-200'>刷新預覽</h3>
+							<p className='mt-1 text-xs text-stone-400'>
+								新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、補貨 {preview.entries.filter((entry) => entry.action === 'restock').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、退役 {preview.entries.filter((entry) => entry.action === 'retire').length} 項。
+							</p>
+						</div>
+						<Button type='button' variant='secondary' disabled={isGenerating || isApplying} onClick={() => void generatePreview()} className='border border-amber-800/70 bg-stone-950 text-amber-200'>
+							<RotateCw className='h-4 w-4' />
+							重新隨機
+						</Button>
+					</div>
+					{preview.entries.length === 0 ? (
+						<p className='mt-3 rounded border border-red-900/70 bg-red-950/30 p-3 text-sm text-red-200'>本次沒有選中商品。清除模式確認後仍會退役既有商品；請再次確認後才會套用。</p>
+					) : (
+						<div className='mt-3 max-h-80 divide-y divide-stone-800 overflow-y-auto rounded border border-stone-800'>
+							{preview.entries.map((entry) => (
+								<div key={entry.key} className='flex items-center justify-between gap-3 px-3 py-2 text-sm'>
+									<div className='min-w-0'>
+										<p className='truncate text-stone-200'>{entry.name}</p>
+										<p className='text-xs text-stone-500'>{entry.sourceTitle}・規則 {entry.ruleIndex === null ? '—' : entry.ruleIndex + 1}・{BLACKSMITH_CATEGORY_LABELS[entry.category]}・{RARITY_CONFIG[entry.rarity].label}</p>
+									</div>
+									<div className='shrink-0 text-right'>
+										<p className={`font-semibold ${actionClass(entry.action)}`}>{actionLabel(entry.action)}</p>
+										<p className='font-mono text-xs text-stone-400'>{entry.unitPriceGp} gp ・庫存 {entry.stockAvailable}</p>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+					<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/40 pt-3'>
+						<p className='text-xs text-stone-500'>確認後會呼叫單一交易 RPC。預覽過期或失敗時不會部分套用，且可保留預覽重試。</p>
+						<Button type='button' variant='danger' disabled={isApplying || isGenerating} onClick={() => void applyPreview()}>
+							<Check className='h-4 w-4' />
+							{isApplying ? '刷新中…' : confirmEmptyRefresh ? '再次確認零項刷新' : '確認刷新'}
+						</Button>
+					</div>
+				</div>
+			)}
+		</section>
+	);
+}
