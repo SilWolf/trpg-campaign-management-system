@@ -4,6 +4,19 @@
 
 ```tsx
 import { Badge, Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
+import { useConfirm, useToast } from '@/contexts/FeedbackContext';
+```
+
+全域操作回饋由 `FeedbackProvider` 提供，已安裝於應用程式 Router 上層。非同步操作結果可透過 `useToast()` 顯示通知；單一二元決策使用 `useConfirm()`，其 Promise 在確認時回傳 `true`，取消或按 Escape 時回傳 `false`。欄位驗證與需要持續查看的錯誤仍應留在操作區域。
+
+```tsx
+const toast = useToast();
+const confirm = useConfirm();
+
+toast.success('角色資料已儲存。');
+if (await confirm({ title: '刪除角色', message: '角色與相關資料將被移除。', variant: 'danger' })) {
+	// 執行已確認的操作
+}
 ```
 
 ## Button
