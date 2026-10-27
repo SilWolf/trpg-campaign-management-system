@@ -56,7 +56,7 @@ interface CampaignShopRefreshRange {
 
 | 欄位                           | 規則                                                                                                                                    |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `flags.keepItemsOnRefresh`    | 預設 `false`。`true` 時保留既有商品，再套用這次選取結果；`false` 時將既有商品從可購買目錄中退役，再建立本次選取的商品列。                 |
+| `flags.keepItemsOnRefresh`    | 預設 `false`。`true` 時保留既有商品，再套用這次選取結果；`false` 時刪除既有商品及其關聯訂單，再建立本次選取的商品列。                 |
 | `rules`                        | 依序處理；允許空陣列，空陣列表示政策不會新增候選商品。                                                                                  |
 | `possibleItemsOrFilters`       | 每筆為指定的 `BlacksmithItem` 或官方目錄篩選器。篩選器的 `source` 必須是目錄索引中存在的 `catalogId`。                                 |
 | `pickCount`                    | `null` 或省略代表選取該規則全部去重後的候選商品；數值物件代表隨機抽取數量。舊版純數字若需相容，代表固定抽取該數量。                     |
@@ -85,27 +85,27 @@ interface CampaignShopRefreshRange {
    - 每個最終選中的商品獨立依 `stockAvailable` 範圍抽樣一次。
    - 抽樣庫存是該商品刷新後的「可用庫存目標」，不是把抽樣數字加到既有可用庫存上；`stock_reserved` 不由刷新器改寫。
 5. **產生預覽**
-   - 預覽列出商品名稱、稀有度、分類、來源、套用規則、售價、刷新後可用庫存，以及新增／補貨／保留／退役的預計動作。
+   - 預覽列出商品名稱、稀有度、分類、來源、套用規則、售價、刷新後可用庫存，以及新增／補貨／保留／刪除的預計動作。
    - DM 可再次隨機生成完整新預覽；再次生成只替換暫存預覽，不寫入資料庫。
    - 生成器接受可替換的亂數來源，確保單元測試可重現抽樣結果；正式 UI 使用 `Math.random()`。
 6. **確認並套用**
    - DM 最後確認時，才將預覽中的變更送往單次資料庫交易。
-   - 套用失敗時整筆回滾，畫面顯示錯誤並保留可重試的預覽；不可部分新增商品或先退役舊商品後才失敗。
+   - 套用失敗時整筆回滾，畫面顯示錯誤並保留可重試的預覽；不可部分新增商品或先刪除舊商品後才失敗。
    - 成功後重新載入商店及商品資料，顯示成功提示並讓既有 Realtime 訂閱同步其他成員畫面。
 
 ## 商品與訂單生命週期規則
 
-刷新不得刪除 `campaign_shop_items` 列或其關聯訂單，也不得重寫訂單快照。
+刷新清除模式會刪除既有 `campaign_shop_items` 列；依商品外鍵設定，相關訂單及付款輔助列也會 cascade 刪除。保留模式不刪除商品或訂單，也不重寫訂單快照。
 
 | 刷新情境                                      | 商品處理                                                                                                                                                            |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `keepItemsOnRefresh = false`                  | 將刷新前既有商品設為 `is_active = false`、`stock_available = 0`，再建立本次選取的商品列。保留原商品列的 `stock_reserved` 和歷史訂單。                               |
+| `keepItemsOnRefresh = false`                  | 刪除刷新前既有商品及其關聯訂單／付款輔助列，再建立本次選取的商品列。                                                                 |
 | `keepItemsOnRefresh = true`，商品未被選中     | 商品列、庫存、啟用狀態及保留庫存維持不變。                                                                                                                          |
 | 保留模式下選中已有相同來源商品                | 以 `source_type = 'catalog'` 及 `source_id = catalogId:itemId` 對應既有列，將 `stock_available` 設為本次抽樣值；保留其商品 ID、售價、審查設定、保留庫存及歷史訂單。 |
 | 商品被選中但商店中不存在                      | 建立新商品列，使用既有目錄匯入轉換器；初始售價沿用目錄商品價值（最低 `0.01 gp`），審查預設關閉，商品啟用。                                                          |
-| 清除模式下選中已有商品                        | 建立新商品列，避免重新啟用舊列而改變其歷史訂單意義；舊列及保留庫存仍保留供待審訂單處理。                                                                            |
+| 清除模式下選中已有商品                        | 刪除舊商品列及其關聯資料後建立新商品列，不沿用舊商品 ID。                                                                 |
 
-刷新不自動取消待審訂單、不釋放待審保留庫存，也不改變訂單核准／拒絕流程。刷新完成後，DM 仍依既有待審訂單介面處理這些訂單。若資料庫交易 RPC 對停用商品的待審訂單核准有額外限制，實作前需確認其行為並確保退役商品不會導致保留訂單遭靜默丟失。
+清除模式刪除商品時，待審與歷史訂單也會依既有 cascade 外鍵一併刪除；此清除不可復原，UI 須在套用前明確提示。保留模式仍維持商品、保留庫存與訂單不變。
 
 ## 持久化、授權與一致性
 
@@ -118,10 +118,10 @@ interface CampaignShopRefreshRange {
 
 ### 刷新交易
 
-- 新增受授權的資料庫 RPC，建議以 `refresh_campaign_shop_items` 為名。RPC 驗證呼叫者是所屬戰役 DM、戰役／商店 ID 一致，並在單一交易內鎖定商店及其商品資料、處理退役／補貨／新增。
+- 新增受授權的資料庫 RPC，建議以 `refresh_campaign_shop_items` 為名。RPC 驗證呼叫者是所屬戰役 DM、戰役／商店 ID 一致，並在單一交易內鎖定商店及其商品資料、處理刪除／補貨／新增。
 - RPC 接收已確認的預覽變更，但需在伺服器端驗證其結構、ID、金額、庫存及目標商店；呼叫者未獲 DM 授權時必須拒絕。刷新不是以多次前端 `.insert()`／`.update()` 模擬交易。
 - 同時刷新政策或商品資料可能造成預覽過期。最小方案是在預覽保存政策／商店 `updated_at` 或明確版本；確認時若版本已改變，拒絕舊預覽並要求重新載入／生成，不得覆蓋較新的資料。
-- RPC 必須保留庫存保留量與訂單外鍵；不對 `campaign_shop_orders` 做更新或刪除。
+- RPC 必須以單一交易完成刪除、補貨與新增。清除模式刪除商品時會依既有外鍵 cascade 訂單及付款輔助列；保留模式不更動商品、訂單或保留庫存。
 - Realtime 仍透過現有 `campaign_shops`、`campaign_shop_items` 事件同步。若單次交易事件會導致多次重載，前端可合併同一刷新事件的載入，但不得因此隱藏錯誤。
 
 ## UI 與使用流程
@@ -131,7 +131,7 @@ interface CampaignShopRefreshRange {
 3. 篩選器可指定官方目錄、搜尋字串、稀有度及分類；提供與官方目錄相同的分類／稀有度中文標籤。
 4. 以數字欄位設定 `pickCount` 與庫存範圍的 `min`、`max`、`p`、`step`；提供預設值、欄位驗證及易懂的 `p` 說明，避免把它誤解為「額外增加的機率」。
 5. 政策先明確儲存，再可按「預覽刷新」。預覽載入中、空候選、載入失敗、驗證失敗及成功狀態均要明確顯示。
-6. 預覽畫面提供「重新隨機」與「確認刷新」；確認前顯示影響數量及舊商品退役提示。若本次結果為零項，確認按鈕要求再次確認，避免誤清空目錄。
+6. 預覽畫面提供「重新隨機」與「確認刷新」；確認前顯示影響數量及清除模式刪除商品與關聯訂單的危險提示。若本次結果為零項，確認按鈕要求再次確認，避免誤清空目錄。
 7. 操作期間防止重複送出；成功後更新本地頁面資料，失敗時不清除預覽。DM 以外成員看不到政策編輯與刷新控制。
 
 採用既有深色奇幻商店管理介面、繁體中文提示及專案現有錯誤處理方式。路由檔案保留規範要求的 ESLint 註解，不手動修改自動生成的 `src/routeTree.gen.ts`。
@@ -143,7 +143,7 @@ interface CampaignShopRefreshRange {
 1. 新增政策型別、預設值、驗證函式及舊格式相容轉換。
 2. 新增 `campaign_shops.refresh_policy` 欄位與預設政策 migration。
 3. 更新商店讀寫轉換器及資料服務。
-4. 新增授權檢查完整、可原子退役／新增／補貨的刷新 RPC。
+4. 新增授權檢查完整、可原子刪除／新增／補貨的刷新 RPC。
 5. 檢查政策 JSON 欄位約束、DM 權限、campaign 隔離、鎖定順序、訂單外鍵及 Realtime publication。
 
 **完成條件：** 舊商店讀取正常；未授權呼叫被拒；RPC 成功時完整套用、任一錯誤時全數回滾；既有訂單及 `stock_reserved` 保持完整。
@@ -152,12 +152,13 @@ interface CampaignShopRefreshRange {
 
 - 已完成政策型別、清除模式預設值、執行時驗證及舊商店缺少 `refresh_policy` 時的相容 fallback，實作於 [`src/types.ts`](../src/types.ts)、[`src/lib/campaignShopRefresh.ts`](../src/lib/campaignShopRefresh.ts) 與 [`src/lib/supabase.ts`](../src/lib/supabase.ts)。
 - 新增 [`supabase/migrations/20261027000001_campaign_shop_refresh.sql`](../supabase/migrations/20261027000001_campaign_shop_refresh.sql)：加入 `campaign_shops.refresh_policy`、JSONB 結構與範圍檢查、authenticated 欄位權限，以及 `refresh_campaign_shop_items` DM 專用交易 RPC。
-- 商店資料服務已支援儲存政策和呼叫刷新 RPC，實作於 [`src/lib/campaignShops.ts`](../src/lib/campaignShops.ts)。確認刷新時以商店 `updated_at` 及全部商品的 ID／`updated_at` 快照拒絕過期預覽，依「商店列 → 商品列 ID 順序」鎖定；資料庫交易會整批退役／新增／補貨，保留 `stock_reserved`、商品列及訂單關聯。
+- 商店資料服務已支援儲存政策和呼叫刷新 RPC，實作於 [`src/lib/campaignShops.ts`](../src/lib/campaignShops.ts)。確認刷新時以商店 `updated_at` 及全部商品的 ID／`updated_at` 快照拒絕過期預覽，依「商店列 → 商品列 ID 順序」鎖定；新增的刪除 migration 會在單一交易內移除清除模式的商品及其關聯訂單／付款列。
 - 官方目錄 ID 在前端儲存政策與組裝 RPC 變更時會對照 `catalog-index.json`；資料庫沒有官方目錄索引資料表，因此 RPC 只驗證來源識別格式及商品是否屬於當前政策列出的目錄／指定商品，不能獨立證明該目錄 ID 仍存在於靜態目錄索引。階段二候選解析器會在產生預覽時再次對照目前索引並驗證載入商品的目錄來源。
 - 已新增商店資料轉換 E2E 覆蓋政策序列化、舊商店 fallback、無效目錄及庫存上限，位於 [`tests/e2e/campaign-shop-data.spec.ts`](../tests/e2e/campaign-shop-data.spec.ts)。
 - 已同步更新 [`docs/campaign-shop-deployment.md`](./campaign-shop-deployment.md)，加入新 migration 的唯讀 schema／RPC 權限檢查，以及 DM 授權、過期預覽、回滾、待審保留庫存和 Realtime 的隔離驗收步驟。
 - 本機驗證：`npm run typecheck`、`npm run build`、`npm run test:e2e -- tests/e2e/campaign-shop-data.spec.ts`（2 項通過）；E2E 執行時並行 Lint 曾碰到 Playwright 清理 `test-results` 的掃描競態，之後單獨重跑 `npm run lint` 成功，只有商店路由既有的 unused eslint-disable 警告。
-- **部署狀態更新：** 維護者已手動部署階段一 migration。本次開發沒有連線或操作 Supabase；隔離環境的 RLS／非 DM 拒絕、原子回滾、併發過期預覽及 Realtime 驗收仍待維護者完成，因此階段一資料庫驗收尚未全數勾選。
+- **部署狀態待核對：** 過往紀錄曾提及維護者已手動部署階段一 migration；但目前 [`campaign-shop-deployment.md`](./campaign-shop-deployment.md) 註明本工作未執行 migration，且本輪沒有目標環境或 migration history 的驗收證據。請維護者在確認的隔離環境核對實際狀態；在取得證據前，不將 migration 部署或資料庫驗收標記為完成。
+- 新增 [`supabase/migrations/20261027000002_campaign_shop_refresh_delete.sql`](../supabase/migrations/20261027000002_campaign_shop_refresh_delete.sql)：刷新清除模式會在原子 RPC 交易中刪除已退役商品列；依既有外鍵，相關訂單及付款輔助列一併刪除。RPC 回傳值改以 `deleted` 回報刪除數量。這項 migration 尚未部署，須依商店部署文件由維護者在確認的隔離環境手動驗收。
 
 ### 階段二：候選解析與抽樣
 
@@ -173,7 +174,7 @@ interface CampaignShopRefreshRange {
 - 已在 [`src/lib/campaignShopRefresh.ts`](../src/lib/campaignShopRefresh.ts) 新增純候選解析與預覽函式：`resolveCampaignShopRefreshCandidates()`、`buildCampaignShopRefreshPreview()` 及 `blacksmithItemToCampaignShopSnapshot()`。目錄載入器以參數注入，呼叫端可直接傳入官方目錄載入器；政策會先依目前 `catalog-index.json` 的 ID 清單驗證，篩選來源只載入各自指定的目錄，任何載入或格式錯誤都會拒絕整次解析，不回傳部分結果。
 - 官方目錄搜尋／分類／稀有度篩選已抽成 [`filterBlacksmithCatalogItems()`](../src/lib/blacksmithCatalog.ts)，官方目錄瀏覽頁改用同一函式；搜尋欄位與既有介面一致，包含商品名稱、分類中英文值與中文標籤、子類型、稀有度及中文標籤、目錄標題、來源、描述、別名與搜尋詞。
 - 候選依政策／陣列順序解析，按 `itemId` 全域去重並歸屬首次出現的規則；範圍數量遵循 `min`、有限 `max`、`p` 與 `step`，候選不足時以候選數量為上限。指定數量以 Fisher–Yates 部分洗牌不放回抽樣；庫存各自獨立抽樣並限制在資料庫 `integer` 範圍。解析器可注入亂數來源，正式呼叫預設使用 `Math.random()`。
-- 預覽模型不寫入資料庫，保存商店及商品版本快照和後續 RPC 所需的 `changes`；依政策產生新增、補貨、保留或退役列。保留模式下沿用既有商品售價／快照並只把目標庫存放入變更；清除模式以新增列取代既有來源列的預計狀態，舊列顯示退役，兩種模式均不會改寫保留庫存。目錄商品快照轉換器已由商店設定頁現有匯入流程共用。
+- 預覽模型不寫入資料庫，保存商店及商品版本快照和後續 RPC 所需的 `changes`；依政策產生新增、補貨、保留或刪除列。保留模式下沿用既有商品售價／快照並只把目標庫存放入變更；清除模式預覽舊商品刪除，再以新商品列取代，兩種模式均不會改寫保留庫存。目錄商品快照轉換器已由商店設定頁現有匯入流程共用。
 - 新增 [`tests/e2e/campaign-shop-refresh.spec.ts`](../tests/e2e/campaign-shop-refresh.spec.ts)，覆蓋官方目錄搜尋一致性、政策候選去重、注入亂數下的範圍抽樣、`p = 1`、候選不足、空結果、來源載入失敗、版本快照及四種預覽操作。
 - 本機驗證：`npm run typecheck`、`npm run build`、`npm run lint` 及 `npm run test:e2e -- tests/e2e/campaign-shop-refresh.spec.ts tests/e2e/blacksmith.spec.ts tests/e2e/campaign-shop-data.spec.ts` 均通過；相關 E2E 共 11 項通過。Lint 僅回報商店詳情路由既有的 unused eslint-disable 警告。
 - **階段二本機實作完成；尚未加入政策編輯、預覽／重抽／確認 UI，也未套用刷新 RPC。** 後續新對話可從階段三開始，讓 DM 設定頁呼叫上述純函式，串接已部署的刷新 RPC；不得把本階段 mock／純函式測試描述成真實 Supabase RLS、交易或 Realtime 驗收。
@@ -201,20 +202,31 @@ interface CampaignShopRefreshRange {
 
 - 單元測試：政策驗證、舊格式轉換、官方目錄篩選、候選去重、隨機選取、庫存抽樣、快照轉換。
 - 元件／E2E 測試：政策欄位驗證、保存與重新載入、預覽重抽、確認／取消、零結果警告、一般成員不可操作及錯誤提示。
-- RPC／隔離環境測試：DM 與非 DM 授權、跨戰役隔離、同時刷新／編輯衝突、交易回滾、已完成訂單保留、待審保留庫存不變及 Realtime 更新。
+- RPC／隔離環境測試：DM 與非 DM 授權、跨戰役隔離、同時刷新／編輯衝突、交易回滾、清除模式刪除關聯訂單、保留模式下待審保留庫存不變及 Realtime 更新。
 - 執行專案既有 `npm run typecheck`、`npm run lint`、相關 E2E 與 `npm run build`。
 - 新 migration 及 RPC 依商店部署文件流程，在維護者確認的隔離 Supabase 專案手動驗收及部署；mock E2E 不可宣稱等同真實 RLS、Realtime 或資料庫交易驗收。
+
+**本機測試與驗收紀錄（2026-10-27）**
+
+- 執行完整 `npm run test:e2e`：60 項通過。E2E 使用 Supabase mock，結果只驗證本機 UI 流程與請求合約，不代表真實 RPC、RLS、交易回滾或 Realtime 已驗收。
+- 新增刷新 UI 驗收案例：確認預覽階段不會提前呼叫刷新 RPC；零候選清除模式需二次確認；刷新 RPC 失敗時顯示實際錯誤並保留預覽。玩家嘗試開啟 DM 設定頁的拒絕流程仍由既有 E2E 覆蓋。
+- 零候選案例發現預覽雖會要求二次確認，卻未顯示清除既有商品的風險提示；已修正 [`CampaignShopRefreshPanel`](../src/routes/_protected/campaigns/$campaignId/shops/-parts/CampaignShopRefreshPanel.tsx)，清除模式提示刪除商品及關聯訂單，保留模式則說明空操作不會變更既有商品。
+- 本次驗證：`npm run typecheck` 通過；`npm run lint` 通過但有一項既有警告（商店詳情路由 unused ESLint disable）；`npm run test:e2e` 60 項通過；`npm run build` 通過。
+- **部署／真實資料庫驗收未執行：** 本輪未連線 Supabase、未執行 SQL、未部署 migration，也未修改 Secrets。DM／非 DM RLS、跨戰役隔離、過期預覽併發、交易回滾、訂單與保留庫存生命週期及 Realtime 仍須維護者依 [`campaign-shop-deployment.md`](./campaign-shop-deployment.md) 在確認的隔離專案手動驗收。
+- **新對話接續：** 先請維護者確認隔離專案與 migration history，釐清上方階段一部署狀態紀錄，再依部署文件執行唯讀檢查及隔離驗收。沒有維護者確認與測試證據前，不連線或部署，也不將未完成的資料庫驗收勾選為通過。
 
 ## 驗收清單
 
 - [x] DM 可儲存、修改及重新載入商店刷新政策；舊商店可使用預設政策正常載入。
-- [x] `keepItemsOnRefresh` 的保留／清除行為符合政策，舊商品及歷史訂單不被刪除。
+- [x] `keepItemsOnRefresh` 的保留／清除行為符合政策；清除模式會刪除舊商品及其關聯訂單。
 - [x] 指定商品及官方目錄 filter 均可加入候選；filter 僅查詢其指定目錄並遵循官方目錄既有搜尋語意。
 - [x] 相同 `itemId` 的候選只產生一個結果；隨機抽樣不重複且受到 `pickCount`、候選總數及庫存上下界限制。
 - [x] 每項商品庫存獨立抽樣；`p = 1` 不會額外增加，且範圍上限／候選不足可透過固定亂數來源測試。
 - [x] 預覽及再次隨機不會寫入遠端；只有 DM 確認才套用刷新結果。
-- [ ] 刷新成功後其他訂閱者收到更新；刷新失敗時沒有部分資料改變。
-- [ ] 刷新不刪除訂單、不改寫歷史快照、不覆蓋 `stock_reserved`，待審訂單仍可依既有流程處理。
+- [x] UI E2E 驗證零候選清除模式顯示風險並要求二次確認，RPC 失敗時保留可重試預覽。
+- [x] 玩家無法開啟 DM 商店設定頁；非 DM 不會看見刷新管理面板。
+- [ ] 隔離資料庫刷新成功後其他訂閱者收到 Realtime 更新；交易失敗時沒有部分資料改變，清除模式刪除的商品及訂單均依預期 cascade。
+- [ ] 清除模式依外鍵刪除關聯訂單；保留模式不刪除訂單、不改寫歷史快照或覆蓋 `stock_reserved`。
 - [ ] 未授權使用者、跨戰役 ID、錯誤政策、失效目錄及過期預覽均被明確拒絕。
 
 ## 非目標

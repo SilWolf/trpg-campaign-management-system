@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Check, Plus, RotateCw, Trash2 } from 'lucide-react';
 import { RARITY_CONFIG } from '@/data';
 import {
@@ -104,7 +104,7 @@ function displayRange(range: CampaignShopRefreshRange, fallbackMax: string) {
 }
 
 function actionLabel(
-	action: 'create' | 'restock' | 'keep' | 'retire',
+	action: 'create' | 'restock' | 'keep' | 'delete',
 ) {
 	switch (action) {
 		case 'create':
@@ -113,13 +113,13 @@ function actionLabel(
 			return '補貨';
 		case 'keep':
 			return '保留';
-		case 'retire':
-			return '退役';
+		case 'delete':
+			return '刪除';
 	}
 }
 
 function actionClass(
-	action: 'create' | 'restock' | 'keep' | 'retire',
+	action: 'create' | 'restock' | 'keep' | 'delete',
 ) {
 	switch (action) {
 		case 'create':
@@ -128,7 +128,7 @@ function actionClass(
 			return 'text-cyan-300';
 		case 'keep':
 			return 'text-stone-400';
-		case 'retire':
+		case 'delete':
 			return 'text-red-300';
 	}
 }
@@ -167,8 +167,19 @@ export function CampaignShopRefreshPanel({
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isApplying, setIsApplying] = useState(false);
 	const [confirmEmptyRefresh, setConfirmEmptyRefresh] = useState(false);
+	const [deletingRuleIndex, setDeletingRuleIndex] = useState<number | null>(
+		null,
+	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [notice, setNotice] = useState<string | null>(null);
+	const deleteRuleDialogRef = useRef<HTMLDialogElement>(null);
+
+	useEffect(() => {
+		const dialog = deleteRuleDialogRef.current;
+		if (!dialog) return;
+		if (deletingRuleIndex !== null && !dialog.open) dialog.showModal();
+		if (deletingRuleIndex === null && dialog.open) dialog.close();
+	}, [deletingRuleIndex]);
 
 	useEffect(() => {
 		let isMounted = true;
@@ -348,7 +359,7 @@ export function CampaignShopRefreshPanel({
 			setPreview(null);
 			setConfirmEmptyRefresh(false);
 			setNotice(
-				`店舖刷新完成：新增 ${result.created} 項、補貨 ${result.restocked} 項、退役 ${result.retired} 項。`,
+				`店舖刷新完成：新增 ${result.created} 項、補貨 ${result.restocked} 項、刪除 ${result.deleted} 項。`,
 			);
 		} catch (error) {
 			setErrorMessage(
@@ -415,7 +426,7 @@ export function CampaignShopRefreshPanel({
 				<span>
 					<span className='font-semibold text-stone-100'>保留既有商品</span>
 					<span className='mt-1 block text-xs text-stone-500'>
-						啟用時只補貨或新增選中商品；關閉時，刷新前商品會退役且可用庫存歸零，但商品列與訂單紀錄都會保留。
+						啟用時只補貨或新增選中商品；關閉時，刷新前商品及其關聯訂單會刪除，再新增本次選中的商品。
 					</span>
 				</span>
 			</label>
@@ -436,15 +447,9 @@ export function CampaignShopRefreshPanel({
 								</h3>
 								<Button
 									type='button'
-									variant='ghost'
+									variant='danger'
 									size='sm'
-									onClick={() =>
-										updatePolicy({
-											...policy,
-											rules: policy.rules.filter((_, index) => index !== ruleIndex),
-										})
-									}
-									className='border border-red-900/70 text-red-300 hover:bg-red-950/40'
+									onClick={() => setDeletingRuleIndex(ruleIndex)}
 								>
 									<Trash2 className='h-3.5 w-3.5' />
 									刪除規則
@@ -631,7 +636,7 @@ export function CampaignShopRefreshPanel({
 						<div>
 							<h3 className='font-serif text-lg font-bold text-amber-200'>刷新預覽</h3>
 							<p className='mt-1 text-xs text-stone-400'>
-								新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、補貨 {preview.entries.filter((entry) => entry.action === 'restock').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、退役 {preview.entries.filter((entry) => entry.action === 'retire').length} 項。
+								新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、補貨 {preview.entries.filter((entry) => entry.action === 'restock').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、刪除 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
 							</p>
 						</div>
 						<Button type='button' variant='secondary' disabled={isGenerating || isApplying} onClick={() => void generatePreview()} className='border border-amber-800/70 bg-stone-950 text-amber-200'>
@@ -639,9 +644,7 @@ export function CampaignShopRefreshPanel({
 							重新隨機
 						</Button>
 					</div>
-					{preview.entries.length === 0 ? (
-						<p className='mt-3 rounded border border-red-900/70 bg-red-950/30 p-3 text-sm text-red-200'>本次沒有選中商品。清除模式確認後仍會退役既有商品；請再次確認後才會套用。</p>
-					) : (
+					{preview.entries.length > 0 && (
 						<div className='mt-3 max-h-80 divide-y divide-stone-800 overflow-y-auto rounded border border-stone-800'>
 							{preview.entries.map((entry) => (
 								<div key={entry.key} className='flex items-center justify-between gap-3 px-3 py-2 text-sm'>
@@ -657,6 +660,19 @@ export function CampaignShopRefreshPanel({
 							))}
 						</div>
 					)}
+					{preview.changes.length === 0 && (
+						<p
+							className={`mt-3 rounded border p-3 text-sm ${
+								preview.keepItemsOnRefresh
+									? 'border-amber-900/70 bg-amber-950/30 text-amber-200'
+									: 'border-red-900/70 bg-red-950/30 text-red-200'
+							}`}
+						>
+							{preview.keepItemsOnRefresh
+								? '本次沒有選中商品，保留模式不會變更既有商品；請再次確認後才會送出空操作。'
+								: '本次沒有選中商品。清除模式確認後仍會刪除既有商品及其關聯訂單；請再次確認後才會套用。'}
+						</p>
+					)}
 					<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/40 pt-3'>
 						<p className='text-xs text-stone-500'>確認後會呼叫單一交易 RPC。預覽過期或失敗時不會部分套用，且可保留預覽重試。</p>
 						<Button type='button' variant='danger' disabled={isApplying || isGenerating} onClick={() => void applyPreview()}>
@@ -666,6 +682,51 @@ export function CampaignShopRefreshPanel({
 					</div>
 				</div>
 			)}
+			<dialog
+				ref={deleteRuleDialogRef}
+				aria-labelledby='delete-refresh-rule-title'
+				onClose={() => setDeletingRuleIndex(null)}
+				className='m-auto max-h-[90vh] w-[min(28rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-red-900/70 bg-stone-950 p-0 text-stone-100 shadow-2xl backdrop:bg-black/80'
+			>
+				<div className='p-5'>
+					<h2
+						id='delete-refresh-rule-title'
+						className='font-serif text-lg font-bold text-red-200'
+					>
+						確認刪除規則
+					</h2>
+					<p className='mt-2 text-sm leading-relaxed text-stone-300'>
+						確定要刪除規則 {deletingRuleIndex === null ? '' : deletingRuleIndex + 1}？此變更需要儲存政策後才會生效。
+					</p>
+					<div className='mt-5 flex justify-end gap-2'>
+						<Button
+							type='button'
+							variant='secondary'
+							onClick={() => setDeletingRuleIndex(null)}
+						>
+							取消
+						</Button>
+						<Button
+							type='button'
+							variant='danger'
+							onClick={() => {
+								if (deletingRuleIndex === null) return;
+								const ruleIndex = deletingRuleIndex;
+								updatePolicy({
+									...policy,
+									rules: policy.rules.filter(
+										(_, index) => index !== ruleIndex,
+									),
+								});
+								setDeletingRuleIndex(null);
+							}}
+						>
+							<Trash2 className='h-4 w-4' />
+							確認刪除
+						</Button>
+					</div>
+				</div>
+			</dialog>
 		</section>
 	);
 }

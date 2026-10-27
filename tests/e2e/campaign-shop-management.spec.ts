@@ -95,6 +95,11 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible({
 		timeout: 15_000,
 	});
+	expect(
+		requests.filter((request) =>
+			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
+		),
+	).toHaveLength(0);
 	await panel.getByRole('button', { name: '確認刷新' }).click();
 	await expect(panel.getByRole('status')).toContainText('店舖刷新完成');
 	expect(
@@ -102,6 +107,112 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
 		),
 	).toBe(true);
+});
+
+test('刪除刷新規則前會要求在危險確認視窗再次確認', async ({ page }) => {
+	await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+
+	const panel = page.getByTestId('shop-refresh-panel');
+	await panel.getByRole('button', { name: '新增規則' }).click();
+	const rule = panel.locator('article').filter({ hasText: '規則 1' });
+	await expect(rule).toBeVisible();
+	await rule.getByRole('button', { name: '刪除規則' }).click();
+
+	const dialog = page.getByRole('dialog', { name: '確認刪除規則' });
+	await expect(dialog).toBeVisible();
+	const dialogBounds = await dialog.boundingBox();
+	const viewport = page.viewportSize();
+	if (!dialogBounds || !viewport) {
+		throw new Error('無法取得刪除規則確認視窗的位置。');
+	}
+	expect(
+		Math.abs(dialogBounds.x + dialogBounds.width / 2 - viewport.width / 2),
+	).toBeLessThan(2);
+	expect(
+		Math.abs(dialogBounds.y + dialogBounds.height / 2 - viewport.height / 2),
+	).toBeLessThan(2);
+	await expect(
+		dialog.getByRole('button', { name: '確認刪除' }),
+	).toHaveClass(/bg-red-900/);
+	await dialog.getByRole('button', { name: '取消' }).click();
+	await expect(dialog).toHaveCount(0);
+	await expect(rule).toBeVisible();
+
+	await rule.getByRole('button', { name: '刪除規則' }).click();
+	await dialog.getByRole('button', { name: '確認刪除' }).click();
+	await expect(dialog).toHaveCount(0);
+	await expect(rule).toHaveCount(0);
+});
+
+test('零候選刷新需要二次確認才會呼叫 RPC', async ({ page }) => {
+	const { requests } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+
+	const panel = page.getByTestId('shop-refresh-panel');
+	await panel.getByRole('button', { name: '預覽刷新' }).click();
+	await expect(
+		panel.getByText(/本次沒有選中商品。清除模式確認後仍會刪除既有商品及其關聯訂單/),
+	).toBeVisible({ timeout: 15_000 });
+
+	await panel.getByRole('button', { name: '確認刷新' }).click();
+	await expect(
+		panel.getByRole('button', { name: '再次確認零項刷新' }),
+	).toBeVisible();
+	expect(
+		requests.filter((request) =>
+			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
+		),
+	).toHaveLength(0);
+
+	await panel.getByRole('button', { name: '再次確認零項刷新' }).click();
+	await expect(panel.getByRole('status')).toContainText('刪除 2 項');
+	await expect(page.getByTestId('shop-item-card')).toHaveCount(0);
+	expect(
+		requests.filter((request) =>
+			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
+		),
+	).toHaveLength(1);
+});
+
+test('刷新 RPC 失敗時顯示錯誤並保留可重試預覽', async ({ page }) => {
+	const { requests } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignShopSeed: true,
+		campaignShopRpcErrors: {
+			refresh_campaign_shop_items: '刷新預覽已過期',
+		},
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${shopUrl}/mock-shop-1/settings`);
+
+	const panel = page.getByTestId('shop-refresh-panel');
+	await panel.getByRole('button', { name: '新增規則' }).click();
+	await panel.getByTestId('refresh-candidate-kind-0').selectOption('filter');
+	await panel.getByTestId('refresh-catalog-0').selectOption({ index: 1 });
+	await panel.getByTestId('refresh-add-candidate-0').click();
+	await panel.getByRole('button', { name: '儲存政策' }).click();
+	await panel.getByRole('button', { name: '預覽刷新' }).click();
+	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible({
+		timeout: 15_000,
+	});
+
+	await panel.getByRole('button', { name: '確認刷新' }).click();
+	await expect(panel.getByRole('alert')).toContainText('刷新預覽已過期');
+	await expect(panel.getByRole('heading', { name: '刷新預覽' })).toBeVisible();
+	expect(
+		requests.filter((request) =>
+			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
+		),
+	).toHaveLength(1);
 });
 
 test('DM 可在商品對話框編輯鍛造欄位並刪除商品', async ({ page }) => {

@@ -652,18 +652,58 @@ export async function mockSupabase(
 			if (rpcName === 'refresh_campaign_shop_items') {
 				const changes = Array.isArray(body.p_changes) ? body.p_changes : [];
 				const keepItems = body.p_keep_items === true;
+				let deleted = 0;
 				if (!keepItems) {
-					for (const item of campaignShopItems) {
-						item.is_active = false;
-						item.stock_available = 0;
-						item.updated_at = new Date().toISOString();
+					for (let index = campaignShopItems.length - 1; index >= 0; index--) {
+						const item = campaignShopItems[index];
+						if (
+							item.campaign_id === body.p_campaign_id &&
+							item.shop_id === body.p_shop_id
+						) {
+							campaignShopItems.splice(index, 1);
+							deleted += 1;
+						}
 					}
+				}
+				for (const rawChange of changes) {
+					const change = rawChange as Record<string, unknown>;
+					const sourceId =
+						typeof change.source_id === 'string' ? change.source_id : '';
+					const existing = keepItems
+						? campaignShopItems.find(
+								(item) =>
+									item.campaign_id === body.p_campaign_id &&
+									item.shop_id === body.p_shop_id &&
+									item.source_type === 'catalog' &&
+									item.source_id === sourceId,
+							)
+						: undefined;
+					if (existing) {
+						existing.stock_available = change.stock_available;
+						existing.updated_at = new Date().toISOString();
+						continue;
+					}
+					campaignShopItems.push({
+						id: `shop-refresh-item-${nextShopItemId++}`,
+						campaign_id: body.p_campaign_id,
+						shop_id: body.p_shop_id,
+						item_snapshot: change.item_snapshot,
+						source_type: 'catalog',
+						source_id: sourceId,
+						unit_price_gp: change.unit_price_gp,
+						stock_available: change.stock_available,
+						stock_reserved: 0,
+						requires_approval: false,
+						is_active: true,
+						created_at: new Date().toISOString(),
+						updated_at: new Date().toISOString(),
+					});
 				}
 				await route.fulfill({
 					json: {
 						created: changes.length,
 						restocked: 0,
-						retired: keepItems ? 0 : campaignShopItems.length,
+						deleted,
 					},
 				});
 				return;

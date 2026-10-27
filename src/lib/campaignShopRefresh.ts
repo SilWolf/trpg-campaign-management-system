@@ -51,7 +51,7 @@ export type CampaignShopRefreshPreviewAction =
 	| 'create'
 	| 'restock'
 	| 'keep'
-	| 'retire';
+	| 'delete';
 
 export interface CampaignShopRefreshPreviewEntry {
 	key: string;
@@ -406,7 +406,7 @@ export function blacksmithItemToCampaignShopSnapshot(
 
 function makePreviewEntry(
 	item: CampaignShopItem,
-	action: 'keep' | 'retire',
+	action: 'keep' | 'delete',
 ): CampaignShopRefreshPreviewEntry {
 	return {
 		key: `existing:${item.id}`,
@@ -420,7 +420,7 @@ function makePreviewEntry(
 		rarity: item.itemSnapshot.rarity,
 		category: item.itemSnapshot.category,
 		unitPriceGp: item.unitPriceGp,
-		stockAvailable: action === 'retire' ? 0 : item.stockAvailable,
+		stockAvailable: item.stockAvailable,
 		itemSnapshot: item.itemSnapshot,
 		existingItemId: item.id,
 	};
@@ -493,7 +493,7 @@ export function buildCampaignShopRefreshPreview(
 		}
 	} else {
 		for (const item of existingItems) {
-			entries.push(makePreviewEntry(item, 'retire'));
+			entries.push(makePreviewEntry(item, 'delete'));
 		}
 	}
 

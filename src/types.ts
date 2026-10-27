@@ -152,7 +152,7 @@ export interface CampaignShopRefreshItemChange {
 export interface CampaignShopRefreshResult {
 	created: number;
 	restocked: number;
-	retired: number;
+	deleted: number;
 }
 
 // 背包展示模式與四大自動分類

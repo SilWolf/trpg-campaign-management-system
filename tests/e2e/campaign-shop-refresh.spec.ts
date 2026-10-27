@@ -188,7 +188,7 @@ test('商店刷新解析沿用官方目錄搜尋並以亂數抽樣、去重', as
 	]);
 });
 
-test('刷新預覽保留舊商品版本並計算新增、補貨、保留或退役', async ({
+test('刷新預覽保留舊商品版本並計算新增、補貨、保留或刪除', async ({
 	page,
 }) => {
 	await page.goto('/');
@@ -297,7 +297,7 @@ test('刷新預覽保留舊商品版本並計算新增、補貨、保留或退�
 		stockAvailable: 5,
 	});
 	expect(previews.clear).toEqual([
-		{ action: 'retire', name: '長劍', stockAvailable: 0 },
+		{ action: 'delete', name: '長劍', stockAvailable: 3 },
 		{ action: 'create', name: '長劍', stockAvailable: 5 },
 	]);
 });

@@ -292,14 +292,14 @@ export async function refreshCampaignShopItems(
 		data === null ||
 		!Number.isSafeInteger(data.created) ||
 		!Number.isSafeInteger(data.restocked) ||
-		!Number.isSafeInteger(data.retired)
+		!Number.isSafeInteger(data.deleted)
 	) {
 		throw new Error('商店刷新服務回傳了無效的結果。');
 	}
 	return {
 		created: data.created,
 		restocked: data.restocked,
-		retired: data.retired,
+		deleted: data.deleted,
 	};
 }
 
