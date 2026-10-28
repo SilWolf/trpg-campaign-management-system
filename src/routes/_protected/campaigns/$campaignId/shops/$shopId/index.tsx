@@ -217,7 +217,7 @@ function CampaignShopDetail() {
 	if (!isSupabaseConfigured || isGuest) {
 		return (
 			<main className='rounded-lg border border-primary/50 bg-card/80 p-6'>
-				<h1 className='font-serif text-2xl font-bold text-primary-foreground'>
+				<h1 className='font-serif text-2xl font-bold text-card-foreground'>
 					戰役商店
 				</h1>
 				<p className='mt-3 text-sm text-muted-foreground'>
@@ -266,10 +266,10 @@ function CampaignShopDetail() {
 		<main data-testid='campaign-shop-detail' data-shop-id={shop.id}>
 			<div className='mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-primary/40 pb-4'>
 				<div>
-					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						戰役商店
 					</p>
-					<h1 className='mt-1 font-serif text-3xl font-bold text-primary-foreground'>
+					<h1 className='mt-1 font-serif text-3xl font-bold text-foreground'>
 						{shop.name}
 					</h1>
 					{shop.flavor && (
@@ -311,7 +311,7 @@ function CampaignShopDetail() {
 
 			<section className='mt-5 rounded-lg border border-border bg-card/50 p-4'>
 				<div className='mb-4'>
-					<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+					<h2 className='font-serif text-xl font-bold text-card-foreground'>
 						商品目錄
 					</h2>
 					<p className='mt-1 text-xs text-muted-foreground'>
@@ -369,7 +369,7 @@ function CampaignShopDetail() {
 											>
 												<div className='flex min-w-0 flex-1 items-center gap-2'>
 													<div
-														className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded border bg-background ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
+														className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded border bg-background ${rarityStyle.border} ${rarityStyle.bg} ${rarityStyle.glow}`}
 														data-testid='shop-item-icon'
 													>
 														{isMasked ? (
@@ -377,7 +377,7 @@ function CampaignShopDetail() {
 														) : (
 															<ItemIcon
 																iconName={item.itemSnapshot.icon}
-																className='h-6 w-6 text-foreground'
+																className={`h-6 w-6 ${rarityStyle.text}`}
 															/>
 														)}
 													</div>

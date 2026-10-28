@@ -65,9 +65,9 @@ function UserProfilePage() {
 			<div className='mb-6 border-b border-primary/50 pb-4'>
 				<h1
 					data-testid='profile-heading'
-					className='font-serif text-xl font-bold text-primary-foreground flex items-center gap-2'
+					className='font-serif text-xl font-bold text-foreground flex items-center gap-2'
 				>
-					<User className='w-5 h-5 text-primary-foreground' />
+					<User className='w-5 h-5 text-foreground' />
 					<span>個人資料設定</span>
 				</h1>
 				<p className='text-xs text-muted-foreground mt-1'>

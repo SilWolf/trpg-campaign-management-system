@@ -156,10 +156,10 @@ export default function CurrencyPanel({
 			>
 				<div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
-						<Coins className='w-5 h-5 text-primary-foreground' />
+						<Coins className='w-5 h-5 text-foreground' />
 						<h2
 							id='currency-panel-heading'
-							className='text-base font-serif font-bold text-primary-foreground'
+							className='text-base font-serif font-bold text-foreground'
 						>
 							{activeCharacter.avatar} {activeCharacter.name} — 錢包管理
 						</h2>

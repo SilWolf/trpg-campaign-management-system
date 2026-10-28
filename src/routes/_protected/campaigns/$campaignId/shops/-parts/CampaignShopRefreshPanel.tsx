@@ -785,7 +785,7 @@ export function CampaignShopRefreshPanel({
 							<div>
 								<h2
 									id='shop-refresh-preview-title'
-									className='font-serif text-lg font-bold text-primary-foreground'
+									className='font-serif text-lg font-bold text-foreground'
 								>
 									刷新預覽
 								</h2>

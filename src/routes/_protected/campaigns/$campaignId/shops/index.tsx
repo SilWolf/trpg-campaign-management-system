@@ -49,10 +49,10 @@ function CampaignShopsIndex() {
 		<main data-testid='campaign-shops-page' data-campaign-id={campaignId}>
 			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-primary/40 pb-5 sm:flex-row sm:items-end'>
 				<div>
-					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						戰役商店
 					</p>
-					<h1 className='mt-1 font-serif text-3xl font-bold text-primary-foreground'>
+					<h1 className='mt-1 font-serif text-3xl font-bold text-foreground'>
 						全部商店
 					</h1>
 					<p className='mt-2 text-sm text-muted-foreground'>
@@ -122,7 +122,7 @@ function CampaignShopsIndex() {
 							)}
 							<div className='flex items-center justify-between gap-3 px-4 py-3'>
 								<div className='min-w-0'>
-									<h2 className='font-serif text-lg font-bold text-primary-foreground group-hover:text-primary-foreground'>
+									<h2 className='font-serif text-lg font-bold text-card-foreground group-hover:text-card-foreground'>
 										{shop.name}
 									</h2>
 									{shop.flavor && (

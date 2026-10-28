@@ -97,7 +97,7 @@ function InviteRegistrationPage() {
 					</div>
 					<h1
 						data-testid='invite-heading'
-						className='font-serif text-2xl font-bold tracking-wide text-primary-foreground'
+						className='font-serif text-2xl font-bold tracking-wide text-foreground'
 					>
 						完成冒險者帳號註冊
 					</h1>

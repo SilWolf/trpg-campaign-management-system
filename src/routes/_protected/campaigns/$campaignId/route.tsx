@@ -38,8 +38,8 @@ function CampaignLayout() {
 								<span>返回大廳</span>
 							</Link>
 							<div className='flex items-center gap-2'>
-								<Shield className='w-5 h-5 text-primary-foreground' />
-								<span className='font-serif font-bold text-primary-foreground'>
+								<Shield className='w-5 h-5 text-card-foreground' />
+								<span className='font-serif font-bold text-card-foreground'>
 									戰役 ID: {campaignId}
 								</span>
 							</div>

@@ -48,6 +48,23 @@ async function expectNoOverflowAndReadableMainText(
 	expect(result.contrastRatio).toBeGreaterThanOrEqual(4.5);
 }
 
+async function expectHeadingUsesMainForeground(
+	page: import('@playwright/test').Page,
+	selector: string,
+) {
+	const colors = await page.locator(selector).evaluate((heading) => {
+		const main = heading.closest('main');
+		if (!main) throw new Error('標題不在主要內容區中。');
+
+		return {
+			heading: getComputedStyle(heading).color,
+			main: getComputedStyle(main).color,
+		};
+	});
+
+	expect(colors.heading).toBe(colors.main);
+}
+
 test('主題可用鍵盤切換，並在重新載入後保留偏好', async ({ page }) => {
 	await page.goto('/login');
 
@@ -102,7 +119,11 @@ test('三套主題在登入與戰役設定頁維持文字對比並避免手機�
 	await mockSupabase(page, { campaignSettingsRole: 'dm' });
 	await seedAuthenticatedSession(page);
 
-	for (const url of ['/login', '/campaigns/settings-campaign/settings']) {
+	for (const url of [
+		'/login',
+		'/campaigns/settings-campaign/settings',
+		'/blacksmith',
+	]) {
 		await page.goto(url);
 		if (url.includes('/settings')) {
 			await expect(page.getByTestId('campaign-settings-heading')).toBeVisible();
@@ -113,6 +134,14 @@ test('三套主題在登入與戰役設定頁維持文字對比並避免手機�
 			await themeSwitcher.selectOption(theme);
 			await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 			await expectNoOverflowAndReadableMainText(page);
+			await expectHeadingUsesMainForeground(
+				page,
+				url === '/login'
+					? '[data-testid="login-heading"]'
+					: url.includes('/settings')
+						? '[data-testid="campaign-settings-heading"]'
+						: '[data-testid="blacksmith-heading"]',
+			);
 		}
 	}
 });

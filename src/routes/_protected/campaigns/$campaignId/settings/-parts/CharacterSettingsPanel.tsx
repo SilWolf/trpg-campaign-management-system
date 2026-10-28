@@ -103,7 +103,7 @@ export function CharacterSettingsPanel({
 						<div className='flex items-center justify-between border-b border-border pb-3'>
 							<div className='flex items-center gap-2'>
 								<span className='text-xl'>{currentSelectedChar.avatar}</span>
-								<h2 className='text-base font-serif font-bold text-primary-foreground'>
+								<h2 className='text-base font-serif font-bold text-foreground'>
 									{currentSelectedChar.name} — 角色基本資料
 								</h2>
 							</div>

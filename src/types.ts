@@ -345,15 +345,25 @@ export type HomebrewForm = {
 	affixes: ItemAffix[];
 };
 
+export type RarityTokenName =
+	| 'common'
+	| 'uncommon'
+	| 'rare'
+	| 'very-rare'
+	| 'legendary'
+	| 'artifact';
+
+type RarityTokenClass = `rarity-${RarityTokenName}`;
+
 export type RarityStyle = {
 	label: string;
-	color: string;
-	border: string;
-	bg: string;
-	headerGradient: string;
-	glow: string;
-	text: string;
-	badgeBg: string;
+	color: `var(--rarity-${RarityTokenName}-border)`;
+	border: `${RarityTokenClass} border-[var(--rarity-border)]`;
+	bg: `${RarityTokenClass} bg-[var(--rarity-background)] bg-[image:var(--rarity-gradient)]`;
+	headerGradient: `${RarityTokenClass} bg-[var(--rarity-background)] bg-[image:var(--rarity-header-gradient)]`;
+	glow: `${RarityTokenClass} shadow-[var(--rarity-glow)]`;
+	text: `${RarityTokenClass} text-[var(--rarity-foreground)]`;
+	badgeBg: `${RarityTokenClass} bg-[var(--rarity-background)] text-[var(--rarity-foreground)] border-[var(--rarity-border)]`;
 };
 
 export function resolveItemFlags(item: InventoryItem) {

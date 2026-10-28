@@ -140,7 +140,7 @@ export default function ItemTooltip({
 						>
 							{/* 頂部稀有度漸層標題區 */}
 							<div
-								className={`p-4 bg-gradient-to-r ${rStyle.headerGradient} border-b border-border relative`}
+								className={`p-4 ${rStyle.headerGradient} border-b border-border relative`}
 							>
 								<div className='flex items-start justify-between gap-3'>
 									<div className='flex items-center gap-3'>

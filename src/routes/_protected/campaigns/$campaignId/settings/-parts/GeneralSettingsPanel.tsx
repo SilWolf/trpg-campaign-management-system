@@ -51,7 +51,7 @@ export function GeneralSettingsPanel({
 						className='bg-background border border-border rounded-lg p-6 space-y-5 shadow-xl'
 					>
 						<div className='flex items-center justify-between border-b border-border pb-2'>
-							<h2 className='text-sm font-serif font-bold text-primary-foreground'>
+							<h2 className='text-sm font-serif font-bold text-foreground'>
 								戰役基本參數
 							</h2>
 							{!isDm && (
@@ -128,8 +128,8 @@ export function GeneralSettingsPanel({
 					<div className='bg-background border border-border rounded-lg p-6 space-y-4 shadow-xl'>
 						<div className='flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3'>
 							<div>
-								<h2 className='text-sm font-serif font-bold text-primary-foreground flex items-center gap-2'>
-									<Users className='w-4 h-4 text-primary-foreground' />
+								<h2 className='text-sm font-serif font-bold text-foreground flex items-center gap-2'>
+									<Users className='w-4 h-4 text-foreground' />
 									<span>戰役成員總覽與角色創建配額</span>
 								</h2>
 								<p className='text-[11px] text-muted-foreground mt-0.5'>

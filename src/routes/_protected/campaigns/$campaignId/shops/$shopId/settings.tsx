@@ -765,7 +765,7 @@ function CampaignShopsPage() {
 		return (
 			<main className='relative z-10 mx-auto max-w-5xl px-4 py-10 text-foreground'>
 				<div className='rounded-lg border border-primary/50 bg-card/80 p-6'>
-					<h1 className='font-serif text-2xl font-bold text-primary-foreground'>
+					<h1 className='font-serif text-2xl font-bold text-card-foreground'>
 						戰役商店
 					</h1>
 					<p className='mt-3 text-sm text-muted-foreground'>
@@ -807,10 +807,10 @@ function CampaignShopsPage() {
 		>
 			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-primary/40 pb-5 sm:flex-row sm:items-end'>
 				<div>
-					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						戰役商店
 					</p>
-					<h1 className='mt-1 font-serif text-3xl font-bold text-primary-foreground'>
+					<h1 className='mt-1 font-serif text-3xl font-bold text-foreground'>
 						{selectedShop?.name ?? '冒險補給與珍寶'}
 					</h1>
 					<p className='mt-2 text-sm text-muted-foreground'>
@@ -879,7 +879,7 @@ function CampaignShopsPage() {
 								)}
 								<div className='flex items-center justify-between gap-3 px-4 py-3'>
 									<div>
-										<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+										<h2 className='font-serif text-xl font-bold text-foreground'>
 											{selectedShop.name}
 										</h2>
 										{selectedShop.flavor && (
@@ -915,7 +915,7 @@ function CampaignShopsPage() {
 							<section className='rounded-lg border border-border bg-card/50 p-4'>
 								<div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
 									<div>
-										<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+										<h2 className='font-serif text-xl font-bold text-card-foreground'>
 											商品目錄
 										</h2>
 										<p className='mt-1 text-xs text-muted-foreground'>
@@ -1118,7 +1118,9 @@ function CampaignShopsPage() {
 														/>
 													</div>
 													<div className='min-w-0 flex-1'>
-														<h3 className='font-serif text-xl font-bold text-primary-foreground'>
+														<h3
+															className={`font-serif text-xl font-bold ${RARITY_CONFIG[selectedItem.itemSnapshot.rarity].text}`}
+														>
 															{selectedItem.itemSnapshot.name}
 														</h3>
 														{!selectedItem.isIdentified && (
@@ -1693,7 +1695,7 @@ function CampaignShopsPage() {
 											<div>
 												<h2
 													id='shop-source-dialog-title'
-													className='font-serif text-xl font-bold text-primary-foreground'
+													className='font-serif text-xl font-bold text-foreground'
 												>
 													從鍛造工坊匯入
 												</h2>

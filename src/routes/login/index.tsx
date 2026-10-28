@@ -72,12 +72,12 @@ function LoginPage() {
 					<div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-primary/60 bg-gradient-to-br from-primary via-primary to-background shadow-lg'>
 						<Swords className='h-7 w-7 text-primary-foreground' />
 					</div>
-					<p className='mb-1 text-xs font-semibold tracking-[0.25em] text-primary-foreground'>
+					<p className='mb-1 text-xs font-semibold tracking-[0.25em] text-muted-foreground'>
 						D&amp;D 5R・2024
 					</p>
 					<h1
 						data-testid='login-heading'
-						className='font-serif text-2xl font-bold tracking-wide text-primary-foreground'
+						className='font-serif text-2xl font-bold tracking-wide text-foreground'
 					>
 						博德之門戰役軍械庫
 					</h1>

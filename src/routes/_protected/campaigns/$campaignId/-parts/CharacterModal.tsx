@@ -101,10 +101,10 @@ export default function CharacterModal({
 			>
 				<div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
-						<UserPlus className='w-5 h-5 text-primary-foreground' />
+						<UserPlus className='w-5 h-5 text-foreground' />
 						<h2
 							id='character-modal-heading'
-							className='text-base font-serif font-bold text-primary-foreground'
+							className='text-base font-serif font-bold text-foreground'
 						>
 							{character ? `編輯角色：${character.name}` : '招募新冒險者隊員'}
 						</h2>

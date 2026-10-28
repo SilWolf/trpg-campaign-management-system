@@ -491,7 +491,7 @@ function BlacksmithWorkshopPage() {
 							>
 								<div className='flex items-start justify-between gap-4'>
 									<div className='min-w-0'>
-										<h2 className='truncate font-serif text-lg font-bold text-primary-foreground'>
+										<h2 className='truncate font-serif text-lg font-bold text-foreground'>
 											{item.name}
 										</h2>
 										<p className='mt-1 text-xs text-muted-foreground'>

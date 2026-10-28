@@ -156,7 +156,7 @@ export function CampaignSettingsView({
 				<div>
 					<h1
 						data-testid='campaign-settings-heading'
-						className='text-xl font-serif font-bold text-primary-foreground'
+						className='text-xl font-serif font-bold text-foreground'
 					>
 						戰役與角色控制權限中心
 					</h1>

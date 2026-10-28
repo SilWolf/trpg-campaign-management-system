@@ -170,14 +170,14 @@ function BlacksmithCatalogPage() {
 					]}
 				/>
 				<header className='mb-7 border-b border-primary/50 pb-5'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						BLACKSMITH · 官方規則書
 					</p>
 					<h1
 						data-testid='blacksmith-heading'
-						className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-primary-foreground sm:text-3xl'
+						className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-foreground sm:text-3xl'
 					>
-						<BookOpen className='h-7 w-7 text-primary-foreground' />
+						<BookOpen className='h-7 w-7 text-foreground' />
 						{catalogTitle}
 					</h1>
 					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground'>
@@ -376,7 +376,7 @@ function BlacksmithCatalogPage() {
 														}`
 											}`}
 										>
-											<div className={`relative shrink-0 overflow-hidden border ${displayMode === 'list' ? 'h-8 w-8 rounded-md' : 'h-14 w-14 rounded-lg'} ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}>
+											<div className={`relative shrink-0 overflow-hidden border ${displayMode === 'list' ? 'h-8 w-8 rounded-md' : 'h-14 w-14 rounded-lg'} ${rarityStyle.border} ${rarityStyle.bg} ${rarityStyle.glow}`}>
 												<Package className={`absolute inset-0 m-auto text-muted-foreground ${displayMode === 'list' ? 'h-4 w-4' : 'h-6 w-6'}`} />
 												<img
 													src={getBlacksmithIconUrl(item.icon ?? './images/package.webp')}
@@ -531,7 +531,7 @@ function BlacksmithCatalogPage() {
 								aria-label={`${selectedItem.name}物品詳情`}
 								className={`rounded-xl border-2 ${RARITY_CONFIG[selectedItem.rarity].border} bg-gradient-to-b from-card to-background p-5 ${RARITY_CONFIG[selectedItem.rarity].glow} lg:sticky lg:top-5`}
 							>
-								<div className={`-mx-5 -mt-5 mb-4 border-b border-border bg-gradient-to-r ${RARITY_CONFIG[selectedItem.rarity].headerGradient} p-5`}>
+								<div className={`-mx-5 -mt-5 mb-4 border-b border-border ${RARITY_CONFIG[selectedItem.rarity].headerGradient} p-5`}>
 									<div className='flex items-start gap-4'>
 										<div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${RARITY_CONFIG[selectedItem.rarity].border} bg-background`}>
 											<Package className='absolute inset-0 m-auto h-7 w-7 text-muted-foreground' />

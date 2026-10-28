@@ -56,11 +56,11 @@ function OfficialCatalogsPage() {
 					]}
 				/>
 				<header className='mb-7 border-b border-primary/50 pb-5'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						BLACKSMITH · 官方規則書
 					</p>
-					<h1 className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-primary-foreground sm:text-3xl'>
-						<BookOpen className='h-7 w-7 text-primary-foreground' />
+					<h1 className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-foreground sm:text-3xl'>
+						<BookOpen className='h-7 w-7 text-foreground' />
 						官方規則書
 					</h1>
 					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground'>
@@ -135,7 +135,7 @@ function OfficialCatalogsPage() {
 											className='h-6 w-6 shrink-0 text-primary-foreground'
 										/>
 										<span className='min-w-0'>
-											<span className='block truncate font-serif text-lg font-bold text-primary-foreground'>
+											<span 											className='block truncate font-serif text-lg font-bold text-foreground'>
 												{catalog.title}
 											</span>
 											<span className='mt-1 block truncate font-mono text-xs text-muted-foreground'>

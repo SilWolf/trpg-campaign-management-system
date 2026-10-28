@@ -30,6 +30,42 @@
 	--border: #44403c;
 	--input: #1c1917;
 	--ring: #fbbf24;
+	--rarity-common-foreground: #d6d3d1;
+	--rarity-common-background: #292524;
+	--rarity-common-border: #a8a29e;
+	--rarity-common-gradient: linear-gradient(to bottom, #44403c, #292524);
+	--rarity-common-header-gradient: linear-gradient(to right, #44403c, #1c1917);
+	--rarity-common-glow: none;
+	--rarity-uncommon-foreground: #86efac;
+	--rarity-uncommon-background: #052e16;
+	--rarity-uncommon-border: #4ade80;
+	--rarity-uncommon-gradient: linear-gradient(to bottom, #14532d, #052e16);
+	--rarity-uncommon-header-gradient: linear-gradient(to right, #166534, #052e16);
+	--rarity-uncommon-glow: inset 0 0 12px rgb(34 197 94 / 25%), 0 0 8px rgb(34 197 94 / 15%);
+	--rarity-rare-foreground: #93c5fd;
+	--rarity-rare-background: #172554;
+	--rarity-rare-border: #60a5fa;
+	--rarity-rare-gradient: linear-gradient(to bottom, #1e3a8a, #172554);
+	--rarity-rare-header-gradient: linear-gradient(to right, #1e40af, #172554);
+	--rarity-rare-glow: inset 0 0 14px rgb(59 130 246 / 30%), 0 0 10px rgb(59 130 246 / 20%);
+	--rarity-very-rare-foreground: #d8b4fe;
+	--rarity-very-rare-background: #3b0764;
+	--rarity-very-rare-border: #c084fc;
+	--rarity-very-rare-gradient: linear-gradient(to bottom, #581c87, #3b0764);
+	--rarity-very-rare-header-gradient: linear-gradient(to right, #6b21a8, #3b0764);
+	--rarity-very-rare-glow: inset 0 0 16px rgb(168 85 247 / 35%), 0 0 12px rgb(168 85 247 / 25%);
+	--rarity-legendary-foreground: #fcd34d;
+	--rarity-legendary-background: #451a03;
+	--rarity-legendary-border: #fbbf24;
+	--rarity-legendary-gradient: linear-gradient(to bottom, #78350f, #451a03);
+	--rarity-legendary-header-gradient: linear-gradient(to right, #92400e, #451a03);
+	--rarity-legendary-glow: inset 0 0 18px rgb(245 158 11 / 40%), 0 0 15px rgb(245 158 11 / 30%);
+	--rarity-artifact-foreground: #fca5a5;
+	--rarity-artifact-background: #450a0a;
+	--rarity-artifact-border: #f87171;
+	--rarity-artifact-gradient: linear-gradient(to bottom, #7f1d1d, #450a0a);
+	--rarity-artifact-header-gradient: linear-gradient(to right, #991b1b, #450a0a);
+	--rarity-artifact-glow: inset 0 0 20px rgb(239 68 68 / 45%), 0 0 16px rgb(239 68 68 / 35%);
 }
 
 [data-theme='dnd'] {
@@ -61,6 +97,42 @@
 	--border: #a8a29e;
 	--input: #fffaf1;
 	--ring: #9a3412;
+	--rarity-common-foreground: #44403c;
+	--rarity-common-background: #f5f5f4;
+	--rarity-common-border: #78716c;
+	--rarity-common-gradient: linear-gradient(to bottom, #e7e5e4, #f5f5f4);
+	--rarity-common-header-gradient: linear-gradient(to right, #d6d3d1, #f5f5f4);
+	--rarity-common-glow: none;
+	--rarity-uncommon-foreground: #166534;
+	--rarity-uncommon-background: #f0fdf4;
+	--rarity-uncommon-border: #16a34a;
+	--rarity-uncommon-gradient: linear-gradient(to bottom, #dcfce7, #f0fdf4);
+	--rarity-uncommon-header-gradient: linear-gradient(to right, #bbf7d0, #f0fdf4);
+	--rarity-uncommon-glow: inset 0 0 8px rgb(34 197 94 / 12%), 0 0 4px rgb(34 197 94 / 10%);
+	--rarity-rare-foreground: #1e3a8a;
+	--rarity-rare-background: #eff6ff;
+	--rarity-rare-border: #2563eb;
+	--rarity-rare-gradient: linear-gradient(to bottom, #dbeafe, #eff6ff);
+	--rarity-rare-header-gradient: linear-gradient(to right, #bfdbfe, #eff6ff);
+	--rarity-rare-glow: inset 0 0 8px rgb(59 130 246 / 12%), 0 0 4px rgb(59 130 246 / 10%);
+	--rarity-very-rare-foreground: #6b21a8;
+	--rarity-very-rare-background: #faf5ff;
+	--rarity-very-rare-border: #9333ea;
+	--rarity-very-rare-gradient: linear-gradient(to bottom, #f3e8ff, #faf5ff);
+	--rarity-very-rare-header-gradient: linear-gradient(to right, #e9d5ff, #faf5ff);
+	--rarity-very-rare-glow: inset 0 0 8px rgb(168 85 247 / 12%), 0 0 4px rgb(168 85 247 / 10%);
+	--rarity-legendary-foreground: #854d0e;
+	--rarity-legendary-background: #fffbeb;
+	--rarity-legendary-border: #d97706;
+	--rarity-legendary-gradient: linear-gradient(to bottom, #fef3c7, #fffbeb);
+	--rarity-legendary-header-gradient: linear-gradient(to right, #fde68a, #fffbeb);
+	--rarity-legendary-glow: inset 0 0 8px rgb(245 158 11 / 14%), 0 0 4px rgb(245 158 11 / 10%);
+	--rarity-artifact-foreground: #991b1b;
+	--rarity-artifact-background: #fef2f2;
+	--rarity-artifact-border: #dc2626;
+	--rarity-artifact-gradient: linear-gradient(to bottom, #fee2e2, #fef2f2);
+	--rarity-artifact-header-gradient: linear-gradient(to right, #fecaca, #fef2f2);
+	--rarity-artifact-glow: inset 0 0 8px rgb(239 68 68 / 14%), 0 0 4px rgb(239 68 68 / 10%);
 }
 
 [data-theme='printing'] {
@@ -92,6 +164,96 @@
 	--border: #737373;
 	--input: #ffffff;
 	--ring: #262626;
+	--rarity-common-foreground: #292929;
+	--rarity-common-background: #f5f5f5;
+	--rarity-common-border: #737373;
+	--rarity-common-gradient: none;
+	--rarity-common-header-gradient: none;
+	--rarity-common-glow: none;
+	--rarity-uncommon-foreground: #262626;
+	--rarity-uncommon-background: #eeeeee;
+	--rarity-uncommon-border: #666666;
+	--rarity-uncommon-gradient: none;
+	--rarity-uncommon-header-gradient: none;
+	--rarity-uncommon-glow: none;
+	--rarity-rare-foreground: #202020;
+	--rarity-rare-background: #e5e5e5;
+	--rarity-rare-border: #595959;
+	--rarity-rare-gradient: none;
+	--rarity-rare-header-gradient: none;
+	--rarity-rare-glow: none;
+	--rarity-very-rare-foreground: #1a1a1a;
+	--rarity-very-rare-background: #dedede;
+	--rarity-very-rare-border: #525252;
+	--rarity-very-rare-gradient: none;
+	--rarity-very-rare-header-gradient: none;
+	--rarity-very-rare-glow: none;
+	--rarity-legendary-foreground: #171717;
+	--rarity-legendary-background: #d4d4d4;
+	--rarity-legendary-border: #404040;
+	--rarity-legendary-gradient: none;
+	--rarity-legendary-header-gradient: none;
+	--rarity-legendary-glow: none;
+	--rarity-artifact-foreground: #111111;
+	--rarity-artifact-background: #cccccc;
+	--rarity-artifact-border: #333333;
+	--rarity-artifact-gradient: none;
+	--rarity-artifact-header-gradient: none;
+	--rarity-artifact-glow: none;
+}
+
+.rarity-common {
+	--rarity-foreground: var(--rarity-common-foreground);
+	--rarity-background: var(--rarity-common-background);
+	--rarity-border: var(--rarity-common-border);
+	--rarity-gradient: var(--rarity-common-gradient);
+	--rarity-header-gradient: var(--rarity-common-header-gradient);
+	--rarity-glow: var(--rarity-common-glow);
+}
+
+.rarity-uncommon {
+	--rarity-foreground: var(--rarity-uncommon-foreground);
+	--rarity-background: var(--rarity-uncommon-background);
+	--rarity-border: var(--rarity-uncommon-border);
+	--rarity-gradient: var(--rarity-uncommon-gradient);
+	--rarity-header-gradient: var(--rarity-uncommon-header-gradient);
+	--rarity-glow: var(--rarity-uncommon-glow);
+}
+
+.rarity-rare {
+	--rarity-foreground: var(--rarity-rare-foreground);
+	--rarity-background: var(--rarity-rare-background);
+	--rarity-border: var(--rarity-rare-border);
+	--rarity-gradient: var(--rarity-rare-gradient);
+	--rarity-header-gradient: var(--rarity-rare-header-gradient);
+	--rarity-glow: var(--rarity-rare-glow);
+}
+
+.rarity-very-rare {
+	--rarity-foreground: var(--rarity-very-rare-foreground);
+	--rarity-background: var(--rarity-very-rare-background);
+	--rarity-border: var(--rarity-very-rare-border);
+	--rarity-gradient: var(--rarity-very-rare-gradient);
+	--rarity-header-gradient: var(--rarity-very-rare-header-gradient);
+	--rarity-glow: var(--rarity-very-rare-glow);
+}
+
+.rarity-legendary {
+	--rarity-foreground: var(--rarity-legendary-foreground);
+	--rarity-background: var(--rarity-legendary-background);
+	--rarity-border: var(--rarity-legendary-border);
+	--rarity-gradient: var(--rarity-legendary-gradient);
+	--rarity-header-gradient: var(--rarity-legendary-header-gradient);
+	--rarity-glow: var(--rarity-legendary-glow);
+}
+
+.rarity-artifact {
+	--rarity-foreground: var(--rarity-artifact-foreground);
+	--rarity-background: var(--rarity-artifact-background);
+	--rarity-border: var(--rarity-artifact-border);
+	--rarity-gradient: var(--rarity-artifact-gradient);
+	--rarity-header-gradient: var(--rarity-artifact-header-gradient);
+	--rarity-glow: var(--rarity-artifact-glow);
 }
 
 @theme inline {

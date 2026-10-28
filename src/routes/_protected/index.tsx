@@ -260,10 +260,10 @@ function CampaignLobbyPage() {
 							<Swords className='h-6 w-6 text-primary-foreground' />
 						</div>
 						<div>
-							<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+							<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 								戰役軍械庫
 							</p>
-							<h1 className='font-serif text-2xl font-bold text-primary-foreground'>
+							<h1 className='font-serif text-2xl font-bold text-foreground'>
 								冒險者大廳
 							</h1>
 						</div>
@@ -375,7 +375,7 @@ function CampaignLobbyPage() {
 							<div className='mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-primary/60 bg-primary/50'>
 								<Swords className='h-7 w-7 text-primary-foreground' />
 							</div>
-							<h3 className='mt-4 font-serif text-lg font-bold text-primary-foreground'>
+							<h3 className='mt-4 font-serif text-lg font-bold text-foreground'>
 								尚未加入任何戰役
 							</h3>
 							<p className='mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground'>
@@ -456,7 +456,7 @@ function CampaignLobbyPage() {
 						<h2
 							data-testid='lobby-dialog-heading'
 							id='lobby-dialog-title'
-							className='font-serif font-bold text-primary-foreground'
+							className='font-serif font-bold text-foreground'
 						>
 							{dialog === 'create' ? '建立新戰役 (DM)' : '加入戰役'}
 						</h2>

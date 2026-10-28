@@ -544,12 +544,12 @@ export function ShopTransactionsPanel({
 					<div className='space-y-5 p-5'>
 						<div className='flex items-start justify-between gap-4 border-b border-border pb-4'>
 							<div>
-								<p className='text-xs font-semibold tracking-[0.18em] text-primary-foreground'>
+								<p className='text-xs font-semibold tracking-[0.18em] text-muted-foreground'>
 									確認交易
 								</p>
 								<h2
 									id='shop-checkout-title'
-									className='mt-1 font-serif text-2xl font-bold text-primary-foreground'
+									className='mt-1 font-serif text-2xl font-bold text-foreground'
 								>
 									結帳清單
 								</h2>
@@ -800,7 +800,7 @@ export function ShopTransactionsPanel({
 				<div className='mb-4 flex items-center gap-2'>
 					<ShoppingBag className='h-5 w-5 text-primary-foreground' />
 					<div>
-						<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+						<h2 className='font-serif text-xl font-bold text-card-foreground'>
 							購買商品
 						</h2>
 						<p className='mt-1 text-xs text-muted-foreground'>
@@ -940,7 +940,7 @@ export function ShopTransactionsPanel({
 			<div className={PANEL_CLASS}>
 				<div className='mb-4 flex items-center justify-between'>
 					<div>
-						<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+						<h2 className='font-serif text-xl font-bold text-card-foreground'>
 							{showPublicHistory ? '公開購買紀錄' : '待審核購買請求'}
 						</h2>
 						<p className='mt-1 text-xs text-muted-foreground'>

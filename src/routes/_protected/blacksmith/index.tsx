@@ -11,12 +11,12 @@ function BlacksmithHomePage() {
 		<main className='min-h-screen bg-background px-4 py-10 text-foreground sm:px-8'>
 			<div className='mx-auto max-w-5xl'>
 				<header className='mb-8 border-b border-primary/50 pb-6'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						BLACKSMITH · 工坊大廳
 					</p>
 					<h1
 						data-testid='blacksmith-heading'
-						className='mt-2 font-serif text-3xl font-bold text-primary-foreground sm:text-4xl'
+						className='mt-2 font-serif text-3xl font-bold text-foreground sm:text-4xl'
 					>
 						鍛造工坊
 					</h1>
@@ -29,7 +29,7 @@ function BlacksmithHomePage() {
 						<Link
 							data-testid='blacksmith-officials-link'
 							to='/blacksmith/officials'
-							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-primary/60 bg-gradient-to-br from-primary/70 to-background p-7 shadow-lg transition hover:border-primary/80 hover:from-primary/50 sm:p-8'
+							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-primary/60 bg-gradient-to-br from-primary to-primary/90 p-7 shadow-lg transition hover:border-primary/80 hover:from-primary/90 sm:p-8'
 						>
 							<span>
 								<BookOpen
@@ -39,7 +39,7 @@ function BlacksmithHomePage() {
 								<span className='block font-serif text-2xl font-bold text-primary-foreground'>
 									官方規則書
 								</span>
-								<span className='mt-2 block text-sm text-muted-foreground'>
+								<span className='mt-2 block text-sm text-primary-foreground/80'>
 									瀏覽各規則書收錄的物品
 								</span>
 							</span>

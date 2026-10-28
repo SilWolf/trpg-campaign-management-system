@@ -125,7 +125,7 @@ export function CampaignShopDialog({
 				<div className='flex items-center justify-between sm:col-span-2'>
 					<h2
 						id='campaign-shop-dialog-title'
-						className='font-serif text-xl font-bold text-primary-foreground'
+						className='font-serif text-xl font-bold text-card-foreground'
 					>
 						{isEditing ? '編輯商店' : '建立商店'}
 					</h2>
