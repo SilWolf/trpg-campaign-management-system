@@ -10,7 +10,7 @@
 
 - 專案使用 Tailwind CSS v4，樣式入口為 [`src/index.css`](../src/index.css)，目前已有 `--color-ui-surface`、`--color-ui-border`、`--color-ui-focus`、`--color-ui-danger` 等少量 token。
 - 專案已有自建的 [`src/components/ui/`](../src/components/ui) 元件，以及 `Button`、`Badge` 等共用樣式；目前 variant 仍直接使用 amber、stone、purple、emerald、cyan、red 等色階。
-- 以 Tailwind 色彩 class 的靜態搜尋盤點，約有 1,244 處命中、分布於 47 個來源檔案。此數字是遷移規模估算，不是精確的唯一 class 數量；應在正式遷移前以 AST 或 lint 工具建立更精確、可重複的基準。
+- 2026-10-28 的可重跑盤點記錄於下方 Phase 0；目前 `.tsx` 色彩 utility 的詞面計數為 2,243 次，分布於 43 個來源檔案。此數字統計原始碼 token，不等於執行時 DOM 數量或唯一 class 數。
 - 高度客製的背包、物品提示、商店與 Blacksmith 介面比例高，不宜用全域搜尋取代判斷；相同色階在不同頁面可能代表不同意義。
 
 ## 建議決策
@@ -195,7 +195,85 @@
 3. 建立「目前用色 → 介面用途 → 目標 token」對照表。遇到同一色彩對應多個用途時，逐個確認語意，不可自動一對一替換。
 4. 記錄目前路由、互動狀態與窄螢幕的視覺基準；沿用既有 Playwright E2E 基礎設施，必要時補充代表性頁面的主題視覺檢查。
 
-**完成條件：** 有可檢查的 class/token 使用清單、重要狀態清單及代表性頁面清單，且每個用色都能映射至核准的語意角色或基礎 token。
+**完成條件：** 有可重跑的 class/token 使用清單、非 JSX 色源清單、重要狀態與代表性頁面清單；每個色彩家族都有候選語意角色或明確標記的逐處判斷規則。視覺驗收採人工比對修改前後的代表頁面、互動狀態與窄螢幕畫面；功能測試不取代人工視覺驗收。
+
+#### Phase 0 盤點結果（2026-10-28）
+
+**可重跑指令：** `node scripts/audit-theme-colors.mjs`（[`scripts/audit-theme-colors.mjs`](../scripts/audit-theme-colors.mjs)）。此輕量掃描器以原始碼 token 盤點 `src/**/*.tsx` 中完整寫出的 Tailwind 色彩 utility；不安裝依賴、不改動檔案。它用於建立可比較的基準，不是 AST 分析，也不會推算 runtime 組合或 DOM 中的實際出現次數。任意值 utility、其他副檔名及 Markdown 另列於非 JSX 盤點，不混入下表。
+
+| 盤點項目 | 基準結果 |
+| --- | ---: |
+| `.tsx` 原始碼檔案 | 51 |
+| 含色彩 utility 的檔案 | 43 |
+| 色彩 utility 詞面出現次數 | 2,243 |
+| 不含狀態變體的不同 utility 形式 | 311 |
+| 含狀態變體的不同 token 形式 | 371 |
+
+Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列：
+
+| Utility 家族 | 次數 | Utility 家族 | 次數 |
+| --- | ---: | --- | ---: |
+| `text-*` | 1,047 | `border-*` | 556 |
+| `bg-*` | 539 | `from-*` | 27 |
+| `to-*` | 23 | `accent-*` | 22 |
+| `via-*` | 11 | `ring-*` | 8 |
+| `outline-*` | 4 | `divide-*` | 4 |
+| `shadow-*` | 2 | | |
+
+色票家族出現次數（不是語意分類）：
+
+| 色票 | 次數 | 色票 | 次數 | 色票 | 次數 |
+| --- | ---: | --- | ---: | --- | ---: |
+| stone | 1,211 | amber | 491 | purple | 183 |
+| red | 162 | emerald | 86 | cyan | 68 |
+| black | 14 | transparent | 6 | slate | 6 |
+| orange | 6 | sky | 5 | white | 2 |
+| current | 1 | yellow | 1 | indigo | 1 |
+
+已辨識色彩狀態變體：未加互動狀態前綴 2,044 次、`hover:` 168 次、`focus:` 13 次、`focus-visible:` 13 次、`group-hover:` 5 次。這份色彩 utility 掃描沒有找到 `disabled:` 色彩 utility；停用狀態仍常由 `opacity-*`、游標及 HTML disabled 屬性表達，遷移與驗收時仍須檢查，不能以本項零命中推論沒有停用狀態。
+
+**其他色彩來源與掃描邊界**
+
+| 來源 | 盤點結果 | 處理方式 |
+| --- | --- | --- |
+| [`src/index.css`](../src/index.css) | 5 個 hex CSS 值：surface、raised surface、border、focus、danger。 | Phase 1 統一檢視既有 token 與新語意 token 的責任，不重複定義同義變數。 |
+| [`src/data.ts`](../src/data.ts) 的 `RARITY_CONFIG` | 六種稀有度各含直接色碼，另有漸層、utility 字串及 glow；這些值透過資料設定動態套用。 | 逐項確認稀有度是內容分類而非成功／危險狀態；不可將 `Artifact` 的紅色直接轉成 `destructive`。 |
+| 商店詳情 [`index.tsx`](../src/routes/_protected/campaigns/$campaignId/shops/$shopId/index.tsx) 的稀有度樣式 | 樣式由稀有度設定組合，包含 inline `borderLeftColor`。 | 動態來源需逐個檢查，不由 `.tsx` 色票計數器推定已盤點完畢。 |
+| Inline style | 搜尋到一個動態色彩屬性 `borderLeftColor`；另一個 inline style 僅控制負重條寬度。 | 確認動態色彩是否需要變成 token，不把非色彩樣式納入色彩數。 |
+| SVG | [`react.svg`](../src/assets/react.svg) 有 1 個 hex 色值；[`vite.svg`](../src/assets/vite.svg) 有 19 個。 | 兩者是靜態品牌／範例素材，先確認是否出現在產品頁面，再決定保留例外或改色。 |
+| 任意值及陰影 | 原始碼另有 `bg-[#0c0a09]` 等 hex arbitrary utility，以及含 `rgba(...)` 的 shadow arbitrary utility；未包含在上方色票計數。 | 與一般色票 class 分開盤點；背景常數應與頁面背景角色對照，陰影透明度不能誤當文字狀態色。 |
+| Markdown | 色彩 utility 命中位於規劃文件與 repo 指引中的程式範例，不是 app runtime Markdown。`src/` 未發現 Markdown 內容來源。 | 文件範例不計入 JSX/TSX 基準；若未來支援使用者 Markdown，需另訂內容色彩政策。 |
+| 動態 class | `.tsx` 內的完整字串會被詞面掃描；`RARITY_CONFIG` 位於 `.ts`，而 Toast／Button 等樣式映射會透過變數選用 class。 | 檢查定義端與使用端；不可在執行時拼出 Tailwind class 的片段。 |
+
+**目前用色 → 介面用途 → 候選 token**
+
+| 現有色票／用法 | 盤點到的用途 | 候選語意角色或基礎 token | 必須人工區分的情況 |
+| --- | --- | --- | --- |
+| `stone`、`slate`、`black`、`white`、`transparent`、`current` | 頁面／卡片底色、正文與輔助文字、邊框、遮罩及浮層 | `background`、`foreground`、`card`、`popover`、`muted`、`border`、`input`、`ring` | 同一個 `stone-*` 色階可同時是正文、停用文字、分隔線或表面；overlay 與透明度也需保留層級。 |
+| `amber`、`orange`、`yellow` | 主要操作、焦點、金幣／稀有度等強調 | 操作為 `primary`；選取為 `accent`；焦點為 `ring`；真正警告為 `warning` | 金幣、稀有度與品牌強調不是警告；需保留名稱／圖示等非顏色線索。 |
+| `emerald` | 成功狀態、私人背包／錢包相關區塊 | 成功訊息為 `success`；一般容器採 `card`／`muted` | 私人區域是產品領域而非成功狀態；不要把所有綠色 class 改成 `success`。 |
+| `red` | 錯誤／危險操作、神器稀有度 | 真正錯誤或破壞性操作為 `destructive` | 稀有度紅色是內容分類，需與危險狀態分開。 |
+| `purple`、`cyan`、`blue` | 魔法／DM 標記、營地箱標記、稀有度等領域辨識 | 依實際互動角色選 `accent`、`info` 或一般表面 token；不新增 `magic`／`camp` 顏色 token | 領域語意不等同訊息狀態；保留標籤、圖示、邊框等線索，逐處確認。 |
+| `sky`、`indigo` | 少量標籤／強調 | 依用途選 `info`、`accent` 或一般前景 token | 命中少不代表能自動對應。 |
+
+此表是遷移前的候選映射規則，不是逐元素核准清單。某一色票出現在多個用途時，須在 Phase 2/3 對照元件或頁面確認後才改 class；其他未列出的色票或 arbitrary 值也須先確認用途，不可直接批次替換。
+
+**視覺基準與代表性路由**
+
+現行主題基準為預設 BG3 暗色外觀：頁面背景 `#0c0a09`、主要文字 `text-stone-200`、容器與邊框以 stone 色階為主；公開／主要操作常見 amber，魔法／DM 標記常見 purple，私人／成功狀態常見 emerald，營地箱常見 cyan，危險操作常見 red。以上是現況參照，不代表全站每個色值均已核准映射。
+
+| 代表路由 | 應記錄的頁面／互動狀態 | 既有 E2E 依據 |
+| --- | --- | --- |
+| `/login`、`/invite/:campaignId` | 登入／註冊、驗證錯誤、密碼顯示、有效及無效邀請。 | [`phase-1-baseline.spec.ts`](../tests/e2e/phase-1-baseline.spec.ts) |
+| `/` | 戰役大廳、建立成功與建立失敗回饋。 | [`phase-1-baseline.spec.ts`](../tests/e2e/phase-1-baseline.spec.ts) |
+| `/campaigns/:campaignId/settings` | DM／一般成員權限差異、不同設定分頁、Toast 成功／錯誤、刪除確認與取消。 | [`phase-2-settings.spec.ts`](../tests/e2e/phase-2-settings.spec.ts)、[`global-feedback.spec.ts`](../tests/e2e/global-feedback.spec.ts) |
+| `/campaigns/:campaignId` | 公開／私人背包、空白戰役與營地箱、格狀／列表、搜尋／排序、錢包面板、讀取／修改權限。 | [`phase-3-inventory.spec.ts`](../tests/e2e/phase-3-inventory.spec.ts) |
+| `/campaigns/:campaignId/shops/...` | 商品列表與詳細、購物車、直接購買／送審、店主設定及危險操作。 | [`campaign-shop-management.spec.ts`](../tests/e2e/campaign-shop-management.spec.ts)、[`campaign-shop-purchase.spec.ts`](../tests/e2e/campaign-shop-purchase.spec.ts) |
+| `/blacksmith`、`/blacksmith/officials/:catalogId`、`/blacksmith/workshop` | 搜尋／篩選／分頁、列表／詳細、建立／編輯／匯入視窗。 | [`blacksmith.spec.ts`](../tests/e2e/blacksmith.spec.ts) |
+
+現有 E2E 已有 375×812 的登入／邀請或背包窄螢幕檢查，以及 Toast 手機寬度檢查；背包測試驗證水平溢位。Playwright 設定目前只在失敗時保存 screenshot，沒有 `toHaveScreenshot` 視覺 golden 或固定的代表頁面截圖。本計畫採人工視覺比對，不新增像素級 screenshot golden：每次改色前後以相同路由、測試資料、viewport 與互動狀態檢視代表畫面，並同時檢查一般與窄螢幕、正常／hover／focus／disabled／錯誤等適用狀態；必要時可用瀏覽器截圖作為人工比較材料，但不要求建立或維護 golden 檔案。
+
+**盤點狀態：** class/token 與非 JSX 色源清單、候選映射、E2E 代表頁面及人工視覺比對方式已記錄；後續色彩改動仍須依上述條件完成人工比對，並以功能測試驗證互動行為。
 
 ### Phase 1：建立 CSS variables 與 Tailwind token 映射
 
