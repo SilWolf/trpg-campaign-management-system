@@ -25,61 +25,166 @@
 - 專案已有自建共用元件，且既有 UI 元件規劃已採用逐步封裝的方向。此處直接將既有元件改為使用語意 token，較不會造成元件重複或 UI 風格不一致。
 - 如果日後需要 Dialog、Dropdown、Tabs 等複雜互動元件，可依 [`docs/ui-component-refactor-plan.md`](./ui-component-refactor-plan.md) 的既有建議，針對實際需求選用 primitives；這與引入主題系統是兩個獨立決策。
 
-### 以語意用途命名，而非把色票換一個名字
+### 統一語意色彩角色
 
-建議先定義一組中性基礎 token：
+全站採用以下語意角色，使用 shadcn/ui 常見的 `background`、`card`、`popover`、`primary`、`secondary`、`muted`、`accent` 等命名方式，並補充產品需要的狀態色。避免頁面各自發明用途相近的色彩名稱：
 
-| Token | 用途例子 |
-| --- | --- |
-| `background` / `foreground` | 頁面底色與主要文字 |
-| `card` / `card-foreground` | 卡片、面板及其文字 |
-| `popover` / `popover-foreground` | 選單、浮層、提示框 |
-| `primary` / `primary-foreground` | 主要操作與其文字 |
-| `secondary` / `secondary-foreground` | 次要操作與其文字 |
-| `muted` / `muted-foreground` | 次要表面、輔助文字、停用資訊 |
-| `accent` / `accent-foreground` | 一般互動強調狀態 |
-| `destructive` / `destructive-foreground` | 刪除、危險操作與錯誤操作 |
-| `border`、`input`、`ring` | 邊框、表單欄位、鍵盤焦點環 |
+| 語境 | 用途 | 適合的例子 |
+| --- | --- | --- |
+| `primary` | 最主要、建議優先執行的操作 | 儲存、建立、主要確認 |
+| `secondary` | 次要但仍明確的操作樣式 | 一般次要按鈕 |
+| `card` | 卡片、面板等內容容器及其前景文字 | 設定面板、戰役卡片 |
+| `popover` | 浮在內容上方的選單、提示框及其前景文字 | Dropdown、Popover、浮層 |
+| `muted` | 低強調表面及其低強調文字 | 輔助區塊、次要說明、未選取項目 |
+| `accent` | 互動中的強調或選取表面及其前景文字 | Hover、目前選取的選單項目 |
+| `success` | 成功結果或正向完成狀態 | 儲存成功、已完成 |
+| `destructive` | 具破壞性或不可逆的操作，以及危險錯誤 | 刪除、移除角色、失敗狀態 |
+| `warning` | 需要注意或可能造成影響，但未必是錯誤 | 權限提醒、尚未保存、即將過期 |
+| `info` | 中性資訊、說明或提示 | 說明文字、一般提示、資訊型標籤 |
+| `disabled` | 不可互動或目前不可用的控制項狀態 | 停用按鈕、不可編輯欄位 |
 
-例如 `bg-primary text-primary-foreground` 描述的是主要操作的背景與對比文字，不代表固定的琥珀色。所有主題都應提供完整 token，並維持文字與背景的足夠對比。
+`card`、`popover`、`muted`、`accent` 描述容器或互動表面，不是操作優先級；`primary`、`secondary` 用於操作樣式；`success`、`destructive`、`warning`、`info` 表達狀態或訊息。這些角色可由不同元件組合使用，但不應因為名稱相似而混為一談。
+
+各語意角色依用途提供對應的背景、前景文字及必要邊框 token。例如主要按鈕使用 `bg-primary text-primary-foreground`，卡片使用 `bg-card text-card-foreground`，選單浮層使用 `bg-popover text-popover-foreground`，選取項目可使用 `bg-accent text-accent-foreground`，低強調文字使用 `text-muted-foreground`。每個主題都需維持前景與背景的足夠對比。
+
+此外保留不代表操作樣式或訊息狀態的基礎 token：`background`、`foreground`、`border`、`input`、`ring`。它們分別用於頁面底色、預設文字、邊框、表單欄位與鍵盤焦點環。
+
+`disabled` 是控制項狀態，不是可任意套用在一般訊息上的狀態色。優先以 HTML `disabled`／`aria-disabled` 和 `disabled:` 樣式表達不可操作；disabled token 用於該狀態的背景、文字與邊框，且必須確保停用狀態仍可辨識。
+
+每個主題都應提供完整且一致的 token，確保切換主題不會改變上述語意，並維持文字與背景的足夠對比。
 
 在 Tailwind CSS v4 中，建議由 CSS variables 提供主題值，再透過 `@theme inline` 將其暴露為 Tailwind utilities。概念示例：
 
 ```css
-:root {
-  --background: /* 預設主題頁面底色 */;
-  --foreground: /* 預設主題主要文字 */;
+:root,
+:root[data-theme='default'] {
+  --background: /* 預設博德之門 3 黑金風格的頁面底色 */;
+  --foreground: /* 預設博德之門 3 黑金風格的主要文字 */;
+  --card: /* 預設主題卡片或面板底色 */;
+  --card-foreground: /* 預設主題卡片或面板文字 */;
+  --popover: /* 預設主題浮層底色 */;
+  --popover-foreground: /* 預設主題浮層文字 */;
   --primary: /* 預設主題主要操作底色 */;
   --primary-foreground: /* 預設主題主要操作文字 */;
+  --secondary: /* 預設主題次要操作底色 */;
+  --secondary-foreground: /* 預設主題次要操作文字 */;
+  --muted: /* 預設主題低強調表面底色 */;
+  --muted-foreground: /* 預設主題低強調文字 */;
+  --accent: /* 預設主題互動強調或選取底色 */;
+  --accent-foreground: /* 預設主題互動強調或選取文字 */;
+  --success: /* 預設主題成功狀態色 */;
+  --success-foreground: /* 預設主題成功狀態文字 */;
+  --destructive: /* 預設主題危險狀態色 */;
+  --destructive-foreground: /* 預設主題危險狀態文字 */;
+  --warning: /* 預設主題警告狀態色 */;
+  --warning-foreground: /* 預設主題警告狀態文字 */;
+  --info: /* 預設主題資訊狀態色 */;
+  --info-foreground: /* 預設主題資訊狀態文字 */;
+  --disabled: /* 預設主題停用控制項底色 */;
+  --disabled-foreground: /* 預設主題停用控制項文字 */;
+  --border: /* 預設主題邊框色 */;
+  --input: /* 預設主題輸入欄位色 */;
+  --ring: /* 預設主題鍵盤焦點環色 */;
 }
 
-[data-theme='alternate'] {
-  --background: /* 替代主題頁面底色 */;
-  --foreground: /* 替代主題主要文字 */;
-  --primary: /* 替代主題主要操作底色 */;
-  --primary-foreground: /* 替代主題主要操作文字 */;
+[data-theme='dnd'] {
+  --background: /* 龍與地下城奶白底色 */;
+  --foreground: /* 龍與地下城深棕紅主要文字 */;
+  --card: /* 龍與地下城奶白或淺暖色卡片底色 */;
+  --card-foreground: /* 龍與地下城卡片文字 */;
+  --popover: /* 龍與地下城浮層底色 */;
+  --popover-foreground: /* 龍與地下城浮層文字 */;
+  --primary: /* 龍與地下城棕紅主要操作底色 */;
+  --primary-foreground: /* 龍與地下城主要操作文字 */;
+  --secondary: /* 龍與地下城次要操作底色 */;
+  --secondary-foreground: /* 龍與地下城次要操作文字 */;
+  --muted: /* 龍與地下城低強調暖色表面 */;
+  --muted-foreground: /* 龍與地下城低強調文字 */;
+  --accent: /* 龍與地下城互動強調或選取底色 */;
+  --accent-foreground: /* 龍與地下城互動強調或選取文字 */;
+  --success: /* 龍與地下城成功狀態色 */;
+  --success-foreground: /* 龍與地下城成功狀態文字 */;
+  --destructive: /* 龍與地下城危險狀態色 */;
+  --destructive-foreground: /* 龍與地下城危險狀態文字 */;
+  --warning: /* 龍與地下城警告狀態色 */;
+  --warning-foreground: /* 龍與地下城警告狀態文字 */;
+  --info: /* 龍與地下城資訊狀態色 */;
+  --info-foreground: /* 龍與地下城資訊狀態文字 */;
+  --disabled: /* 龍與地下城停用控制項底色 */;
+  --disabled-foreground: /* 龍與地下城停用控制項文字 */;
+  --border: /* 龍與地下城邊框色 */;
+  --input: /* 龍與地下城輸入欄位色 */;
+  --ring: /* 龍與地下城鍵盤焦點環色 */;
+}
+
+[data-theme='printing'] {
+  --background: /* 適合列印的白色頁面底色 */;
+  --foreground: /* 適合列印的深灰或黑色主要文字 */;
+  --card: /* 灰階卡片或面板底色 */;
+  --card-foreground: /* 灰階卡片或面板文字 */;
+  --popover: /* 灰階浮層底色 */;
+  --popover-foreground: /* 灰階浮層文字 */;
+  --primary: /* 灰階主要操作底色 */;
+  --primary-foreground: /* 灰階主要操作文字 */;
+  --secondary: /* 灰階次要操作底色 */;
+  --secondary-foreground: /* 灰階次要操作文字 */;
+  --muted: /* 淺灰低強調表面底色 */;
+  --muted-foreground: /* 適合列印的中深灰低強調文字 */;
+  --accent: /* 灰階互動強調或選取底色 */;
+  --accent-foreground: /* 灰階互動強調或選取文字 */;
+  --success: /* 灰階成功狀態色，需以文字或圖示補充辨識 */;
+  --success-foreground: /* 灰階成功狀態文字 */;
+  --destructive: /* 灰階危險狀態色，需以文字或圖示補充辨識 */;
+  --destructive-foreground: /* 灰階危險狀態文字 */;
+  --warning: /* 灰階警告狀態色，需以文字或圖示補充辨識 */;
+  --warning-foreground: /* 灰階警告狀態文字 */;
+  --info: /* 灰階資訊狀態色 */;
+  --info-foreground: /* 灰階資訊狀態文字 */;
+  --disabled: /* 灰階停用控制項底色 */;
+  --disabled-foreground: /* 灰階停用控制項文字 */;
+  --border: /* 列印友善的灰階邊框色 */;
+  --input: /* 灰階輸入欄位色 */;
+  --ring: /* 灰階鍵盤焦點環色 */;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-disabled: var(--disabled);
+  --color-disabled-foreground: var(--disabled-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 ```
 
-實際 token 命名、預設主題與數值應在設計 token 階段定稿；以上僅示意映射關係，不是完整色票。
+主題識別值固定為 `default`、`dnd`、`printing`。`default` 是預設的《博德之門 3》黑金風格；`dnd` 是龍與地下城奶白配棕紅風格；`printing` 以灰階為主並以白底、深色文字及清晰邊界支援直接列印。以上 CSS 僅示意映射關係與視覺方向，具體色票、對比值及列印樣式仍須在設計 token 階段定稿。
 
-### 將產品語意色與一般主題表面分開
+### 保留領域資訊，不另造一套顏色語境
 
-琥珀金、秘法紫、翠綠、青色與危險紅色不只是裝飾，也承載產品領域資訊。建議將它們整理為第二層「狀態／產品語意 token」，例如 `magic`、`private`、`camp`、`success`、`warning`、`destructive`，並為所需的背景、文字、邊框分別提供 token。切換主題時可以調整各組色值，但不可讓語意混淆。
+琥珀金、秘法紫、翠綠、青色等現有色系應依實際用途映射至上述語意角色，而非成為一套額外的 `magic`、`private`、`camp` 顏色 token。遷移盤點時，主要操作使用 `primary`、次要操作使用 `secondary`、低強調內容使用 `muted`、互動選取使用 `accent`、正向結果使用 `success`、危險動作使用 `destructive`、提醒使用 `warning`、中性說明使用 `info`；卡片與浮層則分別使用 `card`、`popover`。
 
-以下差異必須保留：
-
-- `primary` 表示一般主操作；不應直接等同所有琥珀色使用場景。
-- `magic`、`private`、`camp` 分別代表魔法、私人暗袋與營地儲物箱識別，不應因為色彩重配而失去區辨。
-- `destructive` 只用於危險操作或錯誤狀態；其語意及可辨識度應跨主題保持一致。
-- 中性色的 `muted` 不應取代所有次要資訊；需要保留的權限、狀態或產品辨識仍應使用具名語意 token。
+背包區域、魔法物品、私人暗袋、營地箱等產品領域標籤若本身不屬於上述語意角色，不可只靠獨立色相維持辨識；應優先保留名稱、圖示、邊框或其他非色彩線索。只有在產品明確要求它們作為獨立且可切換的語意分類時，才另行提出擴充 token 集合的決策。
 
 ## 分階段執行
 
@@ -90,12 +195,12 @@
 3. 建立「目前用色 → 介面用途 → 目標 token」對照表。遇到同一色彩對應多個用途時，逐個確認語意，不可自動一對一替換。
 4. 記錄目前路由、互動狀態與窄螢幕的視覺基準；沿用既有 Playwright E2E 基礎設施，必要時補充代表性頁面的主題視覺檢查。
 
-**完成條件：** 有可檢查的 class/token 使用清單、重要狀態清單及代表性頁面清單，且能辨識需保留的領域色彩。
+**完成條件：** 有可檢查的 class/token 使用清單、重要狀態清單及代表性頁面清單，且每個用色都能映射至核准的語意角色或基礎 token。
 
 ### Phase 1：建立 CSS variables 與 Tailwind token 映射
 
 1. 在 `src/index.css` 整理既有 `--color-ui-*` token，決定哪些延伸為通用語意 token，哪些保留為元件基礎 token。
-2. 定義預設主題所需的完整中性色與互動狀態色，包含背景/文字配對、邊框、表單欄位、焦點環、選取、停用及危險狀態。
+2. 定義預設主題所需的完整基礎 token、容器/互動表面角色與狀態色，包含必要的背景/文字配對、邊框、表單欄位及焦點環。
 3. 使用 Tailwind v4 `@theme inline` 將 CSS variables 映射至可用 utility；先以少量共用元件驗證 `bg-*`、`text-*`、`border-*`、`ring-*` 與透明度 modifier 的實際輸出。
 4. 維持目前預設暗黑奇幻視覺，不在 token 基礎建置階段更動現行設計。
 
@@ -104,7 +209,7 @@
 ### Phase 2：共用元件先行遷移
 
 1. 先遷移 `src/components/ui/` 的 Button、Badge、Input、Select、Textarea、ConfirmDialog、Toast 等共用元件。
-2. 將色彩 variant 對應到穩定的語意 API；共用元件保留明確的 danger、magic、private、camp 等領域 variant，不讓呼叫端直接指定色票。
+2. 將元件色彩 variant 統一對應至 `primary`、`secondary`、`success`、`destructive`、`warning`、`info`、`disabled`；容器與互動狀態使用 `card`、`popover`、`muted`、`accent`。產品領域標籤不另設顏色 variant，改以文字、圖示等線索區分。
 3. 為主要元件驗證正常、hover、focus-visible、disabled、loading、錯誤與窄螢幕狀態。
 4. 保留 `className` 的合理擴充能力，但避免它再次成為任意硬編碼色彩的逃生口。
 
@@ -121,26 +226,27 @@
 
 每批先依照用途映射 token，再替換 class；完成後比較主要頁面與互動狀態，並執行相關 E2E、lint、typecheck 與 build。業務邏輯或資料存取不得隨色彩遷移改動。
 
-**完成條件：** 該批頁面不再依賴直接色票 class 作為一般表面樣式；產品領域色仍由具名語意 token 控制；所有指定流程通過回歸檢查。
+**完成條件：** 該批頁面不再依賴直接色票 class 作為一般樣式；色彩使用核准的語意角色或基礎 token；所有指定流程通過回歸檢查。
 
-### Phase 4：新增替代主題與主題切換能力
+### Phase 4：新增三套主題與主題切換能力
 
-1. 在全部必要 token 齊備後，為替代主題提供另一套完整 CSS variable 值，並以根元素的 `data-theme` 屬性切換。
+1. 在全部必要 token 齊備後，提供 `default`、`dnd`、`printing` 三套完整 CSS variable 值，並以根元素的 `data-theme` 屬性切換；未設定屬性時使用 `default`。
 2. 主題偏好建議先作為使用者層級偏好，不與 campaign 狀態混用。若第一版不需要跨裝置同步，可先存於 localStorage；只有在明確需要登入後跨裝置同步時，再評估 profile 欄位與資料遷移。
-3. 初始化時優先讀取已儲存偏好，避免頁面載入後短暫閃現另一個主題。未設定偏好時，可依產品決策使用固定預設值或跟隨 `prefers-color-scheme`。
+3. 初始化時優先讀取已儲存偏好，避免頁面載入後短暫閃現另一個主題；未設定偏好時固定使用 `default`，避免作業系統外觀偏好意外覆蓋產品指定的預設黑金風格。
 4. 主題控制項應可鍵盤操作、具清楚可存取名稱，且不依賴顏色本身表達目前選取狀態。
 5. 確認訪客／離線模式仍可使用主題偏好；主題功能不得要求 Supabase 可用。
+6. 為 `printing` 驗證實際瀏覽器列印預覽，並視需要建立 `@media print` 規則處理導覽／操作控制項隱藏、頁面分頁、背景墨水用量與避免內容被截斷；灰階 CSS variables 本身不等於完整列印支援。
 
-**完成條件：** 切換主題時只需改變主題屬性及變數，不需逐頁切換 class；偏好載入穩定；核心頁面、互動狀態與文字對比在各主題皆通過驗收。
+**完成條件：** 能在 `default`、`dnd`、`printing` 三種風格切換，且只需改變主題屬性及變數、不需逐頁切換 class；偏好載入穩定；核心頁面、互動狀態、文字對比及列印結果皆通過驗收。
 
 ### Phase 5：防回歸與文件收尾
 
-1. 加入 lint 或 CI 檢查，逐步禁止新增一般用途的硬編碼色階 class；保留少數明確核准的特例及產品語意 token。
-2. 將例外列入 allowlist 或提供可說明用途的具名 utility/token，不要用全面禁用規則迫使開發者繞過 lint。
+1. 加入 lint 或 CI 檢查，逐步禁止新增一般用途的硬編碼色階 class，並檢查元件與頁面是否只使用核准的語意角色及基礎 token。
+2. 只為無法使用 token 的品牌素材或第三方元件保留明確例外；列出原因與範圍，不以新增產品專屬色彩語境作為一般解法。
 3. 更新 UI 元件、設計 token 與新增主題的文件，說明新增 token、檢查對比及處理例外的方法。
 4. 驗證代表性頁面在主題切換前後沒有水平溢位、不可辨識狀態或文字可讀性回歸。
 
-**完成條件：** 新增介面樣式有清楚的語意 token 使用規範；lint 不阻礙必要的產品特例；文件與實際 token 保持一致。
+**完成條件：** 新增介面樣式遵守核准的語意角色與基礎 token 規範；必要例外有文件說明；lint 與實際 token 保持一致。
 
 ## 驗收與注意事項
 
@@ -149,7 +255,7 @@
 - **檢查動態 class：** Tailwind 需要能靜態辨識使用到的 utility。若 class 由字串拼接或資料決定，應使用完整且明確的映射表，避免執行時才組合出未生成的 class。
 - **檢查非 Tailwind 色彩來源：** inline styles、SVG、圖示、第三方元件、Markdown 與瀏覽器原生表單外觀，可能不會自動跟隨 CSS variables。
 - **對比與非色彩提示：** 檢查一般文字、輔助文字、按鈕、焦點環、錯誤與停用狀態；權限或危險狀態不能只靠色相區分，還應保留文字、圖示或其他提示。
-- **主題變數需完整：** 避免替代主題漏掉某個 token 後靜默回退到不相容的顏色；各主題應具備同一份必要 token 清單。
+- **主題變數需完整：** `default`、`dnd`、`printing` 避免漏掉某個 token 後靜默回退到不相容的顏色；各主題應具備同一份必要 token 清單。列印主題還應檢查列印樣式是否保留可辨識的文字、邊框與資訊層級，並在瀏覽器列印預覽中實際驗證版面。
 - **管理 `dark:` 與硬編碼值：** 遷移至單一語意 token 後，檢視既有 `dark:` 樣式是否仍有必要，避免同一元素同時由 CSS variable 與獨立色階控制。
 - **先保留預設外觀：** 語意化是結構改造，不應順便更動色票、間距或元件互動；視覺改版應另立明確需求。
 - **測試重點：** 以共用元件狀態、登入／大廳、戰役設定、背包和商店等代表性頁面作視覺回歸；自動化測試優先斷言語意與互動，避免綁定 Tailwind class。
