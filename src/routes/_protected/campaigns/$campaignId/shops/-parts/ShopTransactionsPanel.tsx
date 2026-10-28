@@ -561,8 +561,8 @@ export function ShopTransactionsPanel({
 								aria-label='關閉結帳視窗'
 								onClick={() => onCheckoutOpenChange?.(false)}
 								className='text-muted-foreground'
+								prefixIcon={<X className='h-4 w-4' />}
 							>
-								<X className='h-4 w-4' />
 							</Button>
 						</div>
 
@@ -634,8 +634,8 @@ export function ShopTransactionsPanel({
 														)
 													}
 													className='h-7 min-w-7 px-1.5'
+													prefixIcon={<Minus className='h-3 w-3' />}
 												>
-													<Minus className='h-3 w-3' />
 												</Button>
 												<span
 													className='min-w-6 text-center font-mono text-sm text-foreground'
@@ -659,8 +659,8 @@ export function ShopTransactionsPanel({
 														)
 													}
 													className='h-7 min-w-7 px-1.5'
+													prefixIcon={<Plus className='h-3 w-3' />}
 												>
-													<Plus className='h-3 w-3' />
 												</Button>
 												<span className='text-xs text-muted-foreground'>
 													庫存 {item.stockAvailable}
@@ -782,8 +782,8 @@ export function ShopTransactionsPanel({
 								onClick={() => void handleCartCheckout()}
 								data-testid='shop-checkout-confirm'
 								className='border border-primary/60 bg-primary text-primary-foreground'
+								prefixIcon={<ShoppingBag className='h-4 w-4' />}
 							>
-								<ShoppingBag className='h-4 w-4' />
 								{isSubmittingPurchase
 									? '處理中…'
 									: cartHasApproval
@@ -917,8 +917,8 @@ export function ShopTransactionsPanel({
 								}
 								onClick={() => void handlePurchase()}
 								className='border border-primary/60 bg-primary text-primary-foreground'
+								prefixIcon={<ShoppingBag className='h-4 w-4' />}
 							>
-								<ShoppingBag className='h-4 w-4' />
 								{selectedItem?.requiresApproval ? '送出審查請求' : '確認購買'}
 							</Button>
 						</div>
@@ -1049,8 +1049,8 @@ export function ShopTransactionsPanel({
 													)
 												}
 												className='border border-destructive/70 bg-destructive/40 text-destructive-foreground'
+												prefixIcon={<X className='h-4 w-4' />}
 											>
-												<X className='h-4 w-4' />
 												拒絕
 											</Button>
 											<Button
@@ -1064,8 +1064,8 @@ export function ShopTransactionsPanel({
 													)
 												}
 												className='border border-border bg-background/60 text-foreground'
+												prefixIcon={<Check className='h-4 w-4' />}
 											>
-												<Check className='h-4 w-4' />
 												核准
 											</Button>
 										</div>
@@ -1084,8 +1084,8 @@ export function ShopTransactionsPanel({
 													)
 												}
 												className='border border-border bg-card text-foreground'
+												prefixIcon={<X className='h-4 w-4' />}
 											>
-												<X className='h-4 w-4' />
 												取消請求
 											</Button>
 										</div>

@@ -116,8 +116,8 @@ export default function CharacterModal({
 						aria-label='關閉角色編輯'
 						onClick={onClose}
 						className='text-muted-foreground hover:text-foreground cursor-pointer'
+						prefixIcon={<X className='w-5 h-5' />}
 					>
-						<X className='w-5 h-5' />
 					</Button>
 				</div>
 
@@ -243,8 +243,8 @@ export default function CharacterModal({
 									type='submit'
 									variant='primary'
 									className='px-5 py-2 rounded bg-primary hover:bg-primary text-primary-foreground font-bold shadow flex items-center gap-1.5 cursor-pointer'
+									prefixIcon={<Save className='w-4 h-4' />}
 								>
-									<Save className='w-4 h-4' />
 									<span>儲存角色</span>
 								</Button>
 							)}

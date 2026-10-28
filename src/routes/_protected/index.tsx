@@ -268,9 +268,9 @@ function CampaignLobbyPage() {
 							variant='secondary'
 							size='sm'
 							className='gap-1.5 border-primary/70 bg-card/80 px-3 py-1.5 text-xs font-normal text-primary-foreground hover:border-primary hover:bg-card'
+							prefixIcon={<Hammer className='h-3.5 w-3.5' />}
 						>
 							<Link data-testid='lobby-blacksmith-link' to='/blacksmith'>
-								<Hammer className='h-3.5 w-3.5' />
 								<span>鍛造工坊</span>
 							</Link>
 						</Button>
@@ -279,9 +279,9 @@ function CampaignLobbyPage() {
 							variant='secondary'
 							size='sm'
 							className='gap-1.5 bg-card/80 px-3 py-1.5 text-xs font-normal text-foreground hover:border-primary hover:bg-card hover:text-primary-foreground'
+							prefixIcon={<UserCog className='w-3.5 h-3.5' />}
 						>
 							<Link data-testid='lobby-profile-link' to='/settings/profile'>
-								<UserCog className='w-3.5 h-3.5' />
 								<span>帳號設定</span>
 							</Link>
 						</Button>
@@ -291,8 +291,8 @@ function CampaignLobbyPage() {
 							size='sm'
 							onClick={handleSignOut}
 							className='gap-1.5 border-border bg-card px-3 py-2 text-xs font-normal text-foreground hover:border-destructive hover:bg-card hover:text-destructive-foreground'
+							prefixIcon={<LogOut className='h-3.5 w-3.5' />}
 						>
-							<LogOut className='h-3.5 w-3.5' />
 							登出
 						</Button>
 					</div>
@@ -331,8 +331,8 @@ function CampaignLobbyPage() {
 								setErrorMessage(null);
 							}}
 							className='gap-2 border-border/60 bg-background/70 px-3 py-2 text-xs text-foreground shadow hover:border-border hover:bg-background'
+							prefixIcon={<Plus className='h-4 w-4' />}
 						>
-							<Plus className='h-4 w-4' />
 							建立新戰役 (DM)
 						</Button>
 						<Button
@@ -344,8 +344,8 @@ function CampaignLobbyPage() {
 								setErrorMessage(null);
 							}}
 							className='gap-2 px-3 py-2 text-xs'
+							prefixIcon={<Users className='h-4 w-4' />}
 						>
-							<Users className='h-4 w-4' />
 							輸入邀請碼加入戰役
 						</Button>
 					</div>
@@ -378,8 +378,8 @@ function CampaignLobbyPage() {
 									setErrorMessage(null);
 								}}
 								className='mt-5 gap-2 border border-primary/60 bg-primary/80 px-4 py-2 text-sm text-primary-foreground shadow hover:border-primary hover:bg-primary'
+								prefixIcon={<Plus className='h-4 w-4' />}
 							>
-								<Plus className='h-4 w-4' />
 								建立我的第一場戰役
 							</Button>
 						</div>
@@ -456,8 +456,8 @@ function CampaignLobbyPage() {
 							onClick={closeDialog}
 							aria-label='關閉視窗'
 							className='px-2 text-muted-foreground hover:text-foreground'
+							prefixIcon={<X className='h-5 w-5' />}
 						>
-							<X className='h-5 w-5' />
 						</Button>
 					</div>
 

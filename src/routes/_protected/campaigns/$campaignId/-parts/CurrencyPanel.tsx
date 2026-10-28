@@ -164,8 +164,8 @@ export default function CurrencyPanel({
 						size='sm'
 						aria-label='關閉錢包管理'
 						onClick={onClose}
+						prefixIcon={<X className='w-5 h-5' />}
 					>
-						<X className='w-5 h-5' />
 					</Button>
 				</div>
 
@@ -179,8 +179,8 @@ export default function CurrencyPanel({
 							aria-pressed={walletTab === 'public'}
 							disabled={!canReadPublicWallet}
 							onClick={() => setWalletTab('public')}
+							prefixIcon={<Globe className='w-3.5 h-3.5' />}
 						>
-							<Globe className='w-3.5 h-3.5' />
 							<span>公開錢包 {!canReadPublicWallet && '(無權限)'}</span>
 						</Button>
 
@@ -191,8 +191,8 @@ export default function CurrencyPanel({
 							aria-pressed={walletTab === 'private'}
 							disabled={!canReadPrivateWallet}
 							onClick={() => setWalletTab('private')}
+							prefixIcon={<Lock className='w-3.5 h-3.5' />}
 						>
-							<Lock className='w-3.5 h-3.5' />
 							<span>私人錢包 {!canReadPrivateWallet && '(隱藏)'}</span>
 						</Button>
 					</div>
@@ -340,8 +340,8 @@ export default function CurrencyPanel({
 												transferAmount,
 											)
 										}
+										prefixIcon={<ArrowLeftRight className='w-3.5 h-3.5 text-muted-foreground' />}
 									>
-										<ArrowLeftRight className='w-3.5 h-3.5 text-muted-foreground' />
 										<span>
 											{walletTab === 'public'
 												? `🔒 將 ${transferAmount} ${transferCoin.toUpperCase()} 藏入私人錢包`
@@ -378,8 +378,8 @@ export default function CurrencyPanel({
 											size='sm'
 											disabled={maxAvailable <= 0}
 											onClick={() => onSplitCampCoinToParty(transferCoin)}
+											prefixIcon={<Users className='w-3.5 h-3.5 text-muted-foreground' />}
 										>
-											<Users className='w-3.5 h-3.5 text-muted-foreground' />
 											<span>平分所有 {transferCoin.toUpperCase()} 給全隊</span>
 										</Button>
 									)}
@@ -419,8 +419,8 @@ export default function CurrencyPanel({
 									type='button'
 									variant='secondary'
 									onClick={() => onConsolidateCoinsToGold(walletTab)}
+									prefixIcon={<Sparkles className='w-3.5 h-3.5' />}
 								>
-									<Sparkles className='w-3.5 h-3.5' />
 									<span>一鍵將零錢換整為金幣 (GP)</span>
 								</Button>
 							) : (

@@ -384,8 +384,8 @@ export default function ItemTooltip({
 														onClick={() => onPasteAffix(inspectedItem)}
 														className='text-[11px] px-2 py-0.5 rounded bg-background/90 hover:bg-card border border-border/60 text-foreground flex items-center gap-1 cursor-pointer transition'
 														title={`貼上詞條：${copiedAffix.name}`}
+														prefixIcon={<ClipboardPaste className='w-3 h-3 text-foreground' />}
 													>
-														<ClipboardPaste className='w-3 h-3 text-foreground' />
 														<span>貼上「{copiedAffix.name}」</span>
 													</Button>
 												)}
@@ -425,8 +425,8 @@ export default function ItemTooltip({
 																			disabled={idx === 0}
 																			title='上移詞條'
 																			className='p-1 rounded bg-card hover:bg-muted disabled:opacity-30 text-muted-foreground hover:text-foreground cursor-pointer'
+																			prefixIcon={<ArrowUp className='w-3 h-3' />}
 																		>
-																			<ArrowUp className='w-3 h-3' />
 																		</Button>
 																		<Button
 																			type='button'
@@ -438,8 +438,8 @@ export default function ItemTooltip({
 																			}
 																			title='下移詞條'
 																			className='p-1 rounded bg-card hover:bg-muted disabled:opacity-30 text-muted-foreground hover:text-foreground cursor-pointer'
+																			prefixIcon={<ArrowDown className='w-3 h-3' />}
 																		>
-																			<ArrowDown className='w-3 h-3' />
 																		</Button>
 																		<Button
 																			type='button'
@@ -458,12 +458,14 @@ export default function ItemTooltip({
 																					? 'bg-background/80 border-border/60 text-foreground hover:bg-card'
 																					: 'bg-card border-border text-muted-foreground hover:text-foreground'
 																			}`}
+																			prefixIcon={
+																				affix.isHidden ? (
+																					<Eye className='w-3 h-3' />
+																				) : (
+																					<EyeOff className='w-3 h-3' />
+																				)
+																			}
 																		>
-																			{affix.isHidden ? (
-																				<Eye className='w-3 h-3' />
-																			) : (
-																				<EyeOff className='w-3 h-3' />
-																			)}
 																		</Button>
 																		<Button
 																			type='button'
@@ -472,8 +474,8 @@ export default function ItemTooltip({
 																			onClick={() => onCopyAffix(affix)}
 																			title='複製此詞條以貼到其他物品'
 																			className='p-1 rounded bg-card hover:bg-primary border border-border hover:border-primary/60 text-foreground hover:text-primary-foreground cursor-pointer'
+																			prefixIcon={<Copy className='w-3 h-3' />}
 																		>
-																			<Copy className='w-3 h-3' />
 																		</Button>
 																	</div>
 																)}
@@ -523,8 +525,8 @@ export default function ItemTooltip({
 													variant='secondary'
 													size='sm'
 													onClick={() => setIsEditingNote(true)}
+													prefixIcon={<Edit3 className='w-3 h-3' />}
 												>
-													<Edit3 className='w-3 h-3' />
 													<span>
 														{inspectedItem.playerNotes
 															? '編輯備註'
@@ -554,8 +556,8 @@ export default function ItemTooltip({
 															setIsEditingNote(false);
 														}}
 														className='text-[11px] px-2 py-0.5 rounded bg-primary hover:bg-primary text-primary-foreground flex items-center gap-1 font-medium cursor-pointer'
+														prefixIcon={<Check className='w-3 h-3' />}
 													>
-														<Check className='w-3 h-3' />
 														<span>儲存</span>
 													</Button>
 												</div>
@@ -665,17 +667,18 @@ export default function ItemTooltip({
 														variant='secondary'
 														size='sm'
 														onClick={() => onTogglePrivate(inspectedItem)}
+														prefixIcon={
+															inspectedItem.isPrivate ? (
+																<Unlock className='w-3.5 h-3.5 text-muted-foreground' />
+															) : (
+																<Lock className='w-3.5 h-3.5 text-muted-foreground' />
+															)
+														}
 													>
 														{inspectedItem.isPrivate ? (
-															<>
-																<Unlock className='w-3.5 h-3.5 text-muted-foreground' />
-																<span>移回公開袋</span>
-															</>
+															<span>移回公開袋</span>
 														) : (
-															<>
-																<Lock className='w-3.5 h-3.5 text-muted-foreground' />
-																<span>藏入私人袋</span>
-															</>
+															<span>藏入私人袋</span>
 														)}
 													</Button>
 												)}
@@ -704,8 +707,8 @@ export default function ItemTooltip({
 															consumeOrSplitStack(inspectedItem, 'split')
 														}
 														className='px-3 py-1.5 rounded text-xs font-medium bg-card hover:bg-muted border border-border text-foreground flex items-center justify-center gap-1 cursor-pointer'
+														prefixIcon={<Split className='w-3.5 h-3.5' />}
 													>
-														<Split className='w-3.5 h-3.5' />
 														<span>拆分堆疊</span>
 													</Button>
 												)}
@@ -861,8 +864,8 @@ export default function ItemTooltip({
 													variant='secondary'
 													size='sm'
 													onClick={() => onOpenEditModal(inspectedItem)}
+													prefixIcon={<Edit3 className='w-3.5 h-3.5' />}
 												>
-													<Edit3 className='w-3.5 h-3.5' />
 													<span>DM 編輯物品</span>
 												</Button>
 												{!inspectedItem.isIdentified && (
@@ -871,8 +874,8 @@ export default function ItemTooltip({
 														variant='secondary'
 														size='sm'
 														onClick={() => void toggleIdentify(inspectedItem)}
+														prefixIcon={<Eye className='w-3.5 h-3.5' />}
 													>
-														<Eye className='w-3.5 h-3.5' />
 														<span>向玩家揭露鑑定</span>
 													</Button>
 												)}
@@ -884,8 +887,8 @@ export default function ItemTooltip({
 												size='sm'
 												onClick={() => deleteItem(inspectedItem)}
 												className='px-2.5 py-1.5 rounded text-xs bg-destructive/70 hover:bg-destructive border border-destructive/60 text-destructive-foreground flex items-center gap-1 cursor-pointer'
+												prefixIcon={<Trash2 className='w-3.5 h-3.5' />}
 											>
-												<Trash2 className='w-3.5 h-3.5' />
 												<span>銷毀</span>
 											</Button>
 										</div>

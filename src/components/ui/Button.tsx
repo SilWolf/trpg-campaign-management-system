@@ -1,20 +1,18 @@
 import { cloneElement, forwardRef, isValidElement } from 'react';
 import type { ReactElement } from 'react';
+import type { ReactNode } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from './utils';
 
 export type ButtonVariant =
-	| 'primary'
-	| 'secondary'
-	| 'destructive'
-	| 'danger'
-	| 'ghost';
+	'primary' | 'secondary' | 'destructive' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonStyleProps {
 	variant?: ButtonVariant;
 	size?: ButtonSize;
 	className?: string;
+	prefixIcon?: ReactElement<{ className?: string }>;
 }
 
 export type ButtonProps = ButtonStyleProps &
@@ -25,7 +23,10 @@ export type ButtonProps = ButtonStyleProps &
 		  } & ButtonHTMLAttributes<HTMLButtonElement>)
 		| {
 				asChild: true;
-				children: ReactElement<{ className?: string }>;
+				children: ReactElement<{
+					className?: string;
+					children?: ReactNode;
+				}>;
 		  }
 	);
 
@@ -43,9 +44,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-	sm: 'min-h-8 px-2.5 text-xs',
-	md: 'min-h-9 px-3.5 text-sm',
-	lg: 'min-h-11 px-5 text-base',
+	sm: 'min-h-8 px-2.5 text-xs [&_.lucide]:size-3.5',
+	md: 'min-h-9 px-3.5 text-sm [&_.lucide]:size-4',
+	lg: 'min-h-11 px-5 text-base [&_.lucide]:size-5',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -65,7 +66,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 			);
 
 		if (props.asChild) {
-			if (!isValidElement<{ className?: string }>(props.children)) {
+			if (
+				!isValidElement<{
+					className?: string;
+					children?: ReactNode;
+				}>(props.children)
+			) {
 				throw new TypeError('Button asChild requires a single element child.');
 			}
 
@@ -73,6 +79,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 				className: cn(
 					getButtonClassName(props.variant, props.size, props.className),
 					props.children.props.className,
+				),
+				children: (
+					<>
+						{props.prefixIcon}
+						{props.children.props.children}
+					</>
 				),
 			});
 		}
@@ -82,6 +94,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 			className,
 			disabled,
 			loading = false,
+			prefixIcon,
 			size,
 			variant,
 			...buttonProps
@@ -105,6 +118,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 						<span className='sr-only'>處理中</span>
 					</>
 				)}
+				{prefixIcon}
 				{children}
 			</button>
 		);

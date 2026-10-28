@@ -95,12 +95,14 @@ export function GeneralSettingsPanel({
 										setTimeout(() => setCopied(false), 2000);
 									}}
 									className='shrink-0'
+									prefixIcon={
+										copied ? (
+											<Check className='w-4 h-4 text-muted-foreground' />
+										) : (
+											<Copy className='w-4 h-4' />
+										)
+									}
 								>
-									{copied ? (
-										<Check className='w-4 h-4 text-muted-foreground' />
-									) : (
-										<Copy className='w-4 h-4' />
-									)}
 									<span>{copied ? '已複製' : '複製邀請碼'}</span>
 								</Button>
 							</div>
@@ -116,8 +118,8 @@ export function GeneralSettingsPanel({
 									type='submit'
 									size='sm'
 									className='shadow'
+									prefixIcon={<Save className='w-4 h-4' />}
 								>
-									<Save className='w-4 h-4' />
 									<span>儲存變更</span>
 								</Button>
 							</div>

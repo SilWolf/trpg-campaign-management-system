@@ -158,12 +158,14 @@ export function CampaignShopSettingsPanel({
 								(draftCatalogIds.length === 0 && definitions.length === 0)
 							}
 							className='bg-muted text-foreground hover:bg-accent'
+							prefixIcon={
+								isSaving ? (
+									<Check className='h-4 w-4' />
+								) : (
+									<Save className='h-4 w-4' />
+								)
+							}
 						>
-							{isSaving ? (
-								<Check className='h-4 w-4' />
-							) : (
-								<Save className='h-4 w-4' />
-							)}
 							<span>{isSaving ? '儲存中…' : '儲存設定'}</span>
 						</Button>
 					</div>

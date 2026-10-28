@@ -132,8 +132,8 @@ export function AllCharactersSettingsdPanel({
 					disabled={!canCreateCharacter}
 					title={createCharTooltip}
 					className='bg-background/90 hover:bg-card disabled:opacity-35 disabled:cursor-not-allowed border border-border/70 text-foreground'
+					prefixIcon={<UserPlus className='w-4 h-4' />}
 				>
-					<UserPlus className='w-4 h-4' />
 					<span>新增角色</span>
 				</Button>
 			</div>

@@ -829,8 +829,8 @@ function CampaignShopsPage() {
 								);
 						}}
 						className='border border-border bg-card text-foreground'
+						prefixIcon={<RotateCw className='h-4 w-4' />}
 					>
-						<RotateCw className='h-4 w-4' />
 						重新整理
 					</Button>
 				</div>
@@ -896,8 +896,8 @@ function CampaignShopsPage() {
 										variant='secondary'
 										onClick={() => startShopEdit(selectedShop)}
 										className='border border-border bg-background text-foreground'
+										prefixIcon={<Pencil className='h-4 w-4' />}
 									>
-										<Pencil className='h-4 w-4' />
 										編輯商店
 									</Button>
 								</div>
@@ -928,8 +928,8 @@ function CampaignShopsPage() {
 											variant='secondary'
 											onClick={() => setIsImportDialogOpen(true)}
 											className='border border-border/70 bg-background/40 text-foreground'
+											prefixIcon={<PackagePlus className='h-4 w-4' />}
 										>
-											<PackagePlus className='h-4 w-4' />
 											從鍛造工坊匯入
 										</Button>
 									</div>
@@ -1025,8 +1025,8 @@ function CampaignShopsPage() {
 																onClick={() => startItemEdit(item)}
 																aria-label={`編輯${item.itemSnapshot.name}`}
 																className='shrink-0 border border-border text-foreground hover:border-primary hover:text-primary-foreground'
+																prefixIcon={<Pencil className='h-3.5 w-3.5' />}
 															>
-																<Pencil className='h-3.5 w-3.5' />
 															</Button>
 														</article>
 													);
@@ -1072,11 +1072,11 @@ function CampaignShopsPage() {
 															setRequestedPage((page) => Math.max(1, page - 1))
 														}
 														className='gap-1'
-													>
-														<ChevronLeft
+														prefixIcon={<ChevronLeft
 															aria-hidden='true'
 															className='h-4 w-4'
-														/>
+														/>}
+													>
 														上一頁
 													</Button>
 													<Button
@@ -1091,12 +1091,14 @@ function CampaignShopsPage() {
 															)
 														}
 														className='gap-1'
+														prefixIcon={
+															<ChevronRight
+																aria-hidden='true'
+																className='h-4 w-4'
+															/>
+														}
 													>
 														下一頁
-														<ChevronRight
-															aria-hidden='true'
-															className='h-4 w-4'
-														/>
 													</Button>
 												</div>
 											</nav>
@@ -1275,8 +1277,8 @@ function CampaignShopsPage() {
 													variant='ghost'
 													onClick={() => startItemEdit(selectedItem)}
 													className='mt-3 w-full border border-border text-foreground hover:border-primary hover:text-primary-foreground'
+													prefixIcon={<Pencil className='h-3.5 w-3.5' />}
 												>
-													<Pencil className='h-3.5 w-3.5' />
 													編輯商品
 												</Button>
 											</>
@@ -1326,8 +1328,8 @@ function CampaignShopsPage() {
 													setDeleteConfirmationItemId(null);
 												}}
 												className='text-muted-foreground'
+												prefixIcon={<X className='h-4 w-4' />}
 											>
-												<X className='h-4 w-4' />
 											</Button>
 										</div>
 
@@ -1648,8 +1650,8 @@ function CampaignShopsPage() {
 													disabled={isSaving}
 													onClick={() => void handleDeleteItem(editingItem)}
 													className='border border-destructive/70 text-destructive-foreground hover:bg-destructive/50'
+													prefixIcon={<Trash2 className='h-4 w-4' />}
 												>
-													<Trash2 className='h-4 w-4' />
 													{deleteConfirmationItemId === editingItem.id
 														? '再次按下確認刪除'
 														: '刪除商品'}
@@ -1673,8 +1675,8 @@ function CampaignShopsPage() {
 												type='submit'
 												loading={isSaving}
 												className='border border-border/60 bg-card text-foreground'
+												prefixIcon={<Check className='h-4 w-4' />}
 											>
-												<Check className='h-4 w-4' />
 												儲存商品
 											</Button>
 										</div>
@@ -1709,8 +1711,8 @@ function CampaignShopsPage() {
 												aria-label='關閉鍛造工坊匯入'
 												onClick={() => setIsImportDialogOpen(false)}
 												className='text-muted-foreground'
+												prefixIcon={<X className='h-4 w-4' />}
 											>
-												<X className='h-4 w-4' />
 											</Button>
 										</div>
 										<div
@@ -1779,8 +1781,8 @@ function CampaignShopsPage() {
 															disabled={isSaving}
 															onClick={() => void handleSourceImport(source)}
 															className='shrink-0 border border-primary/60 bg-primary/70 text-primary-foreground'
+															prefixIcon={<Plus className='h-3.5 w-3.5' />}
 														>
-															<Plus className='h-3.5 w-3.5' />
 															加入
 														</Button>
 													</div>

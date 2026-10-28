@@ -136,8 +136,8 @@ export function CampaignShopDialog({
 						disabled={isSaving}
 						onClick={onClose}
 						className='text-muted-foreground hover:text-foreground'
+						prefixIcon={<X className='h-4 w-4' />}
 					>
-						<X className='h-4 w-4' />
 					</Button>
 				</div>
 				{errorMessage && (
@@ -219,8 +219,8 @@ export function CampaignShopDialog({
 						type='submit'
 						loading={isSaving}
 						className='border border-primary/60 bg-primary text-primary-foreground'
+						prefixIcon={<Check className='h-4 w-4' />}
 					>
-						<Check className='h-4 w-4' />
 						儲存商店
 					</Button>
 				</div>

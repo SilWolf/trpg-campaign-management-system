@@ -201,8 +201,8 @@ function BlacksmithCatalogPage() {
 							size='sm'
 							onClick={retryLoading}
 							className='gap-2 border-destructive/70 text-destructive-foreground hover:bg-destructive'
+							prefixIcon={<RotateCw className='h-3.5 w-3.5' />}
 						>
-							<RotateCw className='h-3.5 w-3.5' />
 							重新載入
 						</Button>
 					</div>
@@ -322,8 +322,8 @@ function BlacksmithCatalogPage() {
 										setDisplayMode('grid');
 									}}
 									className='gap-2'
+									prefixIcon={<LayoutGrid aria-hidden='true' className='h-4 w-4' />}
 								>
-									<LayoutGrid aria-hidden='true' className='h-4 w-4' />
 									格狀
 								</Button>
 								<Button
@@ -338,8 +338,8 @@ function BlacksmithCatalogPage() {
 										setDisplayMode('list');
 									}}
 									className='gap-2'
+									prefixIcon={<ListIcon aria-hidden='true' className='h-4 w-4' />}
 								>
-									<ListIcon aria-hidden='true' className='h-4 w-4' />
 									列表
 								</Button>
 							</div>
@@ -469,8 +469,8 @@ function BlacksmithCatalogPage() {
 												setPageInput(String(page));
 											}}
 											className='gap-1'
+											prefixIcon={<ChevronLeft aria-hidden='true' className='h-4 w-4' />}
 										>
-											<ChevronLeft aria-hidden='true' className='h-4 w-4' />
 											上一頁
 										</Button>
 										<Button
@@ -485,9 +485,14 @@ function BlacksmithCatalogPage() {
 												setPageInput(String(page));
 											}}
 											className='gap-1'
+											prefixIcon={
+												<ChevronRight
+													aria-hidden='true'
+													className='h-4 w-4'
+												/>
+											}
 										>
 											下一頁
-											<ChevronRight aria-hidden='true' className='h-4 w-4' />
 										</Button>
 									</div>
 									<form

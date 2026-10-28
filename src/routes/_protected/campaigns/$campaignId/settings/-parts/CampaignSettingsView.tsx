@@ -192,16 +192,10 @@ export function CampaignSettingsView({
 					tabIndex={activeTab === 'general' ? 0 : -1}
 					type='button'
 					onClick={() => setActiveTab('general')}
-					variant='ghost'
-					size='sm'
-					className={`shrink-0 ${
-						activeTab === 'general'
-							? 'bg-primary text-primary-foreground border border-primary/70 shadow'
-							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
-					}`}
+					variant={activeTab === 'general' ? 'primary' : 'ghost'}
+					prefixIcon={<Shield />}
 				>
-					<Shield className='w-3.5 h-3.5 text-primary-foreground' />
-					<span>⚙️ 戰役常規設定與成員配額</span>
+					<span>戰役常規設定與成員配額</span>
 				</Button>
 
 				<Button
@@ -214,15 +208,9 @@ export function CampaignSettingsView({
 					tabIndex={activeTab === 'characters' ? 0 : -1}
 					type='button'
 					onClick={() => setActiveTab('characters')}
-					variant='ghost'
-					size='sm'
-					className={`shrink-0 ${
-						activeTab === 'characters'
-							? 'bg-card text-foreground border border-border/70 shadow'
-							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
-					}`}
+					variant={activeTab === 'characters' ? 'primary' : 'ghost'}
+					prefixIcon={<UserRound />}
 				>
-					<UserRound className='w-3.5 h-3.5 text-foreground' />
 					<span>角色</span>
 				</Button>
 
@@ -236,15 +224,9 @@ export function CampaignSettingsView({
 					tabIndex={activeTab === 'shops' ? 0 : -1}
 					type='button'
 					onClick={() => setActiveTab('shops')}
-					variant='ghost'
-					size='sm'
-					className={`shrink-0 ${
-						activeTab === 'shops'
-							? 'bg-card text-foreground border border-border/70 shadow'
-							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
-					}`}
+					variant={activeTab === 'shops' ? 'primary' : 'ghost'}
+					prefixIcon={<Store />}
 				>
-					<Store className='w-3.5 h-3.5 text-foreground' />
 					<span>商店</span>
 				</Button>
 			</div>

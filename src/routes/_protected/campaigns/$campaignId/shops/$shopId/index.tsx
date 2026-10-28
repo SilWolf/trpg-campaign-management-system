@@ -287,8 +287,8 @@ function CampaignShopDetail() {
 							type='button'
 							variant='secondary'
 							className='border border-border bg-background text-foreground'
+							prefixIcon={<Pencil className='h-4 w-4' />}
 						>
-							<Pencil className='h-4 w-4' />
 							商店設定
 						</Button>
 					</Link>
@@ -437,8 +437,8 @@ function CampaignShopDetail() {
 														}))
 													}
 													className='h-7 min-w-7 px-1.5'
+													prefixIcon={<Minus className='h-3 w-3' />}
 												>
-													<Minus className='h-3 w-3' />
 												</Button>
 												<span
 													className='min-w-6 text-center font-mono text-sm text-foreground'
@@ -459,8 +459,8 @@ function CampaignShopDetail() {
 														}))
 													}
 													className='h-7 min-w-7 px-1.5'
+													prefixIcon={<Plus className='h-3 w-3' />}
 												>
-													<Plus className='h-3 w-3' />
 												</Button>
 											</div>
 										</div>
@@ -501,8 +501,8 @@ function CampaignShopDetail() {
 											setRequestedPage((page) => Math.max(1, page - 1))
 										}
 										className='gap-1'
+										prefixIcon={<ChevronLeft aria-hidden='true' className='h-4 w-4' />}
 									>
-										<ChevronLeft aria-hidden='true' className='h-4 w-4' />
 										上一頁
 									</Button>
 									<Button
@@ -515,9 +515,14 @@ function CampaignShopDetail() {
 											setRequestedPage((page) => Math.min(pageCount, page + 1))
 										}
 										className='gap-1'
+										prefixIcon={
+											<ChevronRight
+												aria-hidden='true'
+												className='h-4 w-4'
+											/>
+										}
 									>
 										下一頁
-										<ChevronRight aria-hidden='true' className='h-4 w-4' />
 									</Button>
 								</div>
 							</nav>
@@ -719,8 +724,8 @@ function CampaignShopDetail() {
 						onClick={() => setCheckoutOpen(true)}
 						data-testid='shop-checkout-open'
 						className='border border-primary/60 bg-primary text-primary-foreground'
+						prefixIcon={<ShoppingBag className='h-4 w-4' />}
 					>
-						<ShoppingBag className='h-4 w-4' />
 						結帳
 					</Button>
 				</div>

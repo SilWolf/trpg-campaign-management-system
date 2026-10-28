@@ -89,8 +89,8 @@ export default function AppHeader({
 								data-testid='inventory-create-item'
 								onClick={onCreateHomebrew}
 								className='flex items-center gap-2 px-3.5 py-2 rounded bg-gradient-to-b from-accent to-background border border-border/70 hover:border-border text-foreground text-xs sm:text-sm font-medium shadow-lg hover:brightness-110 transition cursor-pointer'
+								prefixIcon={<Plus className='w-4 h-4 text-foreground' />}
 							>
-								<Plus className='w-4 h-4 text-foreground' />
 								<span>鍛造自創道具 (Homebrew)</span>
 							</Button>
 						)}

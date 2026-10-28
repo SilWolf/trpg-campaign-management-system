@@ -178,8 +178,8 @@ export function CharacterSettingsPanel({
 									type='submit'
 									size='sm'
 									className='shadow'
+									prefixIcon={<Save className='w-4 h-4' />}
 								>
-									<Save className='w-4 h-4' />
 									<span>儲存角色基本資料</span>
 								</Button>
 							</div>
@@ -521,8 +521,8 @@ export function CharacterSettingsPanel({
 												}}
 												variant='secondary'
 												className='shrink-0 border-border bg-card text-foreground hover:bg-muted'
+												prefixIcon={<ArrowRightLeft className='w-4 h-4' />}
 											>
-												<ArrowRightLeft className='w-4 h-4' />
 												轉移擁有權
 											</Button>
 										</div>
@@ -544,8 +544,8 @@ export function CharacterSettingsPanel({
 										variant='danger'
 										size='sm'
 										className='shadow'
+										prefixIcon={<Trash2 className='w-4 h-4' />}
 									>
-										<Trash2 className='w-4 h-4' />
 										<span>
 											移除角色「{currentSelectedChar.name}」(遺物入公庫)
 										</span>

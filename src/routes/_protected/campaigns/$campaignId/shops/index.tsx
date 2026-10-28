@@ -64,8 +64,8 @@ function CampaignShopsIndex() {
 						type='button'
 						onClick={() => setIsCreating(true)}
 						className='border border-primary/60 bg-primary text-primary-foreground hover:bg-primary'
+						prefixIcon={<Plus className='h-4 w-4' />}
 					>
-						<Plus className='h-4 w-4' />
 						建立商店
 					</Button>
 				)}
