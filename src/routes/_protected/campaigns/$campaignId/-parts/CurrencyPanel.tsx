@@ -237,7 +237,11 @@ export default function CurrencyPanel({
 									className={`p-2.5 rounded-md border flex items-center justify-between ${coin.style}`}
 								>
 									<div>
-										<div className='text-xs font-bold'>{coin.name}</div>
+										<div
+											className={`text-xs font-bold ${coin.key === 'gp' ? 'text-highlight' : ''}`}
+										>
+											{coin.name}
+										</div>
 										<div className='text-[10px] opacity-75'>{coin.rate}</div>
 									</div>
 
@@ -260,7 +264,7 @@ export default function CurrencyPanel({
 											))}
 										<span
 											data-testid={`currency-balance-${coin.key}`}
-											className='w-14 text-center font-mono font-bold text-sm'
+											className={`w-14 text-center font-mono font-bold text-sm ${coin.key === 'gp' ? 'text-money' : ''}`}
 										>
 											{currentWallet[coin.key] ?? 0}
 										</span>
@@ -289,15 +293,17 @@ export default function CurrencyPanel({
 						{canEditCurrent && (
 							<div className='mt-4 pt-3.5 border-t border-border space-y-2.5 text-xs'>
 								<div className='flex items-center justify-between'>
-									<span className='text-primary-foreground font-semibold flex items-center gap-1.5'>
-										<Send className='w-3.5 h-3.5 text-primary-foreground' />
+									<span className='text-highlight font-semibold flex items-center gap-1.5'>
+										<Send className='w-3.5 h-3.5 text-highlight' />
 										<span>
 											{isCampChest
 												? '從營地公庫發放 / 均分貨幣'
 												: `從${walletTab === 'private' ? '私人錢包' : '公開錢包'}單向轉出`}
 										</span>
 									</span>
-									<span className='text-[11px] text-muted-foreground font-mono'>
+									<span
+										className={`text-[11px] font-mono ${transferCoin === 'gp' ? 'text-money' : 'text-muted-foreground'}`}
+									>
 										可用: {maxAvailable} {transferCoin.toUpperCase()}
 									</span>
 								</div>

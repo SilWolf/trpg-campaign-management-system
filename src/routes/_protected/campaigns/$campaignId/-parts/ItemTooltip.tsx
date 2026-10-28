@@ -626,7 +626,9 @@ export default function ItemTooltip({
 									</div>
 									<div>
 										估價:{' '}
-										<span className='text-primary-foreground font-semibold'>
+										<span
+											className={`font-semibold ${masked ? 'text-muted-foreground' : 'text-money'}`}
+										>
 											{masked ? '???' : `${inspectedItem.valueGp} GP`}
 										</span>
 									</div>

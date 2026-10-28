@@ -411,7 +411,7 @@ function BlacksmithCatalogPage() {
 													<span className='hidden w-16 shrink-0 text-right font-mono text-xs text-muted-foreground sm:block'>
 														{item.weight} lb
 													</span>
-													<span className='hidden w-20 shrink-0 text-right font-mono text-xs font-semibold text-primary-foreground sm:block'>
+													<span className='hidden w-20 shrink-0 text-right font-mono text-xs font-semibold text-money sm:block'>
 														{item.valueGp} GP
 													</span>
 												</>
@@ -590,7 +590,7 @@ function BlacksmithCatalogPage() {
 											<Coins className='h-3 w-3' />
 											價值
 										</p>
-										<p className='mt-1 font-mono text-foreground'>
+										<p className='mt-1 font-mono text-money'>
 											{selectedItem.valueGp} GP
 										</p>
 									</div>

@@ -404,7 +404,7 @@ function CampaignShopDetail() {
 													</div>
 												</div>
 												<div className='flex shrink-0 flex-col items-end gap-2'>
-													<span className='font-mono text-sm text-primary-foreground'>
+													<span className='font-mono text-sm text-money'>
 														{item.unitPriceGp.toLocaleString('zh-TW')} gp
 													</span>
 													<span className='text-[11px] text-muted-foreground'>
@@ -596,7 +596,7 @@ function CampaignShopDetail() {
 									)}
 									<div>
 										<p className='text-[11px] text-muted-foreground'>商店價格</p>
-										<p className='font-mono text-primary-foreground'>
+										<p className='font-mono text-money'>
 											{selectedItem.unitPriceGp.toLocaleString('zh-TW')} gp
 										</p>
 									</div>

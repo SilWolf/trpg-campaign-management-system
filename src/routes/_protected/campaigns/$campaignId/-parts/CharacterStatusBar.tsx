@@ -229,15 +229,21 @@ export default function CharacterStatusBar({
 						{isDisplayingPrivateWallet ? (
 							<Lock className='w-3.5 h-3.5 text-muted-foreground' />
 						) : (
-							<Coins className='w-3.5 h-3.5 text-primary-foreground' />
+							<Coins className='w-3.5 h-3.5 text-money' />
 						)}
-						<span>
+						<span className='text-highlight'>
 							{isCampChestActive
 								? '營地公庫錢包'
 								: isDisplayingPrivateWallet
 									? '私人暗袋錢包'
 									: '角色公開錢包'}{' '}
-							(折合 {canReadDisplayedWallet ? `${totalValueInGp} GP` : '???'})
+							(折合{' '}
+							<span
+								className={`font-mono ${canReadDisplayedWallet ? 'text-money' : 'text-muted-foreground'}`}
+							>
+								{canReadDisplayedWallet ? `${totalValueInGp} GP` : '???'}
+							</span>
+							)
 						</span>
 					</span>
 					<Button
@@ -290,7 +296,9 @@ export default function CharacterStatusBar({
 							className={`px-1 py-1 rounded border ${coin.color} cursor-pointer hover:brightness-125 transition`}
 							aria-label={`${coin.label}，點擊開啟錢包管理`}
 						>
-							<div className='text-xs font-mono font-bold'>
+							<div
+								className={`text-xs font-mono font-bold ${coin.key === 'gp' && canReadDisplayedWallet ? 'text-money' : ''}`}
+							>
 								{canReadDisplayedWallet
 									? (displayedCurrencies[coin.key as CurrencyType] ?? 0)
 									: '🔒'}

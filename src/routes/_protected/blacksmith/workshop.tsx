@@ -514,7 +514,8 @@ function BlacksmithWorkshopPage() {
 									{item.effects || item.flavor || '尚無效果描述。'}
 								</p>
 								<p className='mt-3 font-mono text-xs text-muted-foreground'>
-									重量 {item.weight} lb · 價值 {item.valueGp} GP
+									重量 {item.weight} lb · 價值{' '}
+									<span className='text-money'>{item.valueGp} GP</span>
 								</p>
 								<div className='mt-4'>
 									<BlacksmithImportButton source={item} />

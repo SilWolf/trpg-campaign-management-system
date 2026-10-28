@@ -163,11 +163,14 @@ export default function InventoryGrid({
 														.toFixed(1)
 												}{' '}
 												lb /{' '}
-												{sectionItems.reduce(
-													(sum, i) => sum + i.valueGp * i.quantity,
-													0,
-												)}{' '}
-												GP)
+												<span className='text-money'>
+													{sectionItems.reduce(
+														(sum, i) => sum + i.valueGp * i.quantity,
+														0,
+													)}{' '}
+													GP
+												</span>
+												)
 											</span>
 										)}
 										<span
@@ -368,7 +371,9 @@ export default function InventoryGrid({
 														<div className='text-muted-foreground w-16'>
 															{+(item.weight * item.quantity).toFixed(1)} lb
 														</div>
-														<div className='text-primary-foreground font-semibold w-20'>
+														<div
+															className={`font-semibold w-20 ${masked ? 'text-muted-foreground' : 'text-money'}`}
+														>
 															{masked
 																? '???'
 																: `${item.valueGp * item.quantity} GP`}
@@ -392,9 +397,11 @@ export default function InventoryGrid({
 						? '（雙擊「裝備」類別物品可快速穿脫）'
 						: '（唯讀模式）'}
 				</span>
-				<span className='flex items-center gap-1 text-primary-foreground font-mono'>
-					<Coins className='w-3.5 h-3.5 text-primary-foreground' />
-					<span>行囊物品總估值：{totalItemsValueGp} GP</span>
+				<span className='flex items-center gap-1 font-mono'>
+					<Coins className='w-3.5 h-3.5 text-money' />
+					<span className='text-money'>
+						行囊物品總估值：{totalItemsValueGp} GP
+					</span>
 				</span>
 			</div>
 		</div>

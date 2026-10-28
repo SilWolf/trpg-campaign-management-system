@@ -847,7 +847,8 @@ export function CampaignShopRefreshPanel({
 												{actionLabel(entry.action)}
 											</p>
 											<p className='font-mono text-xs text-muted-foreground'>
-												{entry.unitPriceGp} gp ・庫存 {entry.stockAvailable}
+												<span className='text-money'>{entry.unitPriceGp} gp</span>
+												{' '}・庫存 {entry.stockAvailable}
 											</p>
 										</div>
 									</div>
