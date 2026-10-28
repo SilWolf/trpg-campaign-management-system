@@ -137,6 +137,9 @@
 
 [data-theme='printing'] {
 	color-scheme: light;
+	--theme-decoration-gradient: none;
+	--theme-decoration-shadow: none;
+	--theme-decoration-filter: none;
 	--background: #ffffff;
 	--foreground: #111111;
 	--card: #ffffff;
@@ -200,6 +203,21 @@
 	--rarity-artifact-gradient: none;
 	--rarity-artifact-header-gradient: none;
 	--rarity-artifact-glow: none;
+}
+
+:root[data-theme='printing']
+	:is([class*='bg-gradient-to-'], [class*='bg-[radial-gradient']) {
+	background-image: var(--theme-decoration-gradient) !important;
+	background-color: var(--tw-gradient-from, transparent) !important;
+}
+
+:root[data-theme='printing'] :is([class*='shadow-'], [class~='shadow']) {
+	box-shadow: var(--theme-decoration-shadow) !important;
+	transition: none !important;
+}
+
+:root[data-theme='printing'] [class*='drop-shadow'] {
+	filter: var(--theme-decoration-filter) !important;
 }
 
 .rarity-common {

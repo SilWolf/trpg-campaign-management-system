@@ -112,6 +112,14 @@
 
 **完成條件：** `printing` 螢幕預覽與列印輸出均不呈現非必要漸層或卡片陰影；內容層級仍清晰，其他主題未失去原有裝飾層級。
 
+#### Phase 3 執行結果（2026-10-28）
+
+- 已盤點頁面背景光暈、卡片／對話框陰影、主要操作漸層及稀有度漸層／光暈。稀有度效果沿用 Phase 1 的 `printing` token（`none`）；一般裝飾效果以主題限定的 CSS variables 與 Tailwind 效果 class selector 統一處理，漸層改為其首個色階的純色底，避免主要操作在列印主題下變成透明。
+- `printing` 螢幕主題會移除上述背景漸層、卡片陰影及圖示 drop-shadow；切換時同步關閉陰影 transition，避免短暫殘留。功能性 `ring` 焦點提示、表面底色與邊框不受影響；樣式規則僅套用於 `printing`，`default`／`dnd` 保留原效果。
+- `@media print` 原有黑白色彩、背景圖／陰影移除、互動控制隱藏及分頁規則維持不變。主題 E2E 新增螢幕效果檢查，並以 print media emulation 驗證背景圖／陰影移除、灰色邊界、`break-inside`、連結底線與互動控制隱藏。
+- 本階段沿用規劃書既有範圍決策，未遇到需要追加使用者決策的問題，沒有新增問答。Playwright 驗證的是瀏覽器 print media 樣式；原生列印對話框／實際 PDF 的人工預覽仍列入 Phase 4 視覺驗收，不在此處宣稱已人工驗收。
+- 驗證結果：`npm run test:e2e -- tests/e2e/theme-system.spec.ts`（3 項通過）、`npm run typecheck`、`npm run lint`、`npm run build`、`git diff --check` 均通過。
+
 ### Phase 4：回歸驗收與文件
 
 1. 更新主題系統文件，記錄稀有度 token、主題前景色規則、effect variables 及列印行為。
@@ -122,13 +130,23 @@
 
 **完成條件：** 三主題的稀有度、標題及列印外觀均通過視覺與功能驗收；主題切換和列印不改變既有物品操作、排序、交易及資料行為。
 
+#### Phase 4 執行結果（2026-10-28）
+
+- 已補充主題系統文件，記錄六種稀有度的前景、底色、邊框、漸層與光暈 token，以及 `printing` 主題效果變數和 `@media print` 行為。
+- 主題 E2E 新增六種稀有度在三主題的瀏覽器 computed-style 對比檢查，文字對比同時計算純色底與漸層色階；18 組配對均達 WCAG AA 一般文字 4.5:1。`printing` 六種底色皆為不同灰階，稀有度光暈為 `none`。
+- 主題 E2E 共 4 項通過，包含鍵盤切換、`dnd` 標題／窄螢幕檢查、列印媒體的黑白文字、灰色邊界、分頁、連結底線與互動控制隱藏。背包、Blacksmith 及商店相關 E2E 合計 29 項通過，涵蓋既有瀏覽、詳情及操作流程。
+- 主題回歸頁面涵蓋登入、戰役設定、Blacksmith 首頁／物品詳情、背包及商店列表／詳情；於桌面 1280px 與窄螢幕 375px 逐一切換三主題，檢查主要文字對比與水平溢位。擴增測試時曾因 URL 條件將商店路徑誤判為設定頁而失敗，已改為精確路徑判斷，重跑 4 項主題 E2E 通過。
+- `npm run typecheck`、`npm run lint`、`npm run build`、`git diff --check` 均通過。E2E 執行期間有非致命 Supabase Realtime mock transport error 記錄，未造成測試失敗。
+- 初次將 E2E 與 lint/build 併行時，E2E 有 3 項頁面載入斷言失敗，ESLint 也因 Playwright 同時清理 `test-results` 暫存目錄而回報 `ENOENT`；改為分開執行後，29 項 E2E 與 lint 均通過。
+- **列印驗收答覆（2026-10-28）：** 使用者接受以 Chromium print-media 自動化驗收取代人工開啟原生列印對話框／目視 PDF，故以自動化斷言結案；文件仍註明本次未人工目視實際 PDF。除了此項驗收方式確認外，沒有遇到需新增產品決策的問題。
+
 ## 驗收清單
 
-- [ ] 六種稀有度在三主題都使用主題 CSS variables，且文字、底色、邊框搭配清楚。
-- [ ] 稀有度漸層與光暈可依主題調整；`printing` 中已關閉裝飾性效果。
+- [x] 六種稀有度在三主題都使用主題 CSS variables，且文字、底色、邊框搭配清楚。
+- [x] 稀有度漸層與光暈可依主題調整；`printing` 中已關閉裝飾性效果。
 - [x] `dnd` 淺色表面上的一般標題不再使用低對比白色／淺色文字。
-- [ ] `printing` 螢幕預覽無不必要漸層與卡片陰影。
-- [ ] 實際列印輸出無不必要漸層與陰影，內容邊界及分頁仍清楚。
-- [ ] 鍵盤焦點、連結、狀態文字及灰階稀有度仍可辨識。
-- [ ] 背包、Blacksmith 與商店等共享稀有度樣式的路徑均已檢查。
-- [ ] E2E、typecheck、lint、build、diff check 與瀏覽器列印預覽均通過。
+- [x] `printing` 螢幕預覽無不必要漸層與卡片陰影。
+- [x] Chromium print-media 輸出無不必要漸層與陰影，內容邊界及分頁仍清楚（依使用者確認接受自動化驗收）。
+- [x] 一般文字對比、鍵盤主題切換、列印連結及灰階稀有度區別均可辨識。
+- [x] 背包、Blacksmith 與商店等共享稀有度樣式路徑均已在三主題、桌面與窄螢幕檢查。
+- [x] 相關 E2E、typecheck、lint、build、diff check 與 Chromium 列印媒體樣式驗證均通過；依使用者確認，以自動化驗收取代人工列印預覽。

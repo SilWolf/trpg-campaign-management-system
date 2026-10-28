@@ -437,6 +437,15 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 | `npm run test:e2e` | 76 項通過；包含三套主題於登入與戰役設定頁的 375px 溢位與一般文字 4.5:1 對比檢查。輸出仍有非致命 Realtime transport error 記錄，未造成測試失敗。 |
 | `git diff --check` | 通過。 |
 
+### 視覺延伸修正與 Phase 4 回歸驗收（2026-10-28）
+
+- 六種稀有度的前景、底色、邊框、卡片／標題漸層及光暈均由主題 CSS variables 提供；`dnd` 使用深色文字搭配淺色表面，`printing` 使用六種不同灰階底色，裝飾漸層與光暈關閉。細節見 [`theme-system-visual-polish-plan.md`](./theme-system-visual-polish-plan.md)。
+- `printing` 螢幕裝飾效果使用 `--theme-decoration-gradient`、`--theme-decoration-shadow`、`--theme-decoration-filter`；列印媒體維持白底黑字、灰色邊界、隱藏操作控制、連結底線與避免卡片跨頁切斷。
+- [`tests/e2e/theme-system.spec.ts`](../tests/e2e/theme-system.spec.ts) 實際讀取 computed styles，檢查六稀有度 × 三主題的前景色對比（包含漸層色階）均至少 4.5:1，並驗證列印灰階的區別、列印媒體及 `dnd` 標題；登入、設定、Blacksmith、背包與商店頁面於 1280px／375px 均切換三主題檢查文字對比及水平溢位。
+- Phase 4 相關驗證：主題／背包／Blacksmith／商店 E2E 共 29 項通過；`npm run typecheck`、`npm run lint`、`npm run build`、`git diff --check` 通過。
+- **使用者確認（2026-10-28）：** 接受以 Chromium print-media 自動化驗收取代人工開啟原生列印對話框／目視 PDF。已依此結案；記錄明確保留本次沒有人工目視實際 PDF。
+- 除上述列印驗收方式確認外，本次沒有其他需要追問的規格問題。
+
 ## 驗收與注意事項
 
 - **不可只做字串取代：** `text-stone-200` 可能是正文、輔助文字、停用狀態或產品標記；每項應先判定用途。
