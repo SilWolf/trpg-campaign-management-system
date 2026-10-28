@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
-:root {
+:root,
+:root[data-theme='default'] {
+	color-scheme: dark;
 	--background: #0c0a09;
 	--foreground: #e7e5e4;
 	--card: #1c1917;
@@ -28,6 +30,68 @@
 	--border: #44403c;
 	--input: #1c1917;
 	--ring: #fbbf24;
+}
+
+[data-theme='dnd'] {
+	color-scheme: light;
+	--background: #f4ead8;
+	--foreground: #2b1d18;
+	--card: #fff8ed;
+	--card-foreground: #2b1d18;
+	--popover: #fffaf1;
+	--popover-foreground: #241611;
+	--primary: #7f1d1d;
+	--primary-foreground: #fff7ed;
+	--secondary: #e7d6bd;
+	--secondary-foreground: #3c2a22;
+	--muted: #eadfce;
+	--muted-foreground: #5c493e;
+	--accent: #d8c2a3;
+	--accent-foreground: #2b1d18;
+	--success: #166534;
+	--success-foreground: #f0fdf4;
+	--destructive: #991b1b;
+	--destructive-foreground: #fef2f2;
+	--warning: #92400e;
+	--warning-foreground: #fffbeb;
+	--info: #075985;
+	--info-foreground: #e0f2fe;
+	--disabled: #e7e5e4;
+	--disabled-foreground: #57534e;
+	--border: #a8a29e;
+	--input: #fffaf1;
+	--ring: #9a3412;
+}
+
+[data-theme='printing'] {
+	color-scheme: light;
+	--background: #ffffff;
+	--foreground: #111111;
+	--card: #ffffff;
+	--card-foreground: #111111;
+	--popover: #ffffff;
+	--popover-foreground: #111111;
+	--primary: #333333;
+	--primary-foreground: #ffffff;
+	--secondary: #e5e5e5;
+	--secondary-foreground: #111111;
+	--muted: #f5f5f5;
+	--muted-foreground: #333333;
+	--accent: #dedede;
+	--accent-foreground: #111111;
+	--success: #404040;
+	--success-foreground: #ffffff;
+	--destructive: #262626;
+	--destructive-foreground: #ffffff;
+	--warning: #525252;
+	--warning-foreground: #ffffff;
+	--info: #404040;
+	--info-foreground: #ffffff;
+	--disabled: #e5e5e5;
+	--disabled-foreground: #525252;
+	--border: #737373;
+	--input: #ffffff;
+	--ring: #262626;
 }
 
 @theme inline {
@@ -69,4 +133,51 @@
 
 :root {
 	--z-ui-dropdown: 30;
+}
+
+@media print {
+	html,
+	body,
+	#root {
+		min-height: 0 !important;
+		background: #fff !important;
+		color: #111 !important;
+	}
+
+	*,
+	*::before,
+	*::after {
+		color: #111 !important;
+		background-color: transparent !important;
+		background-image: none !important;
+		border-color: #737373 !important;
+		box-shadow: none !important;
+		text-shadow: none !important;
+	}
+
+	nav,
+	button,
+	[role='button'],
+	[data-print-hidden='true'],
+	input,
+	select,
+	textarea {
+		display: none !important;
+	}
+
+	main {
+		width: 100% !important;
+		max-width: none !important;
+		padding: 0 !important;
+	}
+
+	article,
+	section,
+	[class*='rounded'] {
+		break-inside: avoid;
+	}
+
+	a {
+		text-decoration: underline;
+	}
 }

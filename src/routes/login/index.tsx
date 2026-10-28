@@ -5,6 +5,7 @@ import { Dice6, Eye, EyeOff, Swords } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button, Input } from '@/components/ui';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 export const Route = createFileRoute('/login/')({
 	component: LoginPage,
@@ -199,6 +200,9 @@ function LoginPage() {
 				<p className='mt-3 text-center text-[11px] leading-relaxed text-muted-foreground'>
 					訪客模式使用此裝置的本機體驗資料，不需要建立帳號。
 				</p>
+			</div>
+			<div className='absolute right-4 top-4 z-20'>
+				<ThemeSwitcher />
 			</div>
 		</main>
 	);

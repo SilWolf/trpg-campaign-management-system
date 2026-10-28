@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { routeTree } from '@/routeTree.gen';
 import '@/index.css';
 
@@ -23,9 +24,11 @@ if (!rootElement) {
 createRoot(rootElement).render(
 	<StrictMode>
 		<FeedbackProvider>
-			<AuthProvider>
-				<RouterProvider router={router} />
-			</AuthProvider>
+			<ThemeProvider>
+				<AuthProvider>
+					<RouterProvider router={router} />
+				</AuthProvider>
+			</ThemeProvider>
 		</FeedbackProvider>
 	</StrictMode>,
 );

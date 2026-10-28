@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Swords } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Button, Input } from '@/components/ui';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 export const Route = createFileRoute('/invite/$campaignId/')({
 	component: InviteRegistrationPage,
@@ -174,6 +175,9 @@ function InviteRegistrationPage() {
 						</Button>
 					</form>
 				)}
+			</div>
+			<div className='absolute right-4 top-4 z-20'>
+				<ThemeSwitcher />
 			</div>
 		</main>
 	);

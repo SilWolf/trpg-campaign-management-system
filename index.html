@@ -5,6 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>博德之門戰役軍械庫</title>
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('trpg-theme');
+        const themes = ['default', 'dnd', 'printing'];
+        const theme = themes.includes(savedTheme) ? savedTheme : 'default';
+        document.documentElement.dataset.theme = theme;
+        if (savedTheme && !themes.includes(savedTheme)) {
+          localStorage.removeItem('trpg-theme');
+          console.warn('已清除無效的主題偏好，改用預設主題。');
+        }
+      } catch (error) {
+        document.documentElement.dataset.theme = 'default';
+        console.warn('無法讀取主題偏好，改用預設主題。', error);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

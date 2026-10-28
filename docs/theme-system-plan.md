@@ -383,6 +383,31 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 
 **完成條件：** 能在 `default`、`dnd`、`printing` 三種風格切換，且只需改變主題屬性及變數、不需逐頁切換 class；偏好載入穩定；核心頁面、互動狀態、文字對比及列印結果皆通過驗收。
 
+#### Phase 4 執行紀錄（2026-10-28）
+
+已完成三套主題與切換能力，未變更戰役資料、Supabase Schema 或登入需求：
+
+- [`src/index.css`](../src/index.css) 為 `default`、`dnd`、`printing` 提供完整語意 token；`default` 延續黑金色，`dnd` 使用羊皮紙底色與棕紅強調，`printing` 使用灰階配白底與深色文字。原生表單控制項的 `color-scheme` 也會隨主題切換。
+- 根元素以 `data-theme` 套用樣式，未設定時回退至 `default`。[`index.html`](../index.html) 在 app module 載入前同步讀取偏好，避免首屏閃現其他主題；無效值會清除並記錄警告，若瀏覽器封鎖儲存，仍可使用當前工作階段的主題並記錄警告。
+- [`src/contexts/ThemeContext.tsx`](../src/contexts/ThemeContext.tsx) 與 [`src/lib/themes.ts`](../src/lib/themes.ts) 管理主題狀態與識別值。偏好以 `trpg-theme` 存於 `localStorage`，屬於此瀏覽器／裝置的使用者偏好；本版不寫入 campaign 或 Supabase profile，也不提供跨裝置同步。
+- [`src/components/ThemeSwitcher.tsx`](../src/components/ThemeSwitcher.tsx) 使用具可存取名稱的原生選單，支援鍵盤切換，並以目前選取的主題名稱而非色彩單獨表示狀態。切換器可在登入、邀請及已登入／訪客使用的系統導覽中操作，不依賴 Supabase；登入表單的既有鍵盤焦點順序維持不變。
+- `@media print` 將列印輸出轉為黑白、移除背景與陰影，隱藏導覽及操作控制項，並避免卡片內容跨頁切斷；設定主題為 `printing` 時，可同時在螢幕預覽灰階版面。
+
+**決策與使用者確認：** 本輪沒有需要向使用者追問的歧義，因此沒有額外的使用者答覆。因需求未提出跨裝置同步，依本計畫建議採用 `localStorage`；若未來需要登入後跨裝置同步，再另行評估 profile 欄位及資料遷移。
+
+**驗證結果：**
+
+| 驗證 | 結果 |
+| --- | --- |
+| `npm run typecheck` | 通過。 |
+| `npm run lint` | 通過。 |
+| `npm run build` | 通過；TypeScript 與 Vite production build 成功。 |
+| `npm run test:e2e -- tests/e2e/theme-system.spec.ts` | 2 項通過；驗證鍵盤切換、重載後偏好、主題背景與 Chromium 列印媒體樣式。 |
+| `npm run test:e2e -- tests/e2e/phase-1-baseline.spec.ts tests/e2e/theme-system.spec.ts` | 14 項通過；額外確認登入表單鍵盤焦點順序與既有流程未退化。 |
+| `npm run test:e2e` | 75 項通過，涵蓋既有流程與新增主題測試；測試輸出仍有非致命 Realtime transport error 記錄，未造成斷言失敗。 |
+| 語意文字／表面對比 | 逐一計算主要語意前景／背景配對；三主題最低值分別為 `default` 4.84:1、`dnd` 6.44:1、`printing` 10.37:1。 |
+| `git diff --check` | 通過。 |
+
 ### Phase 5：防回歸與文件收尾
 
 1. 加入 lint 或 CI 檢查，逐步禁止新增一般用途的硬編碼色階 class，並檢查元件與頁面是否只使用核准的語意角色及基礎 token。
