@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc --noEmit && vite build",
-		"lint": "eslint .",
+		"lint": "eslint . && npm run lint:theme-colors",
+		"lint:theme-colors": "node scripts/audit-theme-colors.mjs --check",
 		"test:e2e": "playwright test",
 		"validate:blacksmith-source": "node scripts/validate-blacksmith-source.mjs",
 		"split:item-icons": "node .scripts/items-icon-splitter/index.js",

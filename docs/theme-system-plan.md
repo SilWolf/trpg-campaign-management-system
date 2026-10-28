@@ -47,7 +47,7 @@
 
 各語意角色依用途提供對應的背景、前景文字及必要邊框 token。例如主要按鈕使用 `bg-primary text-primary-foreground`，卡片使用 `bg-card text-card-foreground`，選單浮層使用 `bg-popover text-popover-foreground`，選取項目可使用 `bg-accent text-accent-foreground`，低強調文字使用 `text-muted-foreground`。每個主題都需維持前景與背景的足夠對比。
 
-此外保留不代表操作樣式或訊息狀態的基礎 token：`background`、`foreground`、`border`、`input`、`ring`。它們分別用於頁面底色、預設文字、邊框、表單欄位與鍵盤焦點環。
+此外保留不代表操作樣式或訊息狀態的基礎 token：`background`、`foreground`、`border`、`input`、`ring`、`overlay`。它們分別用於頁面底色、預設文字、邊框、表單欄位、鍵盤焦點環與固定使用黑色的遮罩層。
 
 `disabled` 是控制項狀態，不是可任意套用在一般訊息上的狀態色。優先以 HTML `disabled`／`aria-disabled` 和 `disabled:` 樣式表達不可操作；disabled token 用於該狀態的背景、文字與邊框，且必須確保停用狀態仍可辨識。
 
@@ -411,11 +411,31 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 ### Phase 5：防回歸與文件收尾
 
 1. 加入 lint 或 CI 檢查，逐步禁止新增一般用途的硬編碼色階 class，並檢查元件與頁面是否只使用核准的語意角色及基礎 token。
-2. 只為無法使用 token 的品牌素材或第三方元件保留明確例外；列出原因與範圍，不以新增產品專屬色彩語境作為一般解法。
+2. 只為無法使用 token 的品牌素材或第三方元件保留明確例外；列出原因與範圍，不以新增產品專屬色彩語境作為一般解法。稀有度色彩依先前確認，作為內容分類的既有窄範圍例外。
 3. 更新 UI 元件、設計 token 與新增主題的文件，說明新增 token、檢查對比及處理例外的方法。
 4. 驗證代表性頁面在主題切換前後沒有水平溢位、不可辨識狀態或文字可讀性回歸。
 
 **完成條件：** 新增介面樣式遵守核准的語意角色與基礎 token 規範；必要例外有文件說明；lint 與實際 token 保持一致。
+
+#### Phase 5 執行紀錄（2026-10-28）
+
+- [`scripts/audit-theme-colors.mjs`](../scripts/audit-theme-colors.mjs) 新增 `--check` 政策檢查；掃描 `src/**/*.jsx` 與 `src/**/*.tsx` 的一般 Tailwind 色票 utility 及含字面色碼的 arbitrary utility，透明、currentColor 與 inherit 不視為硬編碼色階。盤點器不解析動態 class 或 inline style，也不掃描 CSS、SVG；這些仍需人工檢視。
+- [`package.json`](../package.json) 將該檢查接入 `npm run lint`，並提供 `npm run lint:theme-colors` 單獨執行。現有頁面與元件的殘留色階已改用語意 token；稀有度設定仍是已確認的內容分類例外，不加入一般 UI 色彩政策。
+- [`src/components/ui/README.md`](../src/components/ui/README.md) 補充核准 token 用法、lint 執行方式、色彩對比與例外處理說明。
+- 為保留跨主題一致的黑色對話框遮罩，新增不隨主題變化的基礎 `overlay` token；該 token 只代表通用遮罩層，不擴充產品領域色彩角色。
+- [`tests/e2e/theme-system.spec.ts`](../tests/e2e/theme-system.spec.ts) 新增三套主題在登入及戰役設定頁的 375px 回歸檢查，量測主要文字與實際背景的 WCAG AA 一般文字對比（至少 4.5:1），並檢查水平溢位；另有既有切換、儲存、列印與主題功能測試。
+- **使用者確認與決策：** 本階段沒有需要另行確認的歧義；沿用已確認的稀有度顏色例外。無需新增產品專屬色彩 token，也不改變主題色票及互動行為。
+
+**驗證結果：**
+
+| 驗證 | 結果 |
+| --- | --- |
+| `npm run lint` | 通過；ESLint 與主題色彩政策檢查均通過。 |
+| 色彩政策正反向檢查 | 通過；目前 53 個 JSX/TSX 檔案中無硬編碼色彩 utility。另以暫存 JSX 樣本確認一般色票、hex 及 RGB arbitrary utility 皆會使檢查失敗；樣本已移除。 |
+| `npm run typecheck` | 通過。 |
+| `npm run build` | 通過；Vite production build 成功。 |
+| `npm run test:e2e` | 76 項通過；包含三套主題於登入與戰役設定頁的 375px 溢位與一般文字 4.5:1 對比檢查。輸出仍有非致命 Realtime transport error 記錄，未造成測試失敗。 |
+| `git diff --check` | 通過。 |
 
 ## 驗收與注意事項
 

@@ -2,6 +2,10 @@
 
 從 `@/components/ui` 匯入共用元件。元件提供一致的語意色彩、焦點狀態與原生 HTML 屬性；`className` 適合調整尺寸、間距或版面，不應用硬編碼色階覆寫元件的語意色彩。
 
+新增元件或頁面樣式時，請使用 `src/index.css` 定義的語意角色（例如 `bg-primary`、`text-muted-foreground`、`border-border`）或基礎 token（例如 `bg-background`、`ring-ring`），不要新增 `bg-stone-900`、`text-amber-200` 等固定色階。`npm run lint` 會執行 `scripts/audit-theme-colors.mjs --check`，並阻擋 JSX/TSX 中新增的色票及字面色碼 arbitrary utility。若有無法以 token 表達的視覺需求，先記錄例外理由及範圍，再調整檢查政策；不要以新增產品專屬色彩 token 代替用途分類。
+
+`RARITY_CONFIG` 的物品稀有度顏色與商店稀有度邊線是既有內容分類例外，保留其獨立顏色辨識，並由規劃文件記錄；一般 UI 狀態仍須使用語意 token。盤點器只掃描 JSX/TSX 原始碼，無法解析執行期組合 class，也不涵蓋 inline style、CSS、SVG 或第三方元件，這些來源仍需在變更審查時人工檢查。
+
 ```tsx
 import { Badge, Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
 import { useConfirm, useToast } from '@/contexts/FeedbackContext';

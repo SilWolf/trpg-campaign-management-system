@@ -29,7 +29,7 @@ function BlacksmithHomePage() {
 						<Link
 							data-testid='blacksmith-officials-link'
 							to='/blacksmith/officials'
-							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-primary/60 bg-gradient-to-br from-primary/70 to-background p-7 shadow-lg shadow-amber-950/20 transition hover:border-primary/80 hover:from-primary/50 sm:p-8'
+							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-primary/60 bg-gradient-to-br from-primary/70 to-background p-7 shadow-lg transition hover:border-primary/80 hover:from-primary/50 sm:p-8'
 						>
 							<span>
 								<BookOpen
@@ -52,7 +52,7 @@ function BlacksmithHomePage() {
 						<Link
 							data-testid='blacksmith-workshop-link'
 							to='/blacksmith/workshop'
-							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-border/70 bg-gradient-to-br from-background/60 to-background p-7 shadow-lg shadow-purple-950/20 transition hover:border-border/80 hover:from-card/40 sm:p-8'
+							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-border/70 bg-gradient-to-br from-background/60 to-background p-7 shadow-lg transition hover:border-border/80 hover:from-card/40 sm:p-8'
 						>
 							<span>
 								<Hammer

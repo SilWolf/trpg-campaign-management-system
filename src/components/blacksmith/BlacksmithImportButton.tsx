@@ -192,7 +192,7 @@ export function BlacksmithImportButton({
 					setErrorMessage(null);
 					setIsOpen(true);
 				}}
-				className={`inline-flex items-center justify-center gap-2 rounded-md border border-cyan-700/70 bg-cyan-950/50 px-3 py-2 text-sm font-semibold text-cyan-200 hover:border-cyan-500 hover:bg-cyan-900/50 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+				className={`inline-flex items-center justify-center gap-2 rounded-md border border-primary/70 bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
 				title={
 					canImport
 						? '複製此物品定義到 DM 戰役'
@@ -204,21 +204,21 @@ export function BlacksmithImportButton({
 			</button>
 
 			{isOpen && (
-				<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4'>
+				<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-overlay p-4'>
 					<section
 						role='dialog'
 						aria-modal='true'
 						aria-labelledby='blacksmith-import-title'
-						className='w-full max-w-lg space-y-4 rounded-xl border border-cyan-800/70 bg-stone-950 p-5 shadow-2xl'
+						className='w-full max-w-lg space-y-4 rounded-xl border border-border bg-card p-5 shadow-2xl'
 					>
-						<header className='flex items-start justify-between gap-4 border-b border-stone-800 pb-3'>
+						<header className='flex items-start justify-between gap-4 border-b border-border pb-3'>
 							<div>
-								<p className='text-xs tracking-wider text-cyan-400'>
+								<p className='text-xs tracking-wider text-muted-foreground'>
 									複製目錄定義 · 不會綁定來源樣板
 								</p>
 								<h2
 									id='blacksmith-import-title'
-									className='mt-1 font-serif text-xl font-bold text-cyan-100'
+									className='mt-1 font-serif text-xl font-bold text-card-foreground'
 								>
 									匯入「{source.name}」
 								</h2>
@@ -227,30 +227,30 @@ export function BlacksmithImportButton({
 								type='button'
 								aria-label='關閉匯入視窗'
 								onClick={() => setIsOpen(false)}
-								className='rounded p-1 text-stone-400 hover:bg-stone-800 hover:text-stone-100'
+								className='rounded p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground'
 							>
 								<X className='h-5 w-5' />
 							</button>
 						</header>
 
 						{!isSupabaseConfigured ? (
-							<p className='rounded-md border border-amber-800/70 bg-amber-950/30 p-3 text-sm text-amber-200'>
+							<p className='rounded-md border border-warning/70 bg-warning p-3 text-sm text-warning-foreground'>
 								目前未設定 Supabase；匯入戰役需要雲端資料庫連線。
 							</p>
 						) : isGuest || !user ? (
-							<p className='rounded-md border border-amber-800/70 bg-amber-950/30 p-3 text-sm text-amber-200'>
+							<p className='rounded-md border border-warning/70 bg-warning p-3 text-sm text-warning-foreground'>
 								請使用正式帳號登入後再匯入戰役。
 							</p>
 						) : (
 							<>
-								<label className='block text-sm text-stone-300'>
+								<label className='block text-sm text-foreground'>
 									目標戰役
 									<select
 										aria-label='目標戰役'
 										value={campaignId}
 										disabled={isLoadingCampaigns || campaigns.length === 0}
 										onChange={(event) => setCampaignId(event.target.value)}
-										className='mt-1 w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-stone-100'
+										className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-foreground'
 									>
 										{campaigns.length === 0 && (
 											<option value=''>
@@ -266,14 +266,14 @@ export function BlacksmithImportButton({
 										))}
 									</select>
 								</label>
-								<label className='block text-sm text-stone-300'>
+								<label className='block text-sm text-foreground'>
 									接收目標
 									<select
 										aria-label='接收目標'
 										value={ownerId}
 										disabled={!campaignId || isLoadingCharacters}
 										onChange={(event) => setOwnerId(event.target.value)}
-										className='mt-1 w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-stone-100'
+										className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-foreground'
 									>
 										<option value={CAMP_CHEST_ID}>營地儲物箱（公開）</option>
 										{characters.map((character) => (
@@ -283,7 +283,7 @@ export function BlacksmithImportButton({
 										))}
 									</select>
 								</label>
-								<label className='block text-sm text-stone-300'>
+								<label className='block text-sm text-foreground'>
 									數量
 									<input
 										aria-label='匯入數量'
@@ -293,10 +293,10 @@ export function BlacksmithImportButton({
 										required
 										value={quantity}
 										onChange={(event) => setQuantity(event.target.value)}
-										className='mt-1 w-full rounded-md border border-stone-700 bg-stone-900 px-3 py-2 font-mono text-stone-100'
+										className='mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-foreground'
 									/>
 								</label>
-								<p className='rounded-md border border-stone-800 bg-stone-900/70 p-3 text-xs leading-relaxed text-stone-400'>
+								<p className='rounded-md border border-border bg-muted p-3 text-xs leading-relaxed text-muted-foreground'>
 									匯入會建立新的戰役物品 ID，初始化為未裝備、未調諧、未鑑定及 0
 									充能；營地儲物箱物品固定為公開。
 								</p>
@@ -304,7 +304,7 @@ export function BlacksmithImportButton({
 						)}
 
 						{errorMessage && (
-							<p role='alert' className='rounded-md bg-red-950/50 p-3 text-sm text-red-200'>
+							<p role='alert' className='rounded-md bg-destructive p-3 text-sm text-destructive-foreground'>
 								{errorMessage}
 							</p>
 						)}
@@ -312,7 +312,7 @@ export function BlacksmithImportButton({
 							<button
 								type='button'
 								onClick={() => setIsOpen(false)}
-								className='rounded-md border border-stone-700 px-4 py-2 text-sm text-stone-300 hover:bg-stone-900'
+								className='rounded-md border border-border px-4 py-2 text-sm text-secondary-foreground hover:bg-accent'
 							>
 								取消
 							</button>
@@ -326,7 +326,7 @@ export function BlacksmithImportButton({
 										isLoadingCharacters ||
 										campaigns.length === 0
 									}
-									className='rounded-md bg-cyan-800 px-4 py-2 text-sm font-semibold text-cyan-50 hover:bg-cyan-700 disabled:opacity-50'
+									className='rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50'
 								>
 									{isImporting ? '匯入中…' : '確認匯入'}
 								</button>

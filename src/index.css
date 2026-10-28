@@ -122,6 +122,7 @@
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
+	--color-overlay: var(--overlay);
 	--color-ui-surface: var(--card);
 	--color-ui-surface-raised: var(--popover);
 	--color-ui-border: var(--border);
@@ -133,6 +134,7 @@
 
 :root {
 	--z-ui-dropdown: 30;
+	--overlay: rgb(0 0 0 / 80%);
 }
 
 @media print {
