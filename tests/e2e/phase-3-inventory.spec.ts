@@ -109,6 +109,64 @@ test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', as
 		.toBe(true);
 });
 
+test('裝備沒有武器精通的護甲時同步使用 None', async ({ page }) => {
+	await mockSupabase(page, {
+		campaignInventoryRole: 'dm',
+		extraInventoryItems: [
+			{
+				id: 'inventory-armor',
+				owner_id: 'inventory-character',
+				slot: 2,
+				name: '影心的護甲',
+				category: 'Armor',
+				sub_type: '護甲',
+				rarity: 'Common',
+				icon: 'Shield',
+				damage: null,
+				mastery: 'None',
+				ac: '14',
+				weight: 10,
+				value_gp: 50,
+				quantity: 1,
+				equipped: false,
+				requires_attunement: false,
+				attuned: false,
+				is_homebrew: false,
+				is_identified: true,
+				charges: 0,
+				max_charges: 0,
+				effects: '',
+				flavor: '',
+				dm_notes: '',
+				player_notes: '',
+				is_private: false,
+				is_equippable: true,
+				is_consumable: false,
+				is_important: false,
+				affixes: [],
+			},
+		],
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(inventoryUrl);
+	await expect(page.getByTestId('campaign-sync-status')).toHaveText('Supabase 即時同步中');
+
+	await page.getByTestId('inventory-item-inventory-armor').click();
+	const update = page.waitForResponse(
+		(response) =>
+			response.request().method() === 'PATCH' &&
+			response.url().includes('/rest/v1/inventory_items') &&
+			response.url().includes('id=eq.inventory-armor'),
+	);
+	await page.getByRole('button', { name: '穿戴裝備' }).click();
+	const response = await update;
+	expect(response.ok()).toBe(true);
+	expect(response.request().postDataJSON()).toEqual(
+		expect.objectContaining({ mastery: 'None', equipped: true }),
+	);
+	await expect(page.getByTestId('campaign-sync-status')).toHaveText('Supabase 即時同步中');
+});
+
 test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列', async ({
 	page,
 }) => {

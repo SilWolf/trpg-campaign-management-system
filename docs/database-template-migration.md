@@ -27,6 +27,14 @@ supabase db push --linked
 
 此 SQL 會新增 `campaigns.camp_chest_currency`；強制 `inventory_items.campaign_id`、外鍵、索引及 camp-chest 不可設私人等限制；限制 campaign、角色、物品、成員、邀請及角色權限資料依 campaign 成員資格存取；玩家只能更新 campaign 的公共營地箱錢包，DM 才能更新其他 campaign 欄位或刪除戰役。直接建立 campaign 或 campaign member 列會被限制，需使用安全函式。Migration 另提供邀請碼加入 RPC、僅 `service_role` 可執行的建團 RPC，並確認 `campaigns` 在 `supabase_realtime` publication 中。它不建立範本表、不放入範例 seed，也不建立 `default` 戰役。
 
+### 物品驗證函式權限
+
+若修改物品時出現 `permission denied for function is_valid_item_base`，先確認目標專案與 migration history。[20261028000000_item_base_unification.sql](../supabase/migrations/20261028000000_item_base_unification.sql) 原已授權 `authenticated` 與 `service_role`；錯誤可能表示遠端權限或版本與此 repo 不一致，不能單憑訊息判定原因。
+
+[20261030000007_item_base_validator_grants.sql](../supabase/migrations/20261030000007_item_base_validator_grants.sql) 重新授予上述角色執行物品定義驗證函式及其相依的附魔驗證函式，並維持 `PUBLIC`、`anon` 不直接取得執行權限。維護者應依前述流程先在隔離專案核對並套用所有待執行 migration；不要只修改已套用的歷史 migration。此變更不授予資料表存取權，也不取代 RLS。
+
+套用後，由具備切換至 `authenticated`、`service_role` 權限的維護者在隔離專案執行 [item_base_validator_permissions.sql](../supabase/tests/item_base_validator_permissions.sql)。腳本檢查函式權限與既有 CHECK constraint，以兩個角色測試有效資料的寫入及無效資料的拒絕，最後回滾。另以實際登入帳號裝備、修改物品並保存鍛造樣板，確認真實資料表與 RLS 互動；測試腳本不取代這些驗收。
+
 ## 部署 Edge Function
 
 1. 維護者確認資料庫 migration 已成功套用，`create_campaign_from_seed(text, uuid, jsonb)` 僅授予 `service_role` 執行。

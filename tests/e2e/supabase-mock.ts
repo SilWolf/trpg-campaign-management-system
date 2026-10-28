@@ -41,6 +41,7 @@ export async function mockSupabase(
 		campaignSettingsSaveError?: string;
 		campaignOfficialCatalogIds?: string[];
 		campaignInventoryRole?: CampaignSettingsRole;
+		extraInventoryItems?: Record<string, unknown>[];
 		createCampaignError?: string;
 		blankCampaign?: boolean;
 		blacksmithSharedItems?: Record<string, unknown>[];
@@ -591,6 +592,18 @@ export async function mockSupabase(
 				if (operator === 'neq') return String(row[key] ?? '') !== value;
 				return false;
 			};
+			if (method === 'POST' || method === 'PATCH') {
+				const payload = request.postDataJSON() as Record<string, unknown>;
+				if (payload.mastery === null) {
+					await route.fulfill({
+						status: 400,
+						json: {
+							message: 'null value in column "mastery" of relation "blacksmith_items" violates not-null constraint',
+						},
+					});
+					return;
+				}
+			}
 			if (method === 'GET') {
 				await route.fulfill({
 					json: blacksmithItems.filter((row) =>
@@ -1144,9 +1157,28 @@ export async function mockSupabase(
 			method === 'GET'
 		) {
 			await route.fulfill({
-				json: options.blankCampaign ? [] : inventoryItems,
+				json: options.blankCampaign
+					? []
+					: [...inventoryItems, ...(options.extraInventoryItems ?? [])],
 			});
 			return;
+		}
+
+		if (
+			url.pathname === '/rest/v1/inventory_items' &&
+			(method === 'POST' || method === 'PATCH')
+		) {
+			const payload: unknown = request.postDataJSON();
+			const rows = Array.isArray(payload) ? payload : [payload];
+			if (rows.some((row) => row.mastery === null)) {
+				await route.fulfill({
+					status: 400,
+					json: {
+						message: 'null value in column "mastery" of relation "inventory_items" violates not-null constraint',
+					},
+				});
+				return;
+			}
 		}
 
 		if (
