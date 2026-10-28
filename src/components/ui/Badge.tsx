@@ -4,22 +4,25 @@ import { cn } from './utils';
 export type BadgeVariant =
 	| 'default'
 	| 'secondary'
-	| 'magic'
-	| 'private'
-	| 'camp'
-	| 'danger';
+	| 'success'
+	| 'destructive'
+	| 'warning'
+	| 'info'
+	| 'disabled';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 	variant?: BadgeVariant;
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-	default: 'border-amber-700/60 bg-amber-950/70 text-amber-200',
-	secondary: 'border-stone-700 bg-stone-900 text-stone-300',
-	magic: 'border-purple-700/60 bg-purple-950/70 text-purple-200',
-	private: 'border-emerald-700/60 bg-emerald-950/70 text-emerald-200',
-	camp: 'border-cyan-700/60 bg-cyan-950/70 text-cyan-200',
-	danger: 'border-red-700/60 bg-red-950/70 text-red-200',
+	default: 'border-primary/60 bg-primary/20 text-primary-foreground',
+	secondary: 'border-border bg-muted text-muted-foreground',
+	success: 'border-success/60 bg-success/20 text-success-foreground',
+	destructive:
+		'border-destructive/60 bg-destructive/20 text-destructive-foreground',
+	warning: 'border-warning/60 bg-warning/20 text-warning-foreground',
+	info: 'border-info/60 bg-info/20 text-info-foreground',
+	disabled: 'border-border bg-disabled text-disabled-foreground',
 };
 
 export function Badge({

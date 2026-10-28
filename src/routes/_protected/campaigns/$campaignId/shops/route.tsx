@@ -75,23 +75,23 @@ function CampaignShopsLayout() {
 			: [];
 
 	return (
-		<div className='mx-auto grid max-w-7xl gap-5 px-4 py-5 text-stone-200 lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8'>
+		<div className='mx-auto grid max-w-7xl gap-5 px-4 py-5 text-foreground lg:grid-cols-[240px_minmax(0,1fr)] lg:px-8'>
 			<aside
 				aria-label='商店快速導覽'
-				className='h-fit rounded-lg border border-stone-800 bg-stone-900/70 p-3'
+				className='h-fit rounded-lg border border-border bg-card/70 p-3'
 			>
 				<div className='mb-3 flex items-center justify-between px-2'>
-					<h2 className='font-serif font-bold text-stone-200'>商店快速導覽</h2>
-					<span className='font-mono text-xs text-stone-500'>
+					<h2 className='font-serif font-bold text-foreground'>商店快速導覽</h2>
+					<span className='font-mono text-xs text-muted-foreground'>
 						{visibleShops.length}
 					</span>
 				</div>
 				{errorMessage ? (
-					<p role='alert' className='px-2 py-3 text-sm text-red-300'>
+					<p role='alert' className='px-2 py-3 text-sm text-destructive-foreground'>
 						{errorMessage}
 					</p>
 				) : visibleShops.length === 0 ? (
-					<p className='px-2 py-3 text-sm text-stone-500'>
+					<p className='px-2 py-3 text-sm text-muted-foreground'>
 						{isGuest || !isSupabaseConfigured
 							? '登入後即可查看戰役商店。'
 							: '目前沒有商店。'}
@@ -104,12 +104,12 @@ function CampaignShopsLayout() {
 								to='/campaigns/$campaignId/shops/$shopId'
 								params={{ campaignId, shopId: shop.id }}
 								activeOptions={{ exact: true }}
-								className='flex min-w-0 shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm text-stone-400 transition hover:bg-stone-800 hover:text-stone-100 [&.active]:bg-amber-950/50 [&.active]:text-amber-200 lg:w-full'
+								className='flex min-w-0 shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground [&.active]:bg-primary/50 [&.active]:text-primary-foreground lg:w-full'
 							>
-								<Store className='h-4 w-4 shrink-0 text-amber-400' />
+								<Store className='h-4 w-4 shrink-0 text-primary-foreground' />
 								<span className='truncate'>{shop.name}</span>
 								{!shop.isActive && (
-									<span className='text-[10px] text-stone-500'>停用</span>
+									<span className='text-[10px] text-muted-foreground'>停用</span>
 								)}
 							</Link>
 						))}
@@ -119,7 +119,7 @@ function CampaignShopsLayout() {
 					to='/campaigns/$campaignId/shops'
 					params={{ campaignId }}
 					activeOptions={{ exact: true }}
-					className='mt-3 block rounded-md border-t border-stone-800 px-3 pt-3 text-xs text-stone-400 hover:text-amber-200 [&.active]:text-amber-200'
+					className='mt-3 block rounded-md border-t border-border px-3 pt-3 text-xs text-muted-foreground hover:text-primary-foreground [&.active]:text-primary-foreground'
 				>
 					查看全部商店
 				</Link>

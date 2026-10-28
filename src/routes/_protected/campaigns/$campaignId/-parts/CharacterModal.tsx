@@ -92,19 +92,19 @@ export default function CharacterModal({
 	};
 
 	return (
-		<div className='fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto'>
+		<div className='fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto'>
 			<div
 				role='dialog'
 				aria-modal='true'
 				aria-labelledby='character-modal-heading'
-				className='bg-stone-950 border-2 border-amber-600/70 rounded-lg max-w-md w-full p-5 shadow-[0_0_40px_rgba(217,119,6,0.3)]'
+				className='bg-background border-2 border-primary/70 rounded-lg max-w-md w-full p-5 shadow-lg'
 			>
-				<div className='flex items-center justify-between border-b border-stone-800 pb-3 mb-4'>
+				<div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
-						<UserPlus className='w-5 h-5 text-amber-400' />
+						<UserPlus className='w-5 h-5 text-primary-foreground' />
 						<h2
 							id='character-modal-heading'
-							className='text-base font-serif font-bold text-amber-200'
+							className='text-base font-serif font-bold text-primary-foreground'
 						>
 							{character ? `編輯角色：${character.name}` : '招募新冒險者隊員'}
 						</h2>
@@ -115,7 +115,7 @@ export default function CharacterModal({
 						size='sm'
 						aria-label='關閉角色編輯'
 						onClick={onClose}
-						className='text-stone-400 hover:text-stone-200 cursor-pointer'
+						className='text-muted-foreground hover:text-foreground cursor-pointer'
 					>
 						<X className='w-5 h-5' />
 					</Button>
@@ -127,7 +127,7 @@ export default function CharacterModal({
 					className='space-y-4 text-xs'
 				>
 					<div className='grid gap-1.5'>
-						<label htmlFor='character-name' className='text-stone-400'>
+						<label htmlFor='character-name' className='text-muted-foreground'>
 							角色名稱 *
 						</label>
 						<Input
@@ -138,12 +138,12 @@ export default function CharacterModal({
 							onChange={(e) => setName(e.target.value)}
 							placeholder='例如：阿斯代倫 (Astarion)'
 							data-testid='character-name'
-							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 focus:border-amber-500 outline-none disabled:opacity-50'
+							className='w-full bg-card border border-border rounded px-3 py-1.5 text-foreground focus:border-primary outline-none disabled:opacity-50'
 						/>
 					</div>
 
 					<div className='grid gap-1.5'>
-						<label htmlFor='character-title' className='text-stone-400'>
+						<label htmlFor='character-title' className='text-muted-foreground'>
 							頭銜 / 職業背景
 						</label>
 						<Input
@@ -153,7 +153,7 @@ export default function CharacterModal({
 							onChange={(e) => setTitle(e.target.value)}
 							placeholder='例如：高等精靈 / 游蕩者'
 							data-testid='character-title'
-							className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none disabled:opacity-50'
+							className='w-full bg-card border border-border rounded px-3 py-1.5 text-foreground outline-none disabled:opacity-50'
 						/>
 					</div>
 
@@ -161,7 +161,7 @@ export default function CharacterModal({
 						<div>
 							<label
 								htmlFor='character-strength'
-								className='text-amber-300 mb-1 flex items-center gap-1'
+								className='text-primary-foreground mb-1 flex items-center gap-1'
 							>
 								<Shield className='w-3.5 h-3.5' />
 								<span>力量屬性 (STR)</span>
@@ -176,22 +176,22 @@ export default function CharacterModal({
 								value={str}
 								onChange={(e) => setStr(parseInt(e.target.value, 10) || 10)}
 								data-testid='character-strength'
-								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-amber-200 font-mono font-bold outline-none disabled:opacity-50'
+								className='w-full bg-card border border-border rounded px-3 py-1.5 text-primary-foreground font-mono font-bold outline-none disabled:opacity-50'
 							/>
-							<span className='text-[10px] text-stone-500 mt-0.5 block'>
+							<span className='text-[10px] text-muted-foreground mt-0.5 block'>
 								負重上限 = STR × 15 ({Number(str) * 15} lbs)
 							</span>
 						</div>
 
 						<div>
-							<label className='block text-stone-400 mb-1'>選擇頭像符號</label>
+							<label className='block text-muted-foreground mb-1'>選擇頭像符號</label>
 							<Select
 								label='選擇頭像符號'
 								disabled={!allowFormEdit}
 								value={avatar}
 								onChange={(e) => setAvatar(e.target.value)}
 								data-testid='character-avatar'
-								className='w-full bg-stone-900 border border-stone-700 rounded px-3 py-1.5 text-stone-100 outline-none disabled:opacity-50'
+								className='w-full bg-card border border-border rounded px-3 py-1.5 text-foreground outline-none disabled:opacity-50'
 							>
 								{AVATAR_OPTIONS.map((icon) => (
 									<option key={icon} value={icon}>
@@ -202,7 +202,7 @@ export default function CharacterModal({
 						</div>
 					</div>
 
-					<div className='flex items-center justify-between pt-3 border-t border-stone-800'>
+					<div className='flex items-center justify-between pt-3 border-t border-border'>
 						{character &&
 						character.id !== CAMP_CHEST_ID &&
 						canDeleteCharacter &&
@@ -221,7 +221,7 @@ export default function CharacterModal({
 									onDelete(character.id);
 									onClose();
 								}}
-								className='px-3 py-2 rounded bg-red-950/80 hover:bg-red-900 border border-red-700/60 text-red-200 font-medium transition cursor-pointer'
+								className='px-3 py-2 rounded bg-destructive/80 hover:bg-destructive border border-destructive/60 text-destructive-foreground font-medium transition cursor-pointer'
 							>
 								移除角色 (遺物入庫)
 							</Button>
@@ -234,7 +234,7 @@ export default function CharacterModal({
 								type='button'
 								variant='secondary'
 								onClick={onClose}
-								className='px-4 py-2 rounded bg-stone-900 border border-stone-700 text-stone-300 hover:bg-stone-800 cursor-pointer'
+								className='px-4 py-2 rounded bg-card border border-border text-foreground hover:bg-muted cursor-pointer'
 							>
 								取消
 							</Button>
@@ -242,7 +242,7 @@ export default function CharacterModal({
 								<Button
 									type='submit'
 									variant='primary'
-									className='px-5 py-2 rounded bg-amber-700 hover:bg-amber-600 text-stone-950 font-bold shadow flex items-center gap-1.5 cursor-pointer'
+									className='px-5 py-2 rounded bg-primary hover:bg-primary text-primary-foreground font-bold shadow flex items-center gap-1.5 cursor-pointer'
 								>
 									<Save className='w-4 h-4' />
 									<span>儲存角色</span>

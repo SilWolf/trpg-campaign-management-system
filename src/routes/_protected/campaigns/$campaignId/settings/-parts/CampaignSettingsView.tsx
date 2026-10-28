@@ -149,18 +149,18 @@ export function CampaignSettingsView({
 
 	return (
 		<main className='max-w-5xl mx-auto px-4 py-8 space-y-6'>
-			<div className='flex items-center gap-3 border-b border-amber-900/50 pb-4'>
-				<div className='p-2.5 rounded-lg bg-amber-950 border border-amber-600/50 text-amber-300'>
+			<div className='flex items-center gap-3 border-b border-primary/50 pb-4'>
+				<div className='p-2.5 rounded-lg bg-primary border border-primary/50 text-primary-foreground'>
 					<Settings className='w-6 h-6' />
 				</div>
 				<div>
 					<h1
 						data-testid='campaign-settings-heading'
-						className='text-xl font-serif font-bold text-amber-100'
+						className='text-xl font-serif font-bold text-primary-foreground'
 					>
 						戰役與角色控制權限中心
 					</h1>
-					<p className='text-xs text-stone-400'>
+					<p className='text-xs text-muted-foreground'>
 						管理戰役屬性、個別玩家可創建角色配額，以及各冒險者角色的細粒度存取權限矩陣
 					</p>
 				</div>
@@ -169,7 +169,7 @@ export function CampaignSettingsView({
 			{notice && (
 				<div
 					data-testid='campaign-settings-notice'
-					className='p-3 rounded bg-amber-950/60 border border-amber-600/60 text-amber-200 text-xs'
+					className='p-3 rounded bg-primary/60 border border-primary/60 text-primary-foreground text-xs'
 				>
 					{notice}
 				</div>
@@ -180,7 +180,7 @@ export function CampaignSettingsView({
 				role='tablist'
 				aria-label='戰役與角色設定'
 				onKeyDown={(event) => handleTabKeyDown(event, setActiveTab, 'general')}
-				className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-800'
+				className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-border'
 			>
 				<Button
 					id='campaign-settings-tab-general'
@@ -196,11 +196,11 @@ export function CampaignSettingsView({
 					size='sm'
 					className={`shrink-0 ${
 						activeTab === 'general'
-							? 'bg-amber-800 text-amber-100 border border-amber-500/70 shadow'
-							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+							? 'bg-primary text-primary-foreground border border-primary/70 shadow'
+							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
 					}`}
 				>
-					<Shield className='w-3.5 h-3.5 text-amber-400' />
+					<Shield className='w-3.5 h-3.5 text-primary-foreground' />
 					<span>⚙️ 戰役常規設定與成員配額</span>
 				</Button>
 
@@ -218,11 +218,11 @@ export function CampaignSettingsView({
 					size='sm'
 					className={`shrink-0 ${
 						activeTab === 'characters'
-							? 'bg-purple-900 text-purple-100 border border-purple-500/70 shadow'
-							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+							? 'bg-card text-foreground border border-border/70 shadow'
+							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
 					}`}
 				>
-					<UserRound className='w-3.5 h-3.5 text-purple-300' />
+					<UserRound className='w-3.5 h-3.5 text-foreground' />
 					<span>角色</span>
 				</Button>
 
@@ -240,11 +240,11 @@ export function CampaignSettingsView({
 					size='sm'
 					className={`shrink-0 ${
 						activeTab === 'shops'
-							? 'bg-cyan-900 text-cyan-100 border border-cyan-500/70 shadow'
-							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+							? 'bg-card text-foreground border border-border/70 shadow'
+							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
 					}`}
 				>
-					<Store className='w-3.5 h-3.5 text-cyan-300' />
+					<Store className='w-3.5 h-3.5 text-foreground' />
 					<span>商店</span>
 				</Button>
 			</div>

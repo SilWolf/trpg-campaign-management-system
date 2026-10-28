@@ -90,7 +90,7 @@ const ORDER_STATUS_LABELS: Record<CampaignShopOrder['status'], string> = {
 	cancelled: '已取消',
 };
 
-const PANEL_CLASS = 'rounded-lg border border-stone-800 bg-stone-900/60 p-4';
+const PANEL_CLASS = 'rounded-lg border border-border bg-card/60 p-4';
 
 function getErrorMessage(error: unknown, fallback: string): string {
 	if (error instanceof Error) return error.message;
@@ -527,7 +527,7 @@ export function ShopTransactionsPanel({
 			{errorMessage && !checkoutOpen && (
 				<div
 					role='alert'
-					className='flex items-start gap-2 rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200'
+					className='flex items-start gap-2 rounded-md border border-destructive/70 bg-destructive/40 p-3 text-sm text-destructive-foreground'
 				>
 					<AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
 					<span>{errorMessage}</span>
@@ -538,18 +538,18 @@ export function ShopTransactionsPanel({
 					ref={checkoutDialogRef}
 					aria-labelledby='shop-checkout-title'
 					onClose={() => onCheckoutOpenChange?.(false)}
-					className='m-auto max-h-[90vh] w-[min(42rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-stone-700 bg-stone-950 p-0 text-stone-100 shadow-2xl backdrop:bg-black/70'
+					className='m-auto max-h-[90vh] w-[min(42rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-border bg-background p-0 text-foreground shadow-2xl backdrop:bg-background/70'
 					data-testid='shop-checkout-dialog'
 				>
 					<div className='space-y-5 p-5'>
-						<div className='flex items-start justify-between gap-4 border-b border-stone-800 pb-4'>
+						<div className='flex items-start justify-between gap-4 border-b border-border pb-4'>
 							<div>
-								<p className='text-xs font-semibold tracking-[0.18em] text-amber-500'>
+								<p className='text-xs font-semibold tracking-[0.18em] text-primary-foreground'>
 									確認交易
 								</p>
 								<h2
 									id='shop-checkout-title'
-									className='mt-1 font-serif text-2xl font-bold text-amber-100'
+									className='mt-1 font-serif text-2xl font-bold text-primary-foreground'
 								>
 									結帳清單
 								</h2>
@@ -560,7 +560,7 @@ export function ShopTransactionsPanel({
 								size='sm'
 								aria-label='關閉結帳視窗'
 								onClick={() => onCheckoutOpenChange?.(false)}
-								className='text-stone-400'
+								className='text-muted-foreground'
 							>
 								<X className='h-4 w-4' />
 							</Button>
@@ -569,7 +569,7 @@ export function ShopTransactionsPanel({
 						{errorMessage && (
 							<div
 								role='alert'
-								className='rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200'
+								className='rounded-md border border-destructive/70 bg-destructive/40 p-3 text-sm text-destructive-foreground'
 							>
 								{errorMessage}
 							</div>
@@ -589,29 +589,29 @@ export function ShopTransactionsPanel({
 									data-testid={`shop-checkout-item-${item.id}`}
 									className={`flex items-start justify-between gap-4 rounded-md border p-3 ${
 										item.requiresApproval
-											? 'border-amber-700/70 bg-amber-950/30'
-											: 'border-stone-800 bg-stone-900/60'
+											? 'border-primary/70 bg-primary/30'
+											: 'border-border bg-card/60'
 									}`}
 								>
 									<div className='flex min-w-0 items-start gap-3'>
 										<div
-											className='relative h-10 w-10 shrink-0 overflow-hidden rounded border border-stone-700 bg-stone-950'
+											className='relative h-10 w-10 shrink-0 overflow-hidden rounded border border-border bg-background'
 											data-testid={`shop-checkout-item-icon-${item.id}`}
 										>
 											{isMasked ? (
-												<HelpCircle className='h-6 w-6 text-purple-400' />
+												<HelpCircle className='h-6 w-6 text-muted-foreground' />
 											) : (
 												<ItemIcon
 													iconName={item.itemSnapshot.icon}
-													className='h-6 w-6 text-stone-300'
+													className='h-6 w-6 text-foreground'
 												/>
 											)}
 										</div>
 										<div className='min-w-0'>
-											<p className='font-serif font-bold text-stone-100'>
+											<p className='font-serif font-bold text-foreground'>
 												{displayName}
 											</p>
-											<p className='mt-1 text-xs text-stone-400'>
+											<p className='mt-1 text-xs text-muted-foreground'>
 												單價{' '}
 												<span className='font-mono'>
 													{formatGpFromCp(
@@ -638,7 +638,7 @@ export function ShopTransactionsPanel({
 													<Minus className='h-3 w-3' />
 												</Button>
 												<span
-													className='min-w-6 text-center font-mono text-sm text-stone-200'
+													className='min-w-6 text-center font-mono text-sm text-foreground'
 													data-testid={`shop-checkout-quantity-${item.id}`}
 												>
 													{lineQuantity}
@@ -662,18 +662,18 @@ export function ShopTransactionsPanel({
 												>
 													<Plus className='h-3 w-3' />
 												</Button>
-												<span className='text-xs text-stone-500'>
+												<span className='text-xs text-muted-foreground'>
 													庫存 {item.stockAvailable}
 												</span>
 											</div>
 											{item.requiresApproval && (
-												<p className='mt-2 rounded bg-amber-900/50 px-2 py-1 text-xs font-semibold text-amber-200'>
+												<p className='mt-2 rounded bg-primary/50 px-2 py-1 text-xs font-semibold text-primary-foreground'>
 													注意：此商品需要 DM 審查，整筆交易將等待核准。
 												</p>
 											)}
 										</div>
 									</div>
-									<p className='shrink-0 font-mono text-amber-300'>
+									<p className='shrink-0 font-mono text-primary-foreground'>
 										{formatGpFromCp(
 											Math.round(item.unitPriceGp * lineQuantity * 100),
 										)}{' '}
@@ -685,7 +685,7 @@ export function ShopTransactionsPanel({
 						</div>
 
 						<div className='grid gap-3 sm:grid-cols-2'>
-							<label className='text-sm text-stone-300'>
+							<label className='text-sm text-foreground'>
 								結帳角色
 								<select
 									aria-label='結帳角色'
@@ -693,7 +693,7 @@ export function ShopTransactionsPanel({
 									onChange={(event) =>
 										setSelectedCharacterId(event.target.value)
 									}
-									className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground'
 								>
 									<option value=''>選擇角色</option>
 									{characters.map((character) => (
@@ -703,7 +703,7 @@ export function ShopTransactionsPanel({
 									))}
 								</select>
 							</label>
-							<label className='text-sm text-stone-300'>
+							<label className='text-sm text-foreground'>
 								付款錢包
 								<select
 									aria-label='結帳錢包'
@@ -714,7 +714,7 @@ export function ShopTransactionsPanel({
 										)
 									}
 									disabled={!selectedCharacter || availableWallets.length === 0}
-									className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 disabled:opacity-50'
+									className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-50'
 								>
 									{availableWallets.length === 0 ? (
 										<option value='public'>沒有可修改的錢包</option>
@@ -741,7 +741,7 @@ export function ShopTransactionsPanel({
 						</div>
 
 						{characters.length === 0 && (
-							<p className='text-sm text-amber-200'>
+							<p className='text-sm text-primary-foreground'>
 								找不到可用角色或具有修改權（2）的錢包；請確認角色與 ACL 設定。
 							</p>
 						)}
@@ -749,21 +749,21 @@ export function ShopTransactionsPanel({
 							({ item, quantity: lineQuantity }) =>
 								lineQuantity > item.stockAvailable || !item.isActive,
 						) && (
-							<p role='alert' className='text-sm text-red-300'>
+							<p role='alert' className='text-sm text-destructive-foreground'>
 								購物車中有商品庫存不足或已停用，請返回目錄調整數量。
 							</p>
 						)}
 
-						<div className='flex flex-wrap items-center justify-between gap-4 border-t border-stone-800 pt-4'>
+						<div className='flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4'>
 							<div>
-								<p className='text-xs text-stone-500'>
+								<p className='text-xs text-muted-foreground'>
 									{cartHasApproval ? '待審交易總額' : '應付總額'}
 								</p>
-								<p className='font-mono text-xl text-amber-300'>
+								<p className='font-mono text-xl text-primary-foreground'>
 									{formatGpFromCp(cartTotalCp)} gp
 								</p>
 								{cartHasApproval && (
-									<p className='mt-1 text-xs text-amber-300'>
+									<p className='mt-1 text-xs text-primary-foreground'>
 										DM 核准前不扣款，商品庫存會先保留。
 									</p>
 								)}
@@ -781,7 +781,7 @@ export function ShopTransactionsPanel({
 								}
 								onClick={() => void handleCartCheckout()}
 								data-testid='shop-checkout-confirm'
-								className='border border-amber-700/60 bg-amber-900 text-amber-100'
+								className='border border-primary/60 bg-primary text-primary-foreground'
 							>
 								<ShoppingBag className='h-4 w-4' />
 								{isSubmittingPurchase
@@ -798,28 +798,28 @@ export function ShopTransactionsPanel({
 			{showPurchaseForm && (
 			<div className={PANEL_CLASS}>
 				<div className='mb-4 flex items-center gap-2'>
-					<ShoppingBag className='h-5 w-5 text-amber-400' />
+					<ShoppingBag className='h-5 w-5 text-primary-foreground' />
 					<div>
-						<h2 className='font-serif text-xl font-bold text-amber-100'>
+						<h2 className='font-serif text-xl font-bold text-primary-foreground'>
 							購買商品
 						</h2>
-						<p className='mt-1 text-xs text-stone-500'>
+						<p className='mt-1 text-xs text-muted-foreground'>
 							只會使用你選取的錢包；交易由伺服器驗證並原子處理。
 						</p>
 					</div>
 				</div>
 
 				{isLoading ? (
-					<p className='py-4 text-sm text-stone-400'>載入角色與訂單中…</p>
+					<p className='py-4 text-sm text-muted-foreground'>載入角色與訂單中…</p>
 				) : (
 					<div className='grid gap-3 sm:grid-cols-2'>
-						<label className='text-sm text-stone-300'>
+						<label className='text-sm text-foreground'>
 							購物角色
 							<select
 								aria-label='購物角色'
 								value={selectedCharacterId}
 								onChange={(event) => setSelectedCharacterId(event.target.value)}
-								className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
+								className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground'
 							>
 								<option value=''>選擇角色</option>
 								{characters.map((character) => (
@@ -829,13 +829,13 @@ export function ShopTransactionsPanel({
 								))}
 							</select>
 						</label>
-						<label className='text-sm text-stone-300'>
+						<label className='text-sm text-foreground'>
 							購買商品
 							<select
 								aria-label='購買商品'
 								value={selectedItemId}
 								onChange={(event) => setSelectedItemId(event.target.value)}
-								className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
+								className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground'
 							>
 								<option value=''>選擇商品</option>
 								{activeItems.map((item) => (
@@ -848,7 +848,7 @@ export function ShopTransactionsPanel({
 								))}
 							</select>
 						</label>
-						<label className='text-sm text-stone-300'>
+						<label className='text-sm text-foreground'>
 							付款錢包
 							<select
 								aria-label='付款錢包'
@@ -857,7 +857,7 @@ export function ShopTransactionsPanel({
 									setWalletType(event.target.value as CampaignShopWalletType)
 								}
 								disabled={!selectedCharacter || availableWallets.length === 0}
-								className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 disabled:opacity-50'
+								className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-50'
 							>
 								{availableWallets.length === 0 ? (
 									<option value='public'>沒有可修改的錢包</option>
@@ -878,7 +878,7 @@ export function ShopTransactionsPanel({
 								)}
 							</select>
 						</label>
-						<label className='text-sm text-stone-300'>
+						<label className='text-sm text-foreground'>
 							購買數量
 							<Input
 								aria-label='購買數量'
@@ -888,18 +888,18 @@ export function ShopTransactionsPanel({
 								step={1}
 								value={quantity}
 								onChange={(event) => setQuantity(event.target.value)}
-								className='mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100'
+								className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground'
 							/>
 						</label>
-						<div className='flex flex-wrap items-center justify-between gap-3 rounded-md border border-stone-800 bg-stone-950/60 p-3 sm:col-span-2'>
+						<div className='flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-background/60 p-3 sm:col-span-2'>
 							<div>
-								<p className='text-xs text-stone-500'>應付總額</p>
-								<p className='font-mono text-lg text-amber-300'>
+								<p className='text-xs text-muted-foreground'>應付總額</p>
+								<p className='font-mono text-lg text-primary-foreground'>
 									{formatGpFromCp(totalPriceCp)} gp
 								</p>
 							</div>
 							{selectedItem?.requiresApproval && (
-								<p className='flex items-center gap-1.5 text-xs text-purple-300'>
+								<p className='flex items-center gap-1.5 text-xs text-foreground'>
 									<Clock3 className='h-4 w-4' />
 									送出後保留庫存，DM 核准前不扣款
 								</p>
@@ -916,19 +916,19 @@ export function ShopTransactionsPanel({
 									availableWallets.length === 0
 								}
 								onClick={() => void handlePurchase()}
-								className='border border-amber-700/60 bg-amber-900 text-amber-100'
+								className='border border-primary/60 bg-primary text-primary-foreground'
 							>
 								<ShoppingBag className='h-4 w-4' />
 								{selectedItem?.requiresApproval ? '送出審查請求' : '確認購買'}
 							</Button>
 						</div>
 						{characters.length === 0 && (
-							<p className='text-sm text-amber-200 sm:col-span-2'>
+							<p className='text-sm text-primary-foreground sm:col-span-2'>
 								找不到可用角色或具有修改權（2）的錢包；請確認角色與 ACL 設定。
 							</p>
 						)}
 						{selectedItem && !isValidQuantity && (
-							<p className='text-sm text-red-300 sm:col-span-2'>
+							<p className='text-sm text-destructive-foreground sm:col-span-2'>
 								購買數量須為正整數，且不可超過可用庫存。
 							</p>
 						)}
@@ -940,21 +940,21 @@ export function ShopTransactionsPanel({
 			<div className={PANEL_CLASS}>
 				<div className='mb-4 flex items-center justify-between'>
 					<div>
-						<h2 className='font-serif text-xl font-bold text-amber-100'>
+						<h2 className='font-serif text-xl font-bold text-primary-foreground'>
 							{showPublicHistory ? '公開購買紀錄' : '待審核購買請求'}
 						</h2>
-						<p className='mt-1 text-xs text-stone-500'>
+						<p className='mt-1 text-xs text-muted-foreground'>
 							{showPublicHistory
 								? '戰役成員可見；不顯示付款錢包種類或餘額。'
 								: '僅顯示待 DM 核准的購買請求。'}
 						</p>
 					</div>
-					<span className='font-mono text-xs text-stone-500'>
+					<span className='font-mono text-xs text-muted-foreground'>
 						{orderGroups.length} 筆
 					</span>
 				</div>
 				{orderGroups.length === 0 ? (
-					<p className='rounded-md border border-dashed border-stone-700 p-6 text-center text-sm text-stone-500'>
+					<p className='rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground'>
 						{showPublicHistory ? '目前沒有購買紀錄。' : '目前沒有待審核請求。'}
 					</p>
 				) : (
@@ -980,14 +980,14 @@ export function ShopTransactionsPanel({
 							return (
 								<article
 									key={group.id}
-									className='rounded-md border border-stone-800 bg-stone-950/60 p-3'
+									className='rounded-md border border-border bg-background/60 p-3'
 									data-testid='shop-order-row'
 								>
 									<div className='flex flex-wrap items-start justify-between gap-3'>
 										<div className='min-w-0'>
 											{showPublicHistory ? (
 												<p
-													className='font-serif font-bold text-stone-100'
+													className='font-serif font-bold text-foreground'
 													data-testid='shop-order-title'
 												>
 													{group.orders
@@ -1005,31 +1005,31 @@ export function ShopTransactionsPanel({
 													{group.orders.map((entry) => (
 														<p
 															key={entry.id}
-															className='font-serif font-bold text-stone-100'
+															className='font-serif font-bold text-foreground'
 														>
 															{getItemDisplayName(entry.itemSnapshot, isDm)}
 														</p>
 													))}
 												</div>
 											)}
-											<p className='mt-1 text-xs text-stone-400'>
+											<p className='mt-1 text-xs text-muted-foreground'>
 												{characterNames.get(order.characterId) ?? '未知角色'}・
 												{order.shopNameSnapshot}・共 {quantity} 件・
-												<span className='font-mono text-amber-300'>
+												<span className='font-mono text-primary-foreground'>
 													{groupTotalGp} gp
 												</span>
 											</p>
-											<p className='mt-1 text-[11px] text-stone-500'>
+											<p className='mt-1 text-[11px] text-muted-foreground'>
 												{formatDate(order.createdAt)}
 											</p>
 										</div>
 										<span
 											className={`rounded-full border px-2 py-1 text-xs ${
 												order.status === 'completed'
-													? 'border-emerald-800 text-emerald-300'
+													? 'border-border text-foreground'
 													: order.status === 'pending'
-														? 'border-purple-800 text-purple-300'
-														: 'border-stone-700 text-stone-400'
+														? 'border-border text-foreground'
+														: 'border-border text-muted-foreground'
 											}`}
 										>
 											{ORDER_STATUS_LABELS[order.status]}
@@ -1048,7 +1048,7 @@ export function ShopTransactionsPanel({
 														'已拒絕整筆請求並釋放保留庫存。',
 													)
 												}
-												className='border border-red-900/70 bg-red-950/40 text-red-200'
+												className='border border-destructive/70 bg-destructive/40 text-destructive-foreground'
 											>
 												<X className='h-4 w-4' />
 												拒絕
@@ -1063,7 +1063,7 @@ export function ShopTransactionsPanel({
 														'整筆請求已核准，已扣款並交付商品。',
 													)
 												}
-												className='border border-emerald-800 bg-emerald-950/60 text-emerald-200'
+												className='border border-border bg-background/60 text-foreground'
 											>
 												<Check className='h-4 w-4' />
 												核准
@@ -1083,7 +1083,7 @@ export function ShopTransactionsPanel({
 														'已取消整筆請求並釋放保留庫存。',
 													)
 												}
-												className='border border-stone-700 bg-stone-900 text-stone-300'
+												className='border border-border bg-card text-foreground'
 											>
 												<X className='h-4 w-4' />
 												取消請求

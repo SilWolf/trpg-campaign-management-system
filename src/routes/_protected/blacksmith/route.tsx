@@ -9,7 +9,7 @@ export const Route = createFileRoute('/_protected/blacksmith')({
 function BlacksmithLayout() {
 	return (
 		<>
-			<header className='relative z-20 border-b border-amber-900/40 bg-stone-950/90 px-4 py-3 backdrop-blur-md lg:px-8'>
+			<header className='relative z-20 border-b border-primary/40 bg-background/90 px-4 py-3 backdrop-blur-md lg:px-8'>
 				<div className='mx-auto max-w-7xl'>
 					<SystemLinkBar />
 				</div>

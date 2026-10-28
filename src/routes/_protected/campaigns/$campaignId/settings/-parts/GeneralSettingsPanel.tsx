@@ -48,14 +48,14 @@ export function GeneralSettingsPanel({
 				<div className='space-y-6'>
 					<form
 						onSubmit={onSaveGeneralSettings}
-						className='bg-stone-950 border border-stone-800 rounded-lg p-6 space-y-5 shadow-xl'
+						className='bg-background border border-border rounded-lg p-6 space-y-5 shadow-xl'
 					>
-						<div className='flex items-center justify-between border-b border-stone-800 pb-2'>
-							<h2 className='text-sm font-serif font-bold text-amber-200'>
+						<div className='flex items-center justify-between border-b border-border pb-2'>
+							<h2 className='text-sm font-serif font-bold text-primary-foreground'>
 								戰役基本參數
 							</h2>
 							{!isDm && (
-								<span className='text-[11px] px-2 py-0.5 rounded bg-stone-900 border border-stone-700 text-stone-400'>
+								<span className='text-[11px] px-2 py-0.5 rounded bg-card border border-border text-muted-foreground'>
 									唯讀模式 (僅 DM 可修改)
 								</span>
 							)}
@@ -64,17 +64,17 @@ export function GeneralSettingsPanel({
 						<Input
 							data-testid='campaign-name'
 							label='戰役名稱'
-							labelClassName='text-xs font-semibold text-stone-300'
+							labelClassName='text-xs font-semibold text-foreground'
 							type='text'
 							required
 							disabled={!isDm}
 							value={campaignName}
 							onChange={(e) => setCampaignName(e.target.value)}
-							className='bg-stone-900'
+							className='bg-card'
 						/>
 
 						<div>
-							<p className='text-xs font-semibold text-stone-300 mb-1.5'>
+							<p className='text-xs font-semibold text-foreground mb-1.5'>
 								戰役邀請碼 (Invite Code)
 							</p>
 							<div className='flex items-center gap-2'>
@@ -83,7 +83,7 @@ export function GeneralSettingsPanel({
 									readOnly
 									aria-label='戰役邀請碼'
 									value={inviteCode}
-									className='bg-stone-900 font-mono text-amber-300'
+									className='bg-card font-mono text-primary-foreground'
 								/>
 								<Button
 									type='button'
@@ -97,20 +97,20 @@ export function GeneralSettingsPanel({
 									className='shrink-0'
 								>
 									{copied ? (
-										<Check className='w-4 h-4 text-emerald-400' />
+										<Check className='w-4 h-4 text-muted-foreground' />
 									) : (
 										<Copy className='w-4 h-4' />
 									)}
 									<span>{copied ? '已複製' : '複製邀請碼'}</span>
 								</Button>
 							</div>
-							<p className='text-[11px] text-stone-500 mt-1'>
+							<p className='text-[11px] text-muted-foreground mt-1'>
 								其他冒險者可在大廳輸入此邀請碼加入本戰役。
 							</p>
 						</div>
 
 						{isDm && (
-							<div className='flex justify-end pt-3 border-t border-stone-800'>
+							<div className='flex justify-end pt-3 border-t border-border'>
 								<Button
 									data-testid='campaign-save'
 									type='submit'
@@ -125,25 +125,25 @@ export function GeneralSettingsPanel({
 					</form>
 
 					{/* 戰役成員總覽與個別角色數量上限設定 */}
-					<div className='bg-stone-950 border border-stone-800 rounded-lg p-6 space-y-4 shadow-xl'>
-						<div className='flex flex-wrap items-center justify-between gap-2 border-b border-stone-800 pb-3'>
+					<div className='bg-background border border-border rounded-lg p-6 space-y-4 shadow-xl'>
+						<div className='flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3'>
 							<div>
-								<h2 className='text-sm font-serif font-bold text-amber-200 flex items-center gap-2'>
-									<Users className='w-4 h-4 text-amber-400' />
+								<h2 className='text-sm font-serif font-bold text-primary-foreground flex items-center gap-2'>
+									<Users className='w-4 h-4 text-primary-foreground' />
 									<span>戰役成員總覽與角色創建配額</span>
 								</h2>
-								<p className='text-[11px] text-stone-400 mt-0.5'>
+								<p className='text-[11px] text-muted-foreground mt-0.5'>
 									DM 可針對每名玩家個別設定允許創建的角色數量上限（預設為
 									1，設為 0 代表禁止創建）。
 								</p>
 							</div>
-							<span className='text-[11px] text-stone-400'>
+							<span className='text-[11px] text-muted-foreground'>
 								共 {allMembers.length} 位成員/名單
 							</span>
 						</div>
 
 						{allMembers.length === 0 ? (
-							<p className='text-xs text-stone-500 italic py-2'>
+							<p className='text-xs text-muted-foreground italic py-2'>
 								目前尚無任何成員資料。
 							</p>
 						) : (
@@ -151,10 +151,10 @@ export function GeneralSettingsPanel({
 								{allMembers.map((member) => {
 									const badgeStyle =
 										member.type === 'dm'
-											? 'bg-amber-950/80 text-amber-300 border-amber-600/60'
+											? 'bg-primary/80 text-primary-foreground border-primary/60'
 											: member.type === 'player'
-												? 'bg-purple-950/80 text-purple-300 border-purple-600/60'
-												: 'bg-stone-900 text-stone-400 border-stone-700 border-dashed';
+												? 'bg-background/80 text-foreground border-border/60'
+												: 'bg-card text-muted-foreground border-border border-dashed';
 
 									const createdCount = campaignCharacters.filter(
 										(c) => c.id !== CAMP_CHEST_ID && c.userId === member.id,
@@ -163,10 +163,10 @@ export function GeneralSettingsPanel({
 									return (
 										<div
 											key={member.id}
-											className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-stone-900/60 border border-stone-800 rounded-md px-4 py-2.5 text-xs'
+											className='flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-card/60 border border-border rounded-md px-4 py-2.5 text-xs'
 										>
 											<div className='flex items-center gap-2 min-w-0'>
-												<span className='font-mono text-stone-200 truncate max-w-[240px] sm:max-w-md'>
+												<span className='font-mono text-foreground truncate max-w-[240px] sm:max-w-md'>
 													{member.identifier}
 												</span>
 												<span
@@ -178,12 +178,12 @@ export function GeneralSettingsPanel({
 
 											<div className='flex items-center gap-3 shrink-0'>
 												{member.invitationStatus && (
-													<div className='text-right text-[10px] text-stone-400'>
+													<div className='text-right text-[10px] text-muted-foreground'>
 														<p
 															className={
 																member.acceptedAt
-																	? 'text-emerald-300'
-																	: 'text-amber-300'
+																	? 'text-foreground'
+																	: 'text-primary-foreground'
 															}
 														>
 															{member.invitationStatus}
@@ -203,14 +203,14 @@ export function GeneralSettingsPanel({
 													</div>
 												)}
 												{member.type === 'dm' && (
-													<span className='text-[11px] text-amber-300/90 font-mono'>
+													<span className='text-[11px] text-primary-foreground/90 font-mono'>
 														已建 {createdCount} 名角色（DM 無上限）
 													</span>
 												)}
 
 												{member.type === 'player' && (
-													<div className='flex items-center gap-2 bg-stone-950 border border-stone-800 rounded px-2.5 py-1'>
-														<span className='text-[11px] text-stone-400'>
+													<div className='flex items-center gap-2 bg-background border border-border rounded px-2.5 py-1'>
+														<span className='text-[11px] text-muted-foreground'>
 															角色配額 (已建 {createdCount} 名 / 上限:
 														</span>
 														{isDm ? (
@@ -227,14 +227,14 @@ export function GeneralSettingsPanel({
 																		parseInt(e.target.value, 10) || 0,
 																	)
 																}
-																className='w-12 rounded px-1.5 py-0.5 text-center font-mono font-bold text-amber-300 border-amber-600/60 bg-stone-900 focus-visible:border-amber-400'
+																className='w-12 rounded px-1.5 py-0.5 text-center font-mono font-bold text-primary-foreground border-primary/60 bg-card focus-visible:border-primary'
 															/>
 														) : (
-															<span className='font-mono font-bold text-amber-300'>
+															<span className='font-mono font-bold text-primary-foreground'>
 																{member.maxCharacters ?? 1}
 															</span>
 														)}
-														<span className='text-[11px] text-stone-400'>
+														<span className='text-[11px] text-muted-foreground'>
 															名)
 														</span>
 													</div>
@@ -247,11 +247,11 @@ export function GeneralSettingsPanel({
 						)}
 
 						{isDm && (
-							<div className='pt-4 border-t border-stone-800 space-y-2.5'>
-								<div className='flex items-center gap-2 text-amber-200 font-serif font-bold text-sm'>
+							<div className='pt-4 border-t border-border space-y-2.5'>
+								<div className='flex items-center gap-2 text-primary-foreground font-serif font-bold text-sm'>
 									<span>📧 Email 邀請冒險者</span>
 								</div>
-								<p className='text-xs text-stone-400'>
+								<p className='text-xs text-muted-foreground'>
 									輸入玩家的電子郵件，將其納入本戰役的受邀名單中。
 								</p>
 								<form
@@ -267,13 +267,13 @@ export function GeneralSettingsPanel({
 										value={inviteEmail}
 										onChange={(e) => setInviteEmail(e.target.value)}
 										placeholder='player@example.com'
-										className='flex-1 bg-stone-900'
+										className='flex-1 bg-card'
 									/>
 									<Button
 										data-testid='campaign-email-invite'
 										type='submit'
 										variant='secondary'
-										className='shrink-0 border-purple-600 bg-purple-900 text-purple-100 hover:bg-purple-800'
+										className='shrink-0 border-border bg-card text-foreground hover:bg-muted'
 									>
 										發送邀請
 									</Button>
@@ -284,12 +284,12 @@ export function GeneralSettingsPanel({
 
 					{/* DM 危險區域：刪除戰役 */}
 					{isDm && (
-						<div className='bg-red-950/30 border border-red-900/60 rounded-lg p-5 space-y-3'>
-							<div className='flex items-center gap-2 text-red-300 font-serif font-bold text-sm'>
+						<div className='bg-destructive/30 border border-destructive/60 rounded-lg p-5 space-y-3'>
+							<div className='flex items-center gap-2 text-destructive-foreground font-serif font-bold text-sm'>
 								<ShieldAlert className='w-4 h-4' />
 								<span>戰役危險區域</span>
 							</div>
-							<p className='text-xs text-stone-400 leading-relaxed'>
+							<p className='text-xs text-muted-foreground leading-relaxed'>
 								刪除戰役將會永久移除該戰役底下的所有角色、背包物品與公庫資料，此動作無法復原。
 							</p>
 							<Button

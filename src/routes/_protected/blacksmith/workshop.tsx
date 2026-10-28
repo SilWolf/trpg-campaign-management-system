@@ -369,12 +369,12 @@ function BlacksmithWorkshopPage() {
 	) => setForm((current) => ({ ...current, [key]: value }));
 
 	return (
-		<main className='min-h-screen bg-[#0c0a09] px-4 py-8 text-stone-200 sm:px-8'>
+		<main className='min-h-screen bg-background px-4 py-8 text-foreground sm:px-8'>
 			<div className='mx-auto max-w-6xl'>
 				<div className='mb-5 flex flex-wrap items-center justify-between gap-3'>
 					<Link
 						to='/blacksmith'
-						className='text-sm text-amber-300 underline-offset-4 hover:underline'
+						className='text-sm text-primary-foreground underline-offset-4 hover:underline'
 					>
 						返回鍛造工坊
 					</Link>
@@ -382,27 +382,27 @@ function BlacksmithWorkshopPage() {
 						type='button'
 						onClick={() => setReloadKey((key) => key + 1)}
 						disabled={!isCloudReady || isLoading}
-						className='inline-flex items-center gap-2 rounded-md border border-stone-700 px-3 py-2 text-sm text-stone-300 hover:border-amber-700 disabled:opacity-50'
+						className='inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-foreground hover:border-primary disabled:opacity-50'
 					>
 						<RotateCw className='h-4 w-4' />
 						重新載入
 					</button>
 				</div>
-				<header className='mb-6 border-b border-purple-900/50 pb-5'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-purple-300'>
+				<header className='mb-6 border-b border-border/50 pb-5'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-foreground'>
 						BLACKSMITH · 鍛造與分享
 					</p>
-					<h1 className='mt-2 flex items-center gap-3 font-serif text-3xl font-bold text-purple-100'>
-						<Hammer className='h-7 w-7 text-purple-300' />
+					<h1 className='mt-2 flex items-center gap-3 font-serif text-3xl font-bold text-foreground'>
+						<Hammer className='h-7 w-7 text-foreground' />
 						我的鍛造與分享
 					</h1>
-					<p className='mt-2 text-sm text-stone-400'>
+					<p className='mt-2 text-sm text-muted-foreground'>
 						樣板與戰役物品分開保存；分享只會公開樣板，不會變更已匯入戰役的副本。
 					</p>
 				</header>
 
 				{!isCloudReady && (
-					<div className='mb-5 rounded-lg border border-amber-800/70 bg-amber-950/30 p-4 text-sm text-amber-200'>
+					<div className='mb-5 rounded-lg border border-primary/70 bg-primary/30 p-4 text-sm text-primary-foreground'>
 						{!isSupabaseConfigured
 							? '鍛造、分享與雲端樣板需要 Supabase 設定；目前不會將資料假裝保存於本機。'
 							: '請使用正式帳號登入，訪客模式無法讀取或保存雲端鍛造樣板。'}
@@ -412,7 +412,7 @@ function BlacksmithWorkshopPage() {
 				{errorMessage && (
 					<div
 						role='alert'
-						className='mb-5 flex items-center gap-2 rounded-lg border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-200'
+						className='mb-5 flex items-center gap-2 rounded-lg border border-destructive/70 bg-destructive/40 px-4 py-3 text-sm text-destructive-foreground'
 					>
 						<AlertCircle className='h-4 w-4 shrink-0' />
 						{errorMessage}
@@ -420,12 +420,12 @@ function BlacksmithWorkshopPage() {
 				)}
 
 				<div className='mb-5 flex flex-wrap items-center gap-3'>
-					<div className='flex rounded-lg border border-stone-800 bg-stone-950 p-1'>
+					<div className='flex rounded-lg border border-border bg-background p-1'>
 						<button
 							type='button'
 							aria-pressed={activeTab === 'mine'}
 							onClick={() => setActiveTab('mine')}
-							className={`rounded-md px-4 py-2 text-sm ${activeTab === 'mine' ? 'bg-purple-900/70 text-purple-100' : 'text-stone-400 hover:text-stone-200'}`}
+							className={`rounded-md px-4 py-2 text-sm ${activeTab === 'mine' ? 'bg-card/70 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
 						>
 							我的樣板（{mine.length}）
 						</button>
@@ -433,7 +433,7 @@ function BlacksmithWorkshopPage() {
 							type='button'
 							aria-pressed={activeTab === 'shared'}
 							onClick={() => setActiveTab('shared')}
-							className={`rounded-md px-4 py-2 text-sm ${activeTab === 'shared' ? 'bg-amber-900/70 text-amber-100' : 'text-stone-400 hover:text-stone-200'}`}
+							className={`rounded-md px-4 py-2 text-sm ${activeTab === 'shared' ? 'bg-primary/70 text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
 						>
 							冒險者分享（{shared.length}）
 						</button>
@@ -443,14 +443,14 @@ function BlacksmithWorkshopPage() {
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}
 						placeholder='搜尋名稱、類型、效果…'
-						className='min-w-56 flex-1 rounded-md border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100 outline-none focus:border-amber-600'
+						className='min-w-56 flex-1 rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary'
 					/>
 					{activeTab === 'mine' && (
 						<button
 							type='button'
 							onClick={openNewEditor}
 							disabled={!isCloudReady}
-							className='inline-flex items-center gap-2 rounded-md bg-purple-800 px-4 py-2 text-sm font-semibold text-purple-50 hover:bg-purple-700 disabled:opacity-50'
+							className='inline-flex items-center gap-2 rounded-md bg-muted px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-50'
 						>
 							<Plus className='h-4 w-4' />
 							鍛造新物品
@@ -459,24 +459,24 @@ function BlacksmithWorkshopPage() {
 				</div>
 
 				{!isCloudReady ? (
-					<div className='rounded-xl border border-stone-800 bg-stone-950 p-12 text-center text-sm text-stone-400'>
+					<div className='rounded-xl border border-border bg-background p-12 text-center text-sm text-muted-foreground'>
 						登入正式帳號並設定 Supabase 後，即可管理自己的鍛造樣板及瀏覽社群分享。
 					</div>
 				) : isLoading ? (
-					<div role='status' className='rounded-xl border border-stone-800 bg-stone-950 p-12 text-center text-stone-400'>
+					<div role='status' className='rounded-xl border border-border bg-background p-12 text-center text-muted-foreground'>
 						正在讀取鍛造樣板…
 					</div>
 				) : errorMessage && isCloudReady ? (
-					<div className='rounded-xl border border-stone-800 bg-stone-950 p-12 text-center text-stone-400'>
+					<div className='rounded-xl border border-border bg-background p-12 text-center text-muted-foreground'>
 						無法載入樣板，請檢查連線與資料庫 migration 狀態。
 					</div>
 				) : visibleItems.length === 0 ? (
-					<div className='rounded-xl border border-stone-800 bg-stone-950 p-12 text-center'>
-						<Eye className='mx-auto h-7 w-7 text-stone-500' />
-						<h2 className='mt-3 font-serif text-lg font-bold text-stone-200'>
+					<div className='rounded-xl border border-border bg-background p-12 text-center'>
+						<Eye className='mx-auto h-7 w-7 text-muted-foreground' />
+						<h2 className='mt-3 font-serif text-lg font-bold text-foreground'>
 							{activeTab === 'mine' ? '尚未鍛造任何物品' : '目前沒有公開分享物品'}
 						</h2>
-						<p className='mt-1 text-sm text-stone-400'>
+						<p className='mt-1 text-sm text-muted-foreground'>
 							{activeTab === 'mine'
 								? '建立的樣板預設為私人，之後可自行開啟分享。'
 								: '其他冒險者分享的物品會顯示在這裡。'}
@@ -487,51 +487,51 @@ function BlacksmithWorkshopPage() {
 						{visibleItems.map((item) => (
 							<li
 								key={item.id}
-								className='rounded-xl border border-stone-800 bg-stone-950/80 p-5'
+								className='rounded-xl border border-border bg-background/80 p-5'
 							>
 								<div className='flex items-start justify-between gap-4'>
 									<div className='min-w-0'>
-										<h2 className='truncate font-serif text-lg font-bold text-amber-100'>
+										<h2 className='truncate font-serif text-lg font-bold text-primary-foreground'>
 											{item.name}
 										</h2>
-										<p className='mt-1 text-xs text-stone-400'>
+										<p className='mt-1 text-xs text-muted-foreground'>
 											{ITEM_CATEGORY_LABELS[item.category]} · {item.subTypes.join('、') || '未分類'} · {RARITY_CONFIG[item.rarity].label}
 										</p>
 									</div>
 									{activeTab === 'mine' ? (
 										<span
-											className={`rounded-full border px-2 py-1 text-xs ${item.isShared ? 'border-amber-700/70 bg-amber-950/40 text-amber-200' : 'border-stone-700 text-stone-400'}`}
+											className={`rounded-full border px-2 py-1 text-xs ${item.isShared ? 'border-primary/70 bg-primary/40 text-primary-foreground' : 'border-border text-muted-foreground'}`}
 										>
 											{item.isShared ? '已分享' : '私人'}
 										</span>
 									) : (
-										<span className='rounded-full border border-amber-700/70 bg-amber-950/40 px-2 py-1 text-xs text-amber-200'>
+										<span className='rounded-full border border-primary/70 bg-primary/40 px-2 py-1 text-xs text-primary-foreground'>
 											分享樣板
 										</span>
 									)}
 								</div>
-								<p className='mt-3 line-clamp-3 whitespace-pre-wrap text-sm text-stone-300'>
+								<p className='mt-3 line-clamp-3 whitespace-pre-wrap text-sm text-foreground'>
 									{item.effects || item.flavor || '尚無效果描述。'}
 								</p>
-								<p className='mt-3 font-mono text-xs text-stone-500'>
+								<p className='mt-3 font-mono text-xs text-muted-foreground'>
 									重量 {item.weight} lb · 價值 {item.valueGp} GP
 								</p>
 								<div className='mt-4'>
 									<BlacksmithImportButton source={item} />
 								</div>
 								{activeTab === 'mine' && (
-									<div className='mt-4 flex items-center gap-2 border-t border-stone-800 pt-3'>
+									<div className='mt-4 flex items-center gap-2 border-t border-border pt-3'>
 										<button
 											type='button'
 											onClick={() => openEditor(item)}
-											className='rounded-md border border-stone-700 px-3 py-1.5 text-xs text-stone-200 hover:border-purple-600'
+											className='rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:border-border'
 										>
 											編輯／分享設定
 										</button>
 										<button
 											type='button'
 											onClick={() => void handleDelete(item)}
-											className='inline-flex items-center gap-1 rounded-md border border-red-900/70 px-3 py-1.5 text-xs text-red-300 hover:bg-red-950/50'
+											className='inline-flex items-center gap-1 rounded-md border border-destructive/70 px-3 py-1.5 text-xs text-destructive-foreground hover:bg-destructive/50'
 										>
 											<Trash2 className='h-3.5 w-3.5' />
 											{deleteConfirmationId === item.id ? '再次按下確認刪除' : '刪除'}
@@ -540,7 +540,7 @@ function BlacksmithWorkshopPage() {
 											<button
 												type='button'
 												onClick={() => setDeleteConfirmationId(null)}
-												className='text-xs text-stone-400 underline'
+												className='text-xs text-muted-foreground underline'
 											>
 												取消
 											</button>
@@ -554,57 +554,57 @@ function BlacksmithWorkshopPage() {
 			</div>
 
 			{isEditorOpen && (
-				<div className='fixed inset-0 z-40 overflow-y-auto bg-black/80 px-4 py-8'>
+				<div className='fixed inset-0 z-40 overflow-y-auto bg-background/80 px-4 py-8'>
 					<form
 						onSubmit={handleSave}
-						className='mx-auto max-w-3xl space-y-4 rounded-xl border border-purple-800/70 bg-stone-950 p-5 shadow-2xl'
+						className='mx-auto max-w-3xl space-y-4 rounded-xl border border-border/70 bg-background p-5 shadow-2xl'
 					>
-						<div className='flex items-center justify-between border-b border-stone-800 pb-3'>
-							<h2 className='font-serif text-xl font-bold text-purple-100'>
+						<div className='flex items-center justify-between border-b border-border pb-3'>
+							<h2 className='font-serif text-xl font-bold text-foreground'>
 								{editingId ? '編輯鍛造樣板' : '鍛造新物品'}
 							</h2>
 							<button
 								type='button'
 								onClick={() => setIsEditorOpen(false)}
-								className='text-sm text-stone-400 hover:text-stone-100'
+								className='text-sm text-muted-foreground hover:text-foreground'
 							>
 								關閉
 							</button>
 						</div>
 						<div className='grid gap-3 sm:grid-cols-2'>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								物品名稱 *
 								<input
 									required
 									maxLength={120}
 									value={form.name}
 									onChange={(event) => updateForm('name', event.target.value)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								圖示名稱 *
 								<input
 									required
 									maxLength={500}
 									value={form.icon}
 									onChange={(event) => updateForm('icon', event.target.value)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								物品分類
 								<select
 									value={form.category}
 									onChange={(event) => updateForm('category', event.target.value as ItemBaseCategory)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								>
 									{CATEGORIES.map((category) => (
 										<option key={category.value} value={category.value}>{category.label}</option>
 									))}
 								</select>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								子類型
 								<input
 									maxLength={120}
@@ -618,20 +618,20 @@ function BlacksmithWorkshopPage() {
 												.filter(Boolean),
 										)
 									}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								稀有度
 								<select
 									value={form.rarity}
 									onChange={(event) => updateForm('rarity', event.target.value as ItemBaseRarity)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								>
 									{RARITIES.map((rarity) => <option key={rarity} value={rarity}>{RARITY_CONFIG[rarity].label}</option>)}
 								</select>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								武器精通
 								<select
 									value={form.weaponProperties.mastery}
@@ -639,12 +639,12 @@ function BlacksmithWorkshopPage() {
 										...form.weaponProperties,
 										mastery: event.target.value as WeaponItemMastery | '',
 									})}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								>
 									{MASTERIES.map((mastery) => <option key={mastery} value={mastery}>{WEAPON_MASTERIES[mastery].name}</option>)}
 								</select>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								傷害
 								<input
 									value={form.weaponProperties.damage}
@@ -652,18 +652,18 @@ function BlacksmithWorkshopPage() {
 										...form.weaponProperties,
 										damage: event.target.value,
 									})}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								護甲值
 								<input
 									value={form.armorProperties.ac}
 									onChange={(event) => updateForm('armorProperties', { ac: event.target.value })}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								重量（磅）
 								<input
 									type='number'
@@ -671,10 +671,10 @@ function BlacksmithWorkshopPage() {
 									step='any'
 									value={form.weight}
 									onChange={(event) => updateForm('weight', event.target.value)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								價值（GP）
 								<input
 									type='number'
@@ -682,10 +682,10 @@ function BlacksmithWorkshopPage() {
 									step='any'
 									value={form.valueGp}
 									onChange={(event) => updateForm('valueGp', event.target.value)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
-							<label className='text-xs text-stone-400'>
+							<label className='text-xs text-muted-foreground'>
 								最大充能
 								<input
 									type='number'
@@ -693,56 +693,56 @@ function BlacksmithWorkshopPage() {
 									step='1'
 									value={form.maxCharges}
 									onChange={(event) => updateForm('maxCharges', event.target.value)}
-									className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100'
+									className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground'
 								/>
 							</label>
 						</div>
 						<div className='grid gap-3 sm:grid-cols-2'>
-							<label className='flex items-center gap-2 text-sm text-stone-300'>
+							<label className='flex items-center gap-2 text-sm text-foreground'>
 								<input type='checkbox' checked={form.isRequireAttunement} onChange={(event) => updateForm('isRequireAttunement', event.target.checked)} />
 								需要調諧
 							</label>
-							<label className='flex items-center gap-2 text-sm text-stone-300'>
+							<label className='flex items-center gap-2 text-sm text-foreground'>
 								<input type='checkbox' checked={form.isEquippable} onChange={(event) => updateForm('isEquippable', event.target.checked)} />
 								可裝備
 							</label>
-							<label className='flex items-center gap-2 text-sm text-stone-300'>
+							<label className='flex items-center gap-2 text-sm text-foreground'>
 								<input type='checkbox' checked={form.isConsumable} onChange={(event) => updateForm('isConsumable', event.target.checked)} />
 								消耗品
 							</label>
-							<label className='flex items-center gap-2 text-sm text-stone-300'>
+							<label className='flex items-center gap-2 text-sm text-foreground'>
 								<input type='checkbox' checked={form.isImportant} onChange={(event) => updateForm('isImportant', event.target.checked)} />
 								重要物品
 							</label>
 						</div>
-						<label className='block text-xs text-stone-400'>
+						<label className='block text-xs text-muted-foreground'>
 							效果
-							<textarea value={form.effects} onChange={(event) => updateForm('effects', event.target.value)} rows={3} className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100' />
+							<textarea value={form.effects} onChange={(event) => updateForm('effects', event.target.value)} rows={3} className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground' />
 						</label>
-						<label className='block text-xs text-stone-400'>
+						<label className='block text-xs text-muted-foreground'>
 							風味描述
-							<textarea value={form.flavor} onChange={(event) => updateForm('flavor', event.target.value)} rows={2} className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100' />
+							<textarea value={form.flavor} onChange={(event) => updateForm('flavor', event.target.value)} rows={2} className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground' />
 						</label>
-						<label className='block text-xs text-stone-400'>
+						<label className='block text-xs text-muted-foreground'>
 							鍛造備註（開啟分享時會一併公開）
-							<textarea value={form.dmNotes} onChange={(event) => updateForm('dmNotes', event.target.value)} rows={2} className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 text-sm text-stone-100' />
+							<textarea value={form.dmNotes} onChange={(event) => updateForm('dmNotes', event.target.value)} rows={2} className='mt-1 w-full rounded border border-border bg-card px-3 py-2 text-sm text-foreground' />
 						</label>
-						<label className='block text-xs text-stone-400'>
+						<label className='block text-xs text-muted-foreground'>
 							附魔詞條 JSON
-							<textarea value={form.affixesJson} onChange={(event) => updateForm('affixesJson', event.target.value)} rows={5} spellCheck={false} className='mt-1 w-full rounded border border-stone-700 bg-stone-900 px-3 py-2 font-mono text-xs text-stone-100' />
+							<textarea value={form.affixesJson} onChange={(event) => updateForm('affixesJson', event.target.value)} rows={5} spellCheck={false} className='mt-1 w-full rounded border border-border bg-card px-3 py-2 font-mono text-xs text-foreground' />
 						</label>
-						<label className='flex items-start gap-2 rounded-lg border border-amber-900/60 bg-amber-950/20 p-3 text-sm text-amber-100'>
+						<label className='flex items-start gap-2 rounded-lg border border-primary/60 bg-primary/20 p-3 text-sm text-primary-foreground'>
 							<input type='checkbox' checked={form.isShared} onChange={(event) => updateForm('isShared', event.target.checked)} />
 							<span>
 								與其他已登入冒險者分享此樣板
-								<span className='mt-1 block text-xs text-amber-200/70'>
+								<span className='mt-1 block text-xs text-primary-foreground/70'>
 									分享後其他使用者可讀取完整樣板內容，但不能修改或刪除；取消分享後即不再提供他人讀取。
 								</span>
 							</span>
 						</label>
-						<div className='flex justify-end gap-2 border-t border-stone-800 pt-3'>
-							<button type='button' onClick={() => setIsEditorOpen(false)} className='rounded-md border border-stone-700 px-4 py-2 text-sm text-stone-300'>取消</button>
-							<button type='submit' disabled={isSaving} className='rounded-md bg-purple-800 px-4 py-2 text-sm font-semibold text-purple-50 hover:bg-purple-700 disabled:opacity-50'>
+						<div className='flex justify-end gap-2 border-t border-border pt-3'>
+							<button type='button' onClick={() => setIsEditorOpen(false)} className='rounded-md border border-border px-4 py-2 text-sm text-foreground'>取消</button>
+							<button type='submit' disabled={isSaving} className='rounded-md bg-muted px-4 py-2 text-sm font-semibold text-foreground hover:bg-accent disabled:opacity-50'>
 								{isSaving ? '正在保存…' : '保存樣板'}
 							</button>
 						</div>

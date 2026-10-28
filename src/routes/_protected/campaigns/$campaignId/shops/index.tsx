@@ -47,15 +47,15 @@ function CampaignShopsIndex() {
 
 	return (
 		<main data-testid='campaign-shops-page' data-campaign-id={campaignId}>
-			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-amber-900/40 pb-5 sm:flex-row sm:items-end'>
+			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-primary/40 pb-5 sm:flex-row sm:items-end'>
 				<div>
-					<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 						戰役商店
 					</p>
-					<h1 className='mt-1 font-serif text-3xl font-bold text-amber-100'>
+					<h1 className='mt-1 font-serif text-3xl font-bold text-primary-foreground'>
 						全部商店
 					</h1>
-					<p className='mt-2 text-sm text-stone-400'>
+					<p className='mt-2 text-sm text-muted-foreground'>
 						瀏覽本戰役已建立的商店，選擇商店即可查看商品與交易。
 					</p>
 				</div>
@@ -63,7 +63,7 @@ function CampaignShopsIndex() {
 					<Button
 						type='button'
 						onClick={() => setIsCreating(true)}
-						className='border border-amber-500/60 bg-amber-800 text-amber-50 hover:bg-amber-700'
+						className='border border-primary/60 bg-primary text-primary-foreground hover:bg-primary'
 					>
 						<Plus className='h-4 w-4' />
 						建立商店
@@ -72,7 +72,7 @@ function CampaignShopsIndex() {
 			</div>
 
 			{errorMessage && (
-				<p role='alert' className='mb-4 rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200'>
+				<p role='alert' className='mb-4 rounded-md border border-destructive/70 bg-destructive/40 p-3 text-sm text-destructive-foreground'>
 					{errorMessage}
 				</p>
 			)}
@@ -86,17 +86,17 @@ function CampaignShopsIndex() {
 			)}
 
 			{roleLoading ? (
-				<p className='rounded-lg border border-stone-800 bg-stone-900/60 p-8 text-center text-sm text-stone-400'>
+				<p className='rounded-lg border border-border bg-card/60 p-8 text-center text-sm text-muted-foreground'>
 					載入戰役商店中…
 				</p>
 			) : !isSupabaseConfigured || isGuest ? (
-				<p className='rounded-lg border border-amber-800/50 bg-stone-900/80 p-6 text-sm text-stone-400'>
+				<p className='rounded-lg border border-primary/50 bg-card/80 p-6 text-sm text-muted-foreground'>
 					商店雲端功能需要登入 Supabase 帳號；離線或訪客模式不會建立本機商店或假冒同步狀態。
 				</p>
 			) : visibleShops.length === 0 ? (
-				<div className='rounded-lg border border-dashed border-stone-700 bg-stone-900/40 p-10 text-center'>
-					<Store className='mx-auto mb-3 h-8 w-8 text-stone-600' />
-					<p className='text-stone-400'>
+				<div className='rounded-lg border border-dashed border-border bg-card/40 p-10 text-center'>
+					<Store className='mx-auto mb-3 h-8 w-8 text-muted-foreground' />
+					<p className='text-muted-foreground'>
 						{isDm ? '尚未建立商店。' : '目前沒有啟用中的商店。'}
 					</p>
 				</div>
@@ -107,7 +107,7 @@ function CampaignShopsIndex() {
 							key={shop.id}
 							to='/campaigns/$campaignId/shops/$shopId'
 							params={{ campaignId, shopId: shop.id }}
-							className='group overflow-hidden rounded-lg border border-stone-800 bg-stone-900/70 transition hover:border-amber-800/70'
+							className='group overflow-hidden rounded-lg border border-border bg-card/70 transition hover:border-primary/70'
 						>
 							{shop.backgroundImageUrl ? (
 								<img
@@ -116,23 +116,23 @@ function CampaignShopsIndex() {
 									className='h-36 w-full object-cover'
 								/>
 							) : (
-								<div className='flex h-28 items-center justify-center bg-gradient-to-br from-amber-950/50 via-stone-900 to-stone-950'>
-									<Store className='h-8 w-8 text-amber-900' />
+								<div className='flex h-28 items-center justify-center bg-gradient-to-br from-primary/50 via-card to-background'>
+									<Store className='h-8 w-8 text-primary-foreground' />
 								</div>
 							)}
 							<div className='flex items-center justify-between gap-3 px-4 py-3'>
 								<div className='min-w-0'>
-									<h2 className='font-serif text-lg font-bold text-amber-100 group-hover:text-amber-200'>
+									<h2 className='font-serif text-lg font-bold text-primary-foreground group-hover:text-primary-foreground'>
 										{shop.name}
 									</h2>
 									{shop.flavor && (
-										<p className='mt-1 line-clamp-2 whitespace-pre-line text-xs text-stone-400'>
+										<p className='mt-1 line-clamp-2 whitespace-pre-line text-xs text-muted-foreground'>
 											{shop.flavor}
 										</p>
 									)}
 								</div>
 								{!shop.isActive && (
-									<span className='text-xs text-stone-500'>已停用</span>
+									<span className='text-xs text-muted-foreground'>已停用</span>
 								)}
 							</div>
 						</Link>

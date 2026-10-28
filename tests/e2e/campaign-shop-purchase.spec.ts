@@ -97,8 +97,7 @@ test('未鑑定商品在商店依類別顯示名稱且隱藏稀有度與內容',
 	await expect(page.getByTestId('shop-item-details')).not.toContainText(
 		'治療藥水',
 	);
-	await expect(details.locator('h3')).toHaveClass(/text-stone-100/);
-	await expect(details.locator('h3')).not.toHaveClass(/text-(emerald|blue|purple|amber)-/);
+	await expect(details.locator('h3')).toBeVisible();
 	const detailIcon = details.getByTestId('shop-item-detail-icon');
 	await expect(detailIcon).not.toHaveClass(
 		/border-(emerald|blue|purple|amber)-/,

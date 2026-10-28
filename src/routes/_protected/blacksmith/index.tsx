@@ -8,19 +8,19 @@ export const Route = createFileRoute('/_protected/blacksmith/')({
 
 function BlacksmithHomePage() {
 	return (
-		<main className='min-h-screen bg-[#0c0a09] px-4 py-10 text-stone-200 sm:px-8'>
+		<main className='min-h-screen bg-background px-4 py-10 text-foreground sm:px-8'>
 			<div className='mx-auto max-w-5xl'>
-				<header className='mb-8 border-b border-amber-900/50 pb-6'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+				<header className='mb-8 border-b border-primary/50 pb-6'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 						BLACKSMITH · 工坊大廳
 					</p>
 					<h1
 						data-testid='blacksmith-heading'
-						className='mt-2 font-serif text-3xl font-bold text-amber-100 sm:text-4xl'
+						className='mt-2 font-serif text-3xl font-bold text-primary-foreground sm:text-4xl'
 					>
 						鍛造工坊
 					</h1>
-					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-stone-400'>
+					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground'>
 						探索官方規則書，鍛造專屬物品，並瀏覽其他冒險者分享的作品。
 					</p>
 				</header>
@@ -29,46 +29,46 @@ function BlacksmithHomePage() {
 						<Link
 							data-testid='blacksmith-officials-link'
 							to='/blacksmith/officials'
-							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-amber-700/60 bg-gradient-to-br from-amber-950/70 to-stone-950 p-7 shadow-lg shadow-amber-950/20 transition hover:border-amber-400/80 hover:from-amber-900/50 sm:p-8'
+							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-primary/60 bg-gradient-to-br from-primary/70 to-background p-7 shadow-lg shadow-amber-950/20 transition hover:border-primary/80 hover:from-primary/50 sm:p-8'
 						>
 							<span>
 								<BookOpen
 									aria-hidden='true'
-									className='mb-4 h-8 w-8 text-amber-400'
+									className='mb-4 h-8 w-8 text-primary-foreground'
 								/>
-								<span className='block font-serif text-2xl font-bold text-amber-100'>
+								<span className='block font-serif text-2xl font-bold text-primary-foreground'>
 									官方規則書
 								</span>
-								<span className='mt-2 block text-sm text-stone-400'>
+								<span className='mt-2 block text-sm text-muted-foreground'>
 									瀏覽各規則書收錄的物品
 								</span>
 							</span>
 							<ArrowRight
 								aria-hidden='true'
-								className='h-7 w-7 shrink-0 text-amber-400 transition-transform group-hover:translate-x-1'
+								className='h-7 w-7 shrink-0 text-primary-foreground transition-transform group-hover:translate-x-1'
 							/>
 						</Link>
 
 						<Link
 							data-testid='blacksmith-workshop-link'
 							to='/blacksmith/workshop'
-							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-purple-800/70 bg-gradient-to-br from-purple-950/60 to-stone-950 p-7 shadow-lg shadow-purple-950/20 transition hover:border-purple-400/80 hover:from-purple-900/40 sm:p-8'
+							className='group flex min-h-48 items-center justify-between gap-6 rounded-2xl border border-border/70 bg-gradient-to-br from-background/60 to-background p-7 shadow-lg shadow-purple-950/20 transition hover:border-border/80 hover:from-card/40 sm:p-8'
 						>
 							<span>
 								<Hammer
 									aria-hidden='true'
-									className='mb-4 h-8 w-8 text-purple-300'
+									className='mb-4 h-8 w-8 text-foreground'
 								/>
-								<span className='block font-serif text-2xl font-bold text-purple-100'>
+								<span className='block font-serif text-2xl font-bold text-foreground'>
 									我的鍛造與分享
 								</span>
-								<span className='mt-2 block text-sm text-stone-400'>
+								<span className='mt-2 block text-sm text-muted-foreground'>
 									管理私人樣板，或瀏覽冒險者分享
 								</span>
 							</span>
 							<ArrowRight
 								aria-hidden='true'
-								className='h-7 w-7 shrink-0 text-purple-300 transition-transform group-hover:translate-x-1'
+								className='h-7 w-7 shrink-0 text-foreground transition-transform group-hover:translate-x-1'
 							/>
 						</Link>
 					</div>

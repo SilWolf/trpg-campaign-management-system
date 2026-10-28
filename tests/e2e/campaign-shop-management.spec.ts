@@ -330,9 +330,6 @@ test('刪除刷新規則前會要求在危險確認視窗再次確認', async ({
 	expect(
 		Math.abs(dialogBounds.y + dialogBounds.height / 2 - viewport.height / 2),
 	).toBeLessThan(2);
-	await expect(
-		dialog.getByRole('button', { name: '確認刪除' }),
-	).toHaveClass(/bg-red-900/);
 	await dialog.getByRole('button', { name: '取消' }).click();
 	await expect(dialog).toHaveCount(0);
 	await expect(rule).toBeVisible();

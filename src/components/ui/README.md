@@ -1,6 +1,6 @@
 # 共用 UI 元件
 
-從 `@/components/ui` 匯入共用元件。元件提供一致的暗色外觀、焦點狀態與原生 HTML 屬性；特殊展示仍可在呼叫端使用 `className` 微調。
+從 `@/components/ui` 匯入共用元件。元件提供一致的語意色彩、焦點狀態與原生 HTML 屬性；`className` 適合調整尺寸、間距或版面，不應用硬編碼色階覆寫元件的語意色彩。
 
 ```tsx
 import { Badge, Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
@@ -21,13 +21,13 @@ if (await confirm({ title: '刪除角色', message: '角色與相關資料將被
 
 ## Button
 
-`variant` 可選 `primary`（主要琥珀色操作，預設）、`secondary`（次要操作）、`danger`（危險操作）或 `ghost`（低強度操作）。`size` 可選 `sm`、`md`（預設）或 `lg`。原生按鈕屬性均可使用；按鈕預設 `type="button"`，提交表單時請明確指定 `type="submit"`。
+`variant` 可選 `primary`（主要操作，預設）、`secondary`（次要操作）、`destructive`（危險操作）、`danger`（相容舊呼叫的危險操作別名）或 `ghost`（低強度操作）。`size` 可選 `sm`、`md`（預設）或 `lg`。原生按鈕屬性均可使用；按鈕預設 `type="button"`，提交表單時請明確指定 `type="submit"`。
 
 ```tsx
 <Button type="submit" variant="primary" size="md" loading={saving}>
 	儲存變更
 </Button>
-<Button type="button" variant="danger" onClick={handleDelete}>
+<Button type="button" variant="destructive" onClick={handleDelete}>
 	刪除
 </Button>
 ```
@@ -80,11 +80,11 @@ if (await confirm({ title: '刪除角色', message: '角色與相關資料將被
 
 ## Badge
 
-`Badge` 是非互動狀態標記，支援 `default`（琥珀，預設）、`secondary`（石色）、`magic`（紫色）、`private`（綠色）、`camp`（青色）與 `danger`（紅色），並保留原生 `span` 屬性。
+`Badge` 是非互動狀態標記，支援 `default`（主要強調，預設）、`secondary`、`success`、`destructive`、`warning`、`info` 與 `disabled`，並保留原生 `span` 屬性。領域分類（例如私人、魔法物品或營地箱）應以標籤文字、圖示等線索表達，不使用專屬顏色 variant。
 
 ```tsx
-<Badge variant="private">私人</Badge>
-<Badge variant="magic">魔法物品</Badge>
+<Badge variant="success">已完成</Badge>
+<Badge variant="info">需要鑑定</Badge>
 ```
 
 互動元件應保留可見鍵盤焦點，表單控制項需有可存取標籤；E2E 測試優先使用角色、標籤與可見名稱定位互動，不以 Tailwind class 或 DOM 階層定位。

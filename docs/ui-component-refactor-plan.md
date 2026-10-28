@@ -99,7 +99,7 @@
 - 已在 [`src/index.css`](../src/index.css) 建立深色表面、邊框、焦點色、危險色、控制項圓角與下拉層級等 Tailwind v4 設計 token。
 - 已新增 [`src/components/ui/Button.tsx`](../src/components/ui/Button.tsx)：提供 `primary`、`secondary`、`danger`、`ghost` 外觀與 `sm`、`md`、`lg` 尺寸；預設 `type="button"`，並支援原生按鈕屬性、ref、disabled 與 loading 狀態。
 - 已新增 [`src/components/ui/Input.tsx`](../src/components/ui/Input.tsx) 與 [`src/components/ui/Textarea.tsx`](../src/components/ui/Textarea.tsx)：支援原生欄位屬性、ref、`label`、`description`、`error`、焦點可見樣式及 disabled 樣式；標籤與說明／錯誤訊息會自動關聯至欄位。
-- 已新增 [`src/components/ui/Badge.tsx`](../src/components/ui/Badge.tsx)，以 `default`、`secondary`、`magic`、`private`、`camp`、`danger` 對應一般、石色、秘法紫、翠綠、青色與危險語意。
+- 已新增 [`src/components/ui/Badge.tsx`](../src/components/ui/Badge.tsx)；初版使用產品領域色彩 variant，已於主題系統 Phase 2 改為 `default`、`secondary`、`success`、`destructive`、`warning`、`info`、`disabled` 等語意 variant。
 - 元件與型別可由 [`src/components/ui/index.ts`](../src/components/ui/index.ts) 匯入；共用 class helper 位於 [`src/components/ui/utils.ts`](../src/components/ui/utils.ts)。此階段沒有額外引入套件；Dialog、選單等尚未採用的複雜互動元件留待有實際需求時再評估 primitives。
 - 尚未建立 Storybook／展示頁，也尚未將元件套用至產品頁面；各元件在真實頁面的版面與狀態驗證安排於後續 Phase 遷移時進行。
 - 驗收結果：`npm run typecheck`、`npm run lint`、`npm run build`、`npm run test:e2e`（既有基準 8 項通過）及 `git diff --check` 均通過。

@@ -55,7 +55,7 @@ export function ConfirmDialog({ request, onResolve }: ConfirmDialogProps) {
 		<dialog
 			aria-describedby="feedback-confirm-message"
 			aria-labelledby="feedback-confirm-title"
-			className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-xl border border-stone-700 bg-stone-950 p-0 text-stone-100 shadow-2xl backdrop:bg-black/75"
+			className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-2xl backdrop:bg-background/75"
 			onCancel={(event) => {
 				event.preventDefault();
 				resolve(false);
@@ -68,20 +68,20 @@ export function ConfirmDialog({ request, onResolve }: ConfirmDialogProps) {
 			{request && (
 				<div className="p-6">
 					<h2
-						className="font-serif text-xl font-bold text-stone-100"
+						className="font-serif text-xl font-bold text-popover-foreground"
 						id="feedback-confirm-title"
 					>
 						{request.options.title}
 					</h2>
 					<p
-						className="mt-3 whitespace-pre-wrap text-sm leading-6 text-stone-300"
+						className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground"
 						id="feedback-confirm-message"
 					>
 						{request.options.message}
 					</p>
 					<div className="mt-6 flex flex-col-reverse justify-end gap-3 sm:flex-row">
 						<button
-							className="rounded-md border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 transition-colors hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"
+							className="rounded-md border border-border px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"
 							disabled={isResolving}
 							onClick={() => resolve(false)}
 							ref={cancelButtonRef}
@@ -92,8 +92,8 @@ export function ConfirmDialog({ request, onResolve }: ConfirmDialogProps) {
 						<button
 							className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none ${
 								variant === 'danger'
-									? 'bg-red-700 text-white hover:bg-red-600 focus-visible:outline-red-400'
-									: 'bg-amber-500 text-stone-950 hover:bg-amber-400 focus-visible:outline-amber-300'
+									? 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:outline-destructive'
+									: 'bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring'
 							}`}
 							disabled={isResolving}
 							onClick={() => resolve(true)}

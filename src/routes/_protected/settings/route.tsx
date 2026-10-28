@@ -8,11 +8,11 @@ export const Route = createFileRoute('/_protected/settings')({
 
 function UserSettingLayout() {
 	return (
-		<div className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden flex flex-col'>
-			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.14),_rgba(12,10,9,0.95)_70%)]' />
+		<div className='min-h-screen bg-background text-foreground font-sans selection:bg-primary/40 selection:text-primary-foreground relative overflow-x-hidden flex flex-col'>
+			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--primary)_18%,transparent),var(--background)_70%)]' />
 
 			{/* 頂部系統導覽列 */}
-			<header className='relative z-20 border-b border-amber-900/40 bg-stone-950/90 backdrop-blur-md px-4 lg:px-8 py-3'>
+			<header className='relative z-20 border-b border-primary/40 bg-background/90 backdrop-blur-md px-4 lg:px-8 py-3'>
 				<div className='mx-auto max-w-7xl'>
 					<SystemLinkBar />
 				</div>

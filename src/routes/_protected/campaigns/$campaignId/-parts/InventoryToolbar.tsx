@@ -40,7 +40,7 @@ export default function InventoryToolbar({
 	handleConsolidateStacks,
 }: InventoryToolbarProps) {
 	return (
-		<div className='p-3.5 bg-stone-950/90 border-b border-amber-900/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
+		<div className='p-3.5 bg-background/90 border-b border-primary/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
 			<div className='flex items-center gap-2'>
 				<Button
 					type='button'
@@ -51,11 +51,11 @@ export default function InventoryToolbar({
 					onClick={() => setBagTab('public')}
 					className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
 						currentBagTab === 'public'
-							? 'bg-amber-800/80 text-amber-100 border border-amber-400/70 shadow'
-							: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+							? 'bg-primary/80 text-primary-foreground border border-primary/70 shadow'
+							: 'bg-card text-muted-foreground border border-border hover:text-foreground'
 					}`}
 				>
-					<Globe className='w-3.5 h-3.5 text-amber-300' />
+					<Globe className='w-3.5 h-3.5 text-primary-foreground' />
 					<span>
 						公開行囊 (
 						{canReadPublicBag
@@ -75,18 +75,18 @@ export default function InventoryToolbar({
 						onClick={() => setBagTab('private')}
 						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition cursor-pointer ${
 							currentBagTab === 'private'
-								? 'bg-emerald-900/80 text-emerald-100 border border-emerald-400/70 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-								: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-emerald-300'
+								? 'bg-accent text-accent-foreground border border-ring shadow'
+								: 'bg-card text-muted-foreground border border-border hover:text-foreground'
 						}`}
 					>
-						<Lock className='w-3.5 h-3.5 text-emerald-400' />
+						<Lock className='w-3.5 h-3.5 text-muted-foreground' />
 						<span>
 							私人暗袋 (
 							{allCharacterItems.filter((item) => item.isPrivate).length})
 						</span>
 					</Button>
 				) : (
-					<span className='text-[11px] text-stone-500 flex items-center gap-1 px-2'>
+					<span className='text-[11px] text-muted-foreground flex items-center gap-1 px-2'>
 						<Lock className='w-3 h-3' />
 						<span>私人暗袋已隱藏</span>
 					</span>
@@ -95,7 +95,7 @@ export default function InventoryToolbar({
 
 			<div className='flex items-center gap-2'>
 				<div className='relative flex-1 sm:w-40'>
-					<Search className='w-3.5 h-3.5 text-stone-500 absolute left-2.5 top-1/2 -translate-y-1/2' />
+					<Search className='w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2' />
 					<Input
 						type='search'
 						value={searchQuery}
@@ -103,12 +103,12 @@ export default function InventoryToolbar({
 						placeholder='搜尋道具名稱...'
 						aria-label='搜尋道具名稱'
 						data-testid='inventory-search'
-						className='w-full bg-stone-900 border border-stone-700 focus:border-amber-500 rounded pl-8 pr-2.5 py-1.5 text-xs text-stone-200 placeholder:text-stone-500 outline-none'
+						className='w-full bg-card border border-border focus:border-primary rounded pl-8 pr-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none'
 					/>
 				</div>
 
 				<div
-					className='flex bg-stone-900 p-0.5 rounded border border-stone-700'
+					className='flex bg-card p-0.5 rounded border border-border'
 					role='group'
 					aria-label='背包檢視模式'
 				>
@@ -122,8 +122,8 @@ export default function InventoryToolbar({
 						title='一列 6 個展示'
 						className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
 							displayMode === 'grid6'
-								? 'bg-amber-700/80 text-amber-100'
-								: 'text-stone-400 hover:text-stone-200'
+								? 'bg-primary/80 text-primary-foreground'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<Grid3x3 className='w-3.5 h-3.5' />
@@ -139,8 +139,8 @@ export default function InventoryToolbar({
 						title='緊湊格字展示'
 						className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
 							displayMode === 'grid'
-								? 'bg-amber-700/80 text-amber-100'
-								: 'text-stone-400 hover:text-stone-200'
+								? 'bg-primary/80 text-primary-foreground'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<LayoutGrid className='w-3.5 h-3.5' />
@@ -156,8 +156,8 @@ export default function InventoryToolbar({
 						title='詳細列表展示'
 						className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition cursor-pointer ${
 							displayMode === 'list'
-								? 'bg-amber-700/80 text-amber-100'
-								: 'text-stone-400 hover:text-stone-200'
+								? 'bg-primary/80 text-primary-foreground'
+								: 'text-muted-foreground hover:text-foreground'
 						}`}
 					>
 						<List className='w-3.5 h-3.5' />
@@ -179,12 +179,12 @@ export default function InventoryToolbar({
 				>
 					<summary
 						data-testid='inventory-sort-trigger'
-						className='flex list-none items-center gap-1 px-2.5 py-1.5 rounded bg-stone-900 border border-stone-700 hover:border-amber-600/60 text-xs text-stone-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400'
+						className='flex list-none items-center gap-1 px-2.5 py-1.5 rounded bg-card border border-border hover:border-primary/60 text-xs text-foreground cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 					>
-						<ArrowUpDown className='w-3.5 h-3.5 text-amber-400' />
+						<ArrowUpDown className='w-3.5 h-3.5 text-primary-foreground' />
 						<span>排序與整理</span>
 					</summary>
-					<div className='absolute right-0 mt-1 w-48 bg-stone-900 border border-amber-700/70 rounded shadow-xl z-30 py-1 text-xs'>
+					<div className='absolute right-0 mt-1 w-48 bg-card border border-primary/70 rounded shadow-xl z-30 py-1 text-xs'>
 						<Button
 							type='button'
 							variant='ghost'
@@ -217,13 +217,13 @@ export default function InventoryToolbar({
 						</Button>
 						{canEditCurrentBag && (
 							<>
-								<div className='border-t border-stone-800 my-1' />
+								<div className='border-t border-border my-1' />
 								<Button
 									type='button'
 									variant='ghost'
 									size='sm'
 									data-testid='inventory-consolidate-stacks'
-									className='w-full justify-start rounded-none text-emerald-300'
+									className='w-full justify-start rounded-none text-foreground'
 									onClick={handleConsolidateStacks}
 								>
 									<span>📦 合併同名同詞條堆疊</span>

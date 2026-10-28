@@ -326,9 +326,9 @@ function CampaignInventoryPage() {
 	return (
 		<div
 			data-campaign-id={campaignId}
-			className='min-h-screen bg-[#0c0a09] text-stone-200 font-sans selection:bg-amber-600/40 selection:text-amber-200 relative overflow-x-hidden'
+			className='min-h-screen bg-background text-foreground font-sans selection:bg-primary/40 selection:text-primary-foreground relative overflow-x-hidden'
 		>
-			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.14),_rgba(12,10,9,0.95)_70%)]' />
+			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--primary)_18%,transparent),var(--background)_70%)]' />
 
 			<AppHeader
 				isDm={isDm}
@@ -365,7 +365,7 @@ function CampaignInventoryPage() {
 			/>
 
 			<main className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-5 flex flex-col lg:flex-row lg:items-start gap-6'>
-				<div className='w-full lg:w-7/12 flex flex-col bg-gradient-to-b from-[#171412] via-[#12100e] to-[#0c0a09] border-2 border-amber-800/50 rounded-lg shadow-[0_0_40px_rgba(0,0,0,0.85)] overflow-hidden'>
+				<div className='w-full lg:w-7/12 flex flex-col bg-gradient-to-b from-card via-background to-background border-2 border-primary/50 rounded-lg shadow-lg overflow-hidden'>
 					<CharacterStatusBar
 						placement='status'
 						characters={characters}
@@ -459,14 +459,14 @@ function CampaignInventoryPage() {
 					onOpenChange={setIsMobileSheetOpen}
 				>
 					<Drawer.Portal>
-						<Drawer.Overlay className='fixed inset-0 bg-black/75 backdrop-blur-xs z-40 lg:hidden' />
-						<Drawer.Content className='fixed bottom-0 left-0 right-0 max-h-[88vh] bg-[#110e0c] border-t-2 border-amber-700/60 rounded-t-2xl z-50 flex flex-col lg:hidden outline-none shadow-[0_-10px_40px_rgba(0,0,0,0.9)]'>
-							<div className='flex items-center justify-between px-4 py-2.5 border-b border-stone-800/80 shrink-0'>
+						<Drawer.Overlay className='fixed inset-0 bg-background/75 backdrop-blur-xs z-40 lg:hidden' />
+						<Drawer.Content className='fixed bottom-0 left-0 right-0 max-h-[88vh] bg-card border-t-2 border-primary/60 rounded-t-2xl z-50 flex flex-col lg:hidden outline-none shadow-lg'>
+							<div className='flex items-center justify-between px-4 py-2.5 border-b border-border/80 shrink-0'>
 								<div className='w-6' />
-								<div className='w-12 h-1.5 rounded-full bg-stone-700' />
+								<div className='w-12 h-1.5 rounded-full bg-accent' />
 								<button
 									onClick={() => setIsMobileSheetOpen(false)}
-									className='p-1 rounded-md text-stone-400 hover:text-stone-200 hover:bg-stone-800'
+									className='p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted'
 								>
 									<X className='w-4 h-4' />
 								</button>

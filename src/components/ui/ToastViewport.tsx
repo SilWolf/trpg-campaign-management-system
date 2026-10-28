@@ -40,26 +40,26 @@ const TOAST_STYLES: Record<
 > = {
 	success: {
 		icon: CheckCircle2,
-		container: 'border-emerald-800 bg-stone-950',
-		iconClass: 'text-emerald-400',
+		container: 'border-success/70 bg-success/15',
+		iconClass: 'text-success-foreground',
 		role: 'status',
 	},
 	error: {
 		icon: CircleAlert,
-		container: 'border-red-800 bg-stone-950',
-		iconClass: 'text-red-400',
+		container: 'border-destructive/70 bg-destructive/15',
+		iconClass: 'text-destructive-foreground',
 		role: 'alert',
 	},
 	warning: {
 		icon: TriangleAlert,
-		container: 'border-amber-800 bg-stone-950',
-		iconClass: 'text-amber-400',
+		container: 'border-warning/70 bg-warning/15',
+		iconClass: 'text-warning-foreground',
 		role: 'status',
 	},
 	info: {
 		icon: Info,
-		container: 'border-cyan-900 bg-stone-950',
-		iconClass: 'text-cyan-300',
+		container: 'border-info/70 bg-info/15',
+		iconClass: 'text-info-foreground',
 		role: 'status',
 	},
 };
@@ -81,7 +81,7 @@ export function ToastViewport({ toasts, onDismiss }: ToastViewportProps) {
 						key={toast.id}
 						aria-atomic="true"
 						aria-live={toast.kind === 'error' ? 'assertive' : 'polite'}
-						className={`pointer-events-auto flex items-start gap-3 rounded-lg border p-4 text-stone-100 shadow-xl motion-reduce:transition-none ${style.container}`}
+						className={`pointer-events-auto flex items-start gap-3 rounded-lg border p-4 text-card-foreground shadow-xl motion-reduce:transition-none ${style.container}`}
 						role={style.role}
 					>
 						<Icon
@@ -91,14 +91,14 @@ export function ToastViewport({ toasts, onDismiss }: ToastViewportProps) {
 						<div className="min-w-0 flex-1">
 							<p className="font-medium break-words">{toast.message}</p>
 							{toast.description && (
-								<p className="mt-1 text-sm break-words text-stone-300">
+								<p className="mt-1 text-sm break-words text-muted-foreground">
 									{toast.description}
 								</p>
 							)}
 						</div>
 						<button
 							aria-label="關閉通知"
-							className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-800 hover:text-stone-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 motion-reduce:transition-none"
+							className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
 							onClick={() => onDismiss(toast.id)}
 							type="button"
 						>

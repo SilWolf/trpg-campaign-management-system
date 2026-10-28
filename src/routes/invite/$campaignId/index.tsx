@@ -87,33 +87,33 @@ function InviteRegistrationPage() {
 	};
 
 	return (
-		<main className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0c0a09] px-4 py-10 text-stone-200'>
-			<div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.2),_rgba(12,10,9,0.96)_70%)]' />
-			<div className='relative z-10 w-full max-w-md rounded-xl border border-amber-800/60 bg-stone-950/95 p-6 shadow-[0_0_55px_rgba(0,0,0,0.8)] sm:p-8'>
+		<main className='relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10 text-foreground'>
+			<div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--primary)_18%,transparent),var(--background)_70%)]' />
+			<div className='relative z-10 w-full max-w-md rounded-xl border border-primary/60 bg-background/95 p-6 shadow-lg sm:p-8'>
 				<div className='mb-7 text-center'>
-					<div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-500/60 bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950'>
-						<Swords className='h-7 w-7 text-amber-300' />
+					<div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-primary/60 bg-gradient-to-br from-primary via-primary to-background'>
+						<Swords className='h-7 w-7 text-primary-foreground' />
 					</div>
 					<h1
 						data-testid='invite-heading'
-						className='font-serif text-2xl font-bold tracking-wide text-amber-100'
+						className='font-serif text-2xl font-bold tracking-wide text-primary-foreground'
 					>
 						完成冒險者帳號註冊
 					</h1>
-					<p className='mt-2 text-sm text-stone-400'>
+					<p className='mt-2 text-sm text-muted-foreground'>
 						設定登入密碼後，即可接受戰役邀請。
 					</p>
 				</div>
 
 				{isLoading ? (
-					<p data-testid='invite-loading' className='text-center text-sm text-stone-400'>
+					<p data-testid='invite-loading' className='text-center text-sm text-muted-foreground'>
 						正在驗證邀請連結…
 					</p>
 				) : errorMessage && !email ? (
 					<p
 						data-testid='invite-error'
 						role='alert'
-						className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'
+						className='rounded border border-destructive/70 bg-destructive/40 px-3 py-2 text-sm text-destructive-foreground'
 					>
 						{errorMessage}
 					</p>
@@ -127,7 +127,7 @@ function InviteRegistrationPage() {
 							autoComplete='email'
 							readOnly
 							value={email}
-							className='border-stone-700 bg-stone-900 py-2.5 text-stone-400'
+							className='border-border bg-card py-2.5 text-muted-foreground'
 						/>
 						<Input
 							id='invite-password'
@@ -158,7 +158,7 @@ function InviteRegistrationPage() {
 							<p
 								data-testid='invite-error'
 								role='alert'
-								className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'
+								className='rounded border border-destructive/70 bg-destructive/40 px-3 py-2 text-sm text-destructive-foreground'
 							>
 								{errorMessage}
 							</p>
@@ -168,7 +168,7 @@ function InviteRegistrationPage() {
 							data-testid='invite-submit'
 							type='submit'
 							loading={isSubmitting}
-							className='w-full py-2.5 text-stone-950'
+							className='w-full py-2.5 text-primary-foreground'
 						>
 							{isSubmitting ? '處理中…' : '設定密碼並加入戰役'}
 						</Button>

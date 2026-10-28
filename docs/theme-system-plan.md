@@ -314,6 +314,26 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 
 **完成條件：** 共用元件以語意 token 為主，既有 API 與互動行為不退化，代表性狀態可辨識且文字對比足夠。
 
+#### Phase 2 執行紀錄（2026-10-28）
+
+已完成共用元件的語意色彩遷移，沒有變更資料流程、權限或 Supabase 行為。
+
+- Button、Badge、Input、Select、Textarea、Checkbox、ConfirmDialog、ToastViewport、Breadcrumbs 與系統導覽列改用 `primary`、`secondary`、`card`、`popover`、`muted`、`accent`、狀態色及相關前景 token；元件內未再直接使用色階 utility。
+- Button 新增語意名稱 `destructive`，保留既有 `danger` 作為相容別名。Badge 改用一般、次要、成功、危險、警告、資訊與停用狀態；`magic`、`private`、`camp` 舊領域 variant 在專案內沒有使用端，因此移除，改由標籤文字等非色彩線索表達分類。
+- 保留元件 `className` 擴充介面，並更新 [`src/components/ui/README.md`](../src/components/ui/README.md)：建議只用於尺寸、間距與版面，不以硬編碼色階覆寫語意色彩。
+- 未發現需要產品決策的歧義，因此沒有向使用者提出問題。
+
+**驗證結果：**
+
+| 驗證 | 結果 |
+| --- | --- |
+| `npm run typecheck` | 通過。 |
+| `npm run lint` | 通過。第一次與 Playwright 同時執行時遇到測試清理目錄的競爭錯誤；測試完成後重跑通過。 |
+| `npm run build` | 通過；TypeScript 與 Vite production build 成功。 |
+| `npm run test:e2e -- tests/e2e/phase-2-settings.spec.ts tests/e2e/global-feedback.spec.ts` | 13 項通過，涵蓋設定表單驗證、鍵盤操作、Toast、危險確認與窄螢幕。 |
+| `git diff --check` | 通過。 |
+| 色彩檢查 | 共用 UI 元件與系統導覽列已無直接色階 utility；預設主題主要按鈕前景／背景對比為 4.84:1。另以桌面登入表單畫面作目視檢查，未新增 screenshot golden。 |
+
 ### Phase 3：分批遷移產品頁面
 
 建議依使用範圍和視覺風險分批，而非一次全站替換：
@@ -326,6 +346,31 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 每批先依照用途映射 token，再替換 class；完成後比較主要頁面與互動狀態，並執行相關 E2E、lint、typecheck 與 build。業務邏輯或資料存取不得隨色彩遷移改動。
 
 **完成條件：** 該批頁面不再依賴直接色票 class 作為一般樣式；色彩使用核准的語意角色或基礎 token；所有指定流程通過回歸檢查。
+
+#### Phase 3 執行紀錄（2026-10-28）
+
+已完成四批產品頁面的語意色彩遷移，沒有更動資料流程、權限或 Supabase 行為：
+
+- 登入、邀請、個人資料與戰役大廳。
+- 戰役與角色設定、一般對話框。
+- 背包、公開／私人雙錢包、角色狀態列與營地箱。
+- 商店、刷新設定、交易紀錄、Blacksmith 官方目錄與工作台。
+- 頁面一般背景、文字、邊框、表單、選取及錯誤／警告狀態改用已核准的語意 token；登入／邀請／大廳及戰役根容器的背景光暈改為引用 token 的 `color-mix`，不再保留原始色碼或 rgba 陰影。
+- E2E 測試移除依賴 Tailwind 色階 class 的斷言，改驗證危險確認、內容可見性及既有互動結果。
+
+**產品領域色彩決策（使用者確認）：** 移除私人背包／錢包、營地箱、DM／魔法標籤及貨幣面額的專屬色彩，以文字、圖示、中性 token 和選取狀態區分；保留稀有度顏色作為內容分類例外，包含 `RARITY_CONFIG` 動態樣式及商店列表的稀有度邊線。
+
+**驗證結果：**
+
+| 驗證 | 結果 |
+| --- | --- |
+| `npm run typecheck` | 通過。 |
+| `npm run lint` | 通過；與 Playwright 並行時曾遇到 `test-results` 目錄競爭錯誤，測試結束後獨立重跑通過。 |
+| `npm run build` | 通過；TypeScript 與 Vite production build 成功。 |
+| `npm run test:e2e` | 73 項通過；涵蓋登入／大廳、設定、背包、商店交易與管理、Blacksmith 及窄螢幕流程。測試輸出仍有非致命 Realtime transport error 記錄，未造成斷言失敗。 |
+| `git diff --check` | 通過。 |
+| 色彩檢查 | 產品路由未再命中一般用途的直接 Tailwind 色階 class、硬編碼色碼或 rgba 陰影；保留稀有度動態樣式例外。 |
+| 瀏覽器視覺檢查 | 桌面登入頁版面及主要按鈕前景／背景正常，主頁背景與按鈕顏色由語意 token 輸出。 |
 
 ### Phase 4：新增三套主題與主題切換能力
 

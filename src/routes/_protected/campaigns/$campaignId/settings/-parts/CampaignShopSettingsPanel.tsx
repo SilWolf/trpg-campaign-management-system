@@ -85,30 +85,30 @@ export function CampaignShopSettingsPanel({
 
 	return (
 		<section
-			className='rounded-lg border border-cyan-900/70 bg-stone-950 p-6 shadow-xl'
+			className='rounded-lg border border-border/70 bg-background p-6 shadow-xl'
 			data-testid='campaign-shop-settings'
 		>
-			<div className='border-b border-stone-800 pb-3'>
-				<h2 className='font-serif text-lg font-bold text-cyan-200'>
+			<div className='border-b border-border pb-3'>
+				<h2 className='font-serif text-lg font-bold text-foreground'>
 					戰役商店規則書
 				</h2>
-				<p className='mt-1 text-xs leading-relaxed text-stone-400'>
+				<p className='mt-1 text-xs leading-relaxed text-muted-foreground'>
 					選擇此戰役商店可使用的官方規則書，可複選。商店刷新政策使用「此戰役的規則書」時，會以此處選取的目錄建立候選篩選器。
 				</p>
 			</div>
 
 			{!isDm && (
-				<p className='mt-4 rounded border border-stone-700 bg-stone-900 px-3 py-2 text-xs text-stone-400'>
+				<p className='mt-4 rounded border border-border bg-card px-3 py-2 text-xs text-muted-foreground'>
 					唯讀模式（僅 DM 可修改）
 				</p>
 			)}
 			{errorMessage && (
-				<p role='alert' className='mt-4 text-sm text-red-300'>
+				<p role='alert' className='mt-4 text-sm text-destructive-foreground'>
 					{errorMessage}
 				</p>
 			)}
 			{invalidSelectedCatalogIds.length > 0 && (
-				<p role='alert' className='mt-4 text-sm text-red-300'>
+				<p role='alert' className='mt-4 text-sm text-destructive-foreground'>
 					目前設定包含不存在的官方規則書：
 					{invalidSelectedCatalogIds.join('、')}
 				</p>
@@ -116,15 +116,15 @@ export function CampaignShopSettingsPanel({
 
 			<form onSubmit={(event) => void saveSettings(event)} className='mt-4 space-y-4'>
 				{isLoading ? (
-					<p className='text-sm text-stone-500'>載入官方規則書中…</p>
+					<p className='text-sm text-muted-foreground'>載入官方規則書中…</p>
 				) : definitions.length === 0 ? (
-					<p className='text-sm text-stone-500'>目前沒有可用的官方規則書。</p>
+					<p className='text-sm text-muted-foreground'>目前沒有可用的官方規則書。</p>
 				) : (
 					<div className='grid gap-2 sm:grid-cols-2'>
 						{definitions.map((definition) => (
 							<label
 								key={definition.catalogId}
-								className='flex cursor-pointer items-start gap-3 rounded-md border border-stone-800 bg-stone-900/60 p-3 text-sm text-stone-200'
+								className='flex cursor-pointer items-start gap-3 rounded-md border border-border bg-card/60 p-3 text-sm text-foreground'
 							>
 								<input
 									type='checkbox'
@@ -134,11 +134,11 @@ export function CampaignShopSettingsPanel({
 									onChange={(event) =>
 										toggleCatalog(definition.catalogId, event.target.checked)
 									}
-									className='mt-0.5 h-4 w-4 accent-cyan-500'
+									className='mt-0.5 h-4 w-4 accent-primary'
 								/>
 								<span>
 									<span className='block font-medium'>{definition.title}</span>
-									<span className='mt-1 block font-mono text-[11px] text-stone-500'>
+									<span className='mt-1 block font-mono text-[11px] text-muted-foreground'>
 										{definition.catalogId}
 									</span>
 								</span>
@@ -148,7 +148,7 @@ export function CampaignShopSettingsPanel({
 				)}
 
 				{isDm && (
-					<div className='flex justify-end border-t border-stone-800 pt-4'>
+					<div className='flex justify-end border-t border-border pt-4'>
 						<Button
 							type='submit'
 							disabled={
@@ -157,7 +157,7 @@ export function CampaignShopSettingsPanel({
 								invalidSelectedCatalogIds.length > 0 ||
 								(draftCatalogIds.length === 0 && definitions.length === 0)
 							}
-							className='bg-cyan-800 text-cyan-50 hover:bg-cyan-700'
+							className='bg-muted text-foreground hover:bg-accent'
 						>
 							{isSaving ? (
 								<Check className='h-4 w-4' />

@@ -46,7 +46,7 @@ function OfficialCatalogsPage() {
 	};
 
 	return (
-		<main className='min-h-screen bg-[#0c0a09] px-4 py-8 text-stone-200 sm:px-8'>
+		<main className='min-h-screen bg-background px-4 py-8 text-foreground sm:px-8'>
 			<div className='mx-auto max-w-5xl'>
 				<Breadcrumbs
 					className='mb-5'
@@ -55,15 +55,15 @@ function OfficialCatalogsPage() {
 						{ label: '官方規則書', current: true },
 					]}
 				/>
-				<header className='mb-7 border-b border-amber-900/50 pb-5'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+				<header className='mb-7 border-b border-primary/50 pb-5'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 						BLACKSMITH · 官方規則書
 					</p>
-					<h1 className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-amber-100 sm:text-3xl'>
-						<BookOpen className='h-7 w-7 text-amber-400' />
+					<h1 className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-primary-foreground sm:text-3xl'>
+						<BookOpen className='h-7 w-7 text-primary-foreground' />
 						官方規則書
 					</h1>
-					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-stone-400'>
+					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground'>
 						選擇規則書以瀏覽其中收錄的物品。
 					</p>
 				</header>
@@ -72,10 +72,10 @@ function OfficialCatalogsPage() {
 					<div
 						data-testid='blacksmith-error'
 						role='alert'
-						className='mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-200'
+						className='mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/70 bg-destructive/40 px-4 py-3 text-sm text-destructive-foreground'
 					>
 						<span className='flex items-center gap-2'>
-							<AlertCircle className='h-4 w-4 shrink-0 text-red-400' />
+							<AlertCircle className='h-4 w-4 shrink-0 text-destructive-foreground' />
 							{errorMessage}
 						</span>
 						<Button
@@ -83,7 +83,7 @@ function OfficialCatalogsPage() {
 							variant='secondary'
 							size='sm'
 							onClick={retryLoading}
-							className='gap-2 border-red-800/70 text-red-200 hover:bg-red-950'
+							className='gap-2 border-destructive/70 text-destructive-foreground hover:bg-destructive'
 						>
 							<RotateCw className='h-3.5 w-3.5' />
 							重新載入
@@ -95,24 +95,24 @@ function OfficialCatalogsPage() {
 					<div
 						data-testid='blacksmith-loading'
 						role='status'
-						className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-16 text-center text-sm text-stone-400'
+						className='rounded-xl border border-border bg-background/70 px-6 py-16 text-center text-sm text-muted-foreground'
 					>
 						正在讀取規則書清單…
 					</div>
 				) : errorMessage ? (
-					<div className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-12 text-center text-sm text-stone-400'>
+					<div className='rounded-xl border border-border bg-background/70 px-6 py-12 text-center text-sm text-muted-foreground'>
 						規則書清單無法顯示，請確認連線後重新載入。
 					</div>
 				) : catalogs.length === 0 ? (
 					<div
 						data-testid='blacksmith-empty-catalog'
-						className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-16 text-center'
+						className='rounded-xl border border-border bg-background/70 px-6 py-16 text-center'
 					>
-						<BookOpen className='mx-auto h-8 w-8 text-stone-500' />
-						<h2 className='mt-3 font-serif text-lg font-bold text-stone-200'>
+						<BookOpen className='mx-auto h-8 w-8 text-muted-foreground' />
+						<h2 className='mt-3 font-serif text-lg font-bold text-foreground'>
 							目前沒有可瀏覽的規則書
 						</h2>
-						<p className='mt-1 text-sm text-stone-400'>
+						<p className='mt-1 text-sm text-muted-foreground'>
 							目錄索引尚未登錄任何物品來源。
 						</p>
 					</div>
@@ -127,25 +127,25 @@ function OfficialCatalogsPage() {
 									data-testid='blacksmith-catalog-link'
 									to='/blacksmith/officials/$catelogId'
 									params={{ catelogId: catalog.catalogId }}
-									className='group flex min-h-32 items-center justify-between gap-4 rounded-xl border border-stone-800 bg-stone-950/70 p-5 transition hover:border-amber-700/70 hover:bg-stone-900'
+									className='group flex min-h-32 items-center justify-between gap-4 rounded-xl border border-border bg-background/70 p-5 transition hover:border-primary/70 hover:bg-card'
 								>
 									<span className='flex min-w-0 items-center gap-4'>
 										<BookOpen
 											aria-hidden='true'
-											className='h-6 w-6 shrink-0 text-amber-400'
+											className='h-6 w-6 shrink-0 text-primary-foreground'
 										/>
 										<span className='min-w-0'>
-											<span className='block truncate font-serif text-lg font-bold text-amber-100'>
+											<span className='block truncate font-serif text-lg font-bold text-primary-foreground'>
 												{catalog.title}
 											</span>
-											<span className='mt-1 block truncate font-mono text-xs text-stone-500'>
+											<span className='mt-1 block truncate font-mono text-xs text-muted-foreground'>
 												{catalog.catalogId}
 											</span>
 										</span>
 									</span>
 									<ArrowRight
 										aria-hidden='true'
-										className='h-5 w-5 shrink-0 text-stone-500 transition group-hover:translate-x-1 group-hover:text-amber-300'
+										className='h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary-foreground'
 									/>
 								</Link>
 							</li>

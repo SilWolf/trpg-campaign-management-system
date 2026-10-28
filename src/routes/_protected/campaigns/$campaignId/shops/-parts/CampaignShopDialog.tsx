@@ -13,7 +13,7 @@ interface CampaignShopDialogProps {
 }
 
 const INPUT_CLASS =
-	'mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600';
+	'mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring';
 
 function getSaveErrorMessage(error: unknown): string {
 	if (
@@ -109,14 +109,14 @@ export function CampaignShopDialog({
 
 	return (
 		<div
-			className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm'
+			className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm'
 			onClick={(event) => {
 				if (event.target === event.currentTarget && !isSaving) onClose();
 			}}
 		>
 			<form
 				onSubmit={(event) => void handleSubmit(event)}
-				className='my-auto grid w-full max-w-xl gap-4 rounded-lg border border-amber-800/50 bg-stone-900 p-4 shadow-2xl sm:grid-cols-2'
+				className='my-auto grid w-full max-w-xl gap-4 rounded-lg border border-primary/50 bg-card p-4 shadow-2xl sm:grid-cols-2'
 				data-testid='shop-editor'
 				role='dialog'
 				aria-modal='true'
@@ -125,7 +125,7 @@ export function CampaignShopDialog({
 				<div className='flex items-center justify-between sm:col-span-2'>
 					<h2
 						id='campaign-shop-dialog-title'
-						className='font-serif text-xl font-bold text-amber-200'
+						className='font-serif text-xl font-bold text-primary-foreground'
 					>
 						{isEditing ? '編輯商店' : '建立商店'}
 					</h2>
@@ -135,7 +135,7 @@ export function CampaignShopDialog({
 						aria-label='關閉商店編輯'
 						disabled={isSaving}
 						onClick={onClose}
-						className='text-stone-400 hover:text-stone-100'
+						className='text-muted-foreground hover:text-foreground'
 					>
 						<X className='h-4 w-4' />
 					</Button>
@@ -143,12 +143,12 @@ export function CampaignShopDialog({
 				{errorMessage && (
 					<p
 						role='alert'
-						className='rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200 sm:col-span-2'
+						className='rounded-md border border-destructive/70 bg-destructive/40 p-3 text-sm text-destructive-foreground sm:col-span-2'
 					>
 						{errorMessage}
 					</p>
 				)}
-				<label className='text-sm text-stone-300'>
+				<label className='text-sm text-foreground'>
 					商店名稱
 					<Input
 						required
@@ -160,18 +160,18 @@ export function CampaignShopDialog({
 						data-testid='shop-name'
 					/>
 				</label>
-				<label className='text-sm text-stone-300 sm:col-span-2'>
+				<label className='text-sm text-foreground sm:col-span-2'>
 					商店風味描述（選填）
 					<Textarea
 						maxLength={1000}
 						value={flavor}
 						onChange={(event) => setFlavor(event.target.value)}
-						className='mt-1 min-h-24 border-stone-700 bg-stone-950 text-stone-100 placeholder:text-stone-600 focus-visible:border-amber-600 focus-visible:ring-amber-600/40'
+						className='mt-1 min-h-24 border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-ring/40'
 						placeholder='描述商店的氛圍、店主或來訪時的感受…'
 						data-testid='shop-flavor'
 					/>
 				</label>
-				<label className='text-sm text-stone-300'>
+				<label className='text-sm text-foreground'>
 					背景圖片網址（選填）
 					<Input
 						type='url'
@@ -183,7 +183,7 @@ export function CampaignShopDialog({
 					/>
 				</label>
 				{backgroundImageUrl && (
-					<div className='overflow-hidden rounded-md border border-stone-700 sm:col-span-2'>
+					<div className='overflow-hidden rounded-md border border-border sm:col-span-2'>
 						<img
 							src={backgroundImageUrl}
 							alt='商店背景預覽'
@@ -195,12 +195,12 @@ export function CampaignShopDialog({
 					</div>
 				)}
 				{isEditing && (
-					<label className='flex items-center gap-2 text-sm text-stone-300 sm:col-span-2'>
+					<label className='flex items-center gap-2 text-sm text-foreground sm:col-span-2'>
 						<input
 							type='checkbox'
 							checked={isActive}
 							onChange={(event) => setIsActive(event.target.checked)}
-							className='accent-amber-500'
+							className='accent-primary'
 						/>
 						啟用商店（停用後只對 DM 顯示，歷史資料保留）
 					</label>
@@ -211,14 +211,14 @@ export function CampaignShopDialog({
 						variant='ghost'
 						disabled={isSaving}
 						onClick={onClose}
-						className='text-stone-400'
+						className='text-muted-foreground'
 					>
 						取消
 					</Button>
 					<Button
 						type='submit'
 						loading={isSaving}
-						className='border border-amber-500/60 bg-amber-800 text-amber-50'
+						className='border border-primary/60 bg-primary text-primary-foreground'
 					>
 						<Check className='h-4 w-4' />
 						儲存商店

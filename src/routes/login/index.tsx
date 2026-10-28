@@ -64,23 +64,23 @@ function LoginPage() {
 	};
 
 	return (
-		<main className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0c0a09] px-4 py-10 text-stone-200'>
-			<div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.2),_rgba(12,10,9,0.96)_70%)]' />
-			<div className='relative z-10 w-full max-w-md rounded-xl border border-amber-800/60 bg-stone-950/95 p-6 shadow-[0_0_55px_rgba(0,0,0,0.8)] sm:p-8'>
+		<main className='relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10 text-foreground'>
+			<div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--primary)_18%,transparent),var(--background)_70%)]' />
+			<div className='relative z-10 w-full max-w-md rounded-xl border border-primary/60 bg-background/95 p-6 shadow-lg sm:p-8'>
 				<div className='mb-7 text-center'>
-					<div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-500/60 bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950 shadow-[0_0_22px_rgba(217,119,6,0.25)]'>
-						<Swords className='h-7 w-7 text-amber-300' />
+					<div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-primary/60 bg-gradient-to-br from-primary via-primary to-background shadow-lg'>
+						<Swords className='h-7 w-7 text-primary-foreground' />
 					</div>
-					<p className='mb-1 text-xs font-semibold tracking-[0.25em] text-amber-500'>
+					<p className='mb-1 text-xs font-semibold tracking-[0.25em] text-primary-foreground'>
 						D&amp;D 5R・2024
 					</p>
 					<h1
 						data-testid='login-heading'
-						className='font-serif text-2xl font-bold tracking-wide text-amber-100'
+						className='font-serif text-2xl font-bold tracking-wide text-primary-foreground'
 					>
 						博德之門戰役軍械庫
 					</h1>
-					<p className='mt-2 text-sm text-stone-400'>
+					<p className='mt-2 text-sm text-muted-foreground'>
 						登入以繼續管理你的戰役與冒險者行囊
 					</p>
 				</div>
@@ -96,7 +96,7 @@ function LoginPage() {
 						value={email}
 						onChange={(event) => setEmail(event.target.value)}
 						placeholder='adventurer@example.com'
-						className='border-stone-700 bg-stone-900 py-2.5 placeholder:text-stone-600'
+						className='border-border bg-card py-2.5 placeholder:text-muted-foreground'
 					/>
 
 					<div>
@@ -112,7 +112,7 @@ function LoginPage() {
 								value={password}
 								onChange={(event) => setPassword(event.target.value)}
 								placeholder='至少 6 個字元'
-								className='border-stone-700 bg-stone-900 py-2.5 pr-11 placeholder:text-stone-600'
+								className='border-border bg-card py-2.5 pr-11 placeholder:text-muted-foreground'
 							/>
 							<Button
 								data-testid='login-password-visibility'
@@ -121,7 +121,7 @@ function LoginPage() {
 								size='sm'
 								onClick={() => setShowPassword((visible) => !visible)}
 								aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
-								className='absolute inset-y-0 right-0 h-full min-h-0 rounded-none px-3 text-stone-500 hover:text-amber-300'
+								className='absolute inset-y-0 right-0 h-full min-h-0 rounded-none px-3 text-muted-foreground hover:text-primary-foreground'
 							>
 								{showPassword ? (
 									<EyeOff className='h-4 w-4' />
@@ -135,7 +135,7 @@ function LoginPage() {
 					{message && (
 						<p
 							data-testid='login-success'
-							className='rounded border border-emerald-800/70 bg-emerald-950/40 px-3 py-2 text-sm text-emerald-300'
+							className='rounded border border-success/70 bg-success/30 px-3 py-2 text-sm text-success-foreground'
 						>
 							{message}
 						</p>
@@ -144,7 +144,7 @@ function LoginPage() {
 						<p
 							data-testid='login-error'
 							role='alert'
-							className='rounded border border-red-800/70 bg-red-950/40 px-3 py-2 text-sm text-red-300'
+							className='rounded border border-destructive/70 bg-destructive/40 px-3 py-2 text-sm text-destructive-foreground'
 						>
 							{errorMessage}
 						</p>
@@ -154,7 +154,7 @@ function LoginPage() {
 						data-testid='login-submit'
 						type='submit'
 						loading={isSubmitting}
-						className='w-full py-2.5 text-stone-950 shadow-[0_0_18px_rgba(245,158,11,0.15)]'
+						className='w-full py-2.5 text-primary-foreground shadow-lg'
 					>
 						{isSubmitting
 							? '處理中...'
@@ -174,29 +174,29 @@ function LoginPage() {
 						setMessage(null);
 						setErrorMessage(null);
 					}}
-					className='mt-4 w-full text-center text-xs font-normal text-stone-400 hover:text-amber-300'
+					className='mt-4 w-full text-center text-xs font-normal text-muted-foreground hover:text-primary-foreground'
 				>
 					{isSignUp ? '已有帳號？返回登入' : '尚未有帳號？立即註冊'}
 				</Button>
 
 				<div className='my-5 flex items-center gap-3'>
-					<div className='h-px flex-1 bg-stone-800' />
-					<span className='text-[10px] uppercase tracking-wider text-stone-600'>
+					<div className='h-px flex-1 bg-muted' />
+					<span className='text-[10px] uppercase tracking-wider text-muted-foreground'>
 						或
 					</span>
-					<div className='h-px flex-1 bg-stone-800' />
+					<div className='h-px flex-1 bg-muted' />
 				</div>
 
 				<Button
 					type='button'
 					variant='secondary'
 					onClick={handleGuestLogin}
-					className='w-full border-purple-400/70 bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-950 py-3 text-sm font-bold text-purple-100 shadow-[0_0_20px_rgba(168,85,247,0.22)] hover:border-purple-300 hover:brightness-125'
+					className='w-full border-border/70 bg-gradient-to-r from-background via-card to-background py-3 text-sm font-bold text-foreground shadow-lg hover:border-border hover:brightness-125'
 				>
-					<Dice6 className='h-5 w-5 text-purple-300' />
+					<Dice6 className='h-5 w-5 text-foreground' />
 					<span>🎲 免登入・以訪客身分體驗測試戰役</span>
 				</Button>
-				<p className='mt-3 text-center text-[11px] leading-relaxed text-stone-500'>
+				<p className='mt-3 text-center text-[11px] leading-relaxed text-muted-foreground'>
 					訪客模式使用此裝置的本機體驗資料，不需要建立帳號。
 				</p>
 			</div>

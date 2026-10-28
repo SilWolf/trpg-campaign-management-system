@@ -251,27 +251,27 @@ function CampaignLobbyPage() {
 	};
 
 	return (
-		<main className='relative min-h-screen overflow-hidden bg-[#0c0a09] px-4 py-8 text-stone-200 sm:px-8'>
-			<div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(120,83,35,0.18),_rgba(12,10,9,0.96)_70%)]' />
+		<main className='relative min-h-screen overflow-hidden bg-background px-4 py-8 text-foreground sm:px-8'>
+			<div className='pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--primary)_18%,transparent),var(--background)_70%)]' />
 			<div className='relative z-10 mx-auto max-w-6xl'>
-				<header className='mb-10 flex flex-col gap-5 border-b border-amber-900/50 pb-5 sm:flex-row sm:items-center sm:justify-between'>
+				<header className='mb-10 flex flex-col gap-5 border-b border-primary/50 pb-5 sm:flex-row sm:items-center sm:justify-between'>
 					<div className='flex items-center gap-3'>
-						<div className='flex h-12 w-12 items-center justify-center rounded-lg border border-amber-500/60 bg-gradient-to-br from-amber-700 via-amber-900 to-stone-950'>
-							<Swords className='h-6 w-6 text-amber-300' />
+						<div className='flex h-12 w-12 items-center justify-center rounded-lg border border-primary/60 bg-gradient-to-br from-primary via-primary to-background'>
+							<Swords className='h-6 w-6 text-primary-foreground' />
 						</div>
 						<div>
-							<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+							<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 								戰役軍械庫
 							</p>
-							<h1 className='font-serif text-2xl font-bold text-amber-100'>
+							<h1 className='font-serif text-2xl font-bold text-primary-foreground'>
 								冒險者大廳
 							</h1>
 						</div>
 					</div>
 					<div className='flex flex-wrap items-center gap-3'>
-						<div className='rounded-md border border-stone-700 bg-stone-900/80 px-3 py-2 text-xs'>
-							<span className='text-stone-400'>目前身分：</span>
-							<span className='font-semibold text-amber-200'>
+						<div className='rounded-md border border-border bg-card/80 px-3 py-2 text-xs'>
+							<span className='text-muted-foreground'>目前身分：</span>
+							<span className='font-semibold text-primary-foreground'>
 								{isGuest ? '訪客冒險者' : (user?.email ?? '已登入使用者')}
 							</span>
 						</div>
@@ -279,7 +279,7 @@ function CampaignLobbyPage() {
 							asChild
 							variant='secondary'
 							size='sm'
-							className='gap-1.5 border-amber-800/70 bg-stone-900/80 px-3 py-1.5 text-xs font-normal text-amber-200 hover:border-amber-500 hover:bg-stone-900'
+							className='gap-1.5 border-primary/70 bg-card/80 px-3 py-1.5 text-xs font-normal text-primary-foreground hover:border-primary hover:bg-card'
 						>
 							<Link data-testid='lobby-blacksmith-link' to='/blacksmith'>
 								<Hammer className='h-3.5 w-3.5' />
@@ -290,7 +290,7 @@ function CampaignLobbyPage() {
 							asChild
 							variant='secondary'
 							size='sm'
-							className='gap-1.5 bg-stone-900/80 px-3 py-1.5 text-xs font-normal text-stone-300 hover:border-amber-700 hover:bg-stone-900 hover:text-amber-200'
+							className='gap-1.5 bg-card/80 px-3 py-1.5 text-xs font-normal text-foreground hover:border-primary hover:bg-card hover:text-primary-foreground'
 						>
 							<Link data-testid='lobby-profile-link' to='/settings/profile'>
 								<UserCog className='w-3.5 h-3.5' />
@@ -302,7 +302,7 @@ function CampaignLobbyPage() {
 							variant='secondary'
 							size='sm'
 							onClick={handleSignOut}
-							className='gap-1.5 border-stone-700 bg-stone-900 px-3 py-2 text-xs font-normal text-stone-300 hover:border-red-700 hover:bg-stone-900 hover:text-red-300'
+							className='gap-1.5 border-border bg-card px-3 py-2 text-xs font-normal text-foreground hover:border-destructive hover:bg-card hover:text-destructive-foreground'
 						>
 							<LogOut className='h-3.5 w-3.5' />
 							登出
@@ -314,7 +314,7 @@ function CampaignLobbyPage() {
 					<div
 						data-testid='lobby-error'
 						role='alert'
-						className='mb-5 rounded-md border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-300'
+						className='mb-5 rounded-md border border-destructive/70 bg-destructive/40 px-4 py-3 text-sm text-destructive-foreground'
 					>
 						{errorMessage}
 					</div>
@@ -322,12 +322,12 @@ function CampaignLobbyPage() {
 
 				<div className='mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
 					<div>
-						<p className='mb-1 text-xs font-semibold tracking-[0.15em] text-amber-600'>
+						<p className='mb-1 text-xs font-semibold tracking-[0.15em] text-primary-foreground'>
 							你的冒險即將展開
 						</p>
 						<h2
 							data-testid='lobby-heading'
-							className='font-serif text-xl font-bold text-stone-100'
+							className='font-serif text-xl font-bold text-foreground'
 						>
 							我的戰役列表
 						</h2>
@@ -342,7 +342,7 @@ function CampaignLobbyPage() {
 								setCampaignTemplate('sample');
 								setErrorMessage(null);
 							}}
-							className='gap-2 border-purple-500/60 bg-purple-950/70 px-3 py-2 text-xs text-purple-200 shadow hover:border-purple-300 hover:bg-purple-950'
+							className='gap-2 border-border/60 bg-background/70 px-3 py-2 text-xs text-foreground shadow hover:border-border hover:bg-background'
 						>
 							<Plus className='h-4 w-4' />
 							建立新戰役 (DM)
@@ -370,15 +370,15 @@ function CampaignLobbyPage() {
 					{campaigns.length === 0 ? (
 						<div
 							data-testid='lobby-empty-state'
-							className='col-span-full rounded-xl border border-amber-800/60 bg-gradient-to-br from-stone-900/90 via-stone-950 to-[#17110b] px-6 py-10 text-center shadow-[0_10px_35px_rgba(0,0,0,0.35)]'
+							className='col-span-full rounded-xl border border-primary/60 bg-gradient-to-br from-card/90 via-background to-background px-6 py-10 text-center shadow-lg'
 						>
-							<div className='mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-amber-700/60 bg-amber-950/50'>
-								<Swords className='h-7 w-7 text-amber-300' />
+							<div className='mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-primary/60 bg-primary/50'>
+								<Swords className='h-7 w-7 text-primary-foreground' />
 							</div>
-							<h3 className='mt-4 font-serif text-lg font-bold text-amber-100'>
+							<h3 className='mt-4 font-serif text-lg font-bold text-primary-foreground'>
 								尚未加入任何戰役
 							</h3>
-							<p className='mx-auto mt-2 max-w-md text-sm leading-relaxed text-stone-400'>
+							<p className='mx-auto mt-2 max-w-md text-sm leading-relaxed text-muted-foreground'>
 								建立一場專屬戰役，成為 DM 展開冒險；或使用邀請碼加入朋友的戰役。
 							</p>
 							<Button
@@ -389,7 +389,7 @@ function CampaignLobbyPage() {
 									setCampaignTemplate('sample');
 									setErrorMessage(null);
 								}}
-								className='mt-5 gap-2 border border-amber-500/60 bg-amber-700/80 px-4 py-2 text-sm text-amber-50 shadow hover:border-amber-300 hover:bg-amber-600'
+								className='mt-5 gap-2 border border-primary/60 bg-primary/80 px-4 py-2 text-sm text-primary-foreground shadow hover:border-primary hover:bg-primary'
 							>
 								<Plus className='h-4 w-4' />
 								建立我的第一場戰役
@@ -403,34 +403,34 @@ function CampaignLobbyPage() {
 									key={camp.id}
 									to='/campaigns/$campaignId'
 									params={{ campaignId: camp.id }}
-									className='group relative overflow-hidden rounded-xl border border-purple-700/60 bg-gradient-to-br from-stone-900 via-stone-950 to-[#1a0f1c] p-5 shadow-[0_10px_35px_rgba(0,0,0,0.45)] transition hover:-translate-y-0.5 hover:border-purple-400/80 hover:shadow-[0_0_28px_rgba(168,85,247,0.2)]'
+									className='group relative overflow-hidden rounded-xl border border-border/60 bg-gradient-to-br from-card via-background to-card p-5 shadow-lg transition hover:-translate-y-0.5 hover:border-border/80 hover:shadow-lg'
 								>
-									<div className='absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-10 rounded-full bg-purple-600/10 blur-2xl transition group-hover:bg-purple-500/20' />
+									<div className='absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-10 rounded-full bg-secondary/10 blur-2xl transition group-hover:bg-secondary/20' />
 									<div className='relative flex items-start justify-between gap-4'>
-										<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-purple-700/60 bg-purple-950/60'>
-											<Swords className='h-6 w-6 text-purple-300' />
+										<div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/60'>
+											<Swords className='h-6 w-6 text-foreground' />
 										</div>
-										<span className='rounded-full border border-purple-700/60 bg-purple-950/60 px-2.5 py-1 text-[10px] font-semibold text-purple-300'>
+										<span className='rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[10px] font-semibold text-foreground'>
 											自建戰役
 										</span>
 									</div>
 									<div className='relative mt-5'>
-										<h3 className='font-serif text-lg font-bold text-purple-100 truncate'>
+										<h3 className='font-serif text-lg font-bold text-foreground truncate'>
 											{camp.name}
 										</h3>
-										<p className='mt-2 text-xs leading-relaxed text-stone-400'>
+										<p className='mt-2 text-xs leading-relaxed text-muted-foreground'>
 											ID: {camp.id} • DM 專屬管理世界
 										</p>
-										<p className='mt-1 text-xs text-stone-400'>
+										<p className='mt-1 text-xs text-muted-foreground'>
 											邀請碼:{' '}
-											<strong className='text-amber-300 font-mono'>
+											<strong className='text-primary-foreground font-mono'>
 												{camp.invite_code || '無'}
 											</strong>
 										</p>
 									</div>
-									<div className='relative mt-5 flex items-center justify-between border-t border-stone-800 pt-3 text-[11px] text-stone-500'>
+									<div className='relative mt-5 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground'>
 										<span>點擊進入自建戰役背包</span>
-										<span className='text-purple-400 transition group-hover:translate-x-1'>
+										<span className='text-muted-foreground transition group-hover:translate-x-1'>
 											→
 										</span>
 									</div>
@@ -450,13 +450,13 @@ function CampaignLobbyPage() {
 						event.preventDefault();
 						closeDialog();
 					}}
-					className='m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border-2 border-amber-700/70 bg-stone-950 p-5 text-stone-200 shadow-[0_0_40px_rgba(0,0,0,0.7)] backdrop:bg-black/75 backdrop:backdrop-blur-sm'
+					className='m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border-2 border-primary/70 bg-background p-5 text-foreground shadow-lg backdrop:bg-background/75 backdrop:backdrop-blur-sm'
 				>
-					<div className='mb-4 flex items-center justify-between border-b border-stone-800 pb-3'>
+					<div className='mb-4 flex items-center justify-between border-b border-border pb-3'>
 						<h2
 							data-testid='lobby-dialog-heading'
 							id='lobby-dialog-title'
-							className='font-serif font-bold text-amber-200'
+							className='font-serif font-bold text-primary-foreground'
 						>
 							{dialog === 'create' ? '建立新戰役 (DM)' : '加入戰役'}
 						</h2>
@@ -467,7 +467,7 @@ function CampaignLobbyPage() {
 							size='sm'
 							onClick={closeDialog}
 							aria-label='關閉視窗'
-							className='px-2 text-stone-500 hover:text-stone-200'
+							className='px-2 text-muted-foreground hover:text-foreground'
 						>
 							<X className='h-5 w-5' />
 						</Button>
@@ -499,7 +499,7 @@ function CampaignLobbyPage() {
 									<option value='blank'>空白戰役（不建立角色與物品）</option>
 								</Select>
 							)}
-							<p className='text-[11px] leading-relaxed text-stone-500'>
+							<p className='text-[11px] leading-relaxed text-muted-foreground'>
 								{campaignTemplate === 'sample'
 									? '建立獨立戰役，載入三名範例冒險者與九件物品；營地儲物箱會獨立保存。'
 									: '建立獨立空白戰役；營地儲物箱仍可使用，角色與物品可稍後新增。'}
@@ -536,7 +536,7 @@ function CampaignLobbyPage() {
 								onChange={(event) => setInviteCode(event.target.value)}
 								placeholder='輸入 DM 提供的邀請碼'
 							/>
-							<p className='text-[11px] leading-relaxed text-stone-500'>
+							<p className='text-[11px] leading-relaxed text-muted-foreground'>
 								使用 DM 提供的六碼邀請碼加入戰役。
 							</p>
 							<div className='flex justify-end gap-2 pt-2'>

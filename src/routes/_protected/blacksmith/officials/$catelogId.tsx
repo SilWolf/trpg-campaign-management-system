@@ -52,24 +52,24 @@ function getCategoryStyle(category: ItemBaseCategory) {
 	if (category === 'Weapon') {
 		return {
 			icon: Sword,
-			badge: 'border-amber-600/50 bg-amber-900/60 text-amber-200',
+			badge: 'border-primary/50 bg-primary/60 text-primary-foreground',
 		};
 	}
 	if (category === 'Armor') {
 		return {
 			icon: Shield,
-			badge: 'border-amber-600/50 bg-amber-900/60 text-amber-200',
+			badge: 'border-primary/50 bg-primary/60 text-primary-foreground',
 		};
 	}
 	if (['Potion', 'Poison', 'FoodAndDrink', 'Scroll'].includes(category)) {
 		return {
 			icon: FlaskConical,
-			badge: 'border-emerald-600/50 bg-emerald-900/60 text-emerald-200',
+			badge: 'border-border/50 bg-card/60 text-foreground',
 		};
 	}
 	return {
 		icon: Package,
-		badge: 'border-stone-600/50 bg-stone-800 text-stone-300',
+		badge: 'border-border/50 bg-muted text-foreground',
 	};
 }
 
@@ -159,7 +159,7 @@ function BlacksmithCatalogPage() {
 	};
 
 	return (
-		<main className='min-h-screen bg-[#0c0a09] px-4 py-8 text-stone-200 sm:px-8'>
+		<main className='min-h-screen bg-background px-4 py-8 text-foreground sm:px-8'>
 			<div className='mx-auto max-w-7xl'>
 				<Breadcrumbs
 					className='mb-5'
@@ -169,18 +169,18 @@ function BlacksmithCatalogPage() {
 						{ label: catalogTitle, current: true },
 					]}
 				/>
-				<header className='mb-7 border-b border-amber-900/50 pb-5'>
-					<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+				<header className='mb-7 border-b border-primary/50 pb-5'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 						BLACKSMITH · 官方規則書
 					</p>
 					<h1
 						data-testid='blacksmith-heading'
-						className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-amber-100 sm:text-3xl'
+						className='mt-2 flex items-center gap-3 font-serif text-2xl font-bold text-primary-foreground sm:text-3xl'
 					>
-						<BookOpen className='h-7 w-7 text-amber-400' />
+						<BookOpen className='h-7 w-7 text-primary-foreground' />
 						{catalogTitle}
 					</h1>
-					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-stone-400'>
+					<p className='mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground'>
 						瀏覽此規則書中的物品定義。此目錄為唯讀；目前不會建立或修改戰役物品。
 					</p>
 				</header>
@@ -189,10 +189,10 @@ function BlacksmithCatalogPage() {
 					<div
 						data-testid='blacksmith-error'
 						role='alert'
-						className='mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-800/70 bg-red-950/40 px-4 py-3 text-sm text-red-200'
+						className='mb-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/70 bg-destructive/40 px-4 py-3 text-sm text-destructive-foreground'
 					>
 						<span className='flex items-center gap-2'>
-							<AlertCircle className='h-4 w-4 shrink-0 text-red-400' />
+							<AlertCircle className='h-4 w-4 shrink-0 text-destructive-foreground' />
 							{errorMessage}
 						</span>
 						<Button
@@ -200,7 +200,7 @@ function BlacksmithCatalogPage() {
 							variant='secondary'
 							size='sm'
 							onClick={retryLoading}
-							className='gap-2 border-red-800/70 text-red-200 hover:bg-red-950'
+							className='gap-2 border-destructive/70 text-destructive-foreground hover:bg-destructive'
 						>
 							<RotateCw className='h-3.5 w-3.5' />
 							重新載入
@@ -208,11 +208,11 @@ function BlacksmithCatalogPage() {
 					</div>
 				)}
 
-				<div className='mb-5 grid gap-3 rounded-xl border border-stone-800 bg-stone-950/80 p-4 md:grid-cols-2 xl:grid-cols-[minmax(15rem,1fr)_repeat(2,minmax(10rem,0.45fr))]'>
+				<div className='mb-5 grid gap-3 rounded-xl border border-border bg-background/80 p-4 md:grid-cols-2 xl:grid-cols-[minmax(15rem,1fr)_repeat(2,minmax(10rem,0.45fr))]'>
 					<div className='relative'>
 						<Search
 							aria-hidden='true'
-							className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500'
+							className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground'
 						/>
 						<Input
 							data-testid='blacksmith-search'
@@ -265,37 +265,37 @@ function BlacksmithCatalogPage() {
 					<div
 						data-testid='blacksmith-loading'
 						role='status'
-						className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-16 text-center text-sm text-stone-400'
+						className='rounded-xl border border-border bg-background/70 px-6 py-16 text-center text-sm text-muted-foreground'
 					>
 						正在讀取規則書目錄…
 					</div>
 				) : errorMessage ? (
-					<div className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-12 text-center text-sm text-stone-400'>
+					<div className='rounded-xl border border-border bg-background/70 px-6 py-12 text-center text-sm text-muted-foreground'>
 						目錄資料無法顯示，請確認連線後重新載入。
 					</div>
 				) : items.length === 0 ? (
 					<div
 						data-testid='blacksmith-empty-catalog'
-						className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-16 text-center'
+						className='rounded-xl border border-border bg-background/70 px-6 py-16 text-center'
 					>
-						<BookOpen className='mx-auto h-8 w-8 text-stone-500' />
-						<h2 className='mt-3 font-serif text-lg font-bold text-stone-200'>
+						<BookOpen className='mx-auto h-8 w-8 text-muted-foreground' />
+						<h2 className='mt-3 font-serif text-lg font-bold text-foreground'>
 							目前沒有可瀏覽的規則書
 						</h2>
-						<p className='mt-1 text-sm text-stone-400'>
+						<p className='mt-1 text-sm text-muted-foreground'>
 							目錄索引尚未登錄任何物品來源。
 						</p>
 					</div>
 				) : filteredItems.length === 0 ? (
 					<div
 						data-testid='blacksmith-no-results'
-						className='rounded-xl border border-stone-800 bg-stone-950/70 px-6 py-16 text-center'
+						className='rounded-xl border border-border bg-background/70 px-6 py-16 text-center'
 					>
-						<Search className='mx-auto h-8 w-8 text-stone-500' />
-						<h2 className='mt-3 font-serif text-lg font-bold text-stone-200'>
+						<Search className='mx-auto h-8 w-8 text-muted-foreground' />
+						<h2 className='mt-3 font-serif text-lg font-bold text-foreground'>
 							找不到符合條件的物品
 						</h2>
-						<p className='mt-1 text-sm text-stone-400'>
+						<p className='mt-1 text-sm text-muted-foreground'>
 							請調整搜尋文字或篩選條件。
 						</p>
 					</div>
@@ -304,9 +304,9 @@ function BlacksmithCatalogPage() {
 						<section aria-label='規則書物品列表'>
 							<p
 								data-testid='blacksmith-result-count'
-								className='mb-3 text-xs text-stone-400'
+								className='mb-3 text-xs text-muted-foreground'
 							>
-								找到 <span className='font-mono text-amber-300'>{filteredItems.length}</span>{' '}
+								找到 <span className='font-mono text-primary-foreground'>{filteredItems.length}</span>{' '}
 								筆物品
 							</p>
 							<div className='mb-3 flex justify-end gap-2'>
@@ -366,18 +366,18 @@ function BlacksmithCatalogPage() {
 												displayMode === 'list'
 													? `min-h-12 items-center gap-2 border-b px-2 py-1.5 ${
 															selectedItem?.sourceKey === item.sourceKey
-																? 'border-l-2 border-l-amber-500 bg-amber-950/30'
-																: 'border-stone-800/80 hover:bg-stone-900/70'
+																? 'border-l-2 border-l-amber-500 bg-primary/30'
+																: 'border-border/80 hover:bg-card/70'
 														}`
 													: `min-h-24 items-start gap-3 rounded-xl border p-3 ${
 															selectedItem?.sourceKey === item.sourceKey
-																? 'border-amber-500/70 bg-amber-950/30'
-																: 'border-stone-800 bg-stone-950/70 hover:border-amber-800/70 hover:bg-stone-900'
+																? 'border-primary/70 bg-primary/30'
+																: 'border-border bg-background/70 hover:border-primary/70 hover:bg-card'
 														}`
 											}`}
 										>
 											<div className={`relative shrink-0 overflow-hidden border ${displayMode === 'list' ? 'h-8 w-8 rounded-md' : 'h-14 w-14 rounded-lg'} ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}>
-												<Package className={`absolute inset-0 m-auto text-stone-500 ${displayMode === 'list' ? 'h-4 w-4' : 'h-6 w-6'}`} />
+												<Package className={`absolute inset-0 m-auto text-muted-foreground ${displayMode === 'list' ? 'h-4 w-4' : 'h-6 w-6'}`} />
 												<img
 													src={getBlacksmithIconUrl(item.icon ?? './images/package.webp')}
 													alt=''
@@ -392,7 +392,7 @@ function BlacksmithCatalogPage() {
 											{displayMode === 'list' ? (
 												<>
 													<span className='flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5'>
-														<span className={`truncate font-serif text-sm font-bold ${rarityStyle.text} group-hover:text-amber-100`}>
+														<span className={`truncate font-serif text-sm font-bold ${rarityStyle.text} group-hover:text-primary-foreground`}>
 															{item.name}
 														</span>
 														<span className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-0.5 text-[10px] leading-none ${categoryStyle.badge}`}>
@@ -403,21 +403,21 @@ function BlacksmithCatalogPage() {
 															{rarityStyle.label}
 														</span>
 														{item.subTypes.length > 0 && (
-															<span className='min-w-0 truncate text-xs text-stone-400'>
+															<span className='min-w-0 truncate text-xs text-muted-foreground'>
 																{item.subTypes.join('、')}
 															</span>
 														)}
 													</span>
-													<span className='hidden w-16 shrink-0 text-right font-mono text-xs text-stone-400 sm:block'>
+													<span className='hidden w-16 shrink-0 text-right font-mono text-xs text-muted-foreground sm:block'>
 														{item.weight} lb
 													</span>
-													<span className='hidden w-20 shrink-0 text-right font-mono text-xs font-semibold text-amber-300 sm:block'>
+													<span className='hidden w-20 shrink-0 text-right font-mono text-xs font-semibold text-primary-foreground sm:block'>
 														{item.valueGp} GP
 													</span>
 												</>
 											) : (
 												<span className='min-w-0 flex-1'>
-													<span className={`block truncate font-serif font-bold ${rarityStyle.text} group-hover:text-amber-100`}>
+													<span className={`block truncate font-serif font-bold ${rarityStyle.text} group-hover:text-primary-foreground`}>
 														{item.name}
 													</span>
 													<span className='mt-1 flex flex-wrap items-center gap-1'>
@@ -429,10 +429,10 @@ function BlacksmithCatalogPage() {
 															{rarityStyle.label}
 														</span>
 													</span>
-													<span className='mt-1 block truncate text-[11px] text-stone-400'>
+													<span className='mt-1 block truncate text-[11px] text-muted-foreground'>
 														{item.subTypes.join('、')}
 													</span>
-													<span className='mt-2 block truncate text-[11px] text-amber-400/80'>
+													<span className='mt-2 block truncate text-[11px] text-primary-foreground/80'>
 														{item.catalogTitle}
 													</span>
 												</span>
@@ -444,14 +444,14 @@ function BlacksmithCatalogPage() {
 							{filteredItems.length > pageSize && (
 								<nav
 									aria-label='物品列表分頁'
-									className='mt-4 flex items-center justify-between gap-3 border-t border-stone-800 pt-3'
+									className='mt-4 flex items-center justify-between gap-3 border-t border-border pt-3'
 								>
 									<p
 										data-testid='blacksmith-pagination-status'
-										className='text-xs text-stone-400'
+										className='text-xs text-muted-foreground'
 									>
-										第 <span className='font-mono text-stone-200'>{currentPage}</span> /{' '}
-										<span className='font-mono text-stone-200'>{pageCount}</span> 頁
+										第 <span className='font-mono text-foreground'>{currentPage}</span> /{' '}
+										<span className='font-mono text-foreground'>{pageCount}</span> 頁
 										<span className='hidden sm:inline'>
 											{' '}· 顯示 {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredItems.length)} 筆
 										</span>
@@ -499,7 +499,7 @@ function BlacksmithCatalogPage() {
 									>
 										<label
 											htmlFor='blacksmith-page-input'
-											className='whitespace-nowrap text-xs text-stone-400'
+											className='whitespace-nowrap text-xs text-muted-foreground'
 										>
 											跳轉至
 										</label>
@@ -516,7 +516,7 @@ function BlacksmithCatalogPage() {
 											onChange={(event) => setPageInput(event.target.value)}
 											className='h-8 w-16 px-2 text-center font-mono'
 										/>
-										<span className='text-xs text-stone-400'>頁</span>
+										<span className='text-xs text-muted-foreground'>頁</span>
 										<Button type='submit' variant='secondary' size='sm'>
 											跳轉
 										</Button>
@@ -529,12 +529,12 @@ function BlacksmithCatalogPage() {
 							<aside
 								data-testid='blacksmith-item-detail'
 								aria-label={`${selectedItem.name}物品詳情`}
-								className={`rounded-xl border-2 ${RARITY_CONFIG[selectedItem.rarity].border} bg-gradient-to-b from-stone-900 to-stone-950 p-5 ${RARITY_CONFIG[selectedItem.rarity].glow} lg:sticky lg:top-5`}
+								className={`rounded-xl border-2 ${RARITY_CONFIG[selectedItem.rarity].border} bg-gradient-to-b from-card to-background p-5 ${RARITY_CONFIG[selectedItem.rarity].glow} lg:sticky lg:top-5`}
 							>
-								<div className={`-mx-5 -mt-5 mb-4 border-b border-stone-800 bg-gradient-to-r ${RARITY_CONFIG[selectedItem.rarity].headerGradient} p-5`}>
+								<div className={`-mx-5 -mt-5 mb-4 border-b border-border bg-gradient-to-r ${RARITY_CONFIG[selectedItem.rarity].headerGradient} p-5`}>
 									<div className='flex items-start gap-4'>
-										<div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${RARITY_CONFIG[selectedItem.rarity].border} bg-stone-950`}>
-											<Package className='absolute inset-0 m-auto h-7 w-7 text-stone-500' />
+										<div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${RARITY_CONFIG[selectedItem.rarity].border} bg-background`}>
+											<Package className='absolute inset-0 m-auto h-7 w-7 text-muted-foreground' />
 											<img
 												src={getBlacksmithIconUrl(selectedItem.icon ?? './images/package.webp')}
 												alt=''
@@ -545,7 +545,7 @@ function BlacksmithCatalogPage() {
 											/>
 										</div>
 										<div className='min-w-0'>
-											<p className='text-xs text-amber-500'>
+											<p className='text-xs text-primary-foreground'>
 												{selectedItem.catalogTitle}
 											</p>
 											<h2 className={`mt-1 font-serif text-xl font-bold ${RARITY_CONFIG[selectedItem.rarity].text}`}>
@@ -562,13 +562,13 @@ function BlacksmithCatalogPage() {
 													{RARITY_CONFIG[selectedItem.rarity].label}
 												</span>
 												{selectedItem.isRequireAttunement && (
-													<span className='inline-flex items-center gap-1 rounded border border-purple-500/60 bg-purple-950/80 px-1.5 py-0.5 text-[10px] text-purple-200'>
+													<span className='inline-flex items-center gap-1 rounded border border-border/60 bg-background/80 px-1.5 py-0.5 text-[10px] text-foreground'>
 														<Sparkles aria-hidden='true' className='h-3 w-3' />
 														需要調諧
 													</span>
 												)}
 											</div>
-											<p className='mt-1 text-xs text-stone-400'>
+											<p className='mt-1 text-xs text-muted-foreground'>
 												{selectedItem.subTypes.join('、')}
 											</p>
 										</div>
@@ -576,27 +576,27 @@ function BlacksmithCatalogPage() {
 								</div>
 
 								<div className='mt-5 grid grid-cols-2 gap-2 text-xs'>
-									<div className='rounded-md border border-stone-800 bg-stone-950/80 p-3'>
-										<p className='flex items-center gap-1 text-stone-500'>
+									<div className='rounded-md border border-border bg-background/80 p-3'>
+										<p className='flex items-center gap-1 text-muted-foreground'>
 											<Weight className='h-3 w-3' />
 											重量
 										</p>
-										<p className='mt-1 font-mono text-stone-200'>
+										<p className='mt-1 font-mono text-foreground'>
 											{selectedItem.weight} 磅
 										</p>
 									</div>
-									<div className='rounded-md border border-stone-800 bg-stone-950/80 p-3'>
-										<p className='flex items-center gap-1 text-stone-500'>
+									<div className='rounded-md border border-border bg-background/80 p-3'>
+										<p className='flex items-center gap-1 text-muted-foreground'>
 											<Coins className='h-3 w-3' />
 											價值
 										</p>
-										<p className='mt-1 font-mono text-stone-200'>
+										<p className='mt-1 font-mono text-foreground'>
 											{selectedItem.valueGp} GP
 										</p>
 									</div>
-									<div className='rounded-md border border-stone-800 bg-stone-950/80 p-3'>
-										<p className='text-stone-500'>調諧</p>
-										<p className={`mt-1 ${selectedItem.isRequireAttunement ? 'text-purple-200' : 'text-stone-200'}`}>
+									<div className='rounded-md border border-border bg-background/80 p-3'>
+										<p className='text-muted-foreground'>調諧</p>
+										<p className={`mt-1 ${selectedItem.isRequireAttunement ? 'text-foreground' : 'text-foreground'}`}>
 											{selectedItem.isRequireAttunement ? '需要' : '不需要'}
 										</p>
 									</div>
@@ -605,9 +605,9 @@ function BlacksmithCatalogPage() {
 								{selectedItem.category === 'Weapon' &&
 									(selectedItem.weaponProperties.mastery ||
 										selectedItem.weaponProperties.properties.length > 0) && (
-										<div className='mt-4 rounded-md border border-amber-800/50 bg-amber-950/20 p-3'>
+										<div className='mt-4 rounded-md border border-primary/50 bg-primary/20 p-3'>
 											{selectedItem.weaponProperties.mastery && (
-												<p className='text-xs text-amber-200'>
+												<p className='text-xs text-primary-foreground'>
 													武器精通：{getWeaponMasteryLabel(selectedItem.weaponProperties.mastery)}
 												</p>
 											)}
@@ -616,7 +616,7 @@ function BlacksmithCatalogPage() {
 														{selectedItem.weaponProperties.properties.map((property) => (
 															<span
 																key={property}
-																className='rounded border border-amber-700/50 bg-amber-900/40 px-1.5 py-0.5 text-[10px] text-amber-200'
+																className='rounded border border-primary/50 bg-primary/40 px-1.5 py-0.5 text-[10px] text-primary-foreground'
 															>
 																{property}
 															</span>
@@ -631,11 +631,11 @@ function BlacksmithCatalogPage() {
 									: selectedItem.category === 'Weapon'
 										? selectedItem.weaponProperties.damage
 										: null) != null && (
-									<p className='mt-4 rounded-md border border-stone-800 bg-stone-950/80 px-3 py-2 text-sm'>
-										<span className='text-stone-500'>
+									<p className='mt-4 rounded-md border border-border bg-background/80 px-3 py-2 text-sm'>
+										<span className='text-muted-foreground'>
 											{selectedItem.category === 'Armor' ? '護甲值：' : '傷害：'}
 										</span>
-										<span className='font-mono text-stone-200'>
+										<span className='font-mono text-foreground'>
 											{selectedItem.category === 'Armor'
 												? selectedItem.armorProperties.ac
 												: selectedItem.category === 'Weapon'
@@ -645,11 +645,11 @@ function BlacksmithCatalogPage() {
 									</p>
 								)}
 
-								<div className='mt-5 border-t border-stone-800 pt-4'>
-									<h3 className='text-xs font-semibold tracking-wide text-stone-400'>
+								<div className='mt-5 border-t border-border pt-4'>
+									<h3 className='text-xs font-semibold tracking-wide text-muted-foreground'>
 										物品描述
 									</h3>
-									<p className='mt-2 whitespace-pre-wrap text-sm leading-relaxed text-stone-200'>
+									<p className='mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground'>
 										{selectedItem.effects || '此物品沒有附加描述。'}
 									</p>
 								</div>
@@ -657,7 +657,7 @@ function BlacksmithCatalogPage() {
 									<BlacksmithImportButton source={selectedItem} />
 								</div>
 								{selectedItem.source && (
-									<p className='mt-4 border-t border-stone-800 pt-3 text-xs text-stone-500'>
+									<p className='mt-4 border-t border-border pt-3 text-xs text-muted-foreground'>
 										來源：{selectedItem.source}
 									</p>
 								)}

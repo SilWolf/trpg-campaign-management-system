@@ -216,11 +216,11 @@ function CampaignShopDetail() {
 
 	if (!isSupabaseConfigured || isGuest) {
 		return (
-			<main className='rounded-lg border border-amber-800/50 bg-stone-900/80 p-6'>
-				<h1 className='font-serif text-2xl font-bold text-amber-200'>
+			<main className='rounded-lg border border-primary/50 bg-card/80 p-6'>
+				<h1 className='font-serif text-2xl font-bold text-primary-foreground'>
 					戰役商店
 				</h1>
-				<p className='mt-3 text-sm text-stone-400'>
+				<p className='mt-3 text-sm text-muted-foreground'>
 					商店雲端功能需要登入 Supabase 帳號。
 				</p>
 			</main>
@@ -229,7 +229,7 @@ function CampaignShopDetail() {
 
 	if (isLoading) {
 		return (
-			<main className='rounded-lg border border-stone-800 bg-stone-900/60 p-8 text-center text-sm text-stone-400'>
+			<main className='rounded-lg border border-border bg-card/60 p-8 text-center text-sm text-muted-foreground'>
 				載入商店中…
 			</main>
 		);
@@ -239,7 +239,7 @@ function CampaignShopDetail() {
 		return (
 			<main
 				role='alert'
-				className='rounded-lg border border-red-800/70 bg-red-950/40 p-4 text-sm text-red-200'
+				className='rounded-lg border border-destructive/70 bg-destructive/40 p-4 text-sm text-destructive-foreground'
 			>
 				{errorMessage}
 			</main>
@@ -248,13 +248,13 @@ function CampaignShopDetail() {
 
 	if (!shop || !shop.isActive) {
 		return (
-			<main className='rounded-lg border border-stone-800 bg-stone-900/60 p-8 text-center'>
-				<Store className='mx-auto mb-3 h-8 w-8 text-stone-600' />
-				<p className='text-stone-400'>找不到這家商店，或商店目前未營業。</p>
+			<main className='rounded-lg border border-border bg-card/60 p-8 text-center'>
+				<Store className='mx-auto mb-3 h-8 w-8 text-muted-foreground' />
+				<p className='text-muted-foreground'>找不到這家商店，或商店目前未營業。</p>
 				<Link
 					to='/campaigns/$campaignId/shops'
 					params={{ campaignId }}
-					className='mt-4 inline-block text-sm text-amber-300 hover:text-amber-200'
+					className='mt-4 inline-block text-sm text-primary-foreground hover:text-primary-foreground'
 				>
 					返回商店列表
 				</Link>
@@ -264,16 +264,16 @@ function CampaignShopDetail() {
 
 	return (
 		<main data-testid='campaign-shop-detail' data-shop-id={shop.id}>
-			<div className='mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/40 pb-4'>
+			<div className='mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-primary/40 pb-4'>
 				<div>
-					<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 						戰役商店
 					</p>
-					<h1 className='mt-1 font-serif text-3xl font-bold text-amber-100'>
+					<h1 className='mt-1 font-serif text-3xl font-bold text-primary-foreground'>
 						{shop.name}
 					</h1>
 					{shop.flavor && (
-						<p className='mt-2 whitespace-pre-line text-sm text-stone-400'>
+						<p className='mt-2 whitespace-pre-line text-sm text-muted-foreground'>
 							{shop.flavor}
 						</p>
 					)}
@@ -286,7 +286,7 @@ function CampaignShopDetail() {
 						<Button
 							type='button'
 							variant='secondary'
-							className='border border-stone-700 bg-stone-950 text-stone-300'
+							className='border border-border bg-background text-foreground'
 						>
 							<Pencil className='h-4 w-4' />
 							商店設定
@@ -295,7 +295,7 @@ function CampaignShopDetail() {
 				)}
 			</div>
 
-			<div className='overflow-hidden rounded-lg border border-stone-800 bg-stone-900/70'>
+			<div className='overflow-hidden rounded-lg border border-border bg-card/70'>
 				{shop.backgroundImageUrl ? (
 					<img
 						src={shop.backgroundImageUrl}
@@ -303,34 +303,34 @@ function CampaignShopDetail() {
 						className='h-48 w-full object-cover'
 					/>
 				) : (
-					<div className='flex h-36 items-center justify-center bg-gradient-to-br from-amber-950/50 via-stone-900 to-stone-950'>
-						<Image className='h-8 w-8 text-amber-900' />
+					<div className='flex h-36 items-center justify-center bg-gradient-to-br from-primary/50 via-card to-background'>
+						<Image className='h-8 w-8 text-primary-foreground' />
 					</div>
 				)}
 			</div>
 
-			<section className='mt-5 rounded-lg border border-stone-800 bg-stone-900/50 p-4'>
+			<section className='mt-5 rounded-lg border border-border bg-card/50 p-4'>
 				<div className='mb-4'>
-					<h2 className='font-serif text-xl font-bold text-amber-100'>
+					<h2 className='font-serif text-xl font-bold text-primary-foreground'>
 						商品目錄
 					</h2>
-					<p className='mt-1 text-xs text-stone-500'>
+					<p className='mt-1 text-xs text-muted-foreground'>
 						選擇商品查看詳細資料，使用 +1／-1 調整數量，再選擇角色與錢包結帳。
 					</p>
 				</div>
 				<div className='flex flex-col gap-4 lg:flex-row'>
-					<div className='min-w-0 rounded-md border border-stone-800 bg-stone-950/40 lg:flex-[3]'>
-						<div className='border-b border-stone-800 px-3 py-2'>
-							<span className='font-mono text-xs text-stone-500'>
+					<div className='min-w-0 rounded-md border border-border bg-background/40 lg:flex-[3]'>
+						<div className='border-b border-border px-3 py-2'>
+							<span className='font-mono text-xs text-muted-foreground'>
 								{visibleItems.length} 項商品
 							</span>
 						</div>
 						{visibleItems.length === 0 ? (
-							<div className='rounded-md border border-dashed border-stone-700 p-8 text-center text-sm text-stone-500'>
+							<div className='rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground'>
 								尚無商品
 							</div>
 						) : (
-							<div className='max-h-[38rem] divide-y divide-stone-800 overflow-y-auto'>
+							<div className='max-h-[38rem] divide-y divide-border overflow-y-auto'>
 								{paginatedItems.map((item) => {
 									const isSelected = selectedItem?.id === item.id;
 									const quantity = cartQuantities[item.id] ?? 0;
@@ -350,7 +350,7 @@ function CampaignShopDetail() {
 									return (
 										<div
 											key={item.id}
-											className='flex min-w-0 items-stretch border-b border-stone-800 last:border-b-0'
+											className='flex min-w-0 items-stretch border-b border-border last:border-b-0'
 											data-testid='shop-item-rarity-card'
 											style={{ borderLeftColor: rarityStyle.color }}
 										>
@@ -362,22 +362,22 @@ function CampaignShopDetail() {
 												onClick={() => setSelectedItemId(item.id)}
 												className={`flex min-w-0 flex-1 items-center justify-between gap-3 rounded-none px-3 py-2 text-left ${
 													isSelected
-														? 'border-amber-500/80 bg-amber-950/40'
-														: 'border-transparent bg-stone-950/70 hover:border-stone-600 hover:bg-stone-900'
+														? 'border-primary/80 bg-primary/40'
+														: 'border-transparent bg-background/70 hover:border-border hover:bg-card'
 												}`}
 												data-testid='shop-item-card'
 											>
 												<div className='flex min-w-0 flex-1 items-center gap-2'>
 													<div
-														className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded border bg-stone-950 ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
+														className={`relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded border bg-background ${rarityStyle.border} bg-gradient-to-b ${rarityStyle.bg} ${rarityStyle.glow}`}
 														data-testid='shop-item-icon'
 													>
 														{isMasked ? (
-															<HelpCircle className='h-6 w-6 text-stone-300' />
+															<HelpCircle className='h-6 w-6 text-foreground' />
 														) : (
 															<ItemIcon
 																iconName={item.itemSnapshot.icon}
-																className='h-6 w-6 text-stone-300'
+																className='h-6 w-6 text-foreground'
 															/>
 														)}
 													</div>
@@ -387,7 +387,7 @@ function CampaignShopDetail() {
 														>
 															{displayName}
 														</h3>
-														<p className='mt-1 truncate text-xs text-stone-500'>
+														<p className='mt-1 truncate text-xs text-muted-foreground'>
 															{CATEGORY_LABELS[item.itemSnapshot.category]}
 															{!isUnidentified && (
 																<>
@@ -404,15 +404,15 @@ function CampaignShopDetail() {
 													</div>
 												</div>
 												<div className='flex shrink-0 flex-col items-end gap-2'>
-													<span className='font-mono text-sm text-amber-300'>
+													<span className='font-mono text-sm text-primary-foreground'>
 														{item.unitPriceGp.toLocaleString('zh-TW')} gp
 													</span>
-													<span className='text-[11px] text-stone-500'>
+													<span className='text-[11px] text-muted-foreground'>
 														庫存 {item.stockAvailable}
 													</span>
 												</div>
 												{item.requiresApproval && (
-													<span className='text-[11px] text-amber-300'>
+													<span className='text-[11px] text-primary-foreground'>
 														需 DM 審查
 													</span>
 												)}
@@ -441,7 +441,7 @@ function CampaignShopDetail() {
 													<Minus className='h-3 w-3' />
 												</Button>
 												<span
-													className='min-w-6 text-center font-mono text-sm text-stone-200'
+													className='min-w-6 text-center font-mono text-sm text-foreground'
 													data-testid={`shop-cart-quantity-${item.id}`}
 												>
 													{quantity}
@@ -471,18 +471,18 @@ function CampaignShopDetail() {
 						{visibleItems.length > pageSize && (
 							<nav
 								aria-label='商品列表分頁'
-								className='flex flex-wrap items-center justify-between gap-3 border-t border-stone-800 px-3 py-2'
+								className='flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-2'
 							>
 								<p
 									data-testid='shop-items-pagination-status'
-									className='text-xs text-stone-400'
+									className='text-xs text-muted-foreground'
 								>
 									第{' '}
-									<span className='font-mono text-stone-200'>
+									<span className='font-mono text-foreground'>
 										{currentPage}
 									</span>{' '}
 									/{' '}
-									<span className='font-mono text-stone-200'>{pageCount}</span>{' '}
+									<span className='font-mono text-foreground'>{pageCount}</span>{' '}
 									頁
 									<span className='hidden sm:inline'>
 										{' '}
@@ -525,23 +525,23 @@ function CampaignShopDetail() {
 					</div>
 
 					<aside
-						className='min-w-0 rounded-md border border-stone-800 bg-stone-950/60 p-4 lg:min-w-72 lg:flex-[2]'
+						className='min-w-0 rounded-md border border-border bg-background/60 p-4 lg:min-w-72 lg:flex-[2]'
 						aria-label='物品詳細'
 						data-testid='shop-item-details'
 					>
 						{selectedItem ? (
 							<>
-								<div className='flex items-start gap-3 border-b border-stone-800 pb-4'>
+								<div className='flex items-start gap-3 border-b border-border pb-4'>
 									<div
 										className={`relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-gradient-to-b ${selectedItemRarityStyle.border} ${selectedItemRarityStyle.bg} ${selectedItemRarityStyle.glow}`}
 										data-testid='shop-item-detail-icon'
 									>
 										{selectedItemIsUnidentified ? (
-											<HelpCircle className='h-8 w-8 text-stone-400' />
+											<HelpCircle className='h-8 w-8 text-muted-foreground' />
 										) : (
 											<ItemIcon
 												iconName={selectedItem.itemSnapshot.icon}
-												className='h-8 w-8 text-stone-300'
+												className='h-8 w-8 text-foreground'
 											/>
 										)}
 									</div>
@@ -549,13 +549,13 @@ function CampaignShopDetail() {
 										<h3
 											className={`font-serif text-xl font-bold ${
 												selectedItemIsUnidentified
-													? 'text-stone-100'
+													? 'text-foreground'
 													: selectedItemRarityStyle.text
 											}`}
 										>
 											{selectedItemDisplayName}
 										</h3>
-										<p className='mt-1 text-xs text-stone-400'>
+										<p className='mt-1 text-xs text-muted-foreground'>
 											{selectedItemIsUnidentified
 												? '未鑑定'
 												: `${CATEGORY_LABELS[selectedItem.itemSnapshot.category]}・${selectedItemRarityStyle.label}${
@@ -567,12 +567,12 @@ function CampaignShopDetail() {
 									</div>
 								</div>
 
-								<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
+								<div className='grid grid-cols-2 gap-2 border-b border-border py-3 text-sm'>
 									{!selectedItemIsUnidentified &&
 										getItemDamage(selectedItem.itemSnapshot) && (
 											<div>
-												<p className='text-[11px] text-stone-500'>傷害</p>
-												<p className='font-mono text-amber-200'>
+												<p className='text-[11px] text-muted-foreground'>傷害</p>
+												<p className='font-mono text-primary-foreground'>
 													{getItemDamage(selectedItem.itemSnapshot)}
 												</p>
 											</div>
@@ -580,35 +580,35 @@ function CampaignShopDetail() {
 									{!selectedItemIsUnidentified &&
 										getItemArmorClass(selectedItem.itemSnapshot) && (
 											<div>
-												<p className='text-[11px] text-stone-500'>護甲等級</p>
-												<p className='font-mono text-sky-200'>
+												<p className='text-[11px] text-muted-foreground'>護甲等級</p>
+												<p className='font-mono text-foreground'>
 													AC {getItemArmorClass(selectedItem.itemSnapshot)}
 												</p>
 											</div>
 										)}
 									{!selectedItemIsUnidentified && (
 										<div>
-											<p className='text-[11px] text-stone-500'>重量</p>
-											<p className='font-mono text-stone-200'>
+											<p className='text-[11px] text-muted-foreground'>重量</p>
+											<p className='font-mono text-foreground'>
 												{selectedItem.itemSnapshot.weight} lb
 											</p>
 										</div>
 									)}
 									<div>
-										<p className='text-[11px] text-stone-500'>商店價格</p>
-										<p className='font-mono text-amber-300'>
+										<p className='text-[11px] text-muted-foreground'>商店價格</p>
+										<p className='font-mono text-primary-foreground'>
 											{selectedItem.unitPriceGp.toLocaleString('zh-TW')} gp
 										</p>
 									</div>
 									<div>
-										<p className='text-[11px] text-stone-500'>可用庫存</p>
-										<p className='font-mono text-stone-200'>
+										<p className='text-[11px] text-muted-foreground'>可用庫存</p>
+										<p className='font-mono text-foreground'>
 											{selectedItem.stockAvailable}
 										</p>
 									</div>
 									{!selectedItemIsUnidentified &&
 										selectedItem.itemSnapshot.isRequireAttunement && (
-											<div className='self-end text-xs text-purple-300'>
+											<div className='self-end text-xs text-foreground'>
 												需同調
 											</div>
 										)}
@@ -616,11 +616,11 @@ function CampaignShopDetail() {
 
 								{!selectedItemIsUnidentified &&
 									selectedItem.itemSnapshot.flavor && (
-										<div className='border-b border-stone-800 py-3'>
-											<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+										<div className='border-b border-border py-3'>
+											<h4 className='mb-1 text-xs font-semibold text-muted-foreground'>
 												物品描述
 											</h4>
-											<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+											<div className='prose prose-invert max-w-none text-sm leading-relaxed text-foreground'>
 												<ReactMarkdown>
 													{selectedItem.itemSnapshot.flavor}
 												</ReactMarkdown>
@@ -628,12 +628,12 @@ function CampaignShopDetail() {
 										</div>
 									)}
 								{selectedItemIsUnidentified ? (
-									<div className='border-b border-stone-800 py-3 text-sm italic text-purple-300'>
+									<div className='border-b border-border py-3 text-sm italic text-foreground'>
 										此物品散發著晦澀難明的魔法波動，無法得知其確切能力。
 									</div>
 								) : selectedItem.itemSnapshot.effects ? (
-									<div className='border-b border-stone-800 py-3'>
-										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+									<div className='border-b border-border py-3'>
+										<h4 className='mb-1 text-xs font-semibold text-muted-foreground'>
 											物品效果
 										</h4>
 										<div
@@ -644,7 +644,7 @@ function CampaignShopDetail() {
 										>
 											<div
 												ref={itemEffectsContentRef}
-												className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'
+												className='prose prose-invert max-w-none text-sm leading-relaxed text-foreground'
 											>
 												<ReactMarkdown>
 													{selectedItem.itemSnapshot.effects}
@@ -662,7 +662,7 @@ function CampaignShopDetail() {
 														isItemEffectsExpanded ? null : selectedItem.id,
 													)
 												}
-												className='mt-2 px-0 text-xs text-amber-300 hover:text-amber-200'
+												className='mt-2 px-0 text-xs text-primary-foreground hover:text-primary-foreground'
 											>
 												{isItemEffectsExpanded ? '收合' : '顯示全部'}
 											</Button>
@@ -675,37 +675,37 @@ function CampaignShopDetail() {
 										.map((affix) => (
 											<div
 												key={affix.id}
-												className='border-b border-stone-800 py-3 last:border-0'
+												className='border-b border-border py-3 last:border-0'
 											>
-												<h4 className='mb-1 text-xs font-semibold text-purple-300'>
+												<h4 className='mb-1 text-xs font-semibold text-foreground'>
 													{affix.name}
 												</h4>
-												<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+												<div className='prose prose-invert max-w-none text-sm leading-relaxed text-foreground'>
 													<ReactMarkdown>{affix.desc}</ReactMarkdown>
 												</div>
 											</div>
 										))}
 								{selectedItem.requiresApproval && (
-									<p className='mt-3 text-xs text-purple-300'>
+									<p className='mt-3 text-xs text-foreground'>
 										此商品購買需要 DM 審查。
 									</p>
 								)}
 							</>
 						) : (
-							<div className='flex min-h-48 items-center justify-center text-center text-sm text-stone-500'>
+							<div className='flex min-h-48 items-center justify-center text-center text-sm text-muted-foreground'>
 								請先從左側選擇商品以查看詳細資料。
 							</div>
 						)}
 					</aside>
 				</div>
-				<div className='mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-stone-800 pt-4'>
+				<div className='mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4'>
 					<div>
-						<p className='text-xs text-stone-500'>已挑選商品</p>
-						<p className='mt-1 text-sm text-stone-200'>
+						<p className='text-xs text-muted-foreground'>已挑選商品</p>
+						<p className='mt-1 text-sm text-foreground'>
 							<span className='font-mono'>{cartItemCount}</span> 件
-							<span className='mx-2 text-stone-600'>·</span>
+							<span className='mx-2 text-muted-foreground'>·</span>
 							總價值{' '}
-							<span className='font-mono text-amber-300'>
+							<span className='font-mono text-primary-foreground'>
 								{cartTotalGp.toLocaleString('zh-TW', {
 									maximumFractionDigits: 2,
 								})}{' '}
@@ -718,7 +718,7 @@ function CampaignShopDetail() {
 						disabled={!cartIsValid || !shop.isActive}
 						onClick={() => setCheckoutOpen(true)}
 						data-testid='shop-checkout-open'
-						className='border border-amber-700/60 bg-amber-900 text-amber-100'
+						className='border border-primary/60 bg-primary text-primary-foreground'
 					>
 						<ShoppingBag className='h-4 w-4' />
 						結帳

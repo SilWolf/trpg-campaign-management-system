@@ -121,7 +121,7 @@ export function AllCharactersSettingsdPanel({
 	return (
 		<div className='space-y-5'>
 			<div className='flex flex-wrap items-center justify-between gap-3'>
-				<h2 className='text-base font-serif font-bold text-purple-200'>
+				<h2 className='text-base font-serif font-bold text-foreground'>
 					戰役角色
 				</h2>
 				<Button
@@ -131,7 +131,7 @@ export function AllCharactersSettingsdPanel({
 					onClick={onAddCharacter}
 					disabled={!canCreateCharacter}
 					title={createCharTooltip}
-					className='bg-purple-950/90 hover:bg-purple-900 disabled:opacity-35 disabled:cursor-not-allowed border border-purple-500/70 text-purple-200'
+					className='bg-background/90 hover:bg-card disabled:opacity-35 disabled:cursor-not-allowed border border-border/70 text-foreground'
 				>
 					<UserPlus className='w-4 h-4' />
 					<span>新增角色</span>
@@ -142,7 +142,7 @@ export function AllCharactersSettingsdPanel({
 				role='tablist'
 				aria-label='個別角色設定'
 				onKeyDown={handleTabKeyDown}
-				className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-stone-800'
+				className='flex items-center gap-2 overflow-x-auto pb-2 border-b border-border'
 			>
 				{campaignCharacters
 					.filter((character) => character.id !== CAMP_CHEST_ID)
@@ -164,8 +164,8 @@ export function AllCharactersSettingsdPanel({
 								size='sm'
 								className={`shrink-0 ${
 									isActive
-										? 'bg-purple-900 text-purple-100 border border-purple-500/70 shadow'
-										: 'bg-stone-900 text-stone-400 border border-stone-800 hover:text-stone-200'
+										? 'bg-card text-foreground border border-border/70 shadow'
+										: 'bg-card text-muted-foreground border border-border hover:text-foreground'
 								}`}
 							>
 								<span>{character.avatar}</span>
@@ -211,7 +211,7 @@ export function AllCharactersSettingsdPanel({
 						onDeleteCharacter={onDeleteCharacter}
 					/>
 				) : (
-					<p className='rounded-lg border border-stone-800 bg-stone-950 p-6 text-sm text-stone-400'>
+					<p className='rounded-lg border border-border bg-background p-6 text-sm text-muted-foreground'>
 						目前沒有角色資料，請新增冒險者角色以開始管理。
 					</p>
 				)}

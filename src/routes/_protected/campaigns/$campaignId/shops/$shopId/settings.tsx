@@ -138,7 +138,7 @@ const EMPTY_ITEM: ItemForm = {
 };
 
 const INPUT_CLASS =
-	'w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600';
+	'w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-ring';
 
 const CATEGORY_LABELS = ITEM_CATEGORY_LABELS;
 const ITEM_CATEGORIES = Object.entries(ITEM_CATEGORY_LABELS).map(
@@ -763,19 +763,19 @@ function CampaignShopsPage() {
 
 	if (!isSupabaseConfigured || isGuest) {
 		return (
-			<main className='relative z-10 mx-auto max-w-5xl px-4 py-10 text-stone-200'>
-				<div className='rounded-lg border border-amber-800/50 bg-stone-900/80 p-6'>
-					<h1 className='font-serif text-2xl font-bold text-amber-200'>
+			<main className='relative z-10 mx-auto max-w-5xl px-4 py-10 text-foreground'>
+				<div className='rounded-lg border border-primary/50 bg-card/80 p-6'>
+					<h1 className='font-serif text-2xl font-bold text-primary-foreground'>
 						戰役商店
 					</h1>
-					<p className='mt-3 text-sm text-stone-400'>
+					<p className='mt-3 text-sm text-muted-foreground'>
 						商店雲端功能需要登入 Supabase
 						帳號；離線或訪客模式不會建立本機商店或假冒同步狀態。
 					</p>
 					<Link
 						to='/campaigns/$campaignId'
 						params={{ campaignId }}
-						className='mt-5 inline-flex text-sm text-amber-300 hover:text-amber-200'
+						className='mt-5 inline-flex text-sm text-primary-foreground hover:text-primary-foreground'
 					>
 						返回軍械庫
 					</Link>
@@ -786,12 +786,12 @@ function CampaignShopsPage() {
 
 	if (!roleLoading && !isDm) {
 		return (
-			<main className='rounded-lg border border-red-900/60 bg-red-950/20 p-6 text-sm text-red-200'>
+			<main className='rounded-lg border border-destructive/60 bg-destructive/20 p-6 text-sm text-destructive-foreground'>
 				只有 DM 可以管理商店。
 				<Link
 					to='/campaigns/$campaignId/shops/$shopId'
 					params={{ campaignId, shopId }}
-					className='ml-2 text-amber-300 hover:text-amber-200'
+					className='ml-2 text-primary-foreground hover:text-primary-foreground'
 				>
 					返回商店
 				</Link>
@@ -803,17 +803,17 @@ function CampaignShopsPage() {
 		<main
 			data-testid='campaign-shops-page'
 			data-campaign-id={campaignId}
-			className='relative z-10 mx-auto max-w-7xl px-4 py-6 text-stone-200 lg:px-8'
+			className='relative z-10 mx-auto max-w-7xl px-4 py-6 text-foreground lg:px-8'
 		>
-			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-amber-900/40 pb-5 sm:flex-row sm:items-end'>
+			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-primary/40 pb-5 sm:flex-row sm:items-end'>
 				<div>
-					<p className='text-xs font-semibold tracking-[0.2em] text-amber-500'>
+					<p className='text-xs font-semibold tracking-[0.2em] text-primary-foreground'>
 						戰役商店
 					</p>
-					<h1 className='mt-1 font-serif text-3xl font-bold text-amber-100'>
+					<h1 className='mt-1 font-serif text-3xl font-bold text-primary-foreground'>
 						{selectedShop?.name ?? '冒險補給與珍寶'}
 					</h1>
-					<p className='mt-2 text-sm text-stone-400'>
+					<p className='mt-2 text-sm text-muted-foreground'>
 						商店商品為獨立快照；鍛造來源後續變更不會改寫既有商品。
 					</p>
 				</div>
@@ -828,7 +828,7 @@ function CampaignShopsPage() {
 									setErrorMessage(getErrorMessage(error, '重新載入商店失敗。')),
 								);
 						}}
-						className='border border-stone-700 bg-stone-900 text-stone-300'
+						className='border border-border bg-card text-foreground'
 					>
 						<RotateCw className='h-4 w-4' />
 						重新整理
@@ -839,7 +839,7 @@ function CampaignShopsPage() {
 			{errorMessage && (
 				<div
 					role='alert'
-					className='mb-4 flex items-start gap-2 rounded-md border border-red-800/70 bg-red-950/40 p-3 text-sm text-red-200'
+					className='mb-4 flex items-start gap-2 rounded-md border border-destructive/70 bg-destructive/40 p-3 text-sm text-destructive-foreground'
 				>
 					<AlertCircle className='mt-0.5 h-4 w-4 shrink-0' />
 					<span>{errorMessage}</span>
@@ -855,14 +855,14 @@ function CampaignShopsPage() {
 			)}
 
 			{isLoading || roleLoading ? (
-				<div className='rounded-lg border border-stone-800 bg-stone-900/60 p-8 text-center text-sm text-stone-400'>
+				<div className='rounded-lg border border-border bg-card/60 p-8 text-center text-sm text-muted-foreground'>
 					載入戰役商店中…
 				</div>
 			) : (
 				<section className='min-w-0 space-y-6'>
 					{selectedShop ? (
 						<>
-							<div className='overflow-hidden rounded-lg border border-stone-800 bg-stone-900/70'>
+							<div className='overflow-hidden rounded-lg border border-border bg-card/70'>
 								{selectedShop.backgroundImageUrl ? (
 									<img
 										src={selectedShop.backgroundImageUrl}
@@ -873,21 +873,21 @@ function CampaignShopsPage() {
 										}}
 									/>
 								) : (
-									<div className='flex h-36 items-center justify-center bg-gradient-to-br from-amber-950/50 via-stone-900 to-stone-950'>
-										<Image className='h-8 w-8 text-amber-900' />
+									<div className='flex h-36 items-center justify-center bg-gradient-to-br from-primary/50 via-card to-background'>
+										<Image className='h-8 w-8 text-primary-foreground' />
 									</div>
 								)}
 								<div className='flex items-center justify-between gap-3 px-4 py-3'>
 									<div>
-										<h2 className='font-serif text-xl font-bold text-amber-100'>
+										<h2 className='font-serif text-xl font-bold text-primary-foreground'>
 											{selectedShop.name}
 										</h2>
 										{selectedShop.flavor && (
-											<p className='mt-1 whitespace-pre-line text-sm text-stone-300'>
+											<p className='mt-1 whitespace-pre-line text-sm text-foreground'>
 												{selectedShop.flavor}
 											</p>
 										)}
-										<p className='mt-1 text-xs text-stone-500'>
+										<p className='mt-1 text-xs text-muted-foreground'>
 											{selectedShop.isActive ? '營業中' : '已停用'}
 										</p>
 									</div>
@@ -895,7 +895,7 @@ function CampaignShopsPage() {
 										type='button'
 										variant='secondary'
 										onClick={() => startShopEdit(selectedShop)}
-										className='border border-stone-700 bg-stone-950 text-stone-300'
+										className='border border-border bg-background text-foreground'
 									>
 										<Pencil className='h-4 w-4' />
 										編輯商店
@@ -912,13 +912,13 @@ function CampaignShopsPage() {
 								onReloadItems={reloadItems}
 							/>
 
-							<section className='rounded-lg border border-stone-800 bg-stone-900/50 p-4'>
+							<section className='rounded-lg border border-border bg-card/50 p-4'>
 								<div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
 									<div>
-										<h2 className='font-serif text-xl font-bold text-amber-100'>
+										<h2 className='font-serif text-xl font-bold text-primary-foreground'>
 											商品目錄
 										</h2>
-										<p className='mt-1 text-xs text-stone-500'>
+										<p className='mt-1 text-xs text-muted-foreground'>
 											選擇商品查看詳細資料；可用庫存不包含待審保留數量。
 										</p>
 									</div>
@@ -927,7 +927,7 @@ function CampaignShopsPage() {
 											type='button'
 											variant='secondary'
 											onClick={() => setIsImportDialogOpen(true)}
-											className='border border-purple-800/70 bg-purple-950/40 text-purple-200'
+											className='border border-border/70 bg-background/40 text-foreground'
 										>
 											<PackagePlus className='h-4 w-4' />
 											從鍛造工坊匯入
@@ -935,19 +935,19 @@ function CampaignShopsPage() {
 									</div>
 								</div>
 								<div className='flex flex-col gap-4 lg:flex-row'>
-									<div className='min-w-0 rounded-md border border-stone-800 bg-stone-950/40 lg:flex-[3]'>
-										<div className='border-b border-stone-800 px-3 py-2'>
-											<span className='font-mono text-xs text-stone-500'>
+									<div className='min-w-0 rounded-md border border-border bg-background/40 lg:flex-[3]'>
+										<div className='border-b border-border px-3 py-2'>
+											<span className='font-mono text-xs text-muted-foreground'>
 												{visibleItems.length} 項商品
 											</span>
 										</div>
 										{visibleItems.length === 0 ? (
-											<div className='rounded-md border border-dashed border-stone-700 p-8 text-center text-sm text-stone-500'>
-												<PackagePlus className='mx-auto mb-2 h-6 w-6 text-stone-600' />
+											<div className='rounded-md border border-dashed border-border p-8 text-center text-sm text-muted-foreground'>
+												<PackagePlus className='mx-auto mb-2 h-6 w-6 text-muted-foreground' />
 												尚無商品
 											</div>
 										) : (
-											<div className='max-h-[38rem] divide-y divide-stone-800 overflow-y-auto'>
+											<div className='max-h-[38rem] divide-y divide-border overflow-y-auto'>
 												{paginatedItems.map((item) => {
 													const isSelected = selectedItem?.id === item.id;
 													return (
@@ -964,27 +964,27 @@ function CampaignShopsPage() {
 																onClick={() => setSelectedItemId(item.id)}
 																className={`min-w-0 flex flex-1 items-center justify-between gap-3 rounded-none px-2 py-1 text-left ${
 																	isSelected
-																		? 'border-amber-500/80 bg-amber-950/40'
-																		: 'border-transparent hover:border-stone-600 hover:bg-stone-900'
+																		? 'border-primary/80 bg-primary/40'
+																		: 'border-transparent hover:border-border hover:bg-card'
 																}`}
 															>
 																<div className='flex min-w-0 flex-1 items-center gap-2'>
-																	<div className='relative h-9 w-9 shrink-0 overflow-hidden rounded border border-stone-700 bg-stone-950'>
+																	<div className='relative h-9 w-9 shrink-0 overflow-hidden rounded border border-border bg-background'>
 																		<ItemIcon
 																			iconName={item.itemSnapshot.icon}
-																			className='h-6 w-6 text-stone-300'
+																			className='h-6 w-6 text-foreground'
 																		/>
 																	</div>
 																	<div className='min-w-0'>
-																		<h3 className='truncate font-serif text-sm font-bold text-stone-100'>
+																		<h3 className='truncate font-serif text-sm font-bold text-foreground'>
 																			{item.itemSnapshot.name}
 																		</h3>
 																		{!item.isIdentified && (
-																			<span className='text-[11px] font-semibold text-purple-300'>
+																			<span className='text-[11px] font-semibold text-foreground'>
 																				未鑑定
 																			</span>
 																		)}
-																		<p className='mt-1 truncate text-xs text-stone-500'>
+																		<p className='mt-1 truncate text-xs text-muted-foreground'>
 																			{
 																				CATEGORY_LABELS[
 																					item.itemSnapshot.category
@@ -999,21 +999,21 @@ function CampaignShopsPage() {
 																	</div>
 																</div>
 																<div className='flex shrink-0 flex-col items-end gap-2'>
-																	<span className='font-mono text-sm text-amber-300'>
+																	<span className='font-mono text-sm text-primary-foreground'>
 																		{item.unitPriceGp.toLocaleString('zh-TW')}{' '}
 																		gp
 																	</span>
-																	<span className='text-[11px] text-stone-500'>
+																	<span className='text-[11px] text-muted-foreground'>
 																		庫存 {item.stockAvailable}
 																	</span>
 																</div>
 																{!item.isActive && (
-																	<span className='text-[11px] text-stone-500'>
+																	<span className='text-[11px] text-muted-foreground'>
 																		停用
 																	</span>
 																)}
 																{item.requiresApproval && (
-																	<span className='text-[11px] text-purple-300'>
+																	<span className='text-[11px] text-foreground'>
 																		需 DM 審查
 																	</span>
 																)}
@@ -1024,7 +1024,7 @@ function CampaignShopsPage() {
 																size='sm'
 																onClick={() => startItemEdit(item)}
 																aria-label={`編輯${item.itemSnapshot.name}`}
-																className='shrink-0 border border-stone-800 text-stone-300 hover:border-amber-800 hover:text-amber-200'
+																className='shrink-0 border border-border text-foreground hover:border-primary hover:text-primary-foreground'
 															>
 																<Pencil className='h-3.5 w-3.5' />
 															</Button>
@@ -1036,18 +1036,18 @@ function CampaignShopsPage() {
 										{visibleItems.length > pageSize && (
 											<nav
 												aria-label='商品列表分頁'
-												className='flex flex-wrap items-center justify-between gap-3 border-t border-stone-800 px-3 py-2'
+												className='flex flex-wrap items-center justify-between gap-3 border-t border-border px-3 py-2'
 											>
 												<p
 													data-testid='shop-items-pagination-status'
-													className='text-xs text-stone-400'
+													className='text-xs text-muted-foreground'
 												>
 													第{' '}
-													<span className='font-mono text-stone-200'>
+													<span className='font-mono text-foreground'>
 														{currentPage}
 													</span>{' '}
 													/{' '}
-													<span className='font-mono text-stone-200'>
+													<span className='font-mono text-foreground'>
 														{pageCount}
 													</span>{' '}
 													頁
@@ -1104,29 +1104,29 @@ function CampaignShopsPage() {
 									</div>
 
 									<aside
-										className='min-w-0 rounded-md border border-stone-800 bg-stone-950/60 p-4 lg:min-w-72 lg:flex-[2]'
+										className='min-w-0 rounded-md border border-border bg-background/60 p-4 lg:min-w-72 lg:flex-[2]'
 										aria-label='物品詳細'
 										data-testid='shop-item-details'
 									>
 										{selectedItem ? (
 											<>
-												<div className='flex items-start gap-3 border-b border-stone-800 pb-4'>
-													<div className='relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-stone-700 bg-stone-950'>
+												<div className='flex items-start gap-3 border-b border-border pb-4'>
+													<div className='relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border bg-background'>
 														<ItemIcon
 															iconName={selectedItem.itemSnapshot.icon}
-															className='h-8 w-8 text-stone-300'
+															className='h-8 w-8 text-foreground'
 														/>
 													</div>
 													<div className='min-w-0 flex-1'>
-														<h3 className='font-serif text-xl font-bold text-amber-100'>
+														<h3 className='font-serif text-xl font-bold text-primary-foreground'>
 															{selectedItem.itemSnapshot.name}
 														</h3>
 														{!selectedItem.isIdentified && (
-															<span className='mt-1 inline-block text-xs font-semibold text-purple-300'>
+															<span className='mt-1 inline-block text-xs font-semibold text-foreground'>
 																未鑑定
 															</span>
 														)}
-														<p className='mt-1 text-xs text-stone-400'>
+														<p className='mt-1 text-xs text-muted-foreground'>
 															{
 																CATEGORY_LABELS[
 																	selectedItem.itemSnapshot.category
@@ -1144,97 +1144,97 @@ function CampaignShopsPage() {
 													</div>
 												</div>
 
-												<div className='grid grid-cols-2 gap-2 border-b border-stone-800 py-3 text-sm'>
+												<div className='grid grid-cols-2 gap-2 border-b border-border py-3 text-sm'>
 													{getItemDamage(selectedItem.itemSnapshot) && (
 														<div>
-															<p className='text-[11px] text-stone-500'>傷害</p>
-															<p className='font-mono text-amber-200'>
+															<p className='text-[11px] text-muted-foreground'>傷害</p>
+															<p className='font-mono text-primary-foreground'>
 																{getItemDamage(selectedItem.itemSnapshot)}
 															</p>
 														</div>
 													)}
 													{getItemArmorClass(selectedItem.itemSnapshot) && (
 														<div>
-															<p className='text-[11px] text-stone-500'>
+															<p className='text-[11px] text-muted-foreground'>
 																護甲等級
 															</p>
-															<p className='font-mono text-sky-200'>
+															<p className='font-mono text-foreground'>
 																AC {getItemArmorClass(selectedItem.itemSnapshot)}
 															</p>
 														</div>
 													)}
 													<div>
-														<p className='text-[11px] text-stone-500'>重量</p>
-														<p className='font-mono text-stone-200'>
+														<p className='text-[11px] text-muted-foreground'>重量</p>
+														<p className='font-mono text-foreground'>
 															{selectedItem.itemSnapshot.weight} lb
 														</p>
 													</div>
 													<div>
-														<p className='text-[11px] text-stone-500'>
+														<p className='text-[11px] text-muted-foreground'>
 															物品價值
 														</p>
-														<p className='font-mono text-stone-200'>
+														<p className='font-mono text-foreground'>
 															{selectedItem.itemSnapshot.valueGp} gp
 														</p>
 													</div>
 													<div>
-														<p className='text-[11px] text-stone-500'>
+														<p className='text-[11px] text-muted-foreground'>
 															商店價格
 														</p>
-														<p className='font-mono text-amber-300'>
+														<p className='font-mono text-primary-foreground'>
 															{selectedItem.unitPriceGp.toLocaleString('zh-TW')}{' '}
 															gp
 														</p>
 													</div>
 													<div>
-														<p className='text-[11px] text-stone-500'>
+														<p className='text-[11px] text-muted-foreground'>
 															可用庫存
 														</p>
-														<p className='font-mono text-stone-200'>
+														<p className='font-mono text-foreground'>
 															{selectedItem.stockAvailable}
 														</p>
 													</div>
 													<div>
-														<p className='text-[11px] text-stone-500'>
+														<p className='text-[11px] text-muted-foreground'>
 															保留庫存
 														</p>
-														<p className='font-mono text-stone-200'>
+														<p className='font-mono text-foreground'>
 															{selectedItem.stockReserved}
 														</p>
 													</div>
 												</div>
 
-												<div className='flex flex-wrap gap-2 border-b border-stone-800 py-3 text-xs'>
+												<div className='flex flex-wrap gap-2 border-b border-border py-3 text-xs'>
 													{selectedItem.itemSnapshot.isRequireAttunement && (
-														<span className='text-purple-300'>需調諧</span>
+														<span className='text-foreground'>需調諧</span>
 													)}
 													{selectedItem.itemSnapshot.isEquippable && (
-														<span className='text-stone-300'>可裝備</span>
+														<span className='text-foreground'>可裝備</span>
 													)}
 													{selectedItem.itemSnapshot.isConsumable && (
-														<span className='text-stone-300'>消耗品</span>
+														<span className='text-foreground'>消耗品</span>
 													)}
 													{selectedItem.itemSnapshot.isImportant && (
-														<span className='text-amber-300'>重要物品</span>
+														<span className='text-primary-foreground'>重要物品</span>
 													)}
 													{selectedItem.requiresApproval && (
-														<span className='text-purple-300'>
+														<span className='text-foreground'>
 															購買需 DM 審查
 														</span>
 													)}
 													{!selectedItem.isActive && (
-														<span className='text-stone-500'>
+														<span className='text-muted-foreground'>
 															此商品目前已停用
 														</span>
 													)}
 												</div>
 
 												{selectedItem.itemSnapshot.flavor && (
-													<div className='border-b border-stone-800 py-3'>
-														<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+													<div className='border-b border-border py-3'>
+														<h4 className='mb-1 text-xs font-semibold text-muted-foreground'>
 															物品描述
 														</h4>
-														<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+														<div className='prose prose-invert max-w-none text-sm leading-relaxed text-foreground'>
 															<ReactMarkdown>
 																{selectedItem.itemSnapshot.flavor}
 															</ReactMarkdown>
@@ -1242,11 +1242,11 @@ function CampaignShopsPage() {
 													</div>
 												)}
 												{selectedItem.itemSnapshot.effects && (
-													<div className='border-b border-stone-800 py-3'>
-														<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+													<div className='border-b border-border py-3'>
+														<h4 className='mb-1 text-xs font-semibold text-muted-foreground'>
 															物品效果
 														</h4>
-														<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+														<div className='prose prose-invert max-w-none text-sm leading-relaxed text-foreground'>
 															<ReactMarkdown>
 																{selectedItem.itemSnapshot.effects}
 															</ReactMarkdown>
@@ -1257,12 +1257,12 @@ function CampaignShopsPage() {
 													(affix) => (
 														<div
 															key={affix.id}
-															className='border-b border-stone-800 py-3 last:border-0'
+															className='border-b border-border py-3 last:border-0'
 														>
-															<h4 className='mb-1 text-xs font-semibold text-purple-300'>
+															<h4 className='mb-1 text-xs font-semibold text-foreground'>
 																{affix.name}
 															</h4>
-															<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+															<div className='prose prose-invert max-w-none text-sm leading-relaxed text-foreground'>
 																<ReactMarkdown>{affix.desc}</ReactMarkdown>
 															</div>
 														</div>
@@ -1272,14 +1272,14 @@ function CampaignShopsPage() {
 													type='button'
 													variant='ghost'
 													onClick={() => startItemEdit(selectedItem)}
-													className='mt-3 w-full border border-stone-800 text-stone-300 hover:border-amber-800 hover:text-amber-200'
+													className='mt-3 w-full border border-border text-foreground hover:border-primary hover:text-primary-foreground'
 												>
 													<Pencil className='h-3.5 w-3.5' />
 													編輯商品
 												</Button>
 											</>
 										) : (
-											<div className='flex min-h-48 items-center justify-center text-center text-sm text-stone-500'>
+											<div className='flex min-h-48 items-center justify-center text-center text-sm text-muted-foreground'>
 												請先從左側選擇商品以查看詳細資料。
 											</div>
 										)}
@@ -1288,9 +1288,9 @@ function CampaignShopsPage() {
 							</section>
 						</>
 					) : (
-						<div className='rounded-lg border border-dashed border-stone-700 bg-stone-900/40 p-10 text-center'>
-							<Store className='mx-auto mb-3 h-8 w-8 text-stone-600' />
-							<p className='text-stone-400'>
+						<div className='rounded-lg border border-dashed border-border bg-card/40 p-10 text-center'>
+							<Store className='mx-auto mb-3 h-8 w-8 text-muted-foreground' />
+							<p className='text-muted-foreground'>
 								建立第一家戰役商店以開始管理商品。
 							</p>
 						</div>
@@ -1299,19 +1299,19 @@ function CampaignShopsPage() {
 					{selectedShop && (
 						<>
 							{editingItem && (
-								<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4'>
+								<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4'>
 									<form
 										onSubmit={handleSaveItem}
-										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-purple-800/70 bg-stone-950 p-5 shadow-2xl'
+										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-border/70 bg-background p-5 shadow-2xl'
 										data-testid='shop-item-editor'
 										role='dialog'
 										aria-modal='true'
 										aria-labelledby='shop-item-editor-title'
 									>
-										<div className='flex items-center justify-between border-b border-stone-800 pb-3'>
+										<div className='flex items-center justify-between border-b border-border pb-3'>
 											<h2
 												id='shop-item-editor-title'
-												className='font-serif text-xl font-bold text-purple-200'
+												className='font-serif text-xl font-bold text-foreground'
 											>
 												編輯商品
 											</h2>
@@ -1323,14 +1323,14 @@ function CampaignShopsPage() {
 													setEditingItem(null);
 													setDeleteConfirmationItemId(null);
 												}}
-												className='text-stone-400'
+												className='text-muted-foreground'
 											>
 												<X className='h-4 w-4' />
 											</Button>
 										</div>
 
 										<div className='grid gap-3 sm:grid-cols-2'>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												商品名稱
 												<Input
 													required
@@ -1342,7 +1342,7 @@ function CampaignShopsPage() {
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												圖示名稱
 												<Input
 													required
@@ -1355,7 +1355,7 @@ function CampaignShopsPage() {
 													placeholder='例如：Sword、FlaskConical'
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												物品分類
 												<select
 													value={itemForm.category}
@@ -1374,7 +1374,7 @@ function CampaignShopsPage() {
 													))}
 												</select>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												子類型
 												<Input
 													maxLength={120}
@@ -1391,7 +1391,7 @@ function CampaignShopsPage() {
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												稀有度
 												<select
 													value={itemForm.rarity}
@@ -1412,7 +1412,7 @@ function CampaignShopsPage() {
 											</label>
 											{itemForm.category === 'Weapon' && (
 												<>
-													<label className='text-sm text-stone-300'>
+													<label className='text-sm text-foreground'>
 														傷害
 														<Input
 															required
@@ -1426,7 +1426,7 @@ function CampaignShopsPage() {
 															className={`mt-1 ${INPUT_CLASS}`}
 														/>
 													</label>
-													<label className='text-sm text-stone-300'>
+													<label className='text-sm text-foreground'>
 														武器特性（以頓號分隔）
 														<Input
 															value={itemForm.weaponProperties.properties.join('、')}
@@ -1442,7 +1442,7 @@ function CampaignShopsPage() {
 															className={`mt-1 ${INPUT_CLASS}`}
 														/>
 													</label>
-													<label className='text-sm text-stone-300'>
+													<label className='text-sm text-foreground'>
 														武器精通
 														<select
 															value={itemForm.weaponProperties.mastery}
@@ -1467,7 +1467,7 @@ function CampaignShopsPage() {
 												</>
 											)}
 											{itemForm.category === 'Armor' && (
-												<label className='text-sm text-stone-300'>
+												<label className='text-sm text-foreground'>
 													護甲值
 													<Input
 														required
@@ -1481,7 +1481,7 @@ function CampaignShopsPage() {
 													/>
 												</label>
 											)}
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												重量（磅）
 												<Input
 													required
@@ -1495,7 +1495,7 @@ function CampaignShopsPage() {
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												物品價值（GP）
 												<Input
 													required
@@ -1509,7 +1509,7 @@ function CampaignShopsPage() {
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												最大充能
 												<Input
 													required
@@ -1523,7 +1523,7 @@ function CampaignShopsPage() {
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												商店售價（gp）
 												<Input
 													required
@@ -1535,7 +1535,7 @@ function CampaignShopsPage() {
 													className={`mt-1 ${INPUT_CLASS}`}
 												/>
 											</label>
-											<label className='text-sm text-stone-300'>
+											<label className='text-sm text-foreground'>
 												可用庫存
 												<Input
 													required
@@ -1557,27 +1557,27 @@ function CampaignShopsPage() {
 													[
 														'isRequireAttunement',
 														'需要調諧',
-														'accent-purple-500',
+														'accent-primary',
 													],
-													['isEquippable', '可裝備', 'accent-amber-500'],
-													['isConsumable', '消耗品', 'accent-amber-500'],
-													['isImportant', '重要物品', 'accent-amber-500'],
+													['isEquippable', '可裝備', 'accent-primary'],
+													['isConsumable', '消耗品', 'accent-primary'],
+													['isImportant', '重要物品', 'accent-primary'],
 													[
 														'isUnidentified',
 														'以未鑑定狀態列出',
-														'accent-purple-500',
+														'accent-primary',
 													],
 													[
 														'requiresApproval',
 														'購買需要 DM 審查',
-														'accent-purple-500',
+														'accent-primary',
 													],
-													['isActive', '啟用商品', 'accent-amber-500'],
+													['isActive', '啟用商品', 'accent-primary'],
 												] as const
 											).map(([key, label, color]) => (
 												<label
 													key={key}
-													className='flex items-center gap-2 text-sm text-stone-300'
+													className='flex items-center gap-2 text-sm text-foreground'
 												>
 													<input
 														type='checkbox'
@@ -1592,7 +1592,7 @@ function CampaignShopsPage() {
 											))}
 										</div>
 
-										<label className='block text-sm text-stone-300'>
+										<label className='block text-sm text-foreground'>
 											效果描述
 											<Textarea
 												value={itemForm.effects}
@@ -1602,7 +1602,7 @@ function CampaignShopsPage() {
 												className={`mt-1 min-h-24 ${INPUT_CLASS}`}
 											/>
 										</label>
-										<label className='block text-sm text-stone-300'>
+										<label className='block text-sm text-foreground'>
 											風味描述
 											<Textarea
 												value={itemForm.flavor}
@@ -1612,7 +1612,7 @@ function CampaignShopsPage() {
 												className={`mt-1 min-h-20 ${INPUT_CLASS}`}
 											/>
 										</label>
-										<label className='block text-sm text-stone-300'>
+										<label className='block text-sm text-foreground'>
 											DM 備註
 											<Textarea
 												value={itemForm.dmNotes}
@@ -1622,7 +1622,7 @@ function CampaignShopsPage() {
 												className={`mt-1 min-h-20 ${INPUT_CLASS}`}
 											/>
 										</label>
-										<label className='block text-sm text-stone-300'>
+										<label className='block text-sm text-foreground'>
 											附魔詞條（JSON）
 											<Textarea
 												value={itemForm.affixesJson}
@@ -1634,9 +1634,9 @@ function CampaignShopsPage() {
 										</label>
 
 										{editingItem && (
-											<div className='border-t border-red-900/60 pt-3'>
+											<div className='border-t border-destructive/60 pt-3'>
 												{deleteConfirmationItemId === editingItem.id && (
-													<p role='alert' className='mb-2 text-sm text-red-300'>
+													<p role='alert' className='mb-2 text-sm text-destructive-foreground'>
 														刪除商品會一併刪除其所有關聯訂單（包括待審與已完成），且無法復原。
 													</p>
 												)}
@@ -1645,7 +1645,7 @@ function CampaignShopsPage() {
 													variant='ghost'
 													disabled={isSaving}
 													onClick={() => void handleDeleteItem(editingItem)}
-													className='border border-red-900/70 text-red-300 hover:bg-red-950/50'
+													className='border border-destructive/70 text-destructive-foreground hover:bg-destructive/50'
 												>
 													<Trash2 className='h-4 w-4' />
 													{deleteConfirmationItemId === editingItem.id
@@ -1655,7 +1655,7 @@ function CampaignShopsPage() {
 											</div>
 										)}
 
-										<div className='flex justify-end gap-2 border-t border-stone-800 pt-3'>
+										<div className='flex justify-end gap-2 border-t border-border pt-3'>
 											<Button
 												type='button'
 												variant='ghost'
@@ -1663,14 +1663,14 @@ function CampaignShopsPage() {
 													setEditingItem(null);
 													setDeleteConfirmationItemId(null);
 												}}
-												className='text-stone-400'
+												className='text-muted-foreground'
 											>
 												取消
 											</Button>
 											<Button
 												type='submit'
 												loading={isSaving}
-												className='border border-purple-500/60 bg-purple-900 text-purple-50'
+												className='border border-border/60 bg-card text-foreground'
 											>
 												<Check className='h-4 w-4' />
 												儲存商品
@@ -1681,23 +1681,23 @@ function CampaignShopsPage() {
 							)}
 
 							{isImportDialogOpen && (
-								<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4'>
+								<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4'>
 									<section
 										role='dialog'
 										aria-modal='true'
 										aria-labelledby='shop-source-dialog-title'
-										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-purple-800/70 bg-stone-950 p-5 shadow-2xl'
+										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-border/70 bg-background p-5 shadow-2xl'
 										data-testid='shop-source-dialog'
 									>
-										<div className='flex items-start justify-between gap-4 border-b border-stone-800 pb-3'>
+										<div className='flex items-start justify-between gap-4 border-b border-border pb-3'>
 											<div>
 												<h2
 													id='shop-source-dialog-title'
-													className='font-serif text-xl font-bold text-amber-100'
+													className='font-serif text-xl font-bold text-primary-foreground'
 												>
 													從鍛造工坊匯入
 												</h2>
-												<p className='mt-1 text-xs text-stone-500'>
+												<p className='mt-1 text-xs text-muted-foreground'>
 													選擇官方目錄、自己的樣板或其他玩家分享的樣板；加入後會保存獨立快照。
 												</p>
 											</div>
@@ -1706,7 +1706,7 @@ function CampaignShopsPage() {
 												variant='ghost'
 												aria-label='關閉鍛造工坊匯入'
 												onClick={() => setIsImportDialogOpen(false)}
-												className='text-stone-400'
+												className='text-muted-foreground'
 											>
 												<X className='h-4 w-4' />
 											</Button>
@@ -1732,8 +1732,8 @@ function CampaignShopsPage() {
 													onClick={() => setSourceTab(tab)}
 													className={
 														sourceTab === tab
-															? 'border border-amber-700 bg-amber-950/70 text-amber-200'
-															: 'border border-stone-800 bg-stone-950 text-stone-400'
+															? 'border border-primary bg-primary/70 text-primary-foreground'
+															: 'border border-border bg-background text-muted-foreground'
 													}
 												>
 													{label}
@@ -1748,12 +1748,12 @@ function CampaignShopsPage() {
 											aria-label='搜尋商品來源'
 										/>
 										{sourceError && (
-											<p role='alert' className='mt-3 text-sm text-red-300'>
+											<p role='alert' className='mt-3 text-sm text-destructive-foreground'>
 												{sourceError}
 											</p>
 										)}
 										{isLoadingSources ? (
-											<p className='py-5 text-center text-sm text-stone-500'>
+											<p className='py-5 text-center text-sm text-muted-foreground'>
 												載入工坊來源中…
 											</p>
 										) : (
@@ -1761,13 +1761,13 @@ function CampaignShopsPage() {
 												{visibleSources.slice(0, 100).map((source) => (
 													<div
 														key={source.key}
-														className='flex items-center justify-between gap-3 rounded-md border border-stone-800 bg-stone-950/70 px-3 py-2'
+														className='flex items-center justify-between gap-3 rounded-md border border-border bg-background/70 px-3 py-2'
 													>
 														<div className='min-w-0'>
-															<p className='truncate text-sm text-stone-200'>
+															<p className='truncate text-sm text-foreground'>
 																{source.name}
 															</p>
-															<p className='truncate text-xs text-stone-500'>
+															<p className='truncate text-xs text-muted-foreground'>
 																{source.detail}
 															</p>
 														</div>
@@ -1776,7 +1776,7 @@ function CampaignShopsPage() {
 															size='sm'
 															disabled={isSaving}
 															onClick={() => void handleSourceImport(source)}
-															className='shrink-0 border border-amber-700/60 bg-amber-950/70 text-amber-200'
+															className='shrink-0 border border-primary/60 bg-primary/70 text-primary-foreground'
 														>
 															<Plus className='h-3.5 w-3.5' />
 															加入
@@ -1784,14 +1784,14 @@ function CampaignShopsPage() {
 													</div>
 												))}
 												{visibleSources.length === 0 && !sourceError && (
-													<p className='py-4 text-center text-sm text-stone-500'>
+													<p className='py-4 text-center text-sm text-muted-foreground'>
 														{sources.length
 															? '沒有符合條件的物品。'
 															: '沒有可匯入的來源物品。'}
 													</p>
 												)}
 												{visibleSources.length > 100 && (
-													<p className='py-2 text-center text-xs text-stone-500'>
+													<p className='py-2 text-center text-xs text-muted-foreground'>
 														目前顯示前 100 項，請縮小搜尋範圍。
 													</p>
 												)}

@@ -3,7 +3,12 @@ import type { ReactElement } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
 import { cn } from './utils';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+export type ButtonVariant =
+	| 'primary'
+	| 'secondary'
+	| 'destructive'
+	| 'danger'
+	| 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonStyleProps {
@@ -26,11 +31,15 @@ export type ButtonProps = ButtonStyleProps &
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
-		'border border-amber-500/70 bg-primary text-primary-foreground hover:bg-amber-600',
+		'border border-primary/70 bg-primary text-primary-foreground hover:bg-primary/90',
 	secondary:
-		'border border-border bg-card text-secondary-foreground hover:border-stone-500 hover:bg-muted',
-	danger: 'border border-red-500/70 bg-destructive/80 text-destructive-foreground hover:bg-red-800',
-	ghost: 'border border-transparent bg-transparent text-stone-300 hover:bg-stone-800 hover:text-stone-100',
+		'border border-border bg-card text-secondary-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground',
+	destructive:
+		'border border-destructive/70 bg-destructive/80 text-destructive-foreground hover:bg-destructive',
+	danger:
+		'border border-destructive/70 bg-destructive/80 text-destructive-foreground hover:bg-destructive',
+	ghost:
+		'border border-transparent bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -49,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 			cn(
 				'inline-flex items-center justify-center gap-2 rounded-control font-semibold transition-colors',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-				'disabled:pointer-events-none disabled:opacity-50',
+				'disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-border disabled:bg-disabled disabled:text-disabled-foreground',
 				variantClasses[variant],
 				sizeClasses[size],
 				className,
