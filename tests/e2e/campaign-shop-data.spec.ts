@@ -209,6 +209,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 						],
 						pickCount: null,
 						stockAvailable: { min: 1, max: 1 },
+						listAsUnidentified: true,
 					},
 				],
 			});
@@ -216,6 +217,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			id: 'catalog-shop-id',
 			campaign_id: 'campaign-text-id',
 			name: '目錄商品測試店',
+			flavor: '目錄測試商店風味。',
 			background_image_url: null,
 			is_active: true,
 			refresh_policy: encodedCatalogPolicy,
@@ -225,6 +227,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		const encodedShop = converters.toDbCampaignShop({
 			campaignId: 'campaign-text-id',
 			name: '武器店',
+			flavor: '鐵砧聲不曾停歇。',
 			backgroundImageUrl: null,
 			isActive: true,
 			refreshPolicy,
@@ -269,6 +272,23 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			});
 		} catch (error) {
 			invalidStockError =
+				error instanceof Error ? error.message : String(error);
+		}
+		let invalidUnidentifiedFlagError = '';
+		try {
+			refresh.normalizeCampaignShopRefreshPolicy({
+				flags: { keepItemsOnRefresh: false },
+				rules: [
+					{
+						possibleItemsOrFilters: [],
+						pickCount: null,
+						stockAvailable: { min: 0, max: 1 },
+						listAsUnidentified: 'true',
+					},
+				],
+			});
+		} catch (error) {
+			invalidUnidentifiedFlagError =
 				error instanceof Error ? error.message : String(error);
 		}
 		const decodedItem = converters.fromDbCampaignShopItem({
@@ -318,13 +338,13 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			'rejected',
 			'cancelled',
 		] as const;
-		const decodedStatuses = statuses.map((status) =>
+		const decodedOrders = statuses.map((status) =>
 			converters.fromDbCampaignShopOrder({
 				id: `order-${status}`,
 				checkout_id: 'checkout-group-id',
 				campaign_id: 'campaign-text-id',
 				shop_id: 'shop-text-id',
-				shop_item_id: 'shop-item-id',
+				shop_item_id: status === 'rejected' ? null : 'shop-item-id',
 				character_id: 'character-text-id',
 				item_snapshot: encoded.item_snapshot,
 				shop_name_snapshot: '武器店',
@@ -336,8 +356,9 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 				created_at: '2026-01-01T00:00:00Z',
 				updated_at: '2026-01-02T00:00:00Z',
 				reviewed_at: null,
-			}).status,
+			}),
 		);
+		const decodedStatuses = decodedOrders.map((order) => order.status);
 		return {
 			encoded,
 			encodedUnidentified,
@@ -356,15 +377,19 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 			decodedCatalogCandidate:
 				decodedCatalogShop.refreshPolicy.rules[0]
 					.possibleItemsOrFilters[0],
+			decodedCatalogListAsUnidentified:
+				decodedCatalogShop.refreshPolicy.rules[0].listAsUnidentified,
 			encodedShop,
 			decodedShop,
 			legacyShop,
 			invalidCatalogError,
 			invalidStockError,
+			invalidUnidentifiedFlagError,
 			decodedItem,
 			legacyItem,
 			legacyConsumableItem,
 			decodedStatuses,
+			decodedOrphanedItemReference: decodedOrders[2].shopItemId,
 			decodedCheckoutId: converters.fromDbCampaignShopOrder({
 				id: 'order-in-checkout',
 				checkout_id: 'checkout-group-id',
@@ -390,6 +415,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		id: 'shop-text-id',
 		campaignId: 'campaign-text-id',
 		name: '武器店',
+		flavor: '鐵砧聲不曾停歇。',
 		backgroundImageUrl: null,
 		isActive: true,
 		refreshPolicy: {
@@ -406,6 +432,8 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		},
 	});
 	expect(data.encodedShop.refresh_policy).toEqual(data.decodedShop.refreshPolicy);
+	expect(data.encodedShop.flavor).toBe('鐵砧聲不曾停歇。');
+	expect(data.legacyShop.flavor).toBe('');
 	expect(data.encodedCatalogPolicy).toMatchObject({
 		rules: [
 			{
@@ -434,12 +462,15 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		itemId: 'longsword',
 		category: 'Weapon',
 	});
+	expect(data.decodedCatalogListAsUnidentified).toBe(true);
+	expect(data.decodedShop.refreshPolicy.rules[0].listAsUnidentified).toBe(false);
 	expect(data.legacyShop.refreshPolicy).toEqual({
 		flags: { keepItemsOnRefresh: false },
 		rules: [],
 	});
 	expect(data.invalidCatalogError).toContain('不存在的官方目錄');
 	expect(data.invalidStockError).toContain('資料庫 integer 上限');
+	expect(data.invalidUnidentifiedFlagError).toContain('必須是布林值');
 	expect(data.encoded.item_snapshot).toMatchObject({
 		sub_type: '軍用武器',
 		value_gp: 15,
@@ -549,6 +580,7 @@ test('商店資料轉換器保留 snake_case 快照與各訂單狀態', async ({
 		'rejected',
 		'cancelled',
 	]);
+	expect(data.decodedOrphanedItemReference).toBeNull();
 	expect(data.decodedCheckoutId).toBe('checkout-group-id');
 });
 

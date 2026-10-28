@@ -319,6 +319,7 @@ export interface DbCampaignShop {
 	id: string;
 	campaign_id: string;
 	name: string;
+	flavor?: string | null;
 	background_image_url: string | null;
 	is_active: boolean;
 	refresh_policy?: unknown;
@@ -331,17 +332,19 @@ export const toDbCampaignShop = (
 		CampaignShop,
 		'campaignId' | 'name' | 'backgroundImageUrl' | 'isActive'
 	> &
-		Partial<Pick<CampaignShop, 'refreshPolicy'>>,
+		Partial<Pick<CampaignShop, 'flavor' | 'refreshPolicy'>>,
 ): Pick<
 	DbCampaignShop,
 	| 'campaign_id'
 	| 'name'
+	| 'flavor'
 	| 'background_image_url'
 	| 'is_active'
 	| 'refresh_policy'
 > => ({
 	campaign_id: shop.campaignId,
 	name: shop.name,
+	flavor: shop.flavor ?? '',
 	background_image_url: shop.backgroundImageUrl,
 	is_active: shop.isActive,
 	refresh_policy: toDbCampaignShopRefreshPolicy(shop.refreshPolicy),
@@ -351,6 +354,7 @@ export const fromDbCampaignShop = (row: DbCampaignShop): CampaignShop => ({
 	id: row.id,
 	campaignId: row.campaign_id,
 	name: row.name,
+	flavor: row.flavor ?? '',
 	backgroundImageUrl: row.background_image_url ?? null,
 	isActive: Boolean(row.is_active),
 	refreshPolicy: normalizeCampaignShopRefreshPolicy(row.refresh_policy),
@@ -587,7 +591,7 @@ export interface DbCampaignShopOrder {
 	checkout_id?: string | null;
 	campaign_id: string;
 	shop_id: string;
-	shop_item_id: string;
+	shop_item_id: string | null;
 	character_id: string;
 	item_snapshot: Partial<DbCampaignShopItemSnapshot> | null;
 	shop_name_snapshot: string;

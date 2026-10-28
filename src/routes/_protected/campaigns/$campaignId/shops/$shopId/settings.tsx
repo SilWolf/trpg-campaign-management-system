@@ -882,6 +882,11 @@ function CampaignShopsPage() {
 										<h2 className='font-serif text-xl font-bold text-amber-100'>
 											{selectedShop.name}
 										</h2>
+										{selectedShop.flavor && (
+											<p className='mt-1 whitespace-pre-line text-sm text-stone-300'>
+												{selectedShop.flavor}
+											</p>
+										)}
 										<p className='mt-1 text-xs text-stone-500'>
 											{selectedShop.isActive ? '營業中' : '已停用'}
 										</p>

@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/contexts/FeedbackContext';
 import { saveCampaignShop, type CampaignShopValues } from '@/lib/campaignShops';
-import { Button, Input } from '@/components/ui';
+import { Button, Input, Textarea } from '@/components/ui';
 import type { CampaignShop } from '@/types';
 
 interface CampaignShopDialogProps {
@@ -15,6 +15,27 @@ interface CampaignShopDialogProps {
 const INPUT_CLASS =
 	'mt-1 w-full rounded-md border border-stone-700 bg-stone-950 px-3 py-2 text-sm text-stone-100 placeholder:text-stone-600 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600';
 
+function getSaveErrorMessage(error: unknown): string {
+	if (
+		typeof error === 'object' &&
+		error !== null &&
+		'message' in error &&
+		typeof error.message === 'string' &&
+		error.message
+	) {
+		if (
+			'code' in error &&
+			error.code === 'PGRST204' &&
+			error.message.includes('flavor') &&
+			error.message.includes('campaign_shops')
+		) {
+			return `儲存商店失敗：資料庫缺少商店風味欄位或 schema 快取尚未更新，請維護者確認 migration。${error.message}`;
+		}
+		return `儲存商店失敗：${error.message}`;
+	}
+	return '儲存商店失敗，請稍後重試或聯絡維護者。';
+}
+
 export function CampaignShopDialog({
 	campaignId,
 	shop = null,
@@ -23,6 +44,7 @@ export function CampaignShopDialog({
 }: CampaignShopDialogProps) {
 	const toast = useToast();
 	const [name, setName] = useState(shop?.name ?? '');
+	const [flavor, setFlavor] = useState(shop?.flavor ?? '');
 	const [backgroundImageUrl, setBackgroundImageUrl] = useState(
 		shop?.backgroundImageUrl ?? '',
 	);
@@ -46,6 +68,10 @@ export function CampaignShopDialog({
 			setErrorMessage('商店名稱必須為 1 至 120 個字元。');
 			return;
 		}
+		if (flavor.length > 1000) {
+			setErrorMessage('商店風味描述不可超過 1000 個字元。');
+			return;
+		}
 
 		const imageUrl = backgroundImageUrl.trim();
 		if (imageUrl) {
@@ -62,6 +88,7 @@ export function CampaignShopDialog({
 
 		const values: CampaignShopValues = {
 			name: normalizedName,
+			flavor: flavor.trim(),
 			backgroundImageUrl: imageUrl || null,
 			isActive,
 		};
@@ -72,9 +99,9 @@ export function CampaignShopDialog({
 			await onSaved(savedShop);
 			onClose();
 		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : '儲存商店失敗。',
-			);
+			const message = getSaveErrorMessage(error);
+			setErrorMessage(message);
+			toast.error(message);
 		} finally {
 			setIsSaving(false);
 		}
@@ -131,6 +158,17 @@ export function CampaignShopDialog({
 						className={INPUT_CLASS}
 						placeholder='例如：灰港冒險者商會'
 						data-testid='shop-name'
+					/>
+				</label>
+				<label className='text-sm text-stone-300 sm:col-span-2'>
+					商店風味描述（選填）
+					<Textarea
+						maxLength={1000}
+						value={flavor}
+						onChange={(event) => setFlavor(event.target.value)}
+						className='mt-1 min-h-24 border-stone-700 bg-stone-950 text-stone-100 placeholder:text-stone-600 focus-visible:border-amber-600 focus-visible:ring-amber-600/40'
+						placeholder='描述商店的氛圍、店主或來訪時的感受…'
+						data-testid='shop-flavor'
 					/>
 				</label>
 				<label className='text-sm text-stone-300'>

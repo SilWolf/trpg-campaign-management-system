@@ -27,7 +27,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type CampaignShopValues = Pick<
 	CampaignShop,
-	'name' | 'backgroundImageUrl' | 'isActive'
+	'name' | 'flavor' | 'backgroundImageUrl' | 'isActive'
 > &
 	Partial<Pick<CampaignShop, 'refreshPolicy'>>;
 
@@ -189,6 +189,7 @@ export async function saveCampaignShop(
 				.from('campaign_shops')
 				.update({
 					name: shop.name,
+					flavor: shop.flavor,
 					background_image_url: shop.backgroundImageUrl,
 					is_active: shop.isActive,
 					...(refreshPolicy

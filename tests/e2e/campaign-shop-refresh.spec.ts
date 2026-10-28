@@ -351,6 +351,7 @@ test('刷新預覽保留舊商品版本，並將來源商品列為新增而非�
 					possibleItemsOrFilters: [item],
 					pickCount: null,
 					stockAvailable: { min: 1, max: 10 },
+					listAsUnidentified: true,
 				},
 			],
 		};
@@ -399,6 +400,7 @@ test('刷新預覽保留舊商品版本，並將來源商品列為新增而非�
 		sourceId: 'core-rules:longsword',
 		unitPriceGp: 15,
 		stockAvailable: 5,
+		itemSnapshot: { isIdentified: false },
 	});
 	expect(previews.clear).toEqual([
 		{ action: 'delete', name: '長劍', stockAvailable: 3 },

@@ -104,6 +104,7 @@ export interface CampaignShopRefreshRule {
 	possibleItemsOrFilters: CampaignShopRefreshCandidate[];
 	pickCount?: number | null | CampaignShopRefreshRange;
 	stockAvailable: CampaignShopRefreshRange;
+	listAsUnidentified: boolean;
 }
 
 export interface CampaignShopRefreshPolicy {
@@ -260,6 +261,7 @@ export interface CampaignShop {
 	id: string;
 	campaignId: string;
 	name: string;
+	flavor: string;
 	backgroundImageUrl: string | null;
 	isActive: boolean;
 	refreshPolicy: CampaignShopRefreshPolicy;
@@ -287,7 +289,7 @@ export interface CampaignShopOrder {
 	checkoutId: string | null;
 	campaignId: string;
 	shopId: string;
-	shopItemId: string;
+	shopItemId: string | null;
 	characterId: string;
 	itemSnapshot: CampaignShopItemSnapshot;
 	shopNameSnapshot: string;

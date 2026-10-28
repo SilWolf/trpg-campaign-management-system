@@ -121,9 +121,16 @@ function CampaignShopsIndex() {
 								</div>
 							)}
 							<div className='flex items-center justify-between gap-3 px-4 py-3'>
-								<h2 className='font-serif text-lg font-bold text-amber-100 group-hover:text-amber-200'>
-									{shop.name}
-								</h2>
+								<div className='min-w-0'>
+									<h2 className='font-serif text-lg font-bold text-amber-100 group-hover:text-amber-200'>
+										{shop.name}
+									</h2>
+									{shop.flavor && (
+										<p className='mt-1 line-clamp-2 whitespace-pre-line text-xs text-stone-400'>
+											{shop.flavor}
+										</p>
+									)}
+								</div>
 								{!shop.isActive && (
 									<span className='text-xs text-stone-500'>已停用</span>
 								)}

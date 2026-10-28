@@ -127,6 +127,7 @@ function createRule(): CampaignShopRefreshRule {
 		possibleItemsOrFilters: [],
 		pickCount: null,
 		stockAvailable: { min: 0, max: 1, p: 1, step: 1 },
+		listAsUnidentified: false,
 	};
 }
 
@@ -148,7 +149,7 @@ function actionLabel(
 		case 'keep':
 			return '保留';
 		case 'delete':
-			return '停用';
+			return '刪除';
 	}
 }
 
@@ -444,7 +445,7 @@ export function CampaignShopRefreshPanel({
 			setPreview(null);
 			setConfirmEmptyRefresh(false);
 			toast.success(
-				`店舖刷新完成：新增 ${result.created} 項、停用 ${result.deleted} 項。`,
+				`店舖刷新完成：新增 ${result.created} 項、刪除 ${result.deleted} 項。`,
 			);
 			try {
 				await Promise.all([onReloadShops(), onReloadItems()]);
@@ -510,7 +511,7 @@ export function CampaignShopRefreshPanel({
 				<span>
 					<span className='font-semibold text-stone-100'>保留既有商品</span>
 					<span className='mt-1 block text-xs text-stone-500'>
-						啟用時保留既有商品，並將本次選中的商品另行新增（不會依來源自動補貨或合併）；關閉時，刷新前商品會停用、庫存歸零，歷史訂單保留，再新增本次選中的商品。
+						啟用時保留既有商品，並將本次選中的商品另行新增（不會依來源自動補貨或合併）；關閉時，刷新前商品會直接刪除，再新增本次選中的商品。歷史訂單保留商品快照，待審訂單會標記為拒絕。
 					</span>
 				</span>
 			</label>
@@ -714,6 +715,28 @@ export function CampaignShopRefreshPanel({
 									<p className='mt-2 text-[11px] leading-relaxed text-stone-500'>從最小值開始；每次亂數結果大於或等於 p 才增加 step，直到達到最大值。p = 1 不會額外增加。</p>
 								</div>
 							</div>
+							<label className='mt-3 flex cursor-pointer items-start gap-3 rounded border border-emerald-900/60 bg-emerald-950/20 p-3 text-xs text-stone-300'>
+								<input
+									type='checkbox'
+									data-testid={`refresh-list-unidentified-${ruleIndex}`}
+									checked={rule.listAsUnidentified}
+									onChange={(event) =>
+										updateRule(ruleIndex, (current) => ({
+											...current,
+											listAsUnidentified: event.target.checked,
+										}))
+									}
+									className='mt-0.5 h-4 w-4 accent-emerald-500'
+								/>
+								<span>
+									<span className='font-semibold text-emerald-200'>
+										全部商品以未鑑定狀態列出
+									</span>
+									<span className='mt-1 block text-[11px] text-stone-500'>
+										此規則新增的商品會對玩家隱藏物品內容，直到完成鑑定。
+									</span>
+								</span>
+							</label>
 						</article>
 					);
 				})}
@@ -767,7 +790,7 @@ export function CampaignShopRefreshPanel({
 									刷新預覽
 								</h2>
 								<p className='mt-1 text-xs text-stone-400'>
-									新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、停用 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
+									新增 {preview.entries.filter((entry) => entry.action === 'create').length} 項、保留 {preview.entries.filter((entry) => entry.action === 'keep').length} 項、刪除 {preview.entries.filter((entry) => entry.action === 'delete').length} 項。
 								</p>
 							</div>
 							<div className='flex items-center gap-2'>
@@ -816,6 +839,7 @@ export function CampaignShopRefreshPanel({
 												{entry.ruleIndex === null ? '—' : entry.ruleIndex + 1}・
 												{BLACKSMITH_CATEGORY_LABELS[entry.category]}・
 												{RARITY_CONFIG[entry.rarity].label}
+												{entry.itemSnapshot.isIdentified === false && '・未鑑定'}
 											</p>
 										</div>
 										<div className='shrink-0 text-right'>
@@ -840,7 +864,7 @@ export function CampaignShopRefreshPanel({
 							>
 								{preview.keepItemsOnRefresh
 									? '本次沒有選中商品，保留模式不會變更既有商品；請再次確認後才會送出空操作。'
-									: '本次沒有選中商品。清除模式確認後仍會停用既有商品並將庫存歸零，歷史訂單會保留；請再次確認後才會套用。'}
+									: '本次沒有選中商品。清除模式確認後會直接刪除既有商品，保留歷史訂單快照並拒絕待審訂單；請再次確認後才會套用。'}
 							</p>
 						)}
 						<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/40 pt-3'>

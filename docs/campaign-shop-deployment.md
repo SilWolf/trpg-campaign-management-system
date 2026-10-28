@@ -2,6 +2,10 @@
 
 本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql`、`20261027000000_campaign_shop_cart_checkout.sql`、`20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql`，以及後續的 `20261028000000_item_base_unification.sql`、`20261028000001_campaign_shop_refresh_categories.sql`、`20261028000002_campaign_official_catalogs.sql`、`20261028000003_campaign_shop_refresh_latest_rulebooks.sql`、`20261028000004_campaign_shop_unidentified_items.sql`、`20261029000000_unidentified_item_security.sql`、`20261030000000_unidentified_item_clients.sql`、`20261030000001_campaign_shop_refresh_latest_rulebooks.sql`、`20261030000002_campaign_shop_flat_item_snapshots.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理；第四個 migration 新增刷新政策欄位與驗證，以及 DM 專用的原子刷新 RPC；第五個 migration 讓刷新清除模式在同一交易內實際刪除退役商品，並回報刪除數量；第六個 migration 新增 `inventory_items.item_base` 與 `blacksmith_items.item_base` canonical JSON、擴充分類約束，並更新範例建團、鍛造匯入及購買交付 RPC 保存巢狀屬性。第七個 migration 更新刷新政策驗證，讓篩選器接受新版物品分類；第八個 migration 在 `campaigns.official_catalog_ids` 儲存每個戰役可用的官方規則書 ID，並以 CHECK constraint 驗證清單形狀與 ID 格式；第九個 migration 讓「此戰役的規則書」候選以動態標記儲存，於每次預覽重新讀取最新戰役目錄設定，並於刷新 RPC 中依最新設定展開來源；第十個 migration 讓商店商品快照保存鑑定狀態，並在結帳交付時沿用該狀態；第十一次 migration 新增未鑑定物品的秘密快照、資料庫交易與欄位授權；第十二個 migration 更新未鑑定物品用刷新 RPC，保留依最新戰役規則書設定展開來源的伺服器端驗證；第十三個 migration 將商店與訂單快照中的完整物品定義展平至 JSON 根層、回填舊格式，並新增僅 DM 可呼叫的未鑑定商品定義讀取 RPC。第六個 migration 不回填既有資料，部署前仍須由維護者確認規劃中的空資料表前提。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
 
+本次另新增 `20261030000003_campaign_shop_refresh_hard_delete.sql`，讓清除刷新刪除舊商品時保留訂單快照；`20261030000004_campaign_shop_refresh_unidentified_items.sql` 修正刷新 RPC 對未鑑定商品的驗證與私有定義儲存；`20261030000005_campaign_shop_flavor.sql` 為商店新增風味描述欄位，預設空字串以相容既有商店。
+
+`20261030000006_campaign_shop_flavor_grants.sql` 補上 authenticated 對風味欄位的 INSERT 與 UPDATE 權限；原有商店 RLS 仍限制只有該戰役 DM 可建立或編輯商店。部署時須依 migration history 確認 `20261030000005` 與 `20261030000006` 均已按順序套用，包含先前已套用 `20261030000005` 的環境。
+
 ## Migration 依賴與範圍
 
 商店 migration 預期目標資料庫已具備本專案既有的 `campaigns`、`characters`、`campaign_members`、`character_permissions`、`inventory_items` 表格及 `is_campaign_member_or_dm(text)`、`is_campaign_dm(text)` 函式。它會先驗證必要欄位及型別；前置條件不符時應中止，不可略過檢查後強行部署。
@@ -14,7 +18,7 @@
 - campaign 範圍外鍵、商品與訂單快照、庫存約束、索引、RLS、管理欄位權限及交易 RPC。
 - `campaign_shop_orders.checkout_id` 將同次購物車的多個商品列分組；`checkout_campaign_shop_cart` 在單一 PostgreSQL 交易內建立整筆直接交易或待審請求。只要購物車有一項需審查，整車都會保留庫存且不扣款；核准、拒絕或取消均以整車為單位。
 - 後續刪除權限 migration 僅允許 authenticated DM 刪除所屬戰役商品；依現有外鍵，刪除商品也會 cascade 刪除其訂單與付款輔助列。
-- 刷新 migration 在 `campaign_shops` 儲存 `refresh_policy` JSONB，使用 CHECK constraint 驗證政策形狀與範圍，並提供 `refresh_campaign_shop_items`。RPC 驗證 campaign DM、shop/campaign 對應、政策保留模式及商店／商品版本，依商店後商品 ID 順序鎖定，再於同一交易內刪除、補貨或新增商品。商品刪除依現有外鍵 cascade 刪除關聯訂單與付款輔助列；保留模式不修改 `stock_reserved`。
+- 刷新 migration 在 `campaign_shops` 儲存 `refresh_policy` JSONB，使用 CHECK constraint 驗證政策形狀與範圍，並提供 `refresh_campaign_shop_items`。RPC 驗證 campaign DM、shop/campaign 對應、政策保留模式及商店／商品版本，依商店後商品 ID 順序鎖定，再於同一交易內刪除、補貨或新增商品；保留模式不修改 `stock_reserved`。硬刪除刷新會先拒絕待審訂單並將其商品關聯設為 `NULL`，所以歷史訂單快照及付款紀錄仍保留；直接刪除商品仍依原外鍵級聯刪除關聯訂單。
 - `campaigns.official_catalog_ids` 保存 DM 為該戰役選取的官方規則書 ID 陣列；campaign 更新保護 trigger 會阻止非 DM 變更該欄位。刷新政策選擇「此戰役的規則書」時，前端會依目前設定展開成各個實際目錄篩選器，再照既有刷新 RPC 流程驗證及套用。
 - `20261028000003_campaign_shop_refresh_latest_rulebooks.sql` 讓「此戰役的規則書」候選以 `__campaign_rulebooks__` 標記持久化。每次預覽重新讀取 `campaigns.official_catalog_ids`；刷新 RPC 也在交易內鎖定商店、檢查預覽版本，暫時以當下規則書展開政策，委派既有刷新交易，最後還原標記政策。若最新規則書設定已變更，預覽及伺服器端來源驗證都會使用最新清單。
 - `20261030000001_campaign_shop_refresh_latest_rulebooks.sql` 保留新版未鑑定物品刷新 RPC 的驗證及交易流程，同時恢復動態規則書政策展開包裝層，避免新版 RPC 改寫後把合法的戰役規則書目錄商品誤判為不在政策來源。套用後，使用「此戰役的規則書」政策的刷新仍會依當下 `official_catalog_ids` 驗證來源。
@@ -27,6 +31,7 @@
 - `campaign_shops`、`campaign_shop_items`、`campaign_shop_orders` 的 `supabase_realtime` publication 設定。付款輔助表不屬於公開訂單，也不應加入 Realtime。
 - `20261029000000_unidentified_item_security.sql` 將 `item_identified_snapshot` 留在資料庫，將未鑑定商品、背包列及待審訂單的公開快照遮罩；撤銷秘密資料表的 table-level `SELECT`，只授予公開欄位，並以 service-role-only 鑑定 RPC、DM-only 商店商品寫入 RPC 及安全 Broadcast 取代直接讀寫／整列事件。Migration 將三張含私有快照的資料表移出 `postgres_changes` publication，並要求有有效 `item_base` 才能安全回填。
 - `20261030000002_campaign_shop_flat_item_snapshots.sql` 將商店及訂單 `item_snapshot` 中的 canonical 欄位改存於 JSON 根層，移除巢狀 `item_base` 並回填既有快照；私有未鑑定定義仍只由 DM 專用 `load_campaign_shop_item_definitions` RPC 讀取。刷新 RPC 的巢狀 `item_base` 僅作交易輸入相容格式，寫入資料列前會由 trigger 展平。
+- `20261030000004_campaign_shop_refresh_unidentified_items.sql` 更新刷新 RPC 內部驗證與新增商品流程：允許合法的 `is_identified: false` 預覽，同時驗證旗標型別、保存遮罩公開快照及 DM 專用真實定義，避免未鑑定商品刷新被誤判為無效資料。
 
 **未鑑定物品 migration 尚未部署，且目前不可單獨部署。**其權限收斂會中斷舊版商店直接寫入及整列 Realtime；須先完成規劃書階段二的 Edge Function、安全 projection、Broadcast listener，以及可保留秘密快照的拆堆／移轉流程。來源欄位 `source_type/source_id` 目前保留，待刷新 RPC 與客戶端同步改版後再移除。
 
@@ -86,8 +91,23 @@ SELECT
       AND column_name = 'refresh_policy'
       AND data_type = 'jsonb'
       AND is_nullable = 'NO'
-  ) AS refresh_policy_exists;
+  ) AS refresh_policy_exists,
+  EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'campaign_shops'
+      AND column_name = 'flavor'
+      AND data_type = 'text'
+      AND is_nullable = 'NO'
+  ) AS shop_flavor_exists,
+  has_column_privilege('authenticated', 'public.campaign_shops', 'flavor', 'INSERT')
+    AS authenticated_can_insert_shop_flavor,
+  has_column_privilege('authenticated', 'public.campaign_shops', 'flavor', 'UPDATE')
+    AS authenticated_can_update_shop_flavor;
 ```
+
+若風味欄位尚未建立，`has_column_privilege` 查詢可能報錯；請先確認 migration history 和欄位存在，再檢查欄位權限。隔離驗收時應以 DM 建立、編輯並清空風味描述，重新載入確認保存，並確認非 DM 無法修改。
 
 確認三個公開資料表位於 Realtime publication：
 

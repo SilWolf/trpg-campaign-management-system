@@ -495,7 +495,12 @@ export function buildCampaignShopRefreshPreview(
 	for (const selection of selections) {
 		const { item, ruleIndex, stockAvailable } = selection;
 		const sourceId = `${item.catalogId}:${item.itemId}`;
-		const itemSnapshot = blacksmithItemToCampaignShopSnapshot(item);
+		const itemSnapshot = {
+			...blacksmithItemToCampaignShopSnapshot(item),
+			...(policy.rules[ruleIndex].listAsUnidentified
+				? { isIdentified: false }
+				: {}),
+		};
 		const unitPriceGp = Math.max(item.valueGp, 0.01);
 		if (
 			!Number.isFinite(unitPriceGp) ||
@@ -569,6 +574,11 @@ function normalizeRule(
 		`${field}.stockAvailable`,
 		1,
 	);
+	const listAsUnidentified =
+		value.listAsUnidentified === undefined ? false : value.listAsUnidentified;
+	if (typeof listAsUnidentified !== 'boolean') {
+		throw new Error(`${field}.listAsUnidentified 必須是布林值。`);
+	}
 	const stockMin = stockAvailable.min ?? 0;
 	const stockMax = stockAvailable.max ?? null;
 	if (
@@ -583,7 +593,12 @@ function normalizeRule(
 	if (stockAvailable.step !== undefined && stockAvailable.step > 2_147_483_647) {
 		throw new Error(`${field}.stockAvailable.step 不得超過資料庫 integer 上限。`);
 	}
-	return { possibleItemsOrFilters, pickCount, stockAvailable };
+	return {
+		possibleItemsOrFilters,
+		pickCount,
+		stockAvailable,
+		listAsUnidentified,
+	};
 }
 
 export function normalizeCampaignShopRefreshPolicy(

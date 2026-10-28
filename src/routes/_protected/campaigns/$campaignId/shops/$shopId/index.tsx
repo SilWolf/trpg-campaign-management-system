@@ -272,6 +272,11 @@ function CampaignShopDetail() {
 					<h1 className='mt-1 font-serif text-3xl font-bold text-amber-100'>
 						{shop.name}
 					</h1>
+					{shop.flavor && (
+						<p className='mt-2 whitespace-pre-line text-sm text-stone-400'>
+							{shop.flavor}
+						</p>
+					)}
 				</div>
 				{isDm && (
 					<Link
@@ -302,14 +307,6 @@ function CampaignShopDetail() {
 						<Image className='h-8 w-8 text-amber-900' />
 					</div>
 				)}
-				<div className='px-4 py-3'>
-					<h2 className='font-serif text-xl font-bold text-amber-100'>
-						{shop.name}
-					</h2>
-					<p className='mt-1 text-xs text-stone-500'>
-						{shop.isActive ? '營業中' : '已停用'}
-					</p>
-				</div>
 			</div>
 
 			<section className='mt-5 rounded-lg border border-stone-800 bg-stone-900/50 p-4'>
@@ -338,13 +335,13 @@ function CampaignShopDetail() {
 									const isSelected = selectedItem?.id === item.id;
 									const quantity = cartQuantities[item.id] ?? 0;
 									const isUnidentified = isUnidentifiedShopItem(item);
-									const isMasked = !isDm && isUnidentified;
+									const isMasked = isUnidentified;
 									const displayName =
 										isMasked || item.itemSnapshot.name === '未鑑定物品'
 											? `未鑑定的${CATEGORY_LABELS[item.itemSnapshot.category]}`
 											: item.itemSnapshot.name;
 									const rarityStyle = isMasked
-										? RARITY_CONFIG.Uncommon
+										? RARITY_CONFIG.Common
 										: RARITY_CONFIG[item.itemSnapshot.rarity];
 									const canAdd =
 										shop.isActive &&
@@ -376,7 +373,7 @@ function CampaignShopDetail() {
 														data-testid='shop-item-icon'
 													>
 														{isMasked ? (
-															<HelpCircle className='h-6 w-6 text-purple-400' />
+															<HelpCircle className='h-6 w-6 text-stone-300' />
 														) : (
 															<ItemIcon
 																iconName={item.itemSnapshot.icon}
@@ -391,22 +388,16 @@ function CampaignShopDetail() {
 															{displayName}
 														</h3>
 														<p className='mt-1 truncate text-xs text-stone-500'>
-															{isMasked ? (
-																<span className='text-purple-300'>未鑑定</span>
-															) : (
+															{CATEGORY_LABELS[item.itemSnapshot.category]}
+															{!isUnidentified && (
 																<>
-																	{CATEGORY_LABELS[item.itemSnapshot.category]}
-																	{!isUnidentified && (
-																		<>
-																			・
-																			<span
-																				data-testid='shop-item-rarity'
-																				className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
-																			>
-																				{rarityStyle.label}
-																			</span>
-																		</>
-																	)}
+																	・
+																	<span
+																		data-testid='shop-item-rarity'
+																		className={`inline-flex rounded border px-1 py-0.5 leading-none ${rarityStyle.badgeBg}`}
+																	>
+																		{rarityStyle.label}
+																	</span>
 																</>
 															)}
 														</p>
@@ -623,18 +614,19 @@ function CampaignShopDetail() {
 										)}
 								</div>
 
-								{!selectedItemIsUnidentified && selectedItem.itemSnapshot.flavor && (
-									<div className='border-b border-stone-800 py-3'>
-										<h4 className='mb-1 text-xs font-semibold text-stone-400'>
-											物品描述
-										</h4>
-										<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
-											<ReactMarkdown>
-												{selectedItem.itemSnapshot.flavor}
-											</ReactMarkdown>
+								{!selectedItemIsUnidentified &&
+									selectedItem.itemSnapshot.flavor && (
+										<div className='border-b border-stone-800 py-3'>
+											<h4 className='mb-1 text-xs font-semibold text-stone-400'>
+												物品描述
+											</h4>
+											<div className='prose prose-invert max-w-none text-sm leading-relaxed text-stone-200'>
+												<ReactMarkdown>
+													{selectedItem.itemSnapshot.flavor}
+												</ReactMarkdown>
+											</div>
 										</div>
-									</div>
-								)}
+									)}
 								{selectedItemIsUnidentified ? (
 									<div className='border-b border-stone-800 py-3 text-sm italic text-purple-300'>
 										此物品散發著晦澀難明的魔法波動，無法得知其確切能力。

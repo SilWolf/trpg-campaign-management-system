@@ -856,14 +856,13 @@ export async function mockSupabase(
 				const keepItems = body.p_keep_items === true;
 				let deleted = 0;
 				if (!keepItems) {
-					for (const item of campaignShopItems) {
+					for (let index = campaignShopItems.length - 1; index >= 0; index -= 1) {
+						const item = campaignShopItems[index];
 						if (
 							item.campaign_id === body.p_campaign_id &&
-							item.shop_id === body.p_shop_id &&
-							(item.is_active === true || Number(item.stock_available) > 0)
+							item.shop_id === body.p_shop_id
 						) {
-							item.is_active = false;
-							item.stock_available = 0;
+							campaignShopItems.splice(index, 1);
 							deleted += 1;
 						}
 					}
