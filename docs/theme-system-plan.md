@@ -277,12 +277,33 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 
 ### Phase 1：建立 CSS variables 與 Tailwind token 映射
 
-1. 在 `src/index.css` 整理既有 `--color-ui-*` token，決定哪些延伸為通用語意 token，哪些保留為元件基礎 token。
+1. 在 [`src/index.css`](../src/index.css) 整理既有 `--color-ui-*` token，將表面、邊框、焦點與危險狀態改為既有語意 token 的相容映射。
 2. 定義預設主題所需的完整基礎 token、容器/互動表面角色與狀態色，包含必要的背景/文字配對、邊框、表單欄位及焦點環。
-3. 使用 Tailwind v4 `@theme inline` 將 CSS variables 映射至可用 utility；先以少量共用元件驗證 `bg-*`、`text-*`、`border-*`、`ring-*` 與透明度 modifier 的實際輸出。
-4. 維持目前預設暗黑奇幻視覺，不在 token 基礎建置階段更動現行設計。
+3. 使用 Tailwind v4 `@theme inline` 將 CSS variables 映射至可用 utility；以 [`Button.tsx`](../src/components/ui/Button.tsx) 與 [`Input.tsx`](../src/components/ui/Input.tsx) 驗證 `bg-*`、`text-*`、`border-*`、`ring-*` 及透明度 modifier 的實際輸出。
+4. 維持目前預設暗黑奇幻視覺；本階段只建立預設 token，不啟用主題選單、持久化或 `dnd`／`printing` 主題。
 
 **完成條件：** token 的值集中於 CSS variables，Tailwind utility 可正常生成，預設主題外觀與互動狀態沒有非預期改變。
+
+#### Phase 1 執行結果（2026-10-28）
+
+**狀態：已完成。**
+
+- 在 `:root` 建立完整預設語意 token：`background`、`foreground`、`card`、`popover`、`primary`、`secondary`、`muted`、`accent`、`success`、`destructive`、`warning`、`info`、`disabled` 及其前景配對，另含 `border`、`input`、`ring`。
+- 色票以目前 BG3 暗色外觀為基準：頁面背景維持 `#0c0a09`；`card`／`input` 維持 `#1c1917`；浮層／低強調表面維持 `#292524`；邊框維持 `#44403c`；焦點環維持 `#fbbf24`。主要操作沿用 amber-700／amber-50，危險按鈕沿用 red-900／red-100，避免改變已驗證的元件配色。
+- `@theme inline` 將語意變數映射為 Tailwind `--color-*` token，並保留 `ui-surface`、`ui-surface-raised`、`ui-border`、`ui-focus`、`ui-danger` 相容名稱；控制項圓角與 dropdown z-index 也保留 Tailwind token。
+- Button 與 Input 作為本階段試點，以語意 utility 取代對應的固定色 utility；透明度 modifier（例如 `bg-destructive/80`、`ring-ring/40`）及 `ring-offset-background` 均已確認由 production build 生成。
+- 未新增顏色家族或調整元件版面與互動；舊的 hover、錯誤及其他尚未遷移樣式維持原狀，完整共用元件遷移仍留在 Phase 2。
+
+**確認事項與決策紀錄：** 執行前未發現需要額外產品決策的歧義，因此未向使用者提出問題。依本計畫既定方向，保留 BG3 預設暗色外觀；`dnd`、`printing` 色票與主題切換行為不屬於本階段。
+
+**驗證結果：**
+
+| 驗證 | 結果 |
+| --- | --- |
+| `npm run build` | 通過；TypeScript 與 Vite production build 成功，並確認語意 token、相容 utility、透明度及焦點 utility 有輸出。 |
+| `npm run lint` | 通過，0 errors；有 1 個既有的未使用 ESLint disable warning，位於商店路由，與本次修改無關。 |
+| `npm run test:e2e -- tests/e2e/phase-1-baseline.spec.ts` | 12 項通過，包含登入、大廳、建立戰役及窄螢幕檢查。執行輸出有 Realtime transport error 記錄，但未造成測試失敗。 |
+| `git diff --check` | 通過。 |
 
 ### Phase 2：共用元件先行遷移
 

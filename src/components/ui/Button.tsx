@@ -26,10 +26,10 @@ export type ButtonProps = ButtonStyleProps &
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
-		'border border-amber-500/70 bg-amber-700 text-amber-50 hover:bg-amber-600',
+		'border border-amber-500/70 bg-primary text-primary-foreground hover:bg-amber-600',
 	secondary:
-		'border border-ui-border bg-ui-surface text-stone-200 hover:border-stone-500 hover:bg-ui-surface-raised',
-	danger: 'border border-red-500/70 bg-red-900/80 text-red-100 hover:bg-red-800',
+		'border border-border bg-card text-secondary-foreground hover:border-stone-500 hover:bg-muted',
+	danger: 'border border-red-500/70 bg-destructive/80 text-destructive-foreground hover:bg-red-800',
 	ghost: 'border border-transparent bg-transparent text-stone-300 hover:bg-stone-800 hover:text-stone-100',
 };
 
@@ -48,7 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 		) =>
 			cn(
 				'inline-flex items-center justify-center gap-2 rounded-control font-semibold transition-colors',
-				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ui-focus focus-visible:ring-offset-2 focus-visible:ring-offset-stone-950',
+				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
 				'disabled:pointer-events-none disabled:opacity-50',
 				variantClasses[variant],
 				sizeClasses[size],
