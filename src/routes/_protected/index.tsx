@@ -1,15 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route。 */
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router';
-import {
-	LogOut,
-	Plus,
-	Swords,
-	Users,
-	X,
-	UserCog,
-	Hammer,
-} from 'lucide-react';
+import { LogOut, Plus, Swords, Users, X, UserCog, Hammer } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, toDbItem } from '@/lib/supabase';
 import { INITIAL_CHARACTERS, INITIAL_ITEMS } from '@/data';
@@ -48,9 +40,7 @@ function CampaignLobbyPage() {
 	useEffect(() => {
 		if (dialog && dialogRef.current && !dialogRef.current.open) {
 			dialogRef.current.showModal();
-			dialogRef.current
-				.querySelector<HTMLElement>('[data-autofocus]')
-				?.focus();
+			dialogRef.current.querySelector<HTMLElement>('[data-autofocus]')?.focus();
 		}
 	}, [dialog]);
 
@@ -190,9 +180,7 @@ function CampaignLobbyPage() {
 			closeDialog();
 			setCampaignName('');
 			toast.success(
-				campaignTemplate === 'sample'
-					? '範例戰役已建立。'
-					: '空白戰役已建立。',
+				campaignTemplate === 'sample' ? '範例戰役已建立。' : '空白戰役已建立。',
 			);
 			await navigate({
 				to: '/campaigns/$campaignId',
@@ -271,7 +259,7 @@ function CampaignLobbyPage() {
 					<div className='flex flex-wrap items-center gap-3'>
 						<div className='rounded-md border border-border bg-card/80 px-3 py-2 text-xs'>
 							<span className='text-muted-foreground'>目前身分：</span>
-							<span className='font-semibold text-primary-foreground'>
+							<span className='font-semibold text-highlight'>
 								{isGuest ? '訪客冒險者' : (user?.email ?? '已登入使用者')}
 							</span>
 						</div>
@@ -322,7 +310,7 @@ function CampaignLobbyPage() {
 
 				<div className='mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
 					<div>
-						<p className='mb-1 text-xs font-semibold tracking-[0.15em] text-primary-foreground'>
+						<p className='mb-1 text-xs font-semibold tracking-[0.15em] text-highlight'>
 							你的冒險即將展開
 						</p>
 						<h2

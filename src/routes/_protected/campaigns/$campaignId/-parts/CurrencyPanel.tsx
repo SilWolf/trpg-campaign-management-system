@@ -47,37 +47,31 @@ const COIN_META: {
 	key: CurrencyType;
 	name: string;
 	rate: string;
-	style: string;
 }[] = [
 	{
 		key: 'pp',
 		name: '鉑金幣 (PP)',
 		rate: '1 PP = 10 GP',
-		style: 'border-border/50 bg-card/60 text-foreground',
 	},
 	{
 		key: 'gp',
 		name: '金幣 (GP)',
 		rate: '標準通用貨幣',
-		style: 'border-border/50 bg-muted/60 text-foreground',
 	},
 	{
 		key: 'ep',
 		name: '電金幣 (EP)',
 		rate: '2 EP = 1 GP',
-		style: 'border-border/50 bg-background/30 text-foreground',
 	},
 	{
 		key: 'sp',
 		name: '銀幣 (SP)',
 		rate: '10 SP = 1 GP',
-		style: 'border-border/50 bg-muted/60 text-foreground',
 	},
 	{
 		key: 'cp',
 		name: '銅幣 (CP)',
 		rate: '100 CP = 1 GP',
-		style: 'border-border/50 bg-background/30 text-foreground',
 	},
 ];
 
@@ -170,7 +164,6 @@ export default function CurrencyPanel({
 						size='sm'
 						aria-label='關閉錢包管理'
 						onClick={onClose}
-						className='text-muted-foreground hover:text-foreground cursor-pointer'
 					>
 						<X className='w-5 h-5' />
 					</Button>
@@ -181,35 +174,25 @@ export default function CurrencyPanel({
 					<div className='grid grid-cols-2 gap-2 mb-4'>
 						<Button
 							type='button'
-							variant='ghost'
+							variant={walletTab === 'public' ? 'primary' : 'ghost'}
 							data-testid='currency-wallet-public'
 							aria-pressed={walletTab === 'public'}
 							disabled={!canReadPublicWallet}
 							onClick={() => setWalletTab('public')}
-							className={`py-2 px-3 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-								walletTab === 'public'
-									? 'bg-primary/70 border-primary text-primary-foreground shadow'
-									: 'bg-card border-border text-muted-foreground hover:text-foreground'
-							}`}
 						>
-							<Globe className='w-3.5 h-3.5 text-primary-foreground' />
+							<Globe className='w-3.5 h-3.5' />
 							<span>公開錢包 {!canReadPublicWallet && '(無權限)'}</span>
 						</Button>
 
 						<Button
 							type='button'
-							variant='ghost'
+							variant={walletTab === 'private' ? 'primary' : 'ghost'}
 							data-testid='currency-wallet-private'
 							aria-pressed={walletTab === 'private'}
 							disabled={!canReadPrivateWallet}
 							onClick={() => setWalletTab('private')}
-							className={`py-2 px-3 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-								walletTab === 'private'
-									? 'bg-accent border-ring text-accent-foreground shadow'
-									: 'bg-card border-border text-muted-foreground hover:text-foreground'
-							}`}
 						>
-							<Lock className='w-3.5 h-3.5 text-muted-foreground' />
+							<Lock className='w-3.5 h-3.5' />
 							<span>私人錢包 {!canReadPrivateWallet && '(隱藏)'}</span>
 						</Button>
 					</div>
@@ -234,14 +217,10 @@ export default function CurrencyPanel({
 							{COIN_META.map((coin) => (
 								<div
 									key={coin.key}
-									className={`p-2.5 rounded-md border flex items-center justify-between ${coin.style}`}
+									className={`p-2.5 rounded-md border flex items-center justify-between`}
 								>
 									<div>
-										<div
-											className={`text-xs font-bold ${coin.key === 'gp' ? 'text-highlight' : ''}`}
-										>
-											{coin.name}
-										</div>
+										<div className={`text-xs font-bold`}>{coin.name}</div>
 										<div className='text-[10px] opacity-75'>{coin.rate}</div>
 									</div>
 
@@ -315,7 +294,6 @@ export default function CurrencyPanel({
 										onChange={(e) =>
 											setTransferCoin(e.target.value as CurrencyType)
 										}
-										className='bg-card border border-border rounded px-2.5 py-1.5 text-primary-foreground font-semibold outline-none'
 									>
 										<option value='pp'>PP 鉑金幣</option>
 										<option value='gp'>GP 金幣</option>
@@ -335,7 +313,6 @@ export default function CurrencyPanel({
 												Math.max(1, parseInt(e.target.value, 10) || 1),
 											)
 										}
-										className='flex-1 bg-card border border-border focus:border-primary rounded px-2.5 py-1.5 font-mono font-bold text-foreground outline-none'
 									/>
 
 									<Button
@@ -344,7 +321,6 @@ export default function CurrencyPanel({
 										size='sm'
 										onClick={() => setTransferAmount(maxAvailable)}
 										disabled={maxAvailable <= 0}
-										className='px-2.5 py-1.5 rounded bg-card hover:bg-muted disabled:opacity-40 border border-border text-primary-foreground text-[11px] cursor-pointer'
 									>
 										全部 ({maxAvailable})
 									</Button>
@@ -364,7 +340,6 @@ export default function CurrencyPanel({
 												transferAmount,
 											)
 										}
-										className='w-full py-1.5 px-3 rounded bg-background/80 hover:bg-card disabled:opacity-40 border border-border/70 text-foreground text-[11px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer transition'
 									>
 										<ArrowLeftRight className='w-3.5 h-3.5 text-muted-foreground' />
 										<span>
@@ -391,7 +366,6 @@ export default function CurrencyPanel({
 													walletTab,
 												)
 											}
-											className='px-2.5 py-1.5 rounded bg-background/80 hover:bg-card disabled:opacity-40 border border-border/70 text-foreground text-[11px] font-medium cursor-pointer transition'
 										>
 											🏕️ 存入營地公庫
 										</Button>
@@ -404,7 +378,6 @@ export default function CurrencyPanel({
 											size='sm'
 											disabled={maxAvailable <= 0}
 											onClick={() => onSplitCampCoinToParty(transferCoin)}
-											className='px-2.5 py-1.5 rounded bg-background/90 hover:bg-card disabled:opacity-40 border border-border/70 text-foreground text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition'
 										>
 											<Users className='w-3.5 h-3.5 text-muted-foreground' />
 											<span>平分所有 {transferCoin.toUpperCase()} 給全隊</span>
@@ -431,7 +404,6 @@ export default function CurrencyPanel({
 														walletTab,
 													)
 												}
-												className='px-2.5 py-1.5 rounded bg-card hover:bg-primary disabled:opacity-40 border border-border hover:border-primary/60 text-foreground text-[11px] cursor-pointer transition'
 											>
 												轉給 {target.avatar} {target.name.split(' ')[0]}
 											</Button>
@@ -445,9 +417,8 @@ export default function CurrencyPanel({
 							{canEditCurrent ? (
 								<Button
 									type='button'
-									variant='primary'
+									variant='secondary'
 									onClick={() => onConsolidateCoinsToGold(walletTab)}
-									className='flex-1 py-2 px-3 rounded bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-primary-foreground text-xs font-semibold flex items-center justify-center gap-1.5 shadow cursor-pointer'
 								>
 									<Sparkles className='w-3.5 h-3.5' />
 									<span>一鍵將零錢換整為金幣 (GP)</span>

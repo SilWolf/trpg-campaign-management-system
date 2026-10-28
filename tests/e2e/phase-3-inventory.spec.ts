@@ -70,7 +70,27 @@ test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', as
 		'open',
 		false,
 	);
-	await page.getByTestId('inventory-item-inventory-public-potion').click();
+	const publicPotion = page.getByTestId(
+		'inventory-item-inventory-public-potion',
+	);
+	await publicPotion.click();
+	await expect(publicPotion).toHaveAttribute('aria-pressed', 'true');
+	const selectionStyles = await publicPotion.evaluate((element) => {
+		const primaryColorProbe = document.createElement('div');
+		primaryColorProbe.style.borderLeftColor = 'var(--primary)';
+		document.body.append(primaryColorProbe);
+		const primaryColor = getComputedStyle(primaryColorProbe).borderLeftColor;
+		primaryColorProbe.remove();
+
+		const styles = getComputedStyle(element);
+		return {
+			borderLeftWidth: styles.borderLeftWidth,
+			borderLeftColor: styles.borderLeftColor,
+			primaryColor,
+		};
+	});
+	expect(selectionStyles.borderLeftWidth).toBe('2px');
+	expect(selectionStyles.borderLeftColor).toBe(selectionStyles.primaryColor);
 	await page.getByTestId('inventory-consume-item').click();
 	await expect
 		.poll(() =>

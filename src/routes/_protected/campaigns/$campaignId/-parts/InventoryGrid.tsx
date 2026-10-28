@@ -43,40 +43,30 @@ const SECTION_CONFIG: {
 	title: string;
 	subtitle: string;
 	icon: typeof Sword;
-	accentColor: string;
-	badgeClass: string;
 }[] = [
 	{
 		key: 'Equipment',
 		title: '裝備 (Equipment)',
 		subtitle: '可穿戴或持用的武器、護甲與奇物',
 		icon: Sword,
-		accentColor: 'text-primary-foreground border-primary/50 bg-primary/20',
-		badgeClass: 'bg-primary/60 text-primary-foreground border-primary/50',
 	},
 	{
 		key: 'Consumable',
 		title: '消耗品 (Consumables)',
 		subtitle: '藥水、卷軸、食物與拋擲物',
 		icon: FlaskConical,
-		accentColor: 'text-foreground border-border/50 bg-background/20',
-		badgeClass: 'bg-card/60 text-foreground border-border/50',
 	},
 	{
 		key: 'Important',
 		title: '重要物品 (Key Items)',
 		subtitle: '劇情信物、任務鑰匙與關鍵遺物',
 		icon: Star,
-		accentColor: 'text-foreground border-border/50 bg-background/20',
-		badgeClass: 'bg-card/60 text-foreground border-border/50',
 	},
 	{
 		key: 'Misc',
 		title: '雜物 (Miscellaneous)',
 		subtitle: '戰利品、材料、工具與一般行囊物品',
 		icon: Package,
-		accentColor: 'text-foreground border-border bg-card/40',
-		badgeClass: 'bg-muted text-foreground border-border/50',
 	},
 ];
 
@@ -141,7 +131,7 @@ export default function InventoryGrid({
 							>
 								{/* 分類標題列 */}
 								<div
-									className={`px-3 py-1.5 border-b flex items-center justify-between ${sec.accentColor}`}
+									className={`px-3 py-1.5 border-b flex items-center justify-between`}
 								>
 									<div className='flex items-center gap-2'>
 										<IconComp className='w-3.5 h-3.5 shrink-0' />
@@ -173,9 +163,7 @@ export default function InventoryGrid({
 												)
 											</span>
 										)}
-										<span
-											className={`text-[10px] px-1.5 py-0.2 rounded border ${sec.badgeClass}`}
-										>
+										<span className={`text-[10px]`}>
 											{sectionItems.length} 件
 										</span>
 									</div>
@@ -209,9 +197,7 @@ export default function InventoryGrid({
 													key={item.id}
 													type='button'
 													variant='ghost'
-													aria-label={
-														masked ? '未知魔法物品' : item.name
-													}
+													aria-label={masked ? '未知魔法物品' : item.name}
 													aria-pressed={isInspected}
 													data-testid={`inventory-item-${item.id}`}
 													data-filter-match={matches}
@@ -295,9 +281,7 @@ export default function InventoryGrid({
 													key={item.id}
 													type='button'
 													variant='ghost'
-													aria-label={
-														masked ? '未知魔法物品' : item.name
-													}
+													aria-label={masked ? '未知魔法物品' : item.name}
 													aria-pressed={isInspected}
 													data-testid={`inventory-item-${item.id}`}
 													data-filter-match={matches}
@@ -307,10 +291,10 @@ export default function InventoryGrid({
 															toggleEquip(item);
 														}
 													}}
-													className={`w-full rounded-none px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition ${
+													className={`w-full rounded-none px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition border-l-2 hover:bg-card/80 ${
 														isInspected
-															? 'bg-primary/35 border-l-2 border-l-amber-400'
-															: 'hover:bg-card/80'
+															? 'border-l-primary'
+															: 'border-l-transparent'
 													} ${!matches ? 'opacity-25 grayscale' : ''}`}
 												>
 													<div className='flex items-center gap-2.5 min-w-0 flex-1'>
@@ -340,7 +324,7 @@ export default function InventoryGrid({
 																	</span>
 																)}
 																{item.equipped && (
-																	<span className='text-[9px] px-1.5 py-0.2 rounded bg-primary/20 border border-primary/60 text-primary-foreground font-semibold'>
+																	<span className='text-[9px] px-1.5 py-0.2 rounded bg-primary border border-primary/60 text-primary-foreground font-semibold'>
 																		已裝備
 																	</span>
 																)}
@@ -356,13 +340,13 @@ export default function InventoryGrid({
 																	<EyeOff className='w-3 h-3 text-muted-foreground' />
 																)}
 															</div>
-															<div className='text-[10px] text-muted-foreground truncate'>
+															<div className='text-[10px] text-muted-foreground truncate text-left'>
 																{masked ? '未鑑定' : rStyle.label} •{' '}
 																{item.subTypes.join('、')}
-																{!masked && damage
-																	? ` • ${damage}`
+																{!masked && damage ? ` • ${damage}` : ''}
+																{!masked && armorClass
+																	? ` • AC ${armorClass}`
 																	: ''}
-																{!masked && armorClass ? ` • AC ${armorClass}` : ''}
 															</div>
 														</div>
 													</div>

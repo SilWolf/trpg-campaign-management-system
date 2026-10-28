@@ -57,12 +57,12 @@ export default function AppHeader({
 								<span
 									className={`w-2 h-2 rounded-full ${
 										syncStatus === 'synced'
-											? 'bg-secondary shadow-lg'
+											? 'bg-success shadow-lg'
 											: syncStatus === 'connecting'
 												? 'bg-primary'
 												: syncStatus === 'error'
 													? 'bg-destructive'
-													: 'bg-secondary'
+													: 'bg-success'
 									}`}
 								/>
 								{syncStatus === 'synced'
@@ -102,21 +102,13 @@ export default function AppHeader({
 									<Button
 										key={mode}
 										type='button'
-										variant='ghost'
+										size='sm'
+										variant={viewMode === mode ? 'primary' : 'ghost'}
 										data-testid={`inventory-view-mode-${mode}`}
 										aria-pressed={viewMode === mode}
 										onClick={() => setViewMode(mode)}
-										className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition cursor-pointer ${
-											viewMode === mode
-												? mode === 'player'
-													? 'bg-primary/90 text-primary-foreground border border-primary/60 shadow'
-													: 'bg-accent text-accent-foreground border border-ring shadow'
-												: 'text-muted-foreground hover:text-foreground'
-										}`}
 									>
-										<Icon
-											className={`w-3.5 h-3.5 ${mode === 'dm' ? 'text-primary-foreground' : ''}`}
-										/>
+										<Icon className={`w-3.5 h-3.5`} />
 										<span>
 											{mode === 'player' ? '玩家視角預覽' : 'DM 上帝視角'}
 										</span>

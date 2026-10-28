@@ -128,9 +128,7 @@ export default function ItemTooltip({
 					const armorClass = getItemArmorClass(inspectedItem);
 					const weaponMastery = getItemWeaponMastery(inspectedItem);
 					const masteryInfo =
-						!masked && weaponMastery
-							? weaponMasteries[weaponMastery]
-							: null;
+						!masked && weaponMastery ? weaponMasteries[weaponMastery] : null;
 					const { isEquippable, isConsumable, isImportant } =
 						resolveItemFlags(inspectedItem);
 
@@ -202,7 +200,7 @@ export default function ItemTooltip({
 									{/* 裝備 / 同調 / 未鑑定狀態標籤 */}
 									<div className='flex flex-col items-end gap-1 shrink-0'>
 										{inspectedItem.equipped && (
-											<span className='text-[10px] px-2 py-0.5 rounded bg-primary/20 border border-primary text-primary-foreground font-semibold'>
+											<span className='text-[10px] px-2 py-0.5 rounded bg-primary border border-primary text-primary-foreground font-semibold'>
 												已裝備
 											</span>
 										)}
@@ -227,10 +225,10 @@ export default function ItemTooltip({
 										{damage && (
 											<div>
 												<div className='text-[10px] text-muted-foreground uppercase'>
-													傷害骰 (Damage)
+													傷害
 												</div>
-												<div className='text-sm font-bold text-primary-foreground flex items-center gap-1.5 mt-0.5'>
-													<Sword className='w-4 h-4 text-primary-foreground' />
+												<div className='text-sm font-bold text-highlight flex items-center gap-1.5 mt-0.5'>
+													<Sword className='w-4 h-4 text-highlight' />
 													<span>{damage}</span>
 												</div>
 											</div>
@@ -251,8 +249,8 @@ export default function ItemTooltip({
 
 								{/* D&D 5R (2024) 武器精通專屬區塊 */}
 								{masteryInfo && (
-									<div className='bg-primary/30 border border-primary/50 rounded-md p-2.5'>
-										<div className='flex items-center justify-between text-xs font-bold text-primary-foreground mb-1'>
+									<div className='bg-primary/10 border border-primary/50 rounded-md p-2.5'>
+										<div className='flex items-center justify-between text-xs font-bold text-highlight mb-1'>
 											<span>⚔️ 5R 武器精通：{masteryInfo.name}</span>
 											<span className='text-[10px] px-1.5 py-0.2 bg-primary/60 rounded text-primary-foreground'>
 												2024 規則
@@ -279,7 +277,7 @@ export default function ItemTooltip({
 														key={i}
 														className={`w-3.5 h-3.5 rounded-full border transition ${
 															i < inspectedItem.charges
-																? 'bg-secondary border-border shadow-lg'
+																? 'bg-primary border-border shadow-lg'
 																: 'bg-background border-border'
 														}`}
 													/>
@@ -293,7 +291,6 @@ export default function ItemTooltip({
 													variant='secondary'
 													size='sm'
 													onClick={() => adjustCharges(inspectedItem, -1)}
-													className='px-2.5 py-1 rounded bg-muted hover:bg-accent text-xs font-bold text-foreground border border-border cursor-pointer'
 												>
 													消耗 -1
 												</Button>
@@ -302,7 +299,6 @@ export default function ItemTooltip({
 													variant='secondary'
 													size='sm'
 													onClick={() => adjustCharges(inspectedItem, 1)}
-													className='px-2.5 py-1 rounded bg-background/80 hover:bg-card text-xs font-bold text-foreground border border-border/60 cursor-pointer'
 												>
 													恢復 +1
 												</Button>
@@ -515,9 +511,9 @@ export default function ItemTooltip({
 
 								{/* 玩家個人備註區塊 */}
 								<div className='bg-primary/15 border border-primary/40 rounded-md p-3'>
-									<div className='flex items-center justify-between mb-1.5'>
-										<span className='text-[11px] font-semibold text-primary-foreground/90 flex items-center gap-1.5'>
-											<StickyNote className='w-3.5 h-3.5 text-primary-foreground' />
+									<div className='flex items-start justify-between mb-1.5'>
+										<span className='text-xs font-semibold text-highlight flex items-center gap-1.5'>
+											<StickyNote className='w-3.5 h-3.5' />
 											<span>玩家物品備註 (支援 Markdown)</span>
 										</span>
 										{canEditItemBag &&
@@ -527,7 +523,6 @@ export default function ItemTooltip({
 													variant='secondary'
 													size='sm'
 													onClick={() => setIsEditingNote(true)}
-													className='text-[11px] px-2 py-0.5 rounded bg-card hover:bg-muted text-primary-foreground border border-primary/50 flex items-center gap-1 cursor-pointer'
 												>
 													<Edit3 className='w-3 h-3' />
 													<span>
@@ -592,8 +587,8 @@ export default function ItemTooltip({
 								{/* DM 專屬秘密筆記 */}
 								{viewMode === 'dm' && inspectedItem.dmNotes && (
 									<div className='bg-muted border border-border rounded-md p-3'>
-										<div className='flex items-center gap-1.5 text-xs font-bold text-foreground mb-1'>
-											<Eye className='w-3.5 h-3.5 text-muted-foreground' />
+										<div className='flex items-center gap-1.5 text-xs font-bold text-highlight mb-1'>
+											<Eye className='w-3.5 h-3.5' />
 											<span>DM 專屬隱藏筆記 (玩家不可見)</span>
 										</div>
 										<div
@@ -605,14 +600,14 @@ export default function ItemTooltip({
 								)}
 
 								{/* 底部重量與價值資訊 */}
-								<div className='flex items-center justify-between pt-2 border-t border-border text-xs text-muted-foreground font-mono'>
+								<div className='flex items-center justify-between pt-3 border-t border-border text-xs text-muted-foreground font-mono'>
 									<div>
 										單件重量:{' '}
-										<span className='text-foreground'>
+										<span className='text-highlight'>
 											{inspectedItem.weight} lb
 										</span>
 										{inspectedItem.quantity > 1 && (
-											<span className='text-muted-foreground'>
+											<span className='text-highlight'>
 												{' '}
 												(總重{' '}
 												{
@@ -645,31 +640,24 @@ export default function ItemTooltip({
 														variant='secondary'
 														size='sm'
 														onClick={() => toggleEquip(inspectedItem)}
-														className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
-															inspectedItem.equipped
-																? 'bg-primary/60 border-primary text-primary-foreground'
-																: 'bg-card hover:bg-muted border-border text-foreground'
-														}`}
 													>
 														{inspectedItem.equipped ? '卸下裝備' : '穿戴裝備'}
 													</Button>
 												)}
 
-												{!isInCampChest && inspectedItem.isRequireAttunement && (
-													<Button
-														type='button'
-														variant='secondary'
-														size='sm'
-														onClick={() => toggleAttune(inspectedItem)}
-														className={`px-3 py-1.5 rounded text-xs font-medium border transition cursor-pointer ${
-															inspectedItem.attuned
-																? 'bg-card/70 border-border text-foreground'
-																: 'bg-card hover:bg-muted border-border text-foreground'
-														}`}
-													>
-														{inspectedItem.attuned ? '解除同調' : '✨ 進行同調'}
-													</Button>
-												)}
+												{!isInCampChest &&
+													inspectedItem.isRequireAttunement && (
+														<Button
+															type='button'
+															variant='secondary'
+															size='sm'
+															onClick={() => toggleAttune(inspectedItem)}
+														>
+															{inspectedItem.attuned
+																? '解除同調'
+																: '✨ 進行同調'}
+														</Button>
+													)}
 
 												{canManagePrivacy && (
 													<Button
@@ -677,11 +665,6 @@ export default function ItemTooltip({
 														variant='secondary'
 														size='sm'
 														onClick={() => onTogglePrivate(inspectedItem)}
-														className={`px-3 py-1.5 rounded text-xs font-medium border flex items-center justify-center gap-1 transition cursor-pointer ${
-															inspectedItem.isPrivate
-																? 'bg-background/80 border-border/70 text-foreground hover:bg-card'
-																: 'bg-card hover:bg-muted border-border text-foreground'
-														}`}
 													>
 														{inspectedItem.isPrivate ? (
 															<>
@@ -742,7 +725,9 @@ export default function ItemTooltip({
 
 													{inspectedItem.quantity > 1 && (
 														<div className='flex items-center gap-1 bg-background border border-border rounded px-1.5 py-0.5 text-[11px]'>
-															<span className='text-muted-foreground mr-1'>數量:</span>
+															<span className='text-muted-foreground mr-1'>
+																數量:
+															</span>
 															<Button
 																type='button'
 																variant='ghost'
@@ -750,7 +735,6 @@ export default function ItemTooltip({
 																onClick={() =>
 																	setTransferQty((q) => Math.max(1, q - 1))
 																}
-																className='px-1.5 rounded bg-muted hover:bg-accent text-foreground font-bold cursor-pointer'
 															>
 																-
 															</Button>
@@ -771,7 +755,7 @@ export default function ItemTooltip({
 																			),
 																		);
 																}}
-																className='w-10 text-center bg-transparent font-mono font-bold text-primary-foreground outline-none'
+																className='w-10 text-center bg-transparent font-mono font-bold outline-none'
 															/>
 															<Button
 																type='button'
@@ -782,7 +766,6 @@ export default function ItemTooltip({
 																		Math.min(inspectedItem.quantity, q + 1),
 																	)
 																}
-																className='px-1.5 rounded bg-muted hover:bg-accent text-foreground font-bold cursor-pointer'
 															>
 																+
 															</Button>
@@ -793,7 +776,6 @@ export default function ItemTooltip({
 																onClick={() =>
 																	setTransferQty(inspectedItem.quantity)
 																}
-																className='ml-1 px-1.5 py-0.2 rounded bg-primary hover:bg-primary text-primary-foreground border border-primary/50 text-[10px] cursor-pointer'
 															>
 																全部 ({inspectedItem.quantity})
 															</Button>
@@ -814,7 +796,6 @@ export default function ItemTooltip({
 																	transferQty,
 																)
 															}
-															className='text-[11px] px-2.5 py-1 rounded bg-background/80 hover:bg-card border border-border/70 text-foreground font-medium transition cursor-pointer'
 														>
 															🏕️ 送往營地儲物箱
 															{inspectedItem.quantity > 1
@@ -852,11 +833,6 @@ export default function ItemTooltip({
 																			transferQty,
 																		)
 																	}
-																	className={`text-[11px] px-2 py-1 rounded border transition cursor-pointer ${
-																		isMe && isInCampChest
-																			? 'bg-background/90 hover:bg-card border-border/70 text-foreground font-semibold'
-																			: 'bg-card hover:bg-primary border-border hover:border-primary/60 text-foreground'
-																	}`}
 																>
 																	{target.avatar} {target.name.split(' ')[0]}
 																	{inspectedItem.quantity > 1
@@ -885,7 +861,6 @@ export default function ItemTooltip({
 													variant='secondary'
 													size='sm'
 													onClick={() => onOpenEditModal(inspectedItem)}
-													className='px-3 py-1.5 rounded text-xs font-medium bg-primary/90 hover:bg-primary border border-primary/70 text-primary-foreground flex items-center gap-1.5 cursor-pointer'
 												>
 													<Edit3 className='w-3.5 h-3.5' />
 													<span>DM 編輯物品</span>
@@ -896,7 +871,6 @@ export default function ItemTooltip({
 														variant='secondary'
 														size='sm'
 														onClick={() => void toggleIdentify(inspectedItem)}
-														className='px-3 py-1.5 rounded text-xs font-medium bg-background/90 hover:bg-card border border-border/70 text-foreground flex items-center gap-1.5 cursor-pointer'
 													>
 														<Eye className='w-3.5 h-3.5' />
 														<span>向玩家揭露鑑定</span>
@@ -924,7 +898,7 @@ export default function ItemTooltip({
 			) : (
 				<div className='h-64 rounded-lg border border-border bg-background/70 flex flex-col items-center justify-center text-muted-foreground text-sm p-6 text-center'>
 					<Backpack className='w-8 h-8 mb-2 opacity-40' />
-					<p>將滑鼠懸停或點擊左側背包中的物品，即可檢視詳細規則與風味描述。</p>
+					<p>點擊左側背包中的物品，即可檢視詳細規則與風味描述。</p>
 				</div>
 			)}
 		</div>

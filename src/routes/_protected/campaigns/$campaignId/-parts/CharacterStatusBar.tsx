@@ -70,15 +70,11 @@ export default function CharacterStatusBar({
 										<Button
 											key={character.id}
 											type='button'
-											variant='ghost'
+											variant={isSelected ? 'primary' : 'secondary'}
 											data-testid={`inventory-character-${character.id}`}
 											aria-pressed={isSelected}
 											onClick={() => setActiveCharId(character.id)}
-											className={`flex-1 min-w-[110px] flex items-center gap-2 p-2 rounded-md border text-left transition cursor-pointer relative ${
-												isSelected
-													? 'bg-gradient-to-b from-primary/80 to-card border-primary/80 shadow-lg'
-													: 'bg-card/60 border-border hover:border-primary/50 opacity-75 hover:opacity-100'
-											}`}
+											className={`flex-1 min-w-[110px] flex items-center gap-2 p-2 text-left transition`}
 										>
 											{isMe && (
 												<span className='absolute -top-2 right-2 text-[9px] px-1.5 py-0.2 rounded bg-card border border-border text-foreground font-semibold'>
@@ -89,10 +85,10 @@ export default function CharacterStatusBar({
 												{character.avatar}
 											</div>
 											<div className='overflow-hidden flex-1'>
-												<div className='text-xs font-serif font-bold text-primary-foreground truncate'>
+												<div className='text-xs font-serif font-bold truncate'>
 													{character.name}
 												</div>
-												<div className='text-[10px] text-muted-foreground truncate'>
+												<div className='text-[10px] truncate'>
 													STR {character.str}
 												</div>
 											</div>
@@ -103,27 +99,23 @@ export default function CharacterStatusBar({
 
 						<Button
 							type='button'
-							variant='ghost'
+							variant={isCampChestActive ? 'primary' : 'secondary'}
 							data-testid='inventory-character-camp-chest'
 							aria-pressed={isCampChestActive}
 							onClick={() => setActiveCharId(CAMP_CHEST_ID)}
-							className={`min-w-[130px] flex items-center gap-2.5 p-2.5 rounded-md border text-left transition cursor-pointer relative ${
-								isCampChestActive
-									? 'bg-accent text-accent-foreground border-ring shadow'
-									: 'bg-card/60 border-border hover:border-border/50 opacity-80 hover:opacity-100'
-							}`}
+							className={`min-w-[130px] flex items-center gap-2 p-2 text-left transition relative`}
 						>
 							<span className='absolute -top-2 right-2 text-[9px] px-1.5 py-0.2 rounded bg-background border border-border/70 text-foreground font-semibold'>
 								共用
 							</span>
-							<div className='w-9 h-9 rounded-full bg-muted border border-border/50 flex items-center justify-center text-lg shrink-0'>
+							<div className='w-8 h-8 rounded-full bg-muted border border-border/50 flex items-center justify-center text-lg shrink-0'>
 								🏕️
 							</div>
 							<div className='overflow-hidden'>
-								<div className='text-xs font-serif font-bold text-foreground truncate'>
+								<div className='text-xs font-serif font-bold truncate'>
 									營地儲物箱
 								</div>
-								<div className='text-[10px] text-muted-foreground truncate'>
+								<div className='text-[10px] truncate'>
 									共{' '}
 									{
 										items.filter((item) => item.ownerId === CAMP_CHEST_ID)
@@ -141,7 +133,7 @@ export default function CharacterStatusBar({
 
 	return (
 		<div className='grid grid-cols-1 lg:grid-cols-12 gap-4 p-3.5'>
-			<div className='lg:col-span-6 flex flex-col justify-center gap-2 border-t lg:border-t-0 lg:border-x border-border'>
+			<div className='lg:col-span-6 flex flex-col justify-center gap-2 border-t lg:border-t-0 border-border'>
 				{isCampChestActive ? (
 					<div className='space-y-1.5'>
 						<div className='flex items-center justify-between text-xs'>
@@ -161,8 +153,8 @@ export default function CharacterStatusBar({
 					<>
 						<div>
 							<div className='flex items-center justify-between text-xs mb-1'>
-								<span className='flex items-center gap-1.5 text-foreground font-medium'>
-									<Scale className='w-3.5 h-3.5 text-primary-foreground' />
+								<span className='flex items-center gap-1.5 text-highlight font-medium'>
+									<Scale className='w-3.5 h-3.5' />
 									<span>負重 (力量 {activeCharacter.str})</span>
 								</span>
 								<span
@@ -170,7 +162,7 @@ export default function CharacterStatusBar({
 									className={`font-mono font-semibold ${
 										encumbranceStats.percentage > 85
 											? 'text-warning-foreground'
-											: 'text-primary-foreground'
+											: ''
 									}`}
 								>
 									{encumbranceStats.totalWeight} / {encumbranceStats.maxWeight}{' '}
@@ -206,9 +198,7 @@ export default function CharacterStatusBar({
 										/>
 									))}
 								</div>
-								<span className='text-primary-foreground font-mono ml-1'>
-									{attunedCount}/3
-								</span>
+								<span className='font-mono ml-1'>{attunedCount}/3</span>
 							</div>
 
 							<Checkbox
@@ -252,7 +242,6 @@ export default function CharacterStatusBar({
 						size='sm'
 						data-testid='inventory-currency-open'
 						onClick={onOpenCurrencyPanel}
-						className='text-[11px] px-2 py-0.5 rounded bg-primary/90 hover:bg-primary text-primary-foreground border border-primary/50 transition cursor-pointer'
 					>
 						管理錢包
 					</Button>
@@ -263,27 +252,22 @@ export default function CharacterStatusBar({
 						{
 							key: 'pp',
 							label: 'PP 鉑',
-							color: 'text-foreground border-border/50 bg-card/70',
 						},
 						{
 							key: 'gp',
 							label: 'GP 金',
-							color: 'text-primary-foreground border-primary/60 bg-primary/50',
 						},
 						{
 							key: 'ep',
 							label: 'EP 電',
-							color: 'text-foreground border-border/50 bg-background/40',
 						},
 						{
 							key: 'sp',
 							label: 'SP 銀',
-							color: 'text-foreground border-border/50 bg-muted/70',
 						},
 						{
 							key: 'cp',
 							label: 'CP 銅',
-							color: 'text-muted-foreground border-border/50 bg-background/40',
 						},
 					].map((coin) => (
 						<Button
@@ -293,7 +277,7 @@ export default function CharacterStatusBar({
 							key={coin.key}
 							data-testid={`currency-summary-${coin.key}`}
 							onClick={onOpenCurrencyPanel}
-							className={`px-1 py-1 rounded border ${coin.color} cursor-pointer hover:brightness-125 transition`}
+							className={`px-1 py-1 rounded border cursor-pointer transition`}
 							aria-label={`${coin.label}，點擊開啟錢包管理`}
 						>
 							<div

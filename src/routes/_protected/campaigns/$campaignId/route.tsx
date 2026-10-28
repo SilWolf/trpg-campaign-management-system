@@ -40,7 +40,7 @@ function CampaignLayout() {
 							<div className='flex items-center gap-2'>
 								<Shield className='w-5 h-5 text-card-foreground' />
 								<span className='font-serif font-bold text-card-foreground'>
-									戰役 ID: {campaignId}
+									戰役 ID: <span className='text-highlight'>{campaignId}</span>
 								</span>
 							</div>
 						</div>
