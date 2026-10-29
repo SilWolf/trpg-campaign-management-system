@@ -35,6 +35,23 @@ supabase db push --linked
 
 套用後，由具備切換至 `authenticated`、`service_role` 權限的維護者在隔離專案執行 [item_base_validator_permissions.sql](../supabase/tests/item_base_validator_permissions.sql)。腳本檢查函式權限與既有 CHECK constraint，以兩個角色測試有效資料的寫入及無效資料的拒絕，最後回滾。另以實際登入帳號裝備、修改物品並保存鍛造樣板，確認真實資料表與 RLS 互動；測試腳本不取代這些驗收。
 
+## 冒險筆記 Schema 與授權 migration
+
+[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權；持有 service role 並不會替使用者取得角色刪除權。
+
+此 migration 會檢查所依賴的既有欄位型別、角色主鍵、授權 helper、物品 owner 關聯及 `supabase_realtime` 設定。既有角色擁有者權限列會取得 `journey_access = 2`；新增或轉移擁有權時亦由 DB trigger 同步。另以 restrictive RLS policy 阻止直接刪除角色，只有受限交易 RPC 能執行完整刪除。遇到缺欄位、型別不符、遺留孤兒物品或整個 schema 的 Realtime publication 時會停止，請先人工釐清，不要略過檢查或直接修改正式資料。migration 另以物品 owner trigger 與角色列鎖，避免刪角交易期間新增／移轉物品形成孤兒 owner。
+
+部署前先確認 Supabase 專案與 migration history，並只在隔離專案套用及驗收。以 [campaign_journeys_permissions.sql](../supabase/tests/campaign_journeys_permissions.sql) 執行唯讀目錄／grants／RLS 設定檢查；該腳本以交易回滾，不會建立測試資料，也**不代表已驗證真實列層級 RLS 行為**。在隔離專案再使用專用測試帳號與至少兩個戰役，逐項驗證：
+
+- `authenticated` 戰役成員只能讀取本戰役公開筆記；`anon`、非成員及跨戰役讀寫皆遭拒。
+- 玩家只能新增 `created_by = auth.uid()` 的公開筆記；偽造建立者被拒；玩家只能更新／刪除自己建立的公開筆記，DM 可管理所有公開筆記。
+- 私人筆記綁定同戰役角色；ACL `0` 無法讀寫、`1` 僅可讀、`2` 可讀寫；DM 即使沒有權限列也可完整管理。以 `UPDATE` 測試更改 visibility、角色及 campaign，確認 `USING`／`WITH CHECK` 和不可變欄位無法繞過 ACL。
+- 非 DM 直接查詢 `campaign_journey_dm_notes` 被拒，且該表不在 `supabase_realtime` publication；一般筆記與 Realtime payload 不包含 DM 內容。
+- `anon`／`authenticated` 直接執行角色刪除 RPC 被拒；`service_role` 搭配未授權 actor 仍被拒。授權刪除後筆記轉公開且保留、背包和雙錢包併入營地箱；透過隔離測試觸發交易中途失敗，確認物品、貨幣、筆記與角色全部回滾。
+- 以平行角色移轉／新增物品及刪角請求驗證 owner 鎖定；確認不會留下指向已刪角色的物品，並確認每個戰役至少保留一名實體角色。
+
+完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL、不部署 Edge Function，也不代表真實 Supabase RLS／Realtime／交易已驗收或上線。呼叫此 RPC 的 Edge Function 與前端整合屬後續階段，部署前必須先完成該整合並重新驗證。
+
 ## 部署 Edge Function
 
 1. 維護者確認資料庫 migration 已成功套用，`create_campaign_from_seed(text, uuid, jsonb)` 僅授予 `service_role` 執行。

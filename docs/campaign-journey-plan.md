@@ -176,6 +176,13 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 ### 階段一：Schema 與授權 migration
 
+**進度紀錄（2026-10-29）**
+
+- Migration `20261030000008_campaign_journeys.sql` 已由維護者回報部署成功；新增的 Schema、授權 helper／policies、Realtime 設定與角色刪除交易 RPC 已套用至目標資料庫。
+- 部署期間曾修正前置檢查對尚未建立之 `journey_access` 欄位的解析問題，並將 ACL helper 的門檻參數改為 `integer`，以符合 RLS policy 中整數常值的函式解析。
+- `supabase/tests/campaign_journeys_permissions.sql` 已新增，但尚無回報表示已在目標資料庫執行；RLS 角色矩陣、拒絕／回滾路徑與 Realtime payload 的真實資料庫驗收仍待完成。
+- 階段二至後續階段的前端型別、資料存取、Edge Function 與 UI 尚未完成。因此目前角色刪除 RPC 尚未由 Edge Function 呼叫，現有前端刪角流程不可視為已整合或驗收。
+
 **目標與工作項目**
 
 - 新增單一增量 migration，不修改已存在的歷史 migration。migration 檔名採 repository 現有時間戳命名慣例。
@@ -196,14 +203,14 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] Migration 僅依賴 repository 已確認存在的 schema；對必要欄位、型別或唯一鍵不符時明確失敗，不猜測補資料。
+- [x] Migration 僅依賴 repository 已確認存在的 schema；對必要欄位、型別或唯一鍵不符時明確失敗，不猜測補資料。維護者回報 migration 已成功部署。
 - [ ] 新增筆記可用 `character_id = NULL` 且為公開；私人筆記無角色或角色屬於其他 campaign 時被拒絕。
 - [ ] 所有筆記 CRUD 都有 campaign 範圍限制；跨戰役讀寫、偽造建立者與玩家管理他人公開筆記的測試均被拒絕。
 - [ ] 私人筆記 ACL 0/1/2、公開筆記建立者規則、DM 例外均以 SQL/RLS 測試覆蓋。
 - [ ] 非 DM 直接讀取 DM 私密表被拒絕，且一般筆記查詢及 Realtime 不包含 DM 內容。
 - [ ] 使用一般 `authenticated`／`anon` 直接執行角色刪除 RPC 被拒絕；service role 呼叫時仍由 RPC 驗證 actor 權限。
 - [ ] 角色刪除 RPC 的成功路徑會解除關聯、把筆記轉公開並刪除角色；任一步驟失敗時所有資料回滾。
-- [ ] 說明真實資料庫驗收的隔離環境、角色矩陣與結果；mock 測試不得描述成已驗證真實 RLS。
+- [x] 說明真實資料庫驗收的隔離環境、角色矩陣與結果；mock 測試不得描述成已驗證真實 RLS。驗收步驟已列於 `docs/database-template-migration.md`；實際 RLS／交易驗收仍待執行並記錄。
 
 ### 階段二：型別與資料存取
 
