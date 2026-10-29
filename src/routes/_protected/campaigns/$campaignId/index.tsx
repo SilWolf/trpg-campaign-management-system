@@ -4,6 +4,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Drawer } from 'vaul';
 import { X } from 'lucide-react';
 
+import { Button } from '@/components/ui';
 import AppHeader from './-parts/AppHeader';
 import CharacterStatusBar from './-parts/CharacterStatusBar';
 import CurrencyPanel from './-parts/CurrencyPanel';
@@ -464,12 +465,13 @@ function CampaignInventoryPage() {
 							<div className='flex items-center justify-between px-4 py-2.5 border-b border-border/80 shrink-0'>
 								<div className='w-6' />
 								<div className='w-12 h-1.5 rounded-full bg-accent' />
-								<button
+								<Button
 									onClick={() => setIsMobileSheetOpen(false)}
-									className='p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted'
+									variant='ghost'
+									size='sm'
+									prefixIcon={<X />}
 								>
-									<X className='w-4 h-4' />
-								</button>
+								</Button>
 							</div>
 
 							<div className='overflow-y-auto p-3 overscroll-contain'>

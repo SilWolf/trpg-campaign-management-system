@@ -135,8 +135,7 @@ export function CampaignShopDialog({
 						aria-label='關閉商店編輯'
 						disabled={isSaving}
 						onClick={onClose}
-						className='text-muted-foreground hover:text-foreground'
-						prefixIcon={<X className='h-4 w-4' />}
+						prefixIcon={<X />}
 					>
 					</Button>
 				</div>
@@ -211,15 +210,13 @@ export function CampaignShopDialog({
 						variant='ghost'
 						disabled={isSaving}
 						onClick={onClose}
-						className='text-muted-foreground'
 					>
 						取消
 					</Button>
 					<Button
 						type='submit'
 						loading={isSaving}
-						className='border border-primary/60 bg-primary text-primary-foreground'
-						prefixIcon={<Check className='h-4 w-4' />}
+						prefixIcon={<Check />}
 					>
 						儲存商店
 					</Button>

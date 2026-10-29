@@ -164,9 +164,8 @@ export default function CurrencyPanel({
 						size='sm'
 						aria-label='關閉錢包管理'
 						onClick={onClose}
-						prefixIcon={<X className='w-5 h-5' />}
-					>
-					</Button>
+						prefixIcon={<X />}
+					></Button>
 				</div>
 
 				{/* 公開錢包 vs 私人錢包 分頁切換 */}
@@ -179,7 +178,7 @@ export default function CurrencyPanel({
 							aria-pressed={walletTab === 'public'}
 							disabled={!canReadPublicWallet}
 							onClick={() => setWalletTab('public')}
-							prefixIcon={<Globe className='w-3.5 h-3.5' />}
+							prefixIcon={<Globe />}
 						>
 							<span>公開錢包 {!canReadPublicWallet && '(無權限)'}</span>
 						</Button>
@@ -191,7 +190,7 @@ export default function CurrencyPanel({
 							aria-pressed={walletTab === 'private'}
 							disabled={!canReadPrivateWallet}
 							onClick={() => setWalletTab('private')}
-							prefixIcon={<Lock className='w-3.5 h-3.5' />}
+							prefixIcon={<Lock />}
 						>
 							<span>私人錢包 {!canReadPrivateWallet && '(隱藏)'}</span>
 						</Button>
@@ -217,7 +216,7 @@ export default function CurrencyPanel({
 							{COIN_META.map((coin) => (
 								<div
 									key={coin.key}
-									className={`p-2.5 rounded-md border flex items-center justify-between`}
+									className={`p-2.5 rounded-md border border-border flex items-center justify-between`}
 								>
 									<div>
 										<div className={`text-xs font-bold`}>{coin.name}</div>
@@ -236,7 +235,6 @@ export default function CurrencyPanel({
 													onClick={() =>
 														onUpdateCurrency(coin.key, delta, walletTab)
 													}
-													className='px-2 py-1 rounded bg-background/80 hover:bg-card border border-border text-[11px] font-mono cursor-pointer'
 												>
 													{delta}
 												</Button>
@@ -258,7 +256,6 @@ export default function CurrencyPanel({
 													onClick={() =>
 														onUpdateCurrency(coin.key, delta, walletTab)
 													}
-													className='px-2 py-1 rounded bg-background/80 hover:bg-card border border-border text-[11px] font-mono cursor-pointer'
 												>
 													+{delta}
 												</Button>
@@ -340,7 +337,7 @@ export default function CurrencyPanel({
 												transferAmount,
 											)
 										}
-										prefixIcon={<ArrowLeftRight className='w-3.5 h-3.5 text-muted-foreground' />}
+										prefixIcon={<ArrowLeftRight />}
 									>
 										<span>
 											{walletTab === 'public'
@@ -378,7 +375,7 @@ export default function CurrencyPanel({
 											size='sm'
 											disabled={maxAvailable <= 0}
 											onClick={() => onSplitCampCoinToParty(transferCoin)}
-											prefixIcon={<Users className='w-3.5 h-3.5 text-muted-foreground' />}
+											prefixIcon={<Users />}
 										>
 											<span>平分所有 {transferCoin.toUpperCase()} 給全隊</span>
 										</Button>
@@ -419,19 +416,14 @@ export default function CurrencyPanel({
 									type='button'
 									variant='secondary'
 									onClick={() => onConsolidateCoinsToGold(walletTab)}
-									prefixIcon={<Sparkles className='w-3.5 h-3.5' />}
+									prefixIcon={<Sparkles />}
 								>
 									<span>一鍵將零錢換整為金幣 (GP)</span>
 								</Button>
 							) : (
 								<div />
 							)}
-							<Button
-								type='button'
-								variant='secondary'
-								onClick={onClose}
-								className='py-2 px-4 rounded bg-card hover:bg-muted border border-border text-foreground text-xs cursor-pointer'
-							>
+							<Button type='button' variant='secondary' onClick={onClose}>
 								關閉
 							</Button>
 						</div>

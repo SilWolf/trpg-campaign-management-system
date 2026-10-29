@@ -277,7 +277,6 @@ export default function CharacterStatusBar({
 							key={coin.key}
 							data-testid={`currency-summary-${coin.key}`}
 							onClick={onOpenCurrencyPanel}
-							className={`px-1 py-1 rounded border cursor-pointer transition`}
 							aria-label={`${coin.label}，點擊開啟錢包管理`}
 						>
 							<div

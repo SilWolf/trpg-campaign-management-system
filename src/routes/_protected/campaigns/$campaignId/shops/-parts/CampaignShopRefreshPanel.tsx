@@ -535,7 +535,7 @@ export function CampaignShopRefreshPanel({
 									variant='danger'
 									size='sm'
 									onClick={() => setDeletingRuleIndex(ruleIndex)}
-									prefixIcon={<Trash2 className='h-3.5 w-3.5' />}
+									prefixIcon={<Trash2 />}
 								>
 									刪除規則
 								</Button>
@@ -569,8 +569,7 @@ export function CampaignShopRefreshPanel({
 															),
 													}))
 												}
-												className='shrink-0 text-destructive-foreground'
-												prefixIcon={<Trash2 className='h-3.5 w-3.5' />}
+												prefixIcon={<Trash2 />}
 											>
 											</Button>
 										</div>
@@ -676,8 +675,8 @@ export function CampaignShopRefreshPanel({
 										</label>
 									</>
 								)}
-								<Button type='button' variant='secondary' data-testid={`refresh-add-candidate-${ruleIndex}`} onClick={() => addCandidate(ruleIndex)} disabled={isLoadingCatalogs} className='border border-border/70 bg-background/40 text-foreground md:col-span-2'
-									prefixIcon={<Plus className='h-4 w-4' />}>
+								<Button type='button' variant='secondary' data-testid={`refresh-add-candidate-${ruleIndex}`} onClick={() => addCandidate(ruleIndex)} disabled={isLoadingCatalogs}
+									prefixIcon={<Plus />}>
 									加入候選
 								</Button>
 							</div>
@@ -742,8 +741,8 @@ export function CampaignShopRefreshPanel({
 				})}
 			</div>
 
-			<Button type='button' variant='secondary' onClick={() => updatePolicy({ ...policy, rules: [...policy.rules, createRule()] })} className='mt-4 border border-border bg-background text-foreground'
-				prefixIcon={<Plus className='h-4 w-4' />}>
+			<Button type='button' variant='secondary' onClick={() => updatePolicy({ ...policy, rules: [...policy.rules, createRule()] })}
+				prefixIcon={<Plus />}>
 				新增規則
 			</Button>
 
@@ -757,13 +756,12 @@ export function CampaignShopRefreshPanel({
 						variant='secondary'
 						disabled={isSaving || isLoadingCatalogs || !isPolicyDirty}
 						onClick={() => void savePolicy()}
-						className='border border-border/70 bg-background/40 text-foreground'
-						prefixIcon={<Check className='h-4 w-4' />}
+						prefixIcon={<Check />}
 					>
 						{isSaving ? '儲存中…' : '儲存政策'}
 					</Button>
-					<Button type='button' disabled={isGenerating || isSaving || isPolicyDirty || isLoadingCatalogs} onClick={() => void generatePreview()} className='bg-primary text-primary-foreground hover:bg-primary'
-						prefixIcon={<RotateCw className='h-4 w-4' />}>
+					<Button type='button' disabled={isGenerating || isSaving || isPolicyDirty || isLoadingCatalogs} onClick={() => void generatePreview()}
+						prefixIcon={<RotateCw />}>
 						{isGenerating ? '產生預覽中…' : '預覽刷新'}
 					</Button>
 				</div>
@@ -799,8 +797,7 @@ export function CampaignShopRefreshPanel({
 									variant='secondary'
 									disabled={isGenerating || isApplying}
 									onClick={() => void generatePreview()}
-									className='border border-primary/70 bg-background text-primary-foreground'
-									prefixIcon={<RotateCw className='h-4 w-4' />}
+									prefixIcon={<RotateCw />}
 								>
 									重新隨機
 								</Button>
@@ -810,8 +807,7 @@ export function CampaignShopRefreshPanel({
 									aria-label='關閉刷新預覽'
 									disabled={isGenerating || isApplying}
 									onClick={closePreview}
-									className='text-muted-foreground hover:text-foreground'
-									prefixIcon={<X className='h-4 w-4' />}
+									prefixIcon={<X />}
 								>
 								</Button>
 							</div>
@@ -877,7 +873,7 @@ export function CampaignShopRefreshPanel({
 								variant='danger'
 								disabled={isApplying || isGenerating}
 								onClick={() => void applyPreview()}
-								prefixIcon={<Check className='h-4 w-4' />}
+								prefixIcon={<Check />}
 							>
 								{isApplying
 									? '刷新中…'
@@ -927,7 +923,7 @@ export function CampaignShopRefreshPanel({
 								});
 								setDeletingRuleIndex(null);
 							}}
-							prefixIcon={<Trash2 className='h-4 w-4' />}
+							prefixIcon={<Trash2 />}
 						>
 							確認刪除
 						</Button>

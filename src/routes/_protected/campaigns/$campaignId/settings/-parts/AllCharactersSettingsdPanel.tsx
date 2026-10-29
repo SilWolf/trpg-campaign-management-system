@@ -127,12 +127,10 @@ export function AllCharactersSettingsdPanel({
 				<Button
 					data-testid='character-add'
 					type='button'
-					size='sm'
 					onClick={onAddCharacter}
 					disabled={!canCreateCharacter}
 					title={createCharTooltip}
-					className='bg-background/90 hover:bg-card disabled:opacity-35 disabled:cursor-not-allowed border border-border/70 text-foreground'
-					prefixIcon={<UserPlus className='w-4 h-4' />}
+					prefixIcon={<UserPlus />}
 				>
 					<span>新增角色</span>
 				</Button>
@@ -160,13 +158,7 @@ export function AllCharactersSettingsdPanel({
 								tabIndex={isActive ? 0 : -1}
 								type='button'
 								onClick={() => setActiveCharacterId(character.id)}
-								variant='ghost'
-								size='sm'
-								className={`shrink-0 ${
-									isActive
-										? 'bg-card text-foreground border border-border/70 shadow'
-										: 'bg-card text-muted-foreground border border-border hover:text-foreground'
-								}`}
+								variant={isActive ? 'primary' : 'ghost'}
 							>
 								<span>{character.avatar}</span>
 								<span>{character.name}</span>

@@ -28,11 +28,7 @@ import {
 	getBlacksmithIconUrl,
 	loadBlacksmithCatalogs,
 } from '@/lib/blacksmithCatalog';
-import type {
-	BlacksmithItem,
-	ItemBaseCategory,
-	ItemBaseRarity,
-} from '@/types';
+import type { BlacksmithItem, ItemBaseCategory, ItemBaseRarity } from '@/types';
 
 export const Route = createFileRoute(
 	'/_protected/blacksmith/officials/$catelogId',
@@ -75,8 +71,8 @@ function getCategoryStyle(category: ItemBaseCategory) {
 
 function getWeaponMasteryLabel(mastery: string): string {
 	return (
-		Object.entries(WEAPON_MASTERIES).find(([key]) => key === mastery)?.[1].name ??
-		mastery
+		Object.entries(WEAPON_MASTERIES).find(([key]) => key === mastery)?.[1]
+			.name ?? mastery
 	);
 }
 
@@ -88,7 +84,9 @@ function BlacksmithCatalogPage() {
 	const [reloadKey, setReloadKey] = useState(0);
 	const [query, setQuery] = useState('');
 	const [categoryFilter, setCategoryFilter] = useState('all');
-	const [rarityFilter, setRarityFilter] = useState<ItemBaseRarity | 'all'>('all');
+	const [rarityFilter, setRarityFilter] = useState<ItemBaseRarity | 'all'>(
+		'all',
+	);
 	const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
 	const [currentPage, setCurrentPage] = useState(1);
 	const [pageInput, setPageInput] = useState('1');
@@ -200,8 +198,7 @@ function BlacksmithCatalogPage() {
 							variant='secondary'
 							size='sm'
 							onClick={retryLoading}
-							className='gap-2 border-destructive/70 text-destructive-foreground hover:bg-destructive'
-							prefixIcon={<RotateCw className='h-3.5 w-3.5' />}
+							prefixIcon={<RotateCw />}
 						>
 							重新載入
 						</Button>
@@ -302,46 +299,49 @@ function BlacksmithCatalogPage() {
 				) : (
 					<div className='grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.72fr)]'>
 						<section aria-label='規則書物品列表'>
-							<p
-								data-testid='blacksmith-result-count'
-								className='mb-3 text-xs text-muted-foreground'
-							>
-								找到 <span className='font-mono text-primary-foreground'>{filteredItems.length}</span>{' '}
-								筆物品
-							</p>
-							<div className='mb-3 flex justify-end gap-2'>
-								<Button
-									type='button'
-									variant={displayMode === 'grid' ? 'primary' : 'secondary'}
-									size='sm'
-									aria-label='格狀檢視'
-									aria-pressed={displayMode === 'grid'}
-									onClick={() => {
-										setCurrentPage(1);
-										setPageInput('1');
-										setDisplayMode('grid');
-									}}
-									className='gap-2'
-									prefixIcon={<LayoutGrid aria-hidden='true' className='h-4 w-4' />}
+							<div className='flex items-center justify-between mb-3'>
+								<p
+									data-testid='blacksmith-result-count'
+									className='text-xs text-muted-foreground'
 								>
-									格狀
-								</Button>
-								<Button
-									type='button'
-									variant={displayMode === 'list' ? 'primary' : 'secondary'}
-									size='sm'
-									aria-label='列表檢視'
-									aria-pressed={displayMode === 'list'}
-									onClick={() => {
-										setCurrentPage(1);
-										setPageInput('1');
-										setDisplayMode('list');
-									}}
-									className='gap-2'
-									prefixIcon={<ListIcon aria-hidden='true' className='h-4 w-4' />}
-								>
-									列表
-								</Button>
+									找到{' '}
+									<span className='font-mono text-primary-foreground'>
+										{filteredItems.length}
+									</span>{' '}
+									筆物品
+								</p>
+								<div className='flex justify-end gap-2'>
+									<Button
+										type='button'
+										variant={displayMode === 'grid' ? 'primary' : 'secondary'}
+										size='sm'
+										aria-label='格狀檢視'
+										aria-pressed={displayMode === 'grid'}
+										onClick={() => {
+											setCurrentPage(1);
+											setPageInput('1');
+											setDisplayMode('grid');
+										}}
+										prefixIcon={<LayoutGrid aria-hidden='true' />}
+									>
+										格狀
+									</Button>
+									<Button
+										type='button'
+										variant={displayMode === 'list' ? 'primary' : 'secondary'}
+										size='sm'
+										aria-label='列表檢視'
+										aria-pressed={displayMode === 'list'}
+										onClick={() => {
+											setCurrentPage(1);
+											setPageInput('1');
+											setDisplayMode('list');
+										}}
+										prefixIcon={<ListIcon aria-hidden='true' />}
+									>
+										列表
+									</Button>
+								</div>
 							</div>
 							<div
 								data-testid='blacksmith-item-results'
@@ -356,178 +356,210 @@ function BlacksmithCatalogPage() {
 									const categoryStyle = getCategoryStyle(item.category);
 									const CategoryIcon = categoryStyle.icon;
 									return (
-										<button
+										<Button
+											variant={
+												selectedItem?.sourceKey === item.sourceKey
+													? 'secondary-active'
+													: 'secondary'
+											}
+											asChild
 											key={item.sourceKey}
-											type='button'
-											data-testid='blacksmith-item-card'
-											aria-pressed={selectedItem?.sourceKey === item.sourceKey}
-											onClick={() => setSelectedSourceKey(item.sourceKey)}
-											className={`group flex w-full text-left transition ${
-												displayMode === 'list'
-													? `min-h-12 items-center gap-2 border-b px-2 py-1.5 ${
-															selectedItem?.sourceKey === item.sourceKey
-																? 'border-l-2 border-l-amber-500 bg-primary/30'
-																: 'border-border/80 hover:bg-card/70'
-														}`
-													: `min-h-24 items-start gap-3 rounded-xl border p-3 ${
-															selectedItem?.sourceKey === item.sourceKey
-																? 'border-primary/70 bg-primary/30'
-																: 'border-border bg-background/70 hover:border-primary/70 hover:bg-card'
-														}`
-											}`}
 										>
-											<div className={`relative shrink-0 overflow-hidden border ${displayMode === 'list' ? 'h-8 w-8 rounded-md' : 'h-14 w-14 rounded-lg'} ${rarityStyle.border} ${rarityStyle.bg} ${rarityStyle.glow}`}>
-												<Package className={`absolute inset-0 m-auto text-muted-foreground ${displayMode === 'list' ? 'h-4 w-4' : 'h-6 w-6'}`} />
-												<img
-													src={getBlacksmithIconUrl(item.icon ?? './images/package.webp')}
-													alt=''
-													loading='lazy'
-													decoding='async'
-													className='absolute inset-0 h-full w-full object-cover'
-													onError={(event) => {
-														event.currentTarget.hidden = true;
-													}}
-												/>
-											</div>
-											{displayMode === 'list' ? (
-												<>
-													<span className='flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5'>
-														<span className={`truncate font-serif text-sm font-bold ${rarityStyle.text} group-hover:text-primary-foreground`}>
+											<div
+												data-testid='blacksmith-item-card'
+												aria-pressed={
+													selectedItem?.sourceKey === item.sourceKey
+												}
+												onClick={() => setSelectedSourceKey(item.sourceKey)}
+												onKeyDown={(event) => {
+													if (event.key === 'Enter' || event.key === ' ') {
+														event.preventDefault();
+														setSelectedSourceKey(item.sourceKey);
+													}
+												}}
+												role='button'
+												tabIndex={0}
+												className={`group flex w-full text-left transition ${
+													displayMode === 'list'
+														? `min-h-12 items-center gap-2 border-b px-2 py-1.5`
+														: `min-h-24 items-start gap-3 rounded-xl border p-3`
+												}`}
+											>
+												<div
+													className={`relative shrink-0 overflow-hidden border ${displayMode === 'list' ? 'h-8 w-8 rounded-md' : 'h-14 w-14 rounded-lg'} ${rarityStyle.border} ${rarityStyle.bg} ${rarityStyle.glow}`}
+												>
+													<Package
+														className={`absolute inset-0 m-auto text-muted-foreground ${displayMode === 'list' ? 'h-4 w-4' : 'h-6 w-6'}`}
+													/>
+													<img
+														src={getBlacksmithIconUrl(
+															item.icon ?? './images/package.webp',
+														)}
+														alt=''
+														loading='lazy'
+														decoding='async'
+														className='absolute inset-0 h-full w-full object-cover'
+														onError={(event) => {
+															event.currentTarget.hidden = true;
+														}}
+													/>
+												</div>
+												{displayMode === 'list' ? (
+													<>
+														<span className='flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5'>
+															<span
+																className={`truncate font-serif text-sm font-bold ${rarityStyle.text} group-hover:text-primary-foreground`}
+															>
+																{item.name}
+															</span>
+															<span
+																className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-0.5 text-[10px] leading-none ${categoryStyle.badge}`}
+															>
+																<CategoryIcon
+																	aria-hidden='true'
+																	className='h-2.5 w-2.5'
+																/>
+																{CATEGORY_LABELS[item.category]}
+															</span>
+															<span
+																className={`inline-flex shrink-0 rounded border px-1 py-0.5 text-[10px] leading-none ${rarityStyle.badgeBg}`}
+															>
+																{rarityStyle.label}
+															</span>
+															{item.subTypes.length > 0 && (
+																<span className='min-w-0 truncate text-xs text-muted-foreground'>
+																	{item.subTypes.join('、')}
+																</span>
+															)}
+														</span>
+														<span className='hidden w-16 shrink-0 text-right font-mono text-xs text-muted-foreground sm:block'>
+															{item.weight} lb
+														</span>
+														<span className='hidden w-20 shrink-0 text-right font-mono text-xs font-semibold text-money sm:block'>
+															{item.valueGp} GP
+														</span>
+													</>
+												) : (
+													<span className='min-w-0 flex-1'>
+														<span
+															className={`block truncate font-serif font-bold ${rarityStyle.text} group-hover:text-primary-foreground`}
+														>
 															{item.name}
 														</span>
-														<span className={`inline-flex shrink-0 items-center gap-1 rounded border px-1 py-0.5 text-[10px] leading-none ${categoryStyle.badge}`}>
-															<CategoryIcon aria-hidden='true' className='h-2.5 w-2.5' />
-															{CATEGORY_LABELS[item.category]}
-														</span>
-														<span className={`inline-flex shrink-0 rounded border px-1 py-0.5 text-[10px] leading-none ${rarityStyle.badgeBg}`}>
-															{rarityStyle.label}
-														</span>
-														{item.subTypes.length > 0 && (
-															<span className='min-w-0 truncate text-xs text-muted-foreground'>
-																{item.subTypes.join('、')}
+														<span className='mt-1 flex flex-wrap items-center gap-1'>
+															<span
+																className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${categoryStyle.badge}`}
+															>
+																<CategoryIcon
+																	aria-hidden='true'
+																	className='h-3 w-3'
+																/>
+																{CATEGORY_LABELS[item.category]}
 															</span>
-														)}
-													</span>
-													<span className='hidden w-16 shrink-0 text-right font-mono text-xs text-muted-foreground sm:block'>
-														{item.weight} lb
-													</span>
-													<span className='hidden w-20 shrink-0 text-right font-mono text-xs font-semibold text-money sm:block'>
-														{item.valueGp} GP
-													</span>
-												</>
-											) : (
-												<span className='min-w-0 flex-1'>
-													<span className={`block truncate font-serif font-bold ${rarityStyle.text} group-hover:text-primary-foreground`}>
-														{item.name}
-													</span>
-													<span className='mt-1 flex flex-wrap items-center gap-1'>
-														<span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${categoryStyle.badge}`}>
-															<CategoryIcon aria-hidden='true' className='h-3 w-3' />
-															{CATEGORY_LABELS[item.category]}
+															<span
+																className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] ${rarityStyle.badgeBg}`}
+															>
+																{rarityStyle.label}
+															</span>
 														</span>
-														<span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] ${rarityStyle.badgeBg}`}>
-															{rarityStyle.label}
+														<span className='mt-1 block truncate text-[11px] text-muted-foreground'>
+															{item.subTypes.join('、')}
+														</span>
+														<span className='mt-2 block truncate text-[11px] text-primary-foreground/80'>
+															{item.catalogTitle}
 														</span>
 													</span>
-													<span className='mt-1 block truncate text-[11px] text-muted-foreground'>
-														{item.subTypes.join('、')}
-													</span>
-													<span className='mt-2 block truncate text-[11px] text-primary-foreground/80'>
-														{item.catalogTitle}
-													</span>
-												</span>
-											)}
-										</button>
+												)}
+											</div>
+										</Button>
 									);
 								})}
 							</div>
-							{filteredItems.length > pageSize && (
-								<nav
-									aria-label='物品列表分頁'
-									className='mt-4 flex items-center justify-between gap-3 border-t border-border pt-3'
+							<nav
+								aria-label='物品列表分頁'
+								className='mt-4 flex items-center justify-between gap-3 border-t border-border pt-3'
+							>
+								<p
+									data-testid='blacksmith-pagination-status'
+									className='text-xs text-muted-foreground'
 								>
-									<p
-										data-testid='blacksmith-pagination-status'
-										className='text-xs text-muted-foreground'
-									>
-										第 <span className='font-mono text-foreground'>{currentPage}</span> /{' '}
-										<span className='font-mono text-foreground'>{pageCount}</span> 頁
-										<span className='hidden sm:inline'>
-											{' '}· 顯示 {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredItems.length)} 筆
-										</span>
-									</p>
-									<div className='flex gap-2'>
-										<Button
-											type='button'
-											variant='secondary'
-											size='sm'
-											aria-label='上一頁'
-											disabled={currentPage === 1}
-											onClick={() => {
-												const page = Math.max(1, currentPage - 1);
-												setCurrentPage(page);
-												setPageInput(String(page));
-											}}
-											className='gap-1'
-											prefixIcon={<ChevronLeft aria-hidden='true' className='h-4 w-4' />}
-										>
-											上一頁
-										</Button>
-										<Button
-											type='button'
-											variant='secondary'
-											size='sm'
-											aria-label='下一頁'
-											disabled={currentPage === pageCount}
-											onClick={() => {
-												const page = Math.min(pageCount, currentPage + 1);
-												setCurrentPage(page);
-												setPageInput(String(page));
-											}}
-											className='gap-1'
-											prefixIcon={
-												<ChevronRight
-													aria-hidden='true'
-													className='h-4 w-4'
-												/>
-											}
-										>
-											下一頁
-										</Button>
-									</div>
-									<form
-										className='flex items-center gap-2'
-										onSubmit={(event) => {
-											event.preventDefault();
-											goToPage();
+									第{' '}
+									<span className='font-mono text-foreground'>
+										{currentPage}
+									</span>{' '}
+									/{' '}
+									<span className='font-mono text-foreground'>{pageCount}</span>{' '}
+									頁
+									<span className='hidden sm:inline'>
+										{' '}
+										· 顯示 {(currentPage - 1) * pageSize + 1}–
+										{Math.min(currentPage * pageSize, filteredItems.length)} 筆
+									</span>
+								</p>
+								<div className='flex gap-2'>
+									<Button
+										type='button'
+										variant='secondary'
+										size='sm'
+										aria-label='上一頁'
+										disabled={currentPage === 1}
+										onClick={() => {
+											const page = Math.max(1, currentPage - 1);
+											setCurrentPage(page);
+											setPageInput(String(page));
 										}}
+										prefixIcon={<ChevronLeft aria-hidden='true' />}
 									>
-										<label
-											htmlFor='blacksmith-page-input'
-											className='whitespace-nowrap text-xs text-muted-foreground'
-										>
-											跳轉至
-										</label>
-										<Input
-											id='blacksmith-page-input'
-											data-testid='blacksmith-page-input'
-											type='number'
-											min={1}
-											max={pageCount}
-											step={1}
-											inputMode='numeric'
-											aria-label='跳轉至 X 頁'
-											value={pageInput}
-											onChange={(event) => setPageInput(event.target.value)}
-											className='h-8 w-16 px-2 text-center font-mono'
-										/>
-										<span className='text-xs text-muted-foreground'>頁</span>
-										<Button type='submit' variant='secondary' size='sm'>
-											跳轉
-										</Button>
-									</form>
-								</nav>
-							)}
+										上一頁
+									</Button>
+									<Button
+										type='button'
+										variant='secondary'
+										size='sm'
+										aria-label='下一頁'
+										disabled={currentPage === pageCount}
+										onClick={() => {
+											const page = Math.min(pageCount, currentPage + 1);
+											setCurrentPage(page);
+											setPageInput(String(page));
+										}}
+										prefixIcon={<ChevronRight aria-hidden='true' />}
+									>
+										下一頁
+									</Button>
+								</div>
+								<form
+									className='flex items-center gap-2'
+									onSubmit={(event) => {
+										event.preventDefault();
+										goToPage();
+									}}
+								>
+									<label
+										htmlFor='blacksmith-page-input'
+										className='whitespace-nowrap text-xs text-muted-foreground'
+									>
+										跳轉至
+									</label>
+									<Input
+										id='blacksmith-page-input'
+										data-testid='blacksmith-page-input'
+										type='number'
+										min={1}
+										max={pageCount}
+										step={1}
+										inputMode='numeric'
+										aria-label='跳轉至 X 頁'
+										value={pageInput}
+										onChange={(event) => setPageInput(event.target.value)}
+										className='h-8 w-16 px-2 text-center font-mono'
+									/>
+									<span className='text-xs text-muted-foreground'>頁</span>
+									<Button type='submit' variant='secondary' size='sm'>
+										跳轉
+									</Button>
+								</form>
+							</nav>
 						</section>
 
 						{selectedItem && (
@@ -536,12 +568,18 @@ function BlacksmithCatalogPage() {
 								aria-label={`${selectedItem.name}物品詳情`}
 								className={`rounded-xl border-2 ${RARITY_CONFIG[selectedItem.rarity].border} bg-gradient-to-b from-card to-background p-5 ${RARITY_CONFIG[selectedItem.rarity].glow} lg:sticky lg:top-5`}
 							>
-								<div className={`-mx-5 -mt-5 mb-4 border-b border-border ${RARITY_CONFIG[selectedItem.rarity].headerGradient} p-5`}>
+								<div
+									className={`-mx-5 -mt-5 mb-4 border-b border-border ${RARITY_CONFIG[selectedItem.rarity].headerGradient} p-5`}
+								>
 									<div className='flex items-start gap-4'>
-										<div className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${RARITY_CONFIG[selectedItem.rarity].border} bg-background`}>
+										<div
+											className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${RARITY_CONFIG[selectedItem.rarity].border} bg-background`}
+										>
 											<Package className='absolute inset-0 m-auto h-7 w-7 text-muted-foreground' />
 											<img
-												src={getBlacksmithIconUrl(selectedItem.icon ?? './images/package.webp')}
+												src={getBlacksmithIconUrl(
+													selectedItem.icon ?? './images/package.webp',
+												)}
 												alt=''
 												className='absolute inset-0 h-full w-full object-cover'
 												onError={(event) => {
@@ -553,11 +591,15 @@ function BlacksmithCatalogPage() {
 											<p className='text-xs text-primary-foreground'>
 												{selectedItem.catalogTitle}
 											</p>
-											<h2 className={`mt-1 font-serif text-xl font-bold ${RARITY_CONFIG[selectedItem.rarity].text}`}>
+											<h2
+												className={`mt-1 font-serif text-xl font-bold ${RARITY_CONFIG[selectedItem.rarity].text}`}
+											>
 												{selectedItem.name}
 											</h2>
 											<div className='mt-2 flex flex-wrap items-center gap-1.5'>
-												<span className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] ${getCategoryStyle(selectedItem.category).badge}`}>
+												<span
+													className={`inline-flex rounded border px-1.5 py-0.5 text-[10px] ${getCategoryStyle(selectedItem.category).badge}`}
+												>
 													{CATEGORY_LABELS[selectedItem.category]}
 												</span>
 												<span
@@ -601,7 +643,9 @@ function BlacksmithCatalogPage() {
 									</div>
 									<div className='rounded-md border border-border bg-background/80 p-3'>
 										<p className='text-muted-foreground'>調諧</p>
-										<p className={`mt-1 ${selectedItem.isRequireAttunement ? 'text-foreground' : 'text-foreground'}`}>
+										<p
+											className={`mt-1 ${selectedItem.isRequireAttunement ? 'text-foreground' : 'text-foreground'}`}
+										>
 											{selectedItem.isRequireAttunement ? '需要' : '不需要'}
 										</p>
 									</div>
@@ -613,21 +657,26 @@ function BlacksmithCatalogPage() {
 										<div className='mt-4 rounded-md border border-primary/50 bg-primary/20 p-3'>
 											{selectedItem.weaponProperties.mastery && (
 												<p className='text-xs text-primary-foreground'>
-													武器精通：{getWeaponMasteryLabel(selectedItem.weaponProperties.mastery)}
+													武器精通：
+													{getWeaponMasteryLabel(
+														selectedItem.weaponProperties.mastery,
+													)}
 												</p>
 											)}
 											{selectedItem.weaponProperties.properties.length > 0 && (
-													<div className='mt-2 flex flex-wrap gap-1'>
-														{selectedItem.weaponProperties.properties.map((property) => (
+												<div className='mt-2 flex flex-wrap gap-1'>
+													{selectedItem.weaponProperties.properties.map(
+														(property) => (
 															<span
 																key={property}
 																className='rounded border border-primary/50 bg-primary/40 px-1.5 py-0.5 text-[10px] text-primary-foreground'
 															>
 																{property}
 															</span>
-														))}
-													</div>
-												)}
+														),
+													)}
+												</div>
+											)}
 										</div>
 									)}
 
@@ -638,7 +687,9 @@ function BlacksmithCatalogPage() {
 										: null) != null && (
 									<p className='mt-4 rounded-md border border-border bg-background/80 px-3 py-2 text-sm'>
 										<span className='text-muted-foreground'>
-											{selectedItem.category === 'Armor' ? '護甲值：' : '傷害：'}
+											{selectedItem.category === 'Armor'
+												? '護甲值：'
+												: '傷害：'}
 										</span>
 										<span className='font-mono text-foreground'>
 											{selectedItem.category === 'Armor'

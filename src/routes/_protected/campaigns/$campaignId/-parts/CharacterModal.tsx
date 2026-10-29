@@ -115,8 +115,7 @@ export default function CharacterModal({
 						size='sm'
 						aria-label='關閉角色編輯'
 						onClick={onClose}
-						className='text-muted-foreground hover:text-foreground cursor-pointer'
-						prefixIcon={<X className='w-5 h-5' />}
+						prefixIcon={<X />}
 					>
 					</Button>
 				</div>
@@ -221,7 +220,6 @@ export default function CharacterModal({
 									onDelete(character.id);
 									onClose();
 								}}
-								className='px-3 py-2 rounded bg-destructive/80 hover:bg-destructive border border-destructive/60 text-destructive-foreground font-medium transition cursor-pointer'
 							>
 								移除角色 (遺物入庫)
 							</Button>
@@ -234,7 +232,6 @@ export default function CharacterModal({
 								type='button'
 								variant='secondary'
 								onClick={onClose}
-								className='px-4 py-2 rounded bg-card border border-border text-foreground hover:bg-muted cursor-pointer'
 							>
 								取消
 							</Button>
@@ -242,8 +239,7 @@ export default function CharacterModal({
 								<Button
 									type='submit'
 									variant='primary'
-									className='px-5 py-2 rounded bg-primary hover:bg-primary text-primary-foreground font-bold shadow flex items-center gap-1.5 cursor-pointer'
-									prefixIcon={<Save className='w-4 h-4' />}
+									prefixIcon={<Save />}
 								>
 									<span>儲存角色</span>
 								</Button>

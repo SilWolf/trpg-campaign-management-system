@@ -5,7 +5,12 @@ import type { ButtonHTMLAttributes } from 'react';
 import { cn } from './utils';
 
 export type ButtonVariant =
-	'primary' | 'secondary' | 'destructive' | 'danger' | 'ghost';
+	| 'primary'
+	| 'secondary'
+	| 'secondary-active'
+	| 'destructive'
+	| 'danger'
+	| 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonStyleProps {
@@ -33,6 +38,8 @@ export type ButtonProps = ButtonStyleProps &
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
 		'border border-primary/70 bg-primary text-primary-foreground hover:bg-primary/90',
+	['secondary-active']:
+		'border border-primary/70 bg-primary/30 text-secondary-foreground hover:border-accent hover:bg-primary/30 hover:text-secondary-foreground',
 	secondary:
 		'border border-border bg-card text-secondary-foreground hover:border-accent hover:bg-accent hover:text-accent-foreground',
 	destructive:
@@ -48,6 +55,15 @@ const sizeClasses: Record<ButtonSize, string> = {
 	md: 'min-h-9 px-3.5 text-sm [&_.lucide]:size-4',
 	lg: 'min-h-11 px-5 text-base [&_.lucide]:size-5',
 };
+
+function normalizePrefixIcon(
+	prefixIcon: ReactElement<{ className?: string }> | undefined,
+) {
+	if (!prefixIcon) return null;
+	return cloneElement(prefixIcon, {
+		className: undefined,
+	});
+}
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 	(props, ref) => {
@@ -82,7 +98,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 				),
 				children: (
 					<>
-						{props.prefixIcon}
+						{normalizePrefixIcon(props.prefixIcon)}
 						{props.children.props.children}
 					</>
 				),
@@ -118,7 +134,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 						<span className='sr-only'>處理中</span>
 					</>
 				)}
-				{prefixIcon}
+				{normalizePrefixIcon(prefixIcon)}
 				{children}
 			</button>
 		);

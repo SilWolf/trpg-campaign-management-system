@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PackagePlus, X } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/FeedbackContext';
 import {
@@ -185,23 +186,23 @@ export function BlacksmithImportButton({
 
 	return (
 		<>
-			<button
+			<Button
 				type='button'
 				disabled={!canImport}
 				onClick={() => {
 					setErrorMessage(null);
 					setIsOpen(true);
 				}}
-				className={`inline-flex items-center justify-center gap-2 rounded-md border border-primary/70 bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+				className={className}
 				title={
 					canImport
 						? '複製此物品定義到 DM 戰役'
 						: '匯入戰役需要 Supabase 正式帳號'
 				}
+				prefixIcon={<PackagePlus aria-hidden='true' />}
 			>
-				<PackagePlus aria-hidden='true' className='h-4 w-4' />
 				匯入戰役
-			</button>
+			</Button>
 
 			{isOpen && (
 				<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-overlay p-4'>
@@ -223,14 +224,15 @@ export function BlacksmithImportButton({
 									匯入「{source.name}」
 								</h2>
 							</div>
-							<button
+							<Button
 								type='button'
 								aria-label='關閉匯入視窗'
 								onClick={() => setIsOpen(false)}
-								className='rounded p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+								variant='ghost'
+								size='sm'
+								prefixIcon={<X aria-hidden='true' />}
 							>
-								<X className='h-5 w-5' />
-							</button>
+							</Button>
 						</header>
 
 						{!isSupabaseConfigured ? (
@@ -309,15 +311,15 @@ export function BlacksmithImportButton({
 							</p>
 						)}
 						<footer className='flex justify-end gap-2'>
-							<button
+							<Button
 								type='button'
 								onClick={() => setIsOpen(false)}
-								className='rounded-md border border-border px-4 py-2 text-sm text-secondary-foreground hover:bg-accent'
+								variant='secondary'
 							>
 								取消
-							</button>
+							</Button>
 							{canImport && (
-								<button
+								<Button
 									type='button'
 									onClick={() => void handleImport()}
 									disabled={
@@ -326,10 +328,9 @@ export function BlacksmithImportButton({
 										isLoadingCharacters ||
 										campaigns.length === 0
 									}
-									className='rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50'
 								>
 									{isImporting ? '匯入中…' : '確認匯入'}
-								</button>
+								</Button>
 							)}
 						</footer>
 					</section>

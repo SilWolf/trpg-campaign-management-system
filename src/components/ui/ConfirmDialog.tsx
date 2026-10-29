@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui';
 
 export type ConfirmVariant = 'default' | 'danger';
 
@@ -80,27 +81,23 @@ export function ConfirmDialog({ request, onResolve }: ConfirmDialogProps) {
 						{request.options.message}
 					</p>
 					<div className="mt-6 flex flex-col-reverse justify-end gap-3 sm:flex-row">
-						<button
-							className="rounded-md border border-border px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"
+						<Button
 							disabled={isResolving}
 							onClick={() => resolve(false)}
 							ref={cancelButtonRef}
 							type="button"
+							variant="secondary"
 						>
 							{request.options.cancelLabel ?? '取消'}
-						</button>
-						<button
-							className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none ${
-								variant === 'danger'
-									? 'bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:outline-destructive'
-									: 'bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring'
-							}`}
+						</Button>
+						<Button
 							disabled={isResolving}
 							onClick={() => resolve(true)}
 							type="button"
+							variant={variant === 'danger' ? 'destructive' : 'primary'}
 						>
 							{request.options.confirmLabel ?? '確認'}
-						</button>
+						</Button>
 					</div>
 				</div>
 			)}

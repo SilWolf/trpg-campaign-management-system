@@ -83,8 +83,7 @@ function OfficialCatalogsPage() {
 							variant='secondary'
 							size='sm'
 							onClick={retryLoading}
-							className='gap-2 border-destructive/70 text-destructive-foreground hover:bg-destructive'
-							prefixIcon={<RotateCw className='h-3.5 w-3.5' />}
+							prefixIcon={<RotateCw />}
 						>
 							重新載入
 						</Button>

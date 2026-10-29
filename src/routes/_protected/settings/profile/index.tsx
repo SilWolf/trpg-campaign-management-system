@@ -129,8 +129,7 @@ function UserProfilePage() {
 						data-testid='profile-submit'
 						type='submit'
 						loading={loading}
-						className='px-5 py-2.5 text-xs text-foreground shadow hover:brightness-110'
-						prefixIcon={!loading ? <Save className='w-4 h-4' /> : undefined}
+						prefixIcon={!loading ? <Save /> : undefined}
 					>
 						<span>{loading ? '儲存中...' : '儲存變更'}</span>
 					</Button>

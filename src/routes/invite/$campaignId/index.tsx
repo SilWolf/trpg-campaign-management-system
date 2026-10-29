@@ -169,7 +169,6 @@ function InviteRegistrationPage() {
 							data-testid='invite-submit'
 							type='submit'
 							loading={isSubmitting}
-							className='w-full py-2.5 text-primary-foreground'
 						>
 							{isSubmitting ? '處理中…' : '設定密碼並加入戰役'}
 						</Button>

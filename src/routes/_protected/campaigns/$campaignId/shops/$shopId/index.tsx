@@ -286,8 +286,7 @@ function CampaignShopDetail() {
 						<Button
 							type='button'
 							variant='secondary'
-							className='border border-border bg-background text-foreground'
-							prefixIcon={<Pencil className='h-4 w-4' />}
+							prefixIcon={<Pencil />}
 						>
 							商店設定
 						</Button>
@@ -360,11 +359,6 @@ function CampaignShopDetail() {
 												aria-label={`查看${displayName}`}
 												aria-pressed={isSelected}
 												onClick={() => setSelectedItemId(item.id)}
-												className={`flex min-w-0 flex-1 items-center justify-between gap-3 rounded-none px-3 py-2 text-left ${
-													isSelected
-														? 'border-primary/80 bg-primary/40'
-														: 'border-transparent bg-background/70 hover:border-border hover:bg-card'
-												}`}
 												data-testid='shop-item-card'
 											>
 												<div className='flex min-w-0 flex-1 items-center gap-2'>
@@ -436,8 +430,7 @@ function CampaignShopDetail() {
 															),
 														}))
 													}
-													className='h-7 min-w-7 px-1.5'
-													prefixIcon={<Minus className='h-3 w-3' />}
+													prefixIcon={<Minus />}
 												>
 												</Button>
 												<span
@@ -458,8 +451,7 @@ function CampaignShopDetail() {
 															[item.id]: (current[item.id] ?? 0) + 1,
 														}))
 													}
-													className='h-7 min-w-7 px-1.5'
-													prefixIcon={<Plus className='h-3 w-3' />}
+													prefixIcon={<Plus />}
 												>
 												</Button>
 											</div>
@@ -500,8 +492,7 @@ function CampaignShopDetail() {
 										onClick={() =>
 											setRequestedPage((page) => Math.max(1, page - 1))
 										}
-										className='gap-1'
-										prefixIcon={<ChevronLeft aria-hidden='true' className='h-4 w-4' />}
+										prefixIcon={<ChevronLeft aria-hidden='true' />}
 									>
 										上一頁
 									</Button>
@@ -514,11 +505,9 @@ function CampaignShopDetail() {
 										onClick={() =>
 											setRequestedPage((page) => Math.min(pageCount, page + 1))
 										}
-										className='gap-1'
 										prefixIcon={
 											<ChevronRight
 												aria-hidden='true'
-												className='h-4 w-4'
 											/>
 										}
 									>
@@ -667,7 +656,6 @@ function CampaignShopDetail() {
 														isItemEffectsExpanded ? null : selectedItem.id,
 													)
 												}
-												className='mt-2 px-0 text-xs text-primary-foreground hover:text-primary-foreground'
 											>
 												{isItemEffectsExpanded ? '收合' : '顯示全部'}
 											</Button>
@@ -723,8 +711,7 @@ function CampaignShopDetail() {
 						disabled={!cartIsValid || !shop.isActive}
 						onClick={() => setCheckoutOpen(true)}
 						data-testid='shop-checkout-open'
-						className='border border-primary/60 bg-primary text-primary-foreground'
-						prefixIcon={<ShoppingBag className='h-4 w-4' />}
+						prefixIcon={<ShoppingBag />}
 					>
 						結帳
 					</Button>

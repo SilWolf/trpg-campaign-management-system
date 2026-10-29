@@ -12,7 +12,9 @@ test('DM 可建立商店並從商品目錄開啟鍛造工坊匯入視窗', async
 	await page.getByRole('button', { name: '建立商店' }).click();
 	await expect(page.getByRole('dialog', { name: '建立商店' })).toBeVisible();
 	await page.getByTestId('shop-name').fill('灰港冒險者商會');
-	await page.getByTestId('shop-flavor').fill('壁爐的火光映照著各地冒險者帶回的珍寶。');
+	await page
+		.getByTestId('shop-flavor')
+		.fill('壁爐的火光映照著各地冒險者帶回的珍寶。');
 	await page.getByRole('button', { name: '儲存商店' }).click();
 	await expect(page.getByRole('dialog', { name: '建立商店' })).toHaveCount(0);
 	await expect(
@@ -36,7 +38,9 @@ test('DM 可建立商店並從商品目錄開啟鍛造工坊匯入視窗', async
 	await expect(
 		page.getByRole('status').filter({ hasText: '商店設定已更新' }),
 	).toBeVisible();
-	await expect(page.getByText('城門關閉後仍有燈火守候。').first()).toBeVisible();
+	await expect(
+		page.getByText('城門關閉後仍有燈火守候。').first(),
+	).toBeVisible();
 	await expect(
 		page.getByRole('heading', {
 			name: '灰港冒險者商會（翻新）',
@@ -44,14 +48,18 @@ test('DM 可建立商店並從商品目錄開啟鍛造工坊匯入視窗', async
 		}),
 	).toBeVisible();
 	await expect(page.getByRole('heading', { name: '購買商品' })).toHaveCount(0);
-	await expect(page.getByRole('heading', { name: '公開購買紀錄' })).toHaveCount(0);
+	await expect(page.getByRole('heading', { name: '公開購買紀錄' })).toHaveCount(
+		0,
+	);
 	await expect(page.getByTestId('shop-source-dialog')).toHaveCount(0);
 	await page.getByRole('button', { name: '從鍛造工坊匯入' }).click();
 	await expect(page.getByTestId('shop-source-dialog')).toBeVisible();
 	await expect(page.getByLabel('批次商品資料')).toHaveCount(0);
-	expect(requests.some((request) => request.startsWith('POST /rest/v1/campaign_shops'))).toBe(
-		true,
-	);
+	expect(
+		requests.some((request) =>
+			request.startsWith('POST /rest/v1/campaign_shops'),
+		),
+	).toBe(true);
 });
 
 for (const failure of [
@@ -64,7 +72,8 @@ for (const failure of [
 	{
 		name: '資料庫缺少風味欄位',
 		code: 'PGRST204',
-		message: "Could not find the 'flavor' column of 'campaign_shops' in the schema cache",
+		message:
+			"Could not find the 'flavor' column of 'campaign_shops' in the schema cache",
 		expected: '資料庫缺少商店風味欄位或 schema 快取尚未更新',
 	},
 ]) {
@@ -113,7 +122,9 @@ test('DM 可從鍛造工坊選擇來源並加入商店', async ({ page }) => {
 	});
 	await page.getByRole('button', { name: '加入' }).first().click();
 
-	await expect(page.getByRole('status').filter({ hasText: '已加入商店' })).toBeVisible();
+	await expect(
+		page.getByRole('status').filter({ hasText: '已加入商店' }),
+	).toBeVisible();
 	await expect(page.getByTestId('shop-item-editor')).toHaveCount(0);
 	expect(
 		requests.some((request) =>
@@ -208,9 +219,7 @@ test('DM 可在商店設定查看並編輯未鑑定商品的真實定義', async
 	await expect(unidentifiedCheckbox).not.toBeChecked();
 });
 
-test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async ({
-	page,
-}) => {
+test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async ({ page }) => {
 	const { requests, campaignShopRpcRequests } = await mockSupabase(page, {
 		campaignSettingsRole: 'dm',
 		campaignShopSeed: true,
@@ -252,7 +261,9 @@ test('DM 可儲存刷新政策、預覽並確認呼叫單一刷新 RPC', async (
 		),
 	).toHaveLength(0);
 	await panel.getByRole('button', { name: '確認刷新' }).click();
-	await expect(page.getByRole('status').filter({ hasText: '店舖刷新完成' })).toBeVisible();
+	await expect(
+		page.getByRole('status').filter({ hasText: '店舖刷新完成' }),
+	).toBeVisible();
 	expect(
 		requests.some((request) =>
 			request.startsWith('POST /rest/v1/rpc/refresh_campaign_shop_items'),
@@ -351,7 +362,9 @@ test('零候選刷新需要二次確認才會呼叫 RPC', async ({ page }) => {
 	const panel = page.getByTestId('shop-refresh-panel');
 	await panel.getByRole('button', { name: '預覽刷新' }).click();
 	await expect(
-		panel.getByText(/本次沒有選中商品。清除模式確認後會直接刪除既有商品，保留歷史訂單快照並拒絕待審訂單/),
+		panel.getByText(
+			/本次沒有選中商品。清除模式確認後會直接刪除既有商品，保留歷史訂單快照並拒絕待審訂單/,
+		),
 	).toBeVisible({ timeout: 15_000 });
 
 	await panel.getByRole('button', { name: '確認刷新' }).click();
@@ -365,7 +378,9 @@ test('零候選刷新需要二次確認才會呼叫 RPC', async ({ page }) => {
 	).toHaveLength(0);
 
 	await panel.getByRole('button', { name: '再次確認零項刷新' }).click();
-	await expect(page.getByRole('status').filter({ hasText: '刪除 2 項' })).toBeVisible();
+	await expect(
+		page.getByRole('status').filter({ hasText: '刪除 2 項' }),
+	).toBeVisible();
 	const shopItems = page.getByTestId('shop-item-card');
 	await expect(shopItems).toHaveCount(0);
 	expect(
@@ -427,7 +442,9 @@ test('DM 可在商品對話框編輯鍛造欄位並刪除商品', async ({ page 
 	await editor.getByLabel('重量（磅）').fill('0.5');
 	await editor.getByRole('button', { name: '儲存商品' }).click();
 
-	await expect(page.getByRole('status').filter({ hasText: '商品設定已更新' })).toBeVisible();
+	await expect(
+		page.getByRole('status').filter({ hasText: '商品設定已更新' }),
+	).toBeVisible();
 	await expect(page.getByText('恢復 2d4 + 2 點生命值。')).toBeVisible();
 	await editItemButton.click();
 	await page.getByRole('button', { name: '刪除商品' }).click();
@@ -455,9 +472,7 @@ test('一般成員可瀏覽商店但看不到管理操作', async ({ page }) => 
 	await page.goto(shopUrl);
 
 	await expect(page.getByTestId('campaign-shops-page')).toBeVisible();
-	await expect(
-		page.getByRole('button', { name: '建立商店' }),
-	).toHaveCount(0);
+	await expect(page.getByRole('button', { name: '建立商店' })).toHaveCount(0);
 	await expect(page.getByTestId('shop-item-editor')).toHaveCount(0);
 	await expect(page.getByText('目前沒有啟用中的商店。').first()).toBeVisible();
 });
@@ -474,7 +489,9 @@ test('DM 的商店詳情與目錄管理分頁分離', async ({ page }) => {
 	await expect(page.getByRole('button', { name: '編輯商品' })).toHaveCount(0);
 	await page.getByRole('link', { name: '商店設定' }).click();
 	await expect(page.getByTestId('shop-source-dialog')).toHaveCount(0);
-	await expect(page.getByRole('button', { name: '從鍛造工坊匯入' })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: '從鍛造工坊匯入' }),
+	).toBeVisible();
 });
 
 test('玩家可瀏覽商店詳情但無法進入 DM 管理功能', async ({ page }) => {
@@ -514,12 +531,16 @@ test('商品目錄僅以列表顯示並可查看所選商品詳細', async ({ pa
 	await page.goto(`${shopUrl}/mock-shop-1`);
 
 	const details = page.getByTestId('shop-item-details');
-	await expect(details.getByRole('heading', { name: '治療藥水' })).toBeVisible();
+	await expect(
+		details.getByRole('heading', { name: '治療藥水' }),
+	).toBeVisible();
 	const itemCard = page.getByTestId('shop-item-card').first();
-	await expect(itemCard.locator('h3')).toHaveClass(/text-blue-400/);
+	await expect(itemCard.locator('h3')).toHaveClass(
+		/text-\[var\(--rarity-foreground\)\]/,
+	);
 	await expect(itemCard.getByTestId('shop-item-rarity')).toHaveText('稀有');
 	await expect(page.getByTestId('shop-item-icon').first()).toHaveClass(
-		/border-blue-400/,
+		/border-\[var\(--rarity-border\)\]/,
 	);
 
 	await expect(page.getByTestId('shop-display-grid')).toHaveCount(0);
@@ -539,7 +560,9 @@ test('商店設定的商品目錄使用左右欄且僅提供列表檢視', async
 	await page.goto(`${shopUrl}/mock-shop-1/settings`);
 
 	const details = page.getByTestId('shop-item-details');
-	await expect(details.getByRole('heading', { name: '治療藥水' })).toBeVisible();
+	await expect(
+		details.getByRole('heading', { name: '治療藥水' }),
+	).toBeVisible();
 	await expect(page.getByTestId('shop-display-grid')).toHaveCount(0);
 	await expect(page.getByTestId('shop-display-list')).toHaveCount(0);
 	await page.getByRole('button', { name: '查看治療藥水（需審查）' }).click();

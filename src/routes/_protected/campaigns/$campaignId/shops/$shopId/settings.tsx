@@ -828,8 +828,7 @@ function CampaignShopsPage() {
 									setErrorMessage(getErrorMessage(error, '重新載入商店失敗。')),
 								);
 						}}
-						className='border border-border bg-card text-foreground'
-						prefixIcon={<RotateCw className='h-4 w-4' />}
+						prefixIcon={<RotateCw />}
 					>
 						重新整理
 					</Button>
@@ -895,8 +894,7 @@ function CampaignShopsPage() {
 										type='button'
 										variant='secondary'
 										onClick={() => startShopEdit(selectedShop)}
-										className='border border-border bg-background text-foreground'
-										prefixIcon={<Pencil className='h-4 w-4' />}
+										prefixIcon={<Pencil />}
 									>
 										編輯商店
 									</Button>
@@ -927,8 +925,7 @@ function CampaignShopsPage() {
 											type='button'
 											variant='secondary'
 											onClick={() => setIsImportDialogOpen(true)}
-											className='border border-border/70 bg-background/40 text-foreground'
-											prefixIcon={<PackagePlus className='h-4 w-4' />}
+											prefixIcon={<PackagePlus />}
 										>
 											從鍛造工坊匯入
 										</Button>
@@ -962,11 +959,6 @@ function CampaignShopsPage() {
 																aria-label={`查看${item.itemSnapshot.name}`}
 																aria-pressed={isSelected}
 																onClick={() => setSelectedItemId(item.id)}
-																className={`min-w-0 flex flex-1 items-center justify-between gap-3 rounded-none px-2 py-1 text-left ${
-																	isSelected
-																		? 'border-primary/80 bg-primary/40'
-																		: 'border-transparent hover:border-border hover:bg-card'
-																}`}
 															>
 																<div className='flex min-w-0 flex-1 items-center gap-2'>
 																	<div className='relative h-9 w-9 shrink-0 overflow-hidden rounded border border-border bg-background'>
@@ -1024,8 +1016,7 @@ function CampaignShopsPage() {
 																size='sm'
 																onClick={() => startItemEdit(item)}
 																aria-label={`編輯${item.itemSnapshot.name}`}
-																className='shrink-0 border border-border text-foreground hover:border-primary hover:text-primary-foreground'
-																prefixIcon={<Pencil className='h-3.5 w-3.5' />}
+																prefixIcon={<Pencil />}
 															>
 															</Button>
 														</article>
@@ -1071,10 +1062,8 @@ function CampaignShopsPage() {
 														onClick={() =>
 															setRequestedPage((page) => Math.max(1, page - 1))
 														}
-														className='gap-1'
 														prefixIcon={<ChevronLeft
 															aria-hidden='true'
-															className='h-4 w-4'
 														/>}
 													>
 														上一頁
@@ -1090,11 +1079,9 @@ function CampaignShopsPage() {
 																Math.min(pageCount, page + 1),
 															)
 														}
-														className='gap-1'
 														prefixIcon={
 															<ChevronRight
 																aria-hidden='true'
-																className='h-4 w-4'
 															/>
 														}
 													>
@@ -1276,8 +1263,7 @@ function CampaignShopsPage() {
 													type='button'
 													variant='ghost'
 													onClick={() => startItemEdit(selectedItem)}
-													className='mt-3 w-full border border-border text-foreground hover:border-primary hover:text-primary-foreground'
-													prefixIcon={<Pencil className='h-3.5 w-3.5' />}
+													prefixIcon={<Pencil />}
 												>
 													編輯商品
 												</Button>
@@ -1327,8 +1313,7 @@ function CampaignShopsPage() {
 													setEditingItem(null);
 													setDeleteConfirmationItemId(null);
 												}}
-												className='text-muted-foreground'
-												prefixIcon={<X className='h-4 w-4' />}
+												prefixIcon={<X />}
 											>
 											</Button>
 										</div>
@@ -1649,8 +1634,7 @@ function CampaignShopsPage() {
 													variant='ghost'
 													disabled={isSaving}
 													onClick={() => void handleDeleteItem(editingItem)}
-													className='border border-destructive/70 text-destructive-foreground hover:bg-destructive/50'
-													prefixIcon={<Trash2 className='h-4 w-4' />}
+													prefixIcon={<Trash2 />}
 												>
 													{deleteConfirmationItemId === editingItem.id
 														? '再次按下確認刪除'
@@ -1667,15 +1651,13 @@ function CampaignShopsPage() {
 													setEditingItem(null);
 													setDeleteConfirmationItemId(null);
 												}}
-												className='text-muted-foreground'
 											>
 												取消
 											</Button>
 											<Button
 												type='submit'
 												loading={isSaving}
-												className='border border-border/60 bg-card text-foreground'
-												prefixIcon={<Check className='h-4 w-4' />}
+												prefixIcon={<Check />}
 											>
 												儲存商品
 											</Button>
@@ -1710,8 +1692,7 @@ function CampaignShopsPage() {
 												variant='ghost'
 												aria-label='關閉鍛造工坊匯入'
 												onClick={() => setIsImportDialogOpen(false)}
-												className='text-muted-foreground'
-												prefixIcon={<X className='h-4 w-4' />}
+												prefixIcon={<X />}
 											>
 											</Button>
 										</div>
@@ -1734,11 +1715,6 @@ function CampaignShopsPage() {
 													role='tab'
 													aria-selected={sourceTab === tab}
 													onClick={() => setSourceTab(tab)}
-													className={
-														sourceTab === tab
-															? 'border border-primary bg-primary/70 text-primary-foreground'
-															: 'border border-border bg-background text-muted-foreground'
-													}
 												>
 													{label}
 												</Button>
@@ -1780,8 +1756,7 @@ function CampaignShopsPage() {
 															size='sm'
 															disabled={isSaving}
 															onClick={() => void handleSourceImport(source)}
-															className='shrink-0 border border-primary/60 bg-primary/70 text-primary-foreground'
-															prefixIcon={<Plus className='h-3.5 w-3.5' />}
+															prefixIcon={<Plus />}
 														>
 															加入
 														</Button>

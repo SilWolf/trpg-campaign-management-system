@@ -560,8 +560,7 @@ export function ShopTransactionsPanel({
 								size='sm'
 								aria-label='關閉結帳視窗'
 								onClick={() => onCheckoutOpenChange?.(false)}
-								className='text-muted-foreground'
-								prefixIcon={<X className='h-4 w-4' />}
+								prefixIcon={<X />}
 							>
 							</Button>
 						</div>
@@ -633,8 +632,7 @@ export function ShopTransactionsPanel({
 															Math.max(0, lineQuantity - 1),
 														)
 													}
-													className='h-7 min-w-7 px-1.5'
-													prefixIcon={<Minus className='h-3 w-3' />}
+													prefixIcon={<Minus />}
 												>
 												</Button>
 												<span
@@ -658,8 +656,7 @@ export function ShopTransactionsPanel({
 															Math.min(item.stockAvailable, lineQuantity + 1),
 														)
 													}
-													className='h-7 min-w-7 px-1.5'
-													prefixIcon={<Plus className='h-3 w-3' />}
+													prefixIcon={<Plus />}
 												>
 												</Button>
 												<span className='text-xs text-muted-foreground'>
@@ -781,8 +778,7 @@ export function ShopTransactionsPanel({
 								}
 								onClick={() => void handleCartCheckout()}
 								data-testid='shop-checkout-confirm'
-								className='border border-primary/60 bg-primary text-primary-foreground'
-								prefixIcon={<ShoppingBag className='h-4 w-4' />}
+								prefixIcon={<ShoppingBag />}
 							>
 								{isSubmittingPurchase
 									? '處理中…'
@@ -916,8 +912,7 @@ export function ShopTransactionsPanel({
 									availableWallets.length === 0
 								}
 								onClick={() => void handlePurchase()}
-								className='border border-primary/60 bg-primary text-primary-foreground'
-								prefixIcon={<ShoppingBag className='h-4 w-4' />}
+								prefixIcon={<ShoppingBag />}
 							>
 								{selectedItem?.requiresApproval ? '送出審查請求' : '確認購買'}
 							</Button>
@@ -1048,8 +1043,7 @@ export function ShopTransactionsPanel({
 														'已拒絕整筆請求並釋放保留庫存。',
 													)
 												}
-												className='border border-destructive/70 bg-destructive/40 text-destructive-foreground'
-												prefixIcon={<X className='h-4 w-4' />}
+												prefixIcon={<X />}
 											>
 												拒絕
 											</Button>
@@ -1063,8 +1057,7 @@ export function ShopTransactionsPanel({
 														'整筆請求已核准，已扣款並交付商品。',
 													)
 												}
-												className='border border-border bg-background/60 text-foreground'
-												prefixIcon={<Check className='h-4 w-4' />}
+												prefixIcon={<Check />}
 											>
 												核准
 											</Button>
@@ -1083,8 +1076,7 @@ export function ShopTransactionsPanel({
 														'已取消整筆請求並釋放保留庫存。',
 													)
 												}
-												className='border border-border bg-card text-foreground'
-												prefixIcon={<X className='h-4 w-4' />}
+												prefixIcon={<X />}
 											>
 												取消請求
 											</Button>

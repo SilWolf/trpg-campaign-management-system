@@ -94,12 +94,11 @@ export function GeneralSettingsPanel({
 										setCopied(true);
 										setTimeout(() => setCopied(false), 2000);
 									}}
-									className='shrink-0'
 									prefixIcon={
 										copied ? (
-											<Check className='w-4 h-4 text-muted-foreground' />
+											<Check />
 										) : (
-											<Copy className='w-4 h-4' />
+											<Copy />
 										)
 									}
 								>
@@ -117,8 +116,7 @@ export function GeneralSettingsPanel({
 									data-testid='campaign-save'
 									type='submit'
 									size='sm'
-									className='shadow'
-									prefixIcon={<Save className='w-4 h-4' />}
+									prefixIcon={<Save />}
 								>
 									<span>儲存變更</span>
 								</Button>
@@ -275,7 +273,6 @@ export function GeneralSettingsPanel({
 										data-testid='campaign-email-invite'
 										type='submit'
 										variant='secondary'
-										className='shrink-0 border-border bg-card text-foreground hover:bg-muted'
 									>
 										發送邀請
 									</Button>
@@ -300,7 +297,6 @@ export function GeneralSettingsPanel({
 								onClick={onDeleteCampaign}
 								variant='danger'
 								size='sm'
-								className='shadow'
 							>
 								永久刪除此戰役
 							</Button>

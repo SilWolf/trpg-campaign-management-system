@@ -6,6 +6,7 @@ import {
 	X,
 	type LucideIcon,
 } from 'lucide-react';
+import { Button } from '@/components/ui';
 
 export type ToastKind = 'success' | 'error' | 'warning' | 'info';
 
@@ -96,14 +97,14 @@ export function ToastViewport({ toasts, onDismiss }: ToastViewportProps) {
 								</p>
 							)}
 						</div>
-						<button
+						<Button
 							aria-label="關閉通知"
-							className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
 							onClick={() => onDismiss(toast.id)}
 							type="button"
-						>
-							<X aria-hidden="true" className="size-4" />
-						</button>
+							variant="ghost"
+							size="sm"
+							prefixIcon={<X aria-hidden="true" />}
+						/>
 					</div>
 				);
 			})}

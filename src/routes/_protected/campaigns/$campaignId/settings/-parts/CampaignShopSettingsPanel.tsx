@@ -157,12 +157,11 @@ export function CampaignShopSettingsPanel({
 								invalidSelectedCatalogIds.length > 0 ||
 								(draftCatalogIds.length === 0 && definitions.length === 0)
 							}
-							className='bg-muted text-foreground hover:bg-accent'
 							prefixIcon={
 								isSaving ? (
-									<Check className='h-4 w-4' />
+									<Check />
 								) : (
-									<Save className='h-4 w-4' />
+									<Save />
 								)
 							}
 						>

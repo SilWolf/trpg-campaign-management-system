@@ -267,8 +267,7 @@ function CampaignLobbyPage() {
 							asChild
 							variant='secondary'
 							size='sm'
-							className='gap-1.5 border-primary/70 bg-card/80 px-3 py-1.5 text-xs font-normal text-primary-foreground hover:border-primary hover:bg-card'
-							prefixIcon={<Hammer className='h-3.5 w-3.5' />}
+							prefixIcon={<Hammer />}
 						>
 							<Link data-testid='lobby-blacksmith-link' to='/blacksmith'>
 								<span>鍛造工坊</span>
@@ -278,8 +277,7 @@ function CampaignLobbyPage() {
 							asChild
 							variant='secondary'
 							size='sm'
-							className='gap-1.5 bg-card/80 px-3 py-1.5 text-xs font-normal text-foreground hover:border-primary hover:bg-card hover:text-primary-foreground'
-							prefixIcon={<UserCog className='w-3.5 h-3.5' />}
+							prefixIcon={<UserCog />}
 						>
 							<Link data-testid='lobby-profile-link' to='/settings/profile'>
 								<span>帳號設定</span>
@@ -290,8 +288,7 @@ function CampaignLobbyPage() {
 							variant='secondary'
 							size='sm'
 							onClick={handleSignOut}
-							className='gap-1.5 border-border bg-card px-3 py-2 text-xs font-normal text-foreground hover:border-destructive hover:bg-card hover:text-destructive-foreground'
-							prefixIcon={<LogOut className='h-3.5 w-3.5' />}
+							prefixIcon={<LogOut />}
 						>
 							登出
 						</Button>
@@ -322,20 +319,6 @@ function CampaignLobbyPage() {
 					</div>
 					<div className='flex flex-wrap gap-2'>
 						<Button
-							data-testid='lobby-create-trigger'
-							type='button'
-							variant='secondary'
-							onClick={() => {
-								setDialog('create');
-								setCampaignTemplate('sample');
-								setErrorMessage(null);
-							}}
-							className='gap-2 border-border/60 bg-background/70 px-3 py-2 text-xs text-foreground shadow hover:border-border hover:bg-background'
-							prefixIcon={<Plus className='h-4 w-4' />}
-						>
-							建立新戰役 (DM)
-						</Button>
-						<Button
 							data-testid='lobby-join-trigger'
 							type='button'
 							variant='secondary'
@@ -343,10 +326,22 @@ function CampaignLobbyPage() {
 								setDialog('join');
 								setErrorMessage(null);
 							}}
-							className='gap-2 px-3 py-2 text-xs'
-							prefixIcon={<Users className='h-4 w-4' />}
+							prefixIcon={<Users />}
 						>
 							輸入邀請碼加入戰役
+						</Button>
+						<Button
+							data-testid='lobby-create-trigger'
+							type='button'
+							variant='primary'
+							onClick={() => {
+								setDialog('create');
+								setCampaignTemplate('sample');
+								setErrorMessage(null);
+							}}
+							prefixIcon={<Plus />}
+						>
+							建立新戰役 (DM)
 						</Button>
 					</div>
 				</div>
@@ -377,8 +372,7 @@ function CampaignLobbyPage() {
 									setCampaignTemplate('sample');
 									setErrorMessage(null);
 								}}
-								className='mt-5 gap-2 border border-primary/60 bg-primary/80 px-4 py-2 text-sm text-primary-foreground shadow hover:border-primary hover:bg-primary'
-								prefixIcon={<Plus className='h-4 w-4' />}
+								prefixIcon={<Plus />}
 							>
 								建立我的第一場戰役
 							</Button>
@@ -411,16 +405,10 @@ function CampaignLobbyPage() {
 										</p>
 										<p className='mt-1 text-xs text-muted-foreground'>
 											邀請碼:{' '}
-											<strong className='text-primary-foreground font-mono'>
+											<strong className='text-highlight font-mono'>
 												{camp.invite_code || '無'}
 											</strong>
 										</p>
-									</div>
-									<div className='relative mt-5 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground'>
-										<span>點擊進入自建戰役背包</span>
-										<span className='text-muted-foreground transition group-hover:translate-x-1'>
-											→
-										</span>
 									</div>
 								</Link>
 							))}
@@ -455,10 +443,8 @@ function CampaignLobbyPage() {
 							size='sm'
 							onClick={closeDialog}
 							aria-label='關閉視窗'
-							className='px-2 text-muted-foreground hover:text-foreground'
-							prefixIcon={<X className='h-5 w-5' />}
-						>
-						</Button>
+							prefixIcon={<X />}
+						></Button>
 					</div>
 
 					{dialog === 'create' ? (
@@ -498,7 +484,6 @@ function CampaignLobbyPage() {
 									variant='secondary'
 									size='sm'
 									onClick={closeDialog}
-									className='px-3 text-xs'
 								>
 									取消
 								</Button>
@@ -507,7 +492,6 @@ function CampaignLobbyPage() {
 									type='submit'
 									loading={isSubmitting}
 									size='sm'
-									className='px-4 text-xs'
 								>
 									{isSubmitting ? '鑄造中...' : '確認建立戰役'}
 								</Button>
@@ -533,16 +517,10 @@ function CampaignLobbyPage() {
 									variant='secondary'
 									size='sm'
 									onClick={closeDialog}
-									className='px-3 text-xs'
 								>
 									取消
 								</Button>
-								<Button
-									data-testid='lobby-join-submit'
-									type='submit'
-									size='sm'
-									className='px-4 text-xs'
-								>
+								<Button data-testid='lobby-join-submit' type='submit' size='sm'>
 									確認加入
 								</Button>
 							</div>

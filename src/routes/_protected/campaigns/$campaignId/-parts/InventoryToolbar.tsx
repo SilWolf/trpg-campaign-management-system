@@ -54,7 +54,7 @@ export default function InventoryToolbar({
 						data-testid='inventory-bag-public'
 						aria-pressed={currentBagTab === 'public'}
 						onClick={() => setBagTab('public')}
-						prefixIcon={<Globe className='w-3.5 h-3.5' />}
+						prefixIcon={<Globe />}
 					>
 						<span>
 							公開行囊 (
@@ -73,7 +73,7 @@ export default function InventoryToolbar({
 							data-testid='inventory-bag-private'
 							aria-pressed={currentBagTab === 'private'}
 							onClick={() => setBagTab('private')}
-							prefixIcon={<Lock className='w-3.5 h-3.5' />}
+							prefixIcon={<Lock />}
 						>
 							<span>
 								私人暗袋 (
@@ -115,7 +115,7 @@ export default function InventoryToolbar({
 							aria-pressed={displayMode === 'grid6'}
 							onClick={() => setDisplayMode('grid6')}
 							title='一列 6 個展示'
-							prefixIcon={<Grid3x3 className='w-3.5 h-3.5' />}
+							prefixIcon={<Grid3x3 />}
 						>
 							<span className='hidden md:inline'>6格</span>
 						</Button>
@@ -127,7 +127,7 @@ export default function InventoryToolbar({
 							aria-pressed={displayMode === 'grid'}
 							onClick={() => setDisplayMode('grid')}
 							title='緊湊格字展示'
-							prefixIcon={<LayoutGrid className='w-3.5 h-3.5' />}
+							prefixIcon={<LayoutGrid />}
 						>
 							<span className='hidden md:inline'>格字</span>
 						</Button>
@@ -139,7 +139,7 @@ export default function InventoryToolbar({
 							aria-pressed={displayMode === 'list'}
 							onClick={() => setDisplayMode('list')}
 							title='詳細列表展示'
-							prefixIcon={<List className='w-3.5 h-3.5' />}
+							prefixIcon={<List />}
 						>
 							<span className='hidden md:inline'>列表</span>
 						</Button>
@@ -162,8 +162,7 @@ export default function InventoryToolbar({
 								asChild
 								variant='secondary'
 								size='sm'
-								className='cursor-pointer'
-								prefixIcon={<ArrowUpDown className='w-3.5 h-3.5' />}
+								prefixIcon={<ArrowUpDown />}
 							>
 								<div>
 									<span>排序與整理</span>
@@ -177,8 +176,7 @@ export default function InventoryToolbar({
 								size='sm'
 								data-testid='inventory-sort-rarity'
 								onClick={() => handleAutoSort('rarity')}
-								className='w-full justify-start rounded-none'
-								prefixIcon={<Gem className='size-4' />}
+								prefixIcon={<Gem />}
 							>
 								依稀有度排序
 							</Button>
@@ -188,8 +186,7 @@ export default function InventoryToolbar({
 								size='sm'
 								data-testid='inventory-sort-value'
 								onClick={() => handleAutoSort('value')}
-								className='w-full justify-start rounded-none'
-								prefixIcon={<DollarSign className='size-4' />}
+								prefixIcon={<DollarSign />}
 							>
 								依價值排序
 							</Button>
@@ -199,8 +196,7 @@ export default function InventoryToolbar({
 								size='sm'
 								data-testid='inventory-sort-weight'
 								onClick={() => handleAutoSort('weight')}
-								className='w-full justify-start rounded-none'
-								prefixIcon={<Weight className='size-4' />}
+								prefixIcon={<Weight />}
 							>
 								依重量排序
 							</Button>
@@ -213,8 +209,7 @@ export default function InventoryToolbar({
 										size='sm'
 										data-testid='inventory-consolidate-stacks'
 										onClick={handleConsolidateStacks}
-										className='w-full justify-start rounded-none'
-										prefixIcon={<Boxes className='size-4' />}
+										prefixIcon={<Boxes />}
 									>
 										合併同名同詞條堆疊
 									</Button>

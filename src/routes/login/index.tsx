@@ -122,12 +122,11 @@ function LoginPage() {
 								size='sm'
 								onClick={() => setShowPassword((visible) => !visible)}
 								aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
-								className='absolute inset-y-0 right-0 h-full min-h-0 rounded-none px-3 text-muted-foreground hover:text-primary-foreground'
 								prefixIcon={
 									showPassword ? (
-										<EyeOff className='h-4 w-4' />
+										<EyeOff />
 									) : (
-										<Eye className='h-4 w-4' />
+										<Eye />
 									)
 								}
 							>
@@ -157,7 +156,6 @@ function LoginPage() {
 						data-testid='login-submit'
 						type='submit'
 						loading={isSubmitting}
-						className='w-full py-2.5 text-primary-foreground shadow-lg'
 					>
 						{isSubmitting
 							? '處理中...'
@@ -177,7 +175,6 @@ function LoginPage() {
 						setMessage(null);
 						setErrorMessage(null);
 					}}
-					className='mt-4 w-full text-center text-xs font-normal text-muted-foreground hover:text-primary-foreground'
 				>
 					{isSignUp ? '已有帳號？返回登入' : '尚未有帳號？立即註冊'}
 				</Button>
@@ -194,8 +191,7 @@ function LoginPage() {
 					type='button'
 					variant='secondary'
 					onClick={handleGuestLogin}
-					className='w-full border-border/70 bg-gradient-to-r from-background via-card to-background py-3 text-sm font-bold text-foreground shadow-lg hover:border-border hover:brightness-125'
-					prefixIcon={<Dice6 className='h-5 w-5 text-foreground' />}
+					prefixIcon={<Dice6 />}
 				>
 					<span>🎲 免登入・以訪客身分體驗測試戰役</span>
 				</Button>
