@@ -1,6 +1,7 @@
 import type { FormEvent, KeyboardEvent } from 'react';
 import { UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { CharacterAvatar } from '@/components/CharacterAvatar';
 import {
 	CAMP_CHEST_ID,
 	type AccessLevel,
@@ -160,7 +161,11 @@ export function AllCharactersSettingsdPanel({
 								onClick={() => setActiveCharacterId(character.id)}
 								variant={isActive ? 'primary' : 'ghost'}
 							>
-								<span>{character.avatar}</span>
+								<CharacterAvatar
+									avatar={character.avatar}
+									alt={`${character.name}頭像`}
+									className='h-6 w-6 rounded-full object-cover'
+								/>
 								<span>{character.name}</span>
 							</Button>
 						);

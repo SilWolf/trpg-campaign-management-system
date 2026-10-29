@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Button, Input, Select, Textarea } from '@/components/ui';
 import { useCampaignJourneys } from './CampaignJourneysContext';
+import { JourneyImageUploadField } from './JourneyImageUploadField';
 import { evaluateCharacterPermissions } from '@/hooks/useCharacterPermissions';
 import type { CampaignJourney } from '@/types';
 
@@ -38,6 +39,7 @@ export function JourneyForm({
 	);
 	const [isSaving, setIsSaving] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const contentRef = useRef<HTMLTextAreaElement>(null);
 	const visibleCharacters =
 		visibility === 'private'
 			? characters.filter(
@@ -52,6 +54,27 @@ export function JourneyForm({
 						).canManagePrivateJourneys,
 				)
 			: characters;
+
+	function insertImageReference(reference: string) {
+		const textarea = contentRef.current;
+		if (!textarea) return;
+		const start = textarea.selectionStart;
+		const end = textarea.selectionEnd;
+		const currentContent = textarea.value;
+		const before = currentContent.slice(0, start);
+		const after = currentContent.slice(end);
+		const prefix = before.length > 0 && !before.endsWith('\n') ? '\n\n' : '';
+		const suffix = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '';
+		const markdown = `![冒險筆記圖片](${reference})`;
+		const insertion = `${prefix}${markdown}${suffix}`;
+		const nextContent = `${before}${insertion}${after}`;
+		setContent(nextContent);
+		requestAnimationFrame(() => {
+			textarea.focus();
+			const cursor = before.length + insertion.length;
+			textarea.setSelectionRange(cursor, cursor);
+		});
+	}
 
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -138,12 +161,18 @@ export function JourneyForm({
 				data-testid='journey-tags'
 			/>
 			<Textarea
+				ref={contentRef}
 				label='筆記內容'
 				value={content}
 				onChange={(event) => setContent(event.target.value)}
 				rows={10}
 				description='支援 Markdown；不支援 HTML。'
 				data-testid='journey-content'
+			/>
+			<JourneyImageUploadField
+				campaignId={campaignId}
+				journeyId={initialJourney?.id}
+				onInsert={insertImageReference}
 			/>
 			<div className='grid gap-4 sm:grid-cols-2'>
 				<Select

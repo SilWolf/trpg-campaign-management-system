@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import {
 	ArrowRightLeft,
 	Save,
@@ -7,6 +7,8 @@ import {
 	User,
 } from 'lucide-react';
 import { Button, Checkbox, Input, Select } from '@/components/ui';
+import { CharacterAvatar } from '@/components/CharacterAvatar';
+import { CharacterAvatarPicker } from '@/components/CharacterAvatarPicker';
 import type {
 	AccessLevel,
 	Character,
@@ -50,20 +52,6 @@ interface CharacterSettingsPanelProps {
 	onDeleteCharacter: (character: Character) => void;
 }
 
-const AVATAR_OPTIONS = [
-	'🛡️',
-	'🧙‍♂️',
-	'🧝‍♀️',
-	'🗡️',
-	'🔮',
-	'🦇',
-	'🐉',
-	'🍀',
-	'🏹',
-	'📜',
-	'🌙',
-];
-
 export function CharacterSettingsPanel({
 	isDm,
 	currentSelectedChar,
@@ -88,6 +76,15 @@ export function CharacterSettingsPanel({
 	onTransferCharacter,
 	onDeleteCharacter,
 }: CharacterSettingsPanelProps) {
+	const [isAvatarUploading, setIsAvatarUploading] = useState(false);
+	const handleProfileSubmit = (event: FormEvent<HTMLFormElement>) => {
+		if (isAvatarUploading) {
+			event.preventDefault();
+			return;
+		}
+		onSaveCharacterProfile(event);
+	};
+
 	return (
 		<>
 			{/* ========================================== */}
@@ -97,12 +94,16 @@ export function CharacterSettingsPanel({
 				<div className='space-y-6'>
 					{/* 區塊 1：角色基本資料設定 (can_edit_profile) */}
 					<form
-						onSubmit={onSaveCharacterProfile}
+						onSubmit={handleProfileSubmit}
 						className='bg-background border border-border rounded-lg p-6 space-y-4 shadow-xl'
 					>
 						<div className='flex items-center justify-between border-b border-border pb-3'>
 							<div className='flex items-center gap-2'>
-								<span className='text-xl'>{currentSelectedChar.avatar}</span>
+								<CharacterAvatar
+									avatar={currentSelectedChar.avatar}
+									alt={`${currentSelectedChar.name}頭像`}
+									className='h-9 w-9 rounded-full border border-primary/50 object-cover'
+								/>
 								<h2 className='text-base font-serif font-bold text-foreground'>
 									{currentSelectedChar.name} — 角色基本資料
 								</h2>
@@ -154,21 +155,13 @@ export function CharacterSettingsPanel({
 								className='bg-card font-mono font-bold text-primary-foreground'
 							/>
 
-							<Select
-								data-testid='character-avatar'
-								label='頭像符號'
-								labelClassName='text-xs text-muted-foreground'
+							<CharacterAvatarPicker
+								avatar={editCharAvatar}
+								userId={userId}
 								disabled={!myPermForSelectedChar.canEditProfile}
-								value={editCharAvatar}
-								onChange={(e) => setEditCharAvatar(e.target.value)}
-								className='bg-card'
-							>
-								{AVATAR_OPTIONS.map((icon) => (
-									<option key={icon} value={icon}>
-										{icon} 頭像
-									</option>
-								))}
-							</Select>
+								onChange={setEditCharAvatar}
+								onUploadingChange={setIsAvatarUploading}
+							/>
 						</div>
 
 						{myPermForSelectedChar.canEditProfile && (
@@ -177,6 +170,7 @@ export function CharacterSettingsPanel({
 									data-testid='character-save'
 									type='submit'
 									size='sm'
+									disabled={isAvatarUploading}
 									prefixIcon={<Save />}
 								>
 									<span>儲存角色基本資料</span>

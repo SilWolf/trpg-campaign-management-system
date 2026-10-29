@@ -22,6 +22,8 @@ import type {
 	WeaponItemMastery,
 } from '@/types';
 import { Button } from '@/components/ui';
+import { ItemImageUploadField } from '@/components/ItemImageUploadField';
+import ItemIcon from '@/routes/_protected/campaigns/$campaignId/-parts/ItemIcon';
 
 export const Route = createFileRoute('/_protected/blacksmith/workshop')({
 	component: BlacksmithWorkshopPage,
@@ -504,6 +506,9 @@ function BlacksmithWorkshopPage() {
 								className='rounded-xl border border-border bg-background/80 p-5'
 							>
 								<div className='flex items-start justify-between gap-4'>
+									<div className='relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-card'>
+										<ItemIcon iconName={item.icon} className='h-7 w-7 text-foreground' />
+									</div>
 									<div className='min-w-0'>
 										<h2 className='truncate font-serif text-lg font-bold text-foreground'>
 											{item.name}
@@ -747,6 +752,13 @@ function BlacksmithWorkshopPage() {
 								/>
 							</label>
 						</div>
+						<ItemImageUploadField
+							bucket='blacksmith-assets'
+							scopeId={user?.id ?? ''}
+							value={form.icon}
+							disabled={!isCloudReady}
+							onChange={(icon) => updateForm('icon', icon)}
+						/>
 						<div className='grid gap-3 sm:grid-cols-2'>
 							<label className='flex items-center gap-2 text-sm text-foreground'>
 								<input

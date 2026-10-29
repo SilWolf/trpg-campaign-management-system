@@ -508,7 +508,7 @@ test('玩家可瀏覽商店詳情但無法進入 DM 管理功能', async ({ page
 	const itemImage = page.getByTestId('shop-item-icon').first().locator('img');
 	await expect(itemImage).toHaveAttribute(
 		'src',
-		'/images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c8494aecf5bc9b72.webp',
+		'/images/blacksmith/catalogs/dnd-2024-srd-5.2/item-c8494aecf5bc9b72-4x.webp',
 	);
 	await expect
 		.poll(() =>

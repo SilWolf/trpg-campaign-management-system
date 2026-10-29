@@ -126,7 +126,7 @@
 - 建立 buckets、容量／MIME 限制及 Storage policies。
 - 既有 `characters.avatar`、物品 `icon` 與冒險筆記 Markdown 欄位已是可保存穩定參照的文字欄位；本階段不重複新增圖片欄位。工坊／campaign 資產沿用現有 `icon` 參照格式，筆記沿用 campaign／journey Storage path。
 - 將三個 bucket 設為公開讀取、限制 WebP MIME 與單檔容量，禁止公開列舉及原地覆寫；上傳、刪除依使用者 UID、DM 或筆記編輯權限控制。
-- **頭像 Emoji 資料遷移移至階段三同一版本完成**：目前顯示與選擇介面仍直接處理 Emoji，若先改資料會讓既有客戶端顯示參照字串或送回舊格式。階段三需先完成參照顯示／選取，再用資料庫遷移把歷史值轉成預設圖庫 ID，並阻止舊格式重新寫入。
+- **頭像 Emoji 資料遷移屬階段三工作**：前端參照顯示與選取已完成，migration 已新增並將歷史值轉為預設圖庫 ID；維護者回報 migration 已成功部署，真實資料遷移結果仍待隔離環境唯讀確認。
 - 圖片內容可被持有 URL 的任何人讀取（包含非戰役成員）；角色暗袋、DM-only 筆記等資料的資料列仍受資料庫 RLS 保護，但其圖片不得視為私密。
 - 逐項驗證 Storage 對象的讀取、上傳、覆寫及刪除權限；驗證 campaign 權限不會因錯誤路徑或猜測 object ID 而繞過。
 - SQL migration 與 Storage 設定仍須由維護者確認目標 Supabase 專案及 migration history 後手動部署；此規劃本身不代表已執行。
@@ -138,8 +138,8 @@
 - 新增 `characters.avatar` 更新 trigger：DM 可更新所有角色；其他登入者必須有該角色 `can_edit_profile` 權限，只有角色擁有者且尚無明確 ACL 列時沿用預設擁有者權限。此限制由資料庫執行，不依賴前端隱藏控制項。
 - 個人及鍛造工坊物件限定寫入者自己的 UUID 目錄；鍛造工坊物件 ID 尚未與資料列 ID 一對一綁定，因此 Storage 允許物件擁有者建立自己的圖片物件，物品圖示參照仍由 `blacksmith_items` 資料列 RLS 控制。
 - 對目標 bucket 的 Storage 物件清單查詢限制為擁有者（個人／鍛造工坊）或該 campaign 的 DM；公開 bucket 仍可透過已知 URL 讀取圖片。
-- 本次無需新增資料欄位：角色頭像、鍛造工坊／戰役物品圖示及筆記內容已有 `text` 欄位可保存階段一定義的參照。歷史 Emoji 轉換與新格式驗證待階段三 UI 參照支援時一併實作，避免目前直接顯示／輸入 Emoji 的客戶端壞掉。
-- **狀態：Storage／資料庫權限程式碼已完成；頭像格式遷移依賴階段三；待 Supabase 部署及隔離環境驗收。** 未連線、部署或執行 SQL；不代表 bucket、Storage RLS 或真實 Auth 權限已驗收。
+- 本次無需新增資料欄位：角色頭像、鍛造工坊／戰役物品圖示及筆記內容已有 `text` 欄位可保存階段一定義的參照。歷史 Emoji 轉換由階段三 UI fallback 與資料 migration 完成。
+- **狀態：維護者回報 Storage migration 已成功部署；真實 Storage API／Auth 權限驗收仍待執行。** 本次沒有連線 Supabase 或重新部署 SQL；部署回報不等同於本機已驗證 bucket、Storage RLS 或真實 Auth 權限。
 
 **階段驗收標準**
 
@@ -158,6 +158,17 @@
 - 在角色頭像顯示處統一解析圖庫 ID 或 Storage path，並處理載入失敗 fallback。
 - 沿用 optimistic UI 與 Realtime 同步模式；同步失敗要回復／保留可辨識狀態並提示使用者，不能顯示成功狀態。
 - 保留訪客／離線模式的既有操作；雲端上傳在不可用時明確提示，不能假稱已上傳。
+
+**進度紀錄（2026-10-29）**
+
+- 已建立穩定的 `avatar:default` 圖庫參照及隨前端部署的通用 WebP fallback；現階段尚無其他頭像素材，後續可新增圖庫項目而不更改資料格式。
+- 新增共用角色頭像解析與顯示元件，角色狀態列、角色設定頁籤、設定表單、錢包及物品移轉選單均不再直接輸出角色 Emoji；歷史 Emoji、空值及無效參照會回到通用預設圖，圖片載入失敗也使用 fallback。
+- 新增角色建立／設定頁頭像選取與上傳。預設圖只保存 ID；登入使用者上傳時先驗證並轉成 256×256 WebP，再以使用者 UUID 與隨機 asset ID 建立 `user-uploads` 新物件。訪客／離線或未設定 Supabase 時停用上傳並提供說明。
+- 頭像控制項依 `can_edit_profile`／DM 權限停用；角色資料更新要求資料庫實際回傳更新列，失敗時回復 optimistic state、顯示錯誤並嘗試清除本次未綁定的新物件。
+- 新增 `20261030000010_migrate_character_avatar_references.sql`，將舊 Emoji、空值及不受支援的 avatar 參照更新為 `avatar:default`，保留符合規格的使用者 Storage path。維護者回報此 migration 已成功部署；實際遷移結果及 Storage／Auth 權限仍待隔離環境驗收。
+- **前端驗證：**頭像上傳、Storage path 持久化、資料更新失敗回復／清理、角色設定權限、舊 Emoji／空值 fallback 等 17 項聚焦 E2E 通過；完整 `npm run test:e2e` 共 99 項通過，`npm run typecheck`、`npm run lint` 及 `npm run build` 通過。真實 Storage API／RLS、Realtime 跨客戶端及新資料 migration 未在此環境驗收。
+- 成功上傳但在角色儲存前取消或改回預設值時，暫存物件目前不會即時刪除；引用安全的孤立物件清理仍列入階段六，不會影響角色資料或已儲存的舊頭像。
+- **階段狀態：程式碼完成；avatar migration 維護者回報已部署，待真實隔離環境驗收；不得標記為 Supabase 上線驗收完成。**
 
 **階段驗收標準**
 
@@ -186,6 +197,16 @@
 - 驗證背包／筆記資料列 ACL 不變；已知 campaign 圖片 URL 對非成員可讀，campaign 物件清單只對 DM 開放。此公開讀取行為是明確產品決策，不是 ACL 洩漏。
 - 至少覆蓋直接建立物品、工坊匯入、更新既有圖片、任一變體失敗、Realtime 更新及重載後解析等整合／E2E 流程。
 
+**進度紀錄（2026-10-29）**
+
+- 鍛造工坊建立／編輯表單可上傳圖片並預覽 128、512 版本；圖片在瀏覽器先轉為 WebP，再以使用者 UUID 與隨機 asset ID 寫入 `blacksmith-assets`。成功替換採新路徑，不會原地覆寫來源圖。
+- 戰役背包物品表單與商店商品編輯可預覽及替換圖片；只有 DM 顯示／啟用戰役圖片上傳。檔案成功上傳兩個變體後才更新表單參照，campaign 圖片使用 `campaign-assets/<campaign-id>/items/<asset-id>/`，沿用既有 Storage RLS 限制 DM 寫入。
+- 新增 `20261030000011_guard_campaign_item_image_references.sql`，以資料庫 trigger 限制非 DM 透過直接資料請求更換既有背包物品的 `icon`／`item_base.icon` 圖片參照；並新增唯讀結構檢查 `supabase/tests/campaign_item_image_permissions.sql`。此階段 migration 尚未部署，須經維護者確認 migration history 後手動套用。
+- `ItemIcon` 依用途解析尺寸：背包格子預設載入 128；詳情與商店載入 512。匯入轉換沿用工坊 `icon` Storage path，不複製來源檔；campaign 覆寫只改該物品的圖示參照，其他 campaign 與工坊來源不受影響。
+- 若 campaign 變體上傳部分失敗，會清理本次不完整物件並維持舊參照；鍛造來源資產依既有政策不可刪除，部分失敗時會明確顯示未完成資產路徑，不會切換樣板參照。成功覆寫後的舊物件及刪除物品留下的孤立資產暫不自動清除，列入階段六。
+- **前端驗證：**新增鍛造上傳／匯入來源參照、DM campaign 背包與商店覆寫、部分變體失敗復原及圖片尺寸解析測試；完整 mock E2E 104 項通過，`npm run typecheck`、`npm run lint`、`npm run build` 及 `git diff --check` 通過。建置仍顯示既有主 chunk 超過 500 KB 的警告。mock E2E 只證明前端流程與 Storage 呼叫契約，不代表真實 Storage RLS、直接資料權限或 Realtime 已驗收。
+- **階段狀態：程式碼完成；待維護者部署階段四 guard migration，並完成真實隔離環境驗收；未在本階段連線或變更 Supabase。**
+
 ### 階段五：冒險筆記與靜態圖庫
 
 - 在支援 Markdown 的冒險筆記編輯器加入圖片上傳／插入功能；圖片使用 campaign-scoped 儲存路徑並符合現有筆記編輯權限。
@@ -193,6 +214,16 @@
 - 將約 600 組預設道具圖示整理到版本控管中的靜態資產目錄，提供可重複執行的索引／檔名驗證方式；確認正式建置會將檔案納入輸出。
 - 建立隨前端部署的預設頭像 WebP 圖庫及索引；本地選取只保存穩定識別值，不上傳至 Storage。
 - 預設圖鑑不寫入 Storage、不複製至每個 campaign；資料只保存穩定識別值，確保不同部署基底 URL 均能解析。
+
+**進度紀錄（2026-10-29）**
+
+- 冒險筆記新增圖片上傳／插入流程：在筆記編輯與 DM 專屬筆記編輯都加入 `JourneyImageUploadField`，上傳前先在瀏覽器將圖片轉為最大寬度 1,200 px 的 WebP，再寫入 `campaign-assets/<campaign-id>/journeys/<journey-id>/<asset-id>/image.webp`，成功後插入 `storage:` Markdown 參照；建立新筆記（尚未有 journey id）時明確提示需先儲存再上傳。
+- Markdown 顯示新增來源白名單：僅允許 `https` 外部圖片與同 campaign 的 `storage:campaign-assets/.../journeys/...` 參照；`javascript:`、跨 campaign storage path 與其他非白名單來源會被忽略，不會渲染。仍維持不支援 HTML 腳本與危險協定。
+- 靜態圖庫補齊可重複驗證機制：新增 `src/data/avatar-index.json` 作為預設頭像穩定 ID 索引，`imageReferences` 改由索引載入；新增 `scripts/validate-static-image-catalog.mjs`，檢查頭像與圖鑑路徑安全性、ID 唯一性、WebP 格式與尺寸（頭像 256、物品 128/512）及建置輸出完整性。
+- 建置流程已串接靜態圖庫驗證：`npm run build` 現在會在打包後自動執行 `validate-static-image-catalog.mjs --dist`，確保正式輸出包含圖鑑索引、catalog JSON 與全部靜態圖片；新增 `npm run validate:static-images` 可單獨執行來源檢查。
+- 物品圖示解析補齊 512 靜態版本：`getItemImageUrl` 對靜態圖鑑路徑在 `variant='512'` 時會自動對應 `-4x.webp`，讓背包維持 128、詳情／商店維持 512 的規格一致。
+- **驗證結果：**`npm run typecheck`、`npm run lint`、`npm run validate:static-images`、`npm run build` 全數通過；另外執行聚焦 E2E（圖片參照解析、Markdown 安全顯示、筆記圖片上傳插入）3 項通過。完整 `npm run test:e2e` 在本次執行過程曾被中斷通知，未再重跑整套，因此目前僅可宣稱聚焦案例通過。
+- **階段狀態：程式碼完成並已記錄規劃；待維護者於真實隔離 Supabase 驗證 Storage RLS、跨使用者／跨戰役權限與 Realtime 後，才可標記為上線驗收完成。**
 
 **階段驗收標準**
 
@@ -219,6 +250,14 @@
 - 隔離 Supabase 環境完成登入／登出、權限矩陣、公開／私人讀取、跨使用者／跨戰役隔離、替換／刪除及異常復原測試；所有真實環境檢查結果與 mock 測試結果分開記錄。
 - `npm run typecheck`、`npm run lint`、`npm run test:e2e`、`npm run build` 及相關圖片處理／resolver 測試均通過；測試失敗及未完成的手動步驟不得標成通過。
 - 正式部署前由維護者再次確認 Supabase 專案、migration history、bucket、Storage policies、Secrets 與回復方式；未經明確確認不得部署。部署後以正式環境唯讀／受控驗收確認功能與權限，不在未驗收前宣稱已上線。
+
+**進度紀錄（2026-10-29）**
+
+- 新增 [Storage 孤立物件唯讀稽核 SQL](../supabase/tests/image_storage_orphan_audit.sql)：列出三個指定圖片 bucket 的物件，涵蓋角色頭像、鍛造工坊及戰役物品、商店目前／歷史快照、筆記與 DM 筆記內容參照；鍛造工坊來源一律標為不可清理，最近七日物件不列入清理候選。SQL 使用唯讀交易，只產生候選與引用來源，不執行刪除。需以可看見所有相關資料列的維護者唯讀資料庫身分執行，否則 RLS 隱藏的參照會令報表不完整。
+- 修正角色建立／更新回應錯誤時立即刪除新頭像的行為。網路中斷或回應不確定時，寫入可能已成功；現在會保留舊參照及新物件，明確提示待稽核，避免把已綁定圖片誤刪。已確認失敗但尚無全域引用計數的物件仍交由稽核流程，不由客戶端猜測。
+- **尚未執行物件掃描或刪除。** 本次沒有指定／確認隔離 Supabase 專案、migration history、bucket／policy 狀態與唯讀連線身分；不連線、不執行 SQL、不部署 migration、不修改 Secrets。正式與隔離環境的 Auth、Storage API、RLS、跨使用者／跨戰役及刪除權限驗收仍待維護者在確認的隔離專案執行。
+- **本機驗證結果：**`npm run typecheck`、`npm run lint`、`npm run build` 通過；build 內的正式輸出圖庫檢查確認 1 個預設頭像、537 項物品與 1,075 個 WebP。`npm run test:e2e` 全套 105 項通過；另修正商店詳情 E2E 對靜態 512 WebP 版本路徑的舊期待值。以上只驗證本機程式碼與 mock 流程，不代表 SQL 已在資料庫執行或 Supabase 權限已驗收。
+- **階段狀態：本機安全流程與唯讀候選稽核程式已完成；真實隔離環境驗收及任何物件刪除未完成，不可標記為上線完成。**
 
 ## 驗收條件
 
@@ -249,7 +288,7 @@
 
 ## 部署與安全注意
 
-階段一已完成；階段二已新增 Storage migration 與部署後 SQL 驗收檢查，但尚未在 Supabase 環境部署或執行。三個圖片 bucket 都使用 Supabase 公開 Storage 物件，不提供圖片 bytes 的保密性；不需要把 service-role key 放入 Vite。鍛造工坊來源圖及戰役覆寫圖採不同資產範圍及不可變路徑。部署前仍須由維護者確認目標專案與 migration history，部署後完成真實 Auth／Storage API 驗收，否則不得標記已上線。
+階段一已完成；階段二 Storage migration 與階段三 avatar reference migration 維護者均回報已成功部署，但真實 Auth／Storage API 權限及資料遷移結果尚待隔離環境驗收。三個圖片 bucket 都使用 Supabase 公開 Storage 物件，不提供圖片 bytes 的保密性；不需要把 service-role key 放入 Vite。階段四新增 `20261030000011_guard_campaign_item_image_references.sql`，尚未部署；鍛造工坊來源圖及戰役覆寫圖採不同資產範圍及不可變路徑。新 migration 部署前仍須由維護者確認目標專案與 migration history；完成真實 Auth／Storage API 驗收前，不得標記已上線。
 
 ### 階段二部署與檢查順序
 
@@ -258,3 +297,10 @@
 3. 確認 migration 成功並提交後，再執行 [Storage 驗收 SQL](../supabase/tests/image_storage_permissions.sql)。該檔案只是檢查，最後會 `ROLLBACK`，不會建立或修改 bucket；不可與尚未提交的 migration 放在同一個交易中執行，否則回滾可能撤銷 migration。
 4. 若驗收回報 bucket 不符，先以唯讀 SQL 查詢三個 bucket 的 `public`、`file_size_limit` 與 `allowed_mime_types`；新版驗收 SQL 也會列出缺少或不符的 bucket。確認 migration 的執行結果及目標專案後再處理，不要只修改驗收條件。
 5. SQL 結構檢查通過不代表 Storage API、現有 grants／policies 與不同使用者的實際權限已驗收；仍須在隔離專案依上述權限矩陣實測。
+
+### 階段四部署與檢查順序
+
+1. 維護者確認目標 Supabase 專案及 migration history，並確認階段三 avatar reference migration 已正確完成，再依專案既有流程套用 [戰役物品圖片權限 migration](../supabase/migrations/20261030000011_guard_campaign_item_image_references.sql)。本次未連線或部署此 migration。
+2. migration 成功提交後，執行 [戰役物品圖片權限結構檢查](../supabase/tests/campaign_item_image_permissions.sql)；該檔案只檢查 trigger 與 SECURITY DEFINER 固定 search_path，最後會 `ROLLBACK`。
+3. 在隔離環境以不同真實 Auth 使用者驗證：非 DM 直接更新既有背包物品 `icon` 或 `item_base.icon` 為／從圖片參照時遭拒；非圖片欄位的既有權限行為不變；該戰役 DM 可完成圖片替換。另以 Storage API 驗證非 DM 上傳 campaign-assets 遭拒及 DM 上傳成功。
+4. 已知公開 URL 的讀取、campaign 跨範圍隔離、共享工坊來源圖不可覆寫／刪除，以及跨客戶端 Realtime／重載結果，仍須依階段二與階段四驗收標準實測。Migration／結構檢查通過不等於 Auth、Storage API 或 Realtime 已驗收。

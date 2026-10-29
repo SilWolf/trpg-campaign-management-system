@@ -38,7 +38,9 @@ export async function mockSupabase(
 	page: Page,
 	options: {
 		campaignSettingsRole?: CampaignSettingsRole;
+		campaignSettingsCharacterOwner?: string;
 		campaignSettingsSaveError?: string;
+		campaignCharacterUpdateError?: string;
 		campaignJourneysSeed?: Record<string, unknown>[];
 		campaignJourneyPrivateAccess?: 0 | 1 | 2;
 		campaignJourneyWriteError?: string;
@@ -208,7 +210,8 @@ export async function mockSupabase(
 			str: 14,
 			avatar: '🏹',
 			user_id:
-				campaignSettingsRole === 'player' ? testUser.id : 'other-player-id',
+				options.campaignSettingsCharacterOwner ??
+				(campaignSettingsRole === 'player' ? testUser.id : 'other-player-id'),
 			campaign_id: 'settings-campaign',
 			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
@@ -1179,6 +1182,31 @@ export async function mockSupabase(
 					: campaignInventoryRole
 					? inventoryCharacters
 					: campaignCharacters,
+			});
+			return;
+		}
+
+		if (
+			campaignRole &&
+			url.pathname === '/rest/v1/characters' &&
+			method === 'PATCH'
+		) {
+			if (options.campaignCharacterUpdateError) {
+				await route.fulfill({
+					status: 403,
+					json: { message: options.campaignCharacterUpdateError },
+				});
+				return;
+			}
+			const characterId = url.searchParams.get('id')?.slice('eq.'.length);
+			const character = campaignCharacters.find((row) => row.id === characterId);
+			if (!character) {
+				await route.fulfill({ json: null });
+				return;
+			}
+			Object.assign(character, request.postDataJSON());
+			await route.fulfill({
+				json: { id: character.id },
 			});
 			return;
 		}

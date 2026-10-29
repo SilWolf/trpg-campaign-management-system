@@ -41,6 +41,7 @@ import {
 	Wand2,
 } from 'lucide-react';
 import { Button, Input, Textarea } from '@/components/ui';
+import { CharacterAvatar } from '@/components/CharacterAvatar';
 
 interface ItemTooltipProps {
 	inspectedItem: InventoryItem | null;
@@ -151,6 +152,7 @@ export default function ItemTooltip({
 												<ItemIcon
 													iconName={inspectedItem.icon}
 													className={`w-8 h-8 ${rStyle.text}`}
+													imageSize='512'
 												/>
 											)}
 											{inspectedItem.isPrivate && (
@@ -824,7 +826,12 @@ export default function ItemTooltip({
 																		)
 																	}
 																>
-																	{target.avatar} {target.name.split(' ')[0]}
+																	<CharacterAvatar
+																		avatar={target.avatar}
+																		alt={`${target.name}頭像`}
+																		className='inline-block h-4 w-4 rounded-full object-cover align-middle'
+																	/>{' '}
+																	{target.name.split(' ')[0]}
 																	{inspectedItem.quantity > 1
 																		? ` (${transferQty})`
 																		: ''}

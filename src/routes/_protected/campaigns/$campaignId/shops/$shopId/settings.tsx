@@ -51,6 +51,7 @@ import ReactMarkdown from 'react-markdown';
 import { CampaignShopDialog } from '../-parts/CampaignShopDialog';
 import { CampaignShopRefreshPanel } from '../-parts/CampaignShopRefreshPanel';
 import ItemIcon from '../../-parts/ItemIcon';
+import { ItemImageUploadField } from '@/components/ItemImageUploadField';
 import { ShopTransactionsPanel } from '../-parts/ShopTransactionsPanel';
 import type {
 	BlacksmithTemplate,
@@ -965,6 +966,7 @@ function CampaignShopsPage() {
 																		<ItemIcon
 																			iconName={item.itemSnapshot.icon}
 																			className='h-6 w-6 text-foreground'
+																			imageSize='512'
 																		/>
 																	</div>
 																	<div className='min-w-0'>
@@ -1104,6 +1106,7 @@ function CampaignShopsPage() {
 														<ItemIcon
 															iconName={selectedItem.itemSnapshot.icon}
 															className='h-8 w-8 text-foreground'
+															imageSize='512'
 														/>
 													</div>
 													<div className='min-w-0 flex-1'>
@@ -1344,6 +1347,15 @@ function CampaignShopsPage() {
 													placeholder='例如：Sword、FlaskConical'
 												/>
 											</label>
+											<div className='sm:col-span-2'>
+												<ItemImageUploadField
+													bucket='campaign-assets'
+													scopeId={campaignId}
+													value={itemForm.icon}
+													disabled={!isDm || isGuest}
+													onChange={(icon) => updateItemForm('icon', icon)}
+												/>
+											</div>
 											<label className='text-sm text-foreground'>
 												物品分類
 												<select

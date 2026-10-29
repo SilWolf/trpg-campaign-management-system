@@ -2,8 +2,13 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { CAMP_CHEST_ID, type Character } from '@/types';
 import { UserPlus, Save, X, Shield } from 'lucide-react';
-import { Button, Input, Select } from '@/components/ui';
-import { useConfirm } from '@/contexts/FeedbackContext';
+import { Button, Input } from '@/components/ui';
+import { useConfirm, useToast } from '@/contexts/FeedbackContext';
+import { CharacterAvatarPicker } from '@/components/CharacterAvatarPicker';
+import {
+	DEFAULT_AVATAR_REFERENCE,
+	normalizeAvatarReference,
+} from '@/lib/imageReferences';
 
 interface CharacterModalProps {
 	isOpen: boolean;
@@ -13,23 +18,9 @@ interface CharacterModalProps {
 	canEditProfile?: boolean;
 	canDeleteCharacter?: boolean;
 	onClose: () => void;
-	onSave: (charData: Character) => void;
+	onSave: (charData: Character) => boolean | Promise<boolean>;
 	onDelete?: (charId: string) => void;
 }
-
-const AVATAR_OPTIONS = [
-	'🛡️',
-	'🧙‍♂️',
-	'🧝‍♀️',
-	'🗡️',
-	'🔮',
-	'🦇',
-	'🐉',
-	'🍀',
-	'🏹',
-	'📜',
-	'🌙',
-];
 
 export default function CharacterModal({
 	isOpen,
@@ -43,10 +34,13 @@ export default function CharacterModal({
 	onDelete,
 }: CharacterModalProps) {
 	const confirm = useConfirm();
+	const toast = useToast();
 	const [name, setName] = useState('');
 	const [title, setTitle] = useState('');
 	const [str, setStr] = useState(10);
-	const [avatar, setAvatar] = useState('🛡️');
+	const [avatar, setAvatar] = useState(DEFAULT_AVATAR_REFERENCE);
+	const [isSaving, setIsSaving] = useState(false);
+	const [isAvatarUploading, setIsAvatarUploading] = useState(false);
 
 	const isCreating = !character;
 	const allowFormEdit = isCreating || canEditProfile;
@@ -56,20 +50,20 @@ export default function CharacterModal({
 			setName(character.name);
 			setTitle(character.title);
 			setStr(character.str);
-			setAvatar(character.avatar || '🛡️');
+			setAvatar(normalizeAvatarReference(character.avatar));
 		} else {
 			setName('');
 			setTitle('冒險者');
 			setStr(10);
-			setAvatar('🛡️');
+			setAvatar(DEFAULT_AVATAR_REFERENCE);
 		}
 	}, [character, isOpen]);
 
 	if (!isOpen) return null;
 
-	const handleSubmit = (e: FormEvent) => {
+	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
-		if (!allowFormEdit || !name.trim()) return;
+		if (!allowFormEdit || !name.trim() || isSaving || isAvatarUploading) return;
 
 		const savedCharacter: Character = {
 			id: character ? character.id : `char-${Date.now()}`,
@@ -87,8 +81,17 @@ export default function CharacterModal({
 				: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		};
 
-		onSave(savedCharacter);
-		onClose();
+		setIsSaving(true);
+		try {
+			if (await onSave(savedCharacter)) onClose();
+		} catch (error) {
+			toast.error(
+				'新增角色失敗：' +
+					(error instanceof Error ? error.message : '未知錯誤'),
+			);
+		} finally {
+			setIsSaving(false);
+		}
 	};
 
 	return (
@@ -115,6 +118,7 @@ export default function CharacterModal({
 						size='sm'
 						aria-label='關閉角色編輯'
 						onClick={onClose}
+						disabled={isSaving}
 						prefixIcon={<X />}
 					>
 					</Button>
@@ -182,22 +186,14 @@ export default function CharacterModal({
 							</span>
 						</div>
 
-						<div>
-							<label className='block text-muted-foreground mb-1'>選擇頭像符號</label>
-							<Select
-								label='選擇頭像符號'
-								disabled={!allowFormEdit}
-								value={avatar}
-								onChange={(e) => setAvatar(e.target.value)}
-								data-testid='character-avatar'
-								className='w-full bg-card border border-border rounded px-3 py-1.5 text-foreground outline-none disabled:opacity-50'
-							>
-								{AVATAR_OPTIONS.map((icon) => (
-									<option key={icon} value={icon}>
-										{icon} 符號頭像
-									</option>
-								))}
-							</Select>
+						<div className='col-span-2'>
+							<CharacterAvatarPicker
+								avatar={avatar}
+								userId={userId}
+								disabled={!allowFormEdit || isSaving}
+								onChange={setAvatar}
+								onUploadingChange={setIsAvatarUploading}
+							/>
 						</div>
 					</div>
 
@@ -232,6 +228,7 @@ export default function CharacterModal({
 								type='button'
 								variant='secondary'
 								onClick={onClose}
+								disabled={isSaving || isAvatarUploading}
 							>
 								取消
 							</Button>
@@ -239,9 +236,10 @@ export default function CharacterModal({
 								<Button
 									type='submit'
 									variant='primary'
+									disabled={isSaving}
 									prefixIcon={<Save />}
 								>
-									<span>儲存角色</span>
+									<span>{isSaving ? '正在儲存…' : '儲存角色'}</span>
 								</Button>
 							)}
 						</div>

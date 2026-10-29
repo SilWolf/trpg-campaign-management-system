@@ -372,6 +372,7 @@ function CampaignShopDetail() {
 															<ItemIcon
 																iconName={item.itemSnapshot.icon}
 																className={`h-6 w-6 ${rarityStyle.text}`}
+																imageSize='512'
 															/>
 														)}
 													</div>
@@ -536,6 +537,7 @@ function CampaignShopDetail() {
 											<ItemIcon
 												iconName={selectedItem.itemSnapshot.icon}
 												className='h-8 w-8 text-foreground'
+												imageSize='512'
 											/>
 										)}
 									</div>

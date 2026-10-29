@@ -603,6 +603,7 @@ export function ShopTransactionsPanel({
 												<ItemIcon
 													iconName={item.itemSnapshot.icon}
 													className='h-6 w-6 text-foreground'
+													imageSize='512'
 												/>
 											)}
 										</div>

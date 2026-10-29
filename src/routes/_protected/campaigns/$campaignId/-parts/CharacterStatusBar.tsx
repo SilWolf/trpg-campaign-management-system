@@ -1,5 +1,6 @@
 import { Coins, Lock, Scale, Tent } from 'lucide-react';
 import { Button, Checkbox } from '@/components/ui';
+import { CharacterAvatar } from '@/components/CharacterAvatar';
 import {
 	CAMP_CHEST_ID,
 	type Character,
@@ -81,9 +82,11 @@ export default function CharacterStatusBar({
 													我
 												</span>
 											)}
-											<div className='w-8 h-8 rounded-full bg-muted border border-primary/50 flex items-center justify-center text-base shrink-0'>
-												{character.avatar}
-											</div>
+											<CharacterAvatar
+												avatar={character.avatar}
+												alt={`${character.name}頭像`}
+												className='h-8 w-8 shrink-0 rounded-full border border-primary/50 object-cover'
+											/>
 											<div className='overflow-hidden flex-1'>
 												<div className='text-xs font-serif font-bold truncate'>
 													{character.name}

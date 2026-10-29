@@ -13,6 +13,7 @@ import {
 import { useCampaignJourneys } from './-parts/CampaignJourneysContext';
 import { CampaignJourneyMarkdown } from './-parts/CampaignJourneyMarkdown';
 import { JourneyForm } from './-parts/JourneyForm';
+import { JourneyImageUploadField } from './-parts/JourneyImageUploadField';
 import type { CampaignJourneyDmNote } from '@/types';
 
 type DmNoteState = {
@@ -52,6 +53,7 @@ function CampaignJourneyDetails() {
 		note: null,
 	});
 	const [dmNoteDraft, setDmNoteDraft] = useState('');
+	const dmNoteTextareaRef = useRef<HTMLTextAreaElement>(null);
 	const [isEditingDmNote, setIsEditingDmNote] = useState(false);
 	const [isSavingDmNote, setIsSavingDmNote] = useState(false);
 	const [dmNoteReloadVersion, setDmNoteReloadVersion] = useState(0);
@@ -88,6 +90,26 @@ function CampaignJourneyDetails() {
 							).canManagePrivateJourneys,
 					))
 		: false;
+
+	function insertDmNoteImage(reference: string) {
+		const textarea = dmNoteTextareaRef.current;
+		if (!textarea) return;
+		const start = textarea.selectionStart;
+		const end = textarea.selectionEnd;
+		const currentContent = textarea.value;
+		const before = currentContent.slice(0, start);
+		const after = currentContent.slice(end);
+		const prefix = before.length > 0 && !before.endsWith('\n') ? '\n\n' : '';
+		const suffix = after.length > 0 && !after.startsWith('\n') ? '\n\n' : '';
+		const markdown = `![冒險筆記圖片](${reference})`;
+		const insertion = `${prefix}${markdown}${suffix}`;
+		setDmNoteDraft(`${before}${insertion}${after}`);
+		requestAnimationFrame(() => {
+			textarea.focus();
+			const cursor = before.length + insertion.length;
+			textarea.setSelectionRange(cursor, cursor);
+		});
+	}
 
 	useEffect(() => {
 		const version = ++dmNoteRequestVersion.current;
@@ -394,7 +416,10 @@ function CampaignJourneyDetails() {
 				className='min-w-0 overflow-hidden p-4 sm:p-6'
 			>
 				{journey.content ? (
-					<CampaignJourneyMarkdown content={journey.content} />
+					<CampaignJourneyMarkdown
+						content={journey.content}
+						campaignId={campaignId}
+					/>
 				) : (
 					<p className='text-sm italic text-muted-foreground'>尚無筆記內容。</p>
 				)}
@@ -456,12 +481,18 @@ function CampaignJourneyDetails() {
 									</p>
 								)}
 							<Textarea
+								ref={dmNoteTextareaRef}
 								label='DM 專屬內容'
 								value={dmNoteDraft}
 								onChange={(event) => setDmNoteDraft(event.target.value)}
 								rows={8}
 								description='僅戰役 DM 可讀取；支援 Markdown。'
 								data-testid='journey-dm-note-content'
+							/>
+							<JourneyImageUploadField
+								campaignId={campaignId}
+								journeyId={journey.id}
+								onInsert={insertDmNoteImage}
 							/>
 							<div className='flex flex-wrap justify-end gap-2'>
 								<Button
@@ -491,6 +522,7 @@ function CampaignJourneyDetails() {
 							<div className='mt-3'>
 								<CampaignJourneyMarkdown
 									content={currentDmNoteState.note.content}
+									campaignId={campaignId}
 								/>
 							</div>
 						) : (

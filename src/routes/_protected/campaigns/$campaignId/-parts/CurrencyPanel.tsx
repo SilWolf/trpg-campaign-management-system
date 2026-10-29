@@ -10,8 +10,10 @@ import {
 	Globe,
 	Lock,
 	ArrowLeftRight,
+	Tent,
 } from 'lucide-react';
 import { Button, Input, Select } from '@/components/ui';
+import { CharacterAvatar } from '@/components/CharacterAvatar';
 
 interface CurrencyPanelProps {
 	isOpen: boolean;
@@ -155,7 +157,16 @@ export default function CurrencyPanel({
 							id='currency-panel-heading'
 							className='text-base font-serif font-bold text-foreground'
 						>
-							{activeCharacter.avatar} {activeCharacter.name} — 錢包管理
+							{isCampChest ? (
+								<Tent className='inline-block h-5 w-5 align-middle text-primary-foreground' />
+							) : (
+								<CharacterAvatar
+									avatar={activeCharacter.avatar}
+									alt={`${activeCharacter.name}頭像`}
+									className='inline-block h-5 w-5 rounded-full object-cover align-middle'
+								/>
+							)}{' '}
+							{activeCharacter.name} — 錢包管理
 						</h2>
 					</div>
 					<Button
@@ -402,7 +413,13 @@ export default function CurrencyPanel({
 													)
 												}
 											>
-												轉給 {target.avatar} {target.name.split(' ')[0]}
+												轉給{' '}
+												<CharacterAvatar
+													avatar={target.avatar}
+													alt={`${target.name}頭像`}
+													className='inline-block h-4 w-4 rounded-full object-cover align-middle'
+												/>{' '}
+												{target.name.split(' ')[0]}
 											</Button>
 										))}
 								</div>

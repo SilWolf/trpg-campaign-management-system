@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "avatars": [
+    {
+      "id": "default",
+      "image": "./images/avatars/default.webp"
+    }
+  ]
+}

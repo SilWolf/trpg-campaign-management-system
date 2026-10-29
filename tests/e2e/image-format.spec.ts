@@ -10,13 +10,17 @@ test('圖片參照支援舊格式、穩定 ID 與受限 Storage path', async ({ 
 	expect(fallbackResponse.headers()['content-type']).toContain('image/webp');
 
 	const results = await page.evaluate(async () => {
-		const { resolveImageReference, resolveItemImageUrl } = await import(
-			'/src/lib/imageReferences.ts'
-		);
+		const {
+			normalizeAvatarReference,
+			resolveImageReference,
+			resolveItemImageUrl,
+		} = await import('/src/lib/imageReferences.ts');
 		const { getItemImageUrl } = await import('/src/lib/itemIcon.ts');
 		const baseUrl = '/campaign-app/';
 		return {
 			avatar: resolveImageReference('avatar:default', baseUrl),
+			legacyEmojiAvatar: normalizeAvatarReference('🛡️'),
+			emptyAvatar: normalizeAvatarReference(null),
 			static: resolveImageReference(
 				'./images/blacksmith/catalogs/sample/item.webp',
 				baseUrl,
@@ -57,7 +61,15 @@ test('圖片參照支援舊格式、穩定 ID 與受限 Storage path', async ({ 
 				'storage:campaign-assets/campaign-1/items/123e4567-e89b-42d3-a456-426614174001/128.webp',
 				baseUrl,
 			),
+			itemStorageVariantUrl: getItemImageUrl(
+				'storage:campaign-assets/campaign-1/items/123e4567-e89b-42d3-a456-426614174001/128.webp',
+				'512',
+			),
 			legacyStaticItemUrl: getItemImageUrl('./images/item.webp'),
+			staticCatalogItemUrl: getItemImageUrl(
+				'./images/blacksmith/catalogs/dnd-2024-srd-5.2/item-example.webp',
+				'512',
+			),
 			legacyExternalItemUrl: getItemImageUrl(
 				'image:https://example.com/item.webp',
 			),
@@ -68,6 +80,8 @@ test('圖片參照支援舊格式、穩定 ID 與受限 Storage path', async ({ 
 		kind: 'static',
 		url: '/campaign-app/images/avatars/default.webp',
 	});
+	expect(results.legacyEmojiAvatar).toBe('avatar:default');
+	expect(results.emptyAvatar).toBe('avatar:default');
 	expect(results.static).toEqual({
 		kind: 'static',
 		url: '/campaign-app/images/blacksmith/catalogs/sample/item.webp',
@@ -96,7 +110,13 @@ test('圖片參照支援舊格式、穩定 ID 與受限 Storage path', async ({ 
 	expect(results.rejectedTraversal).toBeNull();
 	expect(results.rejectedUnknownAvatar).toBeNull();
 	expect(results.itemStorageUrl).toBeNull();
+	expect(results.itemStorageVariantUrl).toBe(
+		'http://127.0.0.1:54321/storage/v1/object/public/campaign-assets/campaign-1/items/123e4567-e89b-42d3-a456-426614174001/512.webp',
+	);
 	expect(results.legacyStaticItemUrl).toBe('/images/item.webp');
+	expect(results.staticCatalogItemUrl).toBe(
+		'/images/blacksmith/catalogs/dnd-2024-srd-5.2/item-example-4x.webp',
+	);
 	expect(results.legacyExternalItemUrl).toBe('https://example.com/item.webp');
 });
 

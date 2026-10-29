@@ -170,7 +170,10 @@ function CampaignJourneysIndex() {
 							)}
 							{journey.content && (
 								<div className='mt-4 hidden max-h-24 overflow-hidden border-t border-border pt-3 text-xs text-muted-foreground md:block'>
-									<CampaignJourneyMarkdown content={journey.content} />
+									<CampaignJourneyMarkdown
+										content={journey.content}
+										campaignId={campaignId}
+									/>
 								</div>
 							)}
 						</Link>

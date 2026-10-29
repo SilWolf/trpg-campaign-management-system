@@ -114,7 +114,7 @@ function CampaignInventoryPage() {
 			name: '營地儲物箱',
 			title: '團隊共用行囊與公庫',
 			str: 999,
-			avatar: '🏕️',
+			avatar: 'avatar:default',
 			campaignId,
 			userId: '',
 			currencies: campChestCurrency,
@@ -521,6 +521,8 @@ function CampaignInventoryPage() {
 			<HomebrewModal
 				isOpen={actions.isHomebrewModalOpen}
 				isEditing={Boolean(actions.editingItemId)}
+				campaignId={campaignId}
+				canManageItemImage={isDm && !isGuest && Boolean(user)}
 				form={actions.newItemForm}
 				setForm={actions.setNewItemForm}
 				onSubmit={actions.handleSaveHomebrewOrEditItem}

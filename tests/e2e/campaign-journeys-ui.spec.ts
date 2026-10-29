@@ -185,7 +185,8 @@ test('直接進入未知筆記會顯示明確狀態，Markdown 不執行原始 H
 		campaignSettingsRole: 'player',
 		campaignJourneysSeed: [
 			journey({
-				content: '<script>window.__journeyXss = true</script>\n\n**安全的 Markdown**',
+				content:
+					'<script>window.__journeyXss = true</script>\n\n**安全的 Markdown**\n\n![安全 HTTPS 圖片](https://example.com/image.webp)\n\n![不安全協定](javascript:alert(1))\n\n![其他戰役圖片](storage:campaign-assets/other-campaign/journeys/journey-public-1/123e4567-e89b-42d3-a456-426614174001/image.webp)',
 			}),
 		],
 	});
@@ -199,10 +200,98 @@ test('直接進入未知筆記會顯示明確狀態，Markdown 不執行原始 H
 	await expect(page.getByTestId('journey-markdown-content').locator('script')).toHaveCount(
 		0,
 	);
+	await expect(page.getByTestId('journey-markdown-content').locator('img')).toHaveCount(
+		1,
+	);
+	await expect(page.getByTestId('journey-markdown-content').locator('img')).toHaveAttribute(
+		'src',
+		'https://example.com/image.webp',
+	);
 
 	await page.goto(`${journeysUrl}/unknown-journey`);
 	await expect(page.getByTestId('journey-not-found')).toContainText(
 		'找不到這篇筆記',
+	);
+});
+
+test('筆記編輯者可上傳圖片並插入受 campaign 限制的 Markdown 參照', async ({
+	page,
+}) => {
+	const { campaignJourneyWrites } = await mockSupabase(page, {
+		campaignSettingsRole: 'player',
+		campaignJourneysSeed: [journey()],
+	});
+	const uploadedPaths: string[] = [];
+	await page.route(
+		'http://127.0.0.1:54321/storage/v1/object/**',
+		async (route) => {
+			const request = route.request();
+			if (request.method() === 'POST') {
+				uploadedPaths.push(new URL(request.url()).pathname);
+				await route.fulfill({
+					status: 200,
+					json: { Key: uploadedPaths.at(-1) },
+				});
+				return;
+			}
+			await route.fulfill({
+				status: 200,
+				contentType: 'image/webp',
+				body: Buffer.from('mock-image'),
+			});
+		},
+	);
+	const pngBase64 = await page.evaluate(async () => {
+		const canvas = document.createElement('canvas');
+		canvas.width = 16;
+		canvas.height = 8;
+		const context = canvas.getContext('2d');
+		if (!context) throw new Error('測試無法建立圖片畫布。');
+		context.fillStyle = '#d97706';
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		const blob = await new Promise<Blob>((resolve, reject) => {
+			canvas.toBlob((result) => {
+				if (result) resolve(result);
+				else reject(new Error('測試圖片建立失敗。'));
+			}, 'image/png');
+		});
+		return btoa(String.fromCharCode(...new Uint8Array(await blob.arrayBuffer())));
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${journeysUrl}/journey-public-1`);
+	await page.getByTestId('journey-edit').click();
+	await page.getByTestId('journey-content').fill('既有筆記內容');
+	await page.getByLabel('選擇要上傳的筆記圖片').setInputFiles({
+		name: 'journey.png',
+		mimeType: 'image/png',
+		buffer: Buffer.from(pngBase64, 'base64'),
+	});
+
+	const content = page.getByTestId('journey-content');
+	await expect(content).toHaveValue(
+		/既有筆記內容\n\n!\[冒險筆記圖片\]\(storage:campaign-assets\/settings-campaign\/journeys\/journey-public-1\/[0-9a-f-]+\/image\.webp\)/,
+	);
+	expect(uploadedPaths).toHaveLength(1);
+	expect(uploadedPaths[0]).toMatch(
+		/\/campaign-assets\/settings-campaign\/journeys\/journey-public-1\/[0-9a-f-]+\/image\.webp$/,
+	);
+
+	await page.getByTestId('journey-save').click();
+	await expect(page.getByTestId('journey-markdown-content').locator('img')).toHaveAttribute(
+		'src',
+		/\/storage\/v1\/object\/public\/campaign-assets\/settings-campaign\/journeys\/journey-public-1\/[0-9a-f-]+\/image\.webp$/,
+	);
+	expect(campaignJourneyWrites).toContainEqual(
+		expect.objectContaining({
+			content: expect.stringMatching(
+				/storage:campaign-assets\/settings-campaign\/journeys\/journey-public-1\/[0-9a-f-]+\/image\.webp/,
+			),
+		}),
+	);
+	await page.reload();
+	await expect(page.getByTestId('journey-markdown-content').locator('img')).toHaveAttribute(
+		'src',
+		/\/storage\/v1\/object\/public\/campaign-assets\/settings-campaign\/journeys\/journey-public-1\/[0-9a-f-]+\/image\.webp$/,
 	);
 });
 

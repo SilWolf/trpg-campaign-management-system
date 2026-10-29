@@ -1,8 +1,12 @@
+import avatarIndex from '@/data/avatar-index.json';
+
 export const IMAGE_REFERENCE_PREFIX = {
 	avatar: 'avatar:',
 	storage: 'storage:',
 	external: 'image:',
 } as const;
+
+export const DEFAULT_AVATAR_REFERENCE = `${IMAGE_REFERENCE_PREFIX.avatar}default`;
 
 export const IMAGE_STORAGE_BUCKETS = [
 	'user-uploads',
@@ -27,9 +31,9 @@ type StorageAssetType = Extract<
 	{ kind: 'storage' }
 >['assetType'];
 
-const DEFAULT_AVATARS: Readonly<Record<string, string>> = {
-	default: './images/avatars/default.webp',
-};
+const DEFAULT_AVATARS: Readonly<Record<string, string>> = Object.fromEntries(
+	avatarIndex.avatars.map(({ id, image }) => [id, image]),
+);
 
 const UUID_PATTERN =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -181,6 +185,21 @@ export function resolveImageReference(
 	} catch {
 		return null;
 	}
+}
+
+export function normalizeAvatarReference(
+	reference: string | null | undefined,
+): string {
+	if (!reference) return DEFAULT_AVATAR_REFERENCE;
+	const resolved = resolveImageReference(reference, import.meta.env.BASE_URL);
+	if (
+		(reference.startsWith(IMAGE_REFERENCE_PREFIX.avatar) &&
+			resolved?.kind === 'static') ||
+		(resolved?.kind === 'storage' && resolved.assetType === 'avatar')
+	) {
+		return reference;
+	}
+	return DEFAULT_AVATAR_REFERENCE;
 }
 
 export function resolveItemImageUrl(

@@ -105,7 +105,7 @@ test('鍛造樣板可建立、分享設定、更新及刪除', async ({ page }) 
 });
 
 test('冒險者分享清單只顯示可讀取的已分享樣板', async ({ page }) => {
-	await mockSupabase(page, {
+	const mocks = await mockSupabase(page, {
 		blacksmithSharedItems: [
 			{
 				id: 'community-wand',
@@ -114,7 +114,7 @@ test('冒險者分享清單只顯示可讀取的已分享樣板', async ({ page 
 				category: 'Weapon',
 				sub_type: '法杖',
 				rarity: 'Rare',
-				icon: 'Wand',
+				icon: 'storage:blacksmith-assets/123e4567-e89b-42d3-a456-426614174000/items/123e4567-e89b-42d3-a456-426614174001/128.webp',
 				damage: '1d6',
 				mastery: 'None',
 				ac: null,
@@ -144,6 +144,20 @@ test('冒險者分享清單只顯示可讀取的已分享樣板', async ({ page 
 	await expect(
 		page.getByRole('button', { name: '編輯／分享設定' }),
 	).toHaveCount(0);
+	await page.getByRole('button', { name: '匯入戰役' }).click();
+	await page.getByLabel('目標戰役').selectOption('dm-campaign');
+	await page.getByRole('button', { name: '確認匯入' }).click();
+	await expect(
+		page.getByRole('status').filter({ hasText: '社群秘法法杖' }),
+	).toBeVisible();
+	const importedItem = (
+		mocks.blacksmithImportRequests[0] as {
+			p_item: { item_base: { icon: string } };
+		}
+	).p_item;
+	expect(importedItem.item_base.icon).toBe(
+		'storage:blacksmith-assets/123e4567-e89b-42d3-a456-426614174000/items/123e4567-e89b-42d3-a456-426614174001/128.webp',
+	);
 });
 
 test('官方目錄物品可選擇 DM 戰役與角色後匯入', async ({ page }) => {

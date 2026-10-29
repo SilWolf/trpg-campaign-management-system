@@ -8,6 +8,10 @@ import {
 	fromDbPermission,
 	toDbCharacter,
 } from '@/lib/supabase';
+import {
+	DEFAULT_AVATAR_REFERENCE,
+	normalizeAvatarReference,
+} from '@/lib/imageReferences';
 import { deleteCampaignCharacter } from '@/lib/campaignCharacterDeletion';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import { loadBlacksmithCatalogDefinitions } from '@/lib/blacksmithCatalog';
@@ -56,7 +60,7 @@ function CampaignSettingsPage() {
 	const [editCharName, setEditCharName] = useState('');
 	const [editCharTitle, setEditCharTitle] = useState('');
 	const [editCharStr, setEditCharStr] = useState(10);
-	const [editCharAvatar, setEditCharAvatar] = useState('🛡️');
+	const [editCharAvatar, setEditCharAvatar] = useState(DEFAULT_AVATAR_REFERENCE);
 
 	useEffect(() => {
 		async function fetchSettingsData() {
@@ -132,23 +136,7 @@ function CampaignSettingsPage() {
 			]);
 
 			if (charData) {
-				const characters = charData.map((c) => ({
-					id: c.id,
-					name: c.name,
-					title: c.title,
-					str: c.str,
-					avatar: c.avatar,
-					userId: c.user_id,
-					campaignId: c.campaign_id,
-					currencies: c.currencies || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-					privateCurrencies: c.private_currencies || {
-						pp: 0,
-						gp: 0,
-						ep: 0,
-						sp: 0,
-						cp: 0,
-					},
-				}));
+				const characters = charData.map(fromDbCharacter);
 				setCampaignCharacters(characters);
 				setActiveCharacterId(
 					characters.find((character) => character.id !== CAMP_CHEST_ID)?.id ??
@@ -220,7 +208,9 @@ function CampaignSettingsPage() {
 			setEditCharName(currentSelectedChar.name);
 			setEditCharTitle(currentSelectedChar.title);
 			setEditCharStr(currentSelectedChar.str);
-			setEditCharAvatar(currentSelectedChar.avatar || '🛡️');
+			setEditCharAvatar(
+				currentSelectedChar.avatar || DEFAULT_AVATAR_REFERENCE,
+			);
 		}
 	}, [currentSelectedChar]);
 
@@ -442,7 +432,7 @@ function CampaignSettingsPage() {
 			name: editCharName.trim() || currentSelectedChar.name,
 			title: editCharTitle.trim() || '冒險者',
 			str: Math.max(1, Math.min(30, Number(editCharStr) || 10)),
-			avatar: editCharAvatar,
+			avatar: normalizeAvatarReference(editCharAvatar),
 		};
 
 		setCampaignCharacters((prev) =>
@@ -450,7 +440,7 @@ function CampaignSettingsPage() {
 		);
 
 		if (supabase) {
-			const { error } = await supabase
+			const { data, error } = await supabase
 				.from('characters')
 				.update({
 					name: updatedChar.name,
@@ -459,11 +449,30 @@ function CampaignSettingsPage() {
 					avatar: updatedChar.avatar,
 				})
 				.eq('id', updatedChar.id)
-				.eq('campaign_id', campaignId);
+				.eq('campaign_id', campaignId)
+				.select('id')
+				.maybeSingle();
 
-			if (error) {
+			if (error || !data) {
+				setCampaignCharacters((previous) =>
+					previous.map((character) =>
+						character.id === currentSelectedChar.id
+							? currentSelectedChar
+							: character,
+					),
+				);
+				setEditCharAvatar(currentSelectedChar.avatar);
+				const preservedAvatarNotice =
+					updatedChar.avatar !== currentSelectedChar.avatar &&
+					updatedChar.avatar.startsWith('storage:user-uploads/')
+						? '；新頭像已保留，待確認未被引用後再清理。'
+						: '';
 				setNotice(null);
-				toast.error('更新角色資料失敗：' + error.message);
+				toast.error(
+					'更新角色資料失敗：' +
+						(error?.message ?? '沒有更新任何資料，請確認角色權限。') +
+						preservedAvatarNotice,
+				);
 				return;
 			}
 		}
@@ -728,17 +737,17 @@ function CampaignSettingsPage() {
 		}
 	};
 
-	const handleCreateCharacter = async (character: Character) => {
+	const handleCreateCharacter = async (character: Character): Promise<boolean> => {
 		if (!canCreateCharacter || !user?.id) {
 			setNotice(createCharacterTooltip);
-			return;
+			return false;
 		}
 		if (!supabase) {
 			setCampaignCharacters((previous) => [...previous, character]);
 			setActiveTab('characters');
 			setActiveCharacterId(character.id);
 			setNotice(`✨ 已在本機頁面暫存新增角色「${character.name}」；離開頁面後不會保留。`);
-			return;
+			return true;
 		}
 
 		setIsSavingNewCharacter(true);
@@ -756,12 +765,17 @@ function CampaignSettingsPage() {
 			setActiveCharacterId(createdCharacter.id);
 			setNotice(null);
 			toast.success(`已新增角色「${createdCharacter.name}」！`);
+			return true;
 		} catch (error) {
 			setNotice(null);
 			toast.error(
 				'新增角色失敗：' +
 					(error instanceof Error ? error.message : '未知錯誤'),
 			);
+			if (character.avatar.startsWith('storage:user-uploads/')) {
+				toast.error('角色新增結果可能尚未確認；新頭像已保留，待確認未被引用後再清理。');
+			}
+			return false;
 		} finally {
 			setIsSavingNewCharacter(false);
 		}

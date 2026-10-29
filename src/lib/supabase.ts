@@ -24,6 +24,7 @@ import {
 	type WeaponItemMastery,
 } from '@/types';
 import { normalizeCampaignShopRefreshPolicy } from '@/lib/campaignShopRefresh';
+import { normalizeAvatarReference } from '@/lib/imageReferences';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as
@@ -830,7 +831,7 @@ export interface DbCharacter {
 	id: string;
 	name: string;
 	title: string;
-	avatar: string;
+	avatar: string | null;
 	str: number;
 	user_id: string;
 	campaign_id: string;
@@ -842,7 +843,7 @@ export const toDbCharacter = (char: Character): DbCharacter => ({
 	id: char.id,
 	name: char.name,
 	title: char.title,
-	avatar: char.avatar,
+	avatar: normalizeAvatarReference(char.avatar),
 	str: Number(char.str),
 	user_id: char.userId,
 	campaign_id: char.campaignId,
@@ -860,7 +861,7 @@ export const fromDbCharacter = (row: DbCharacter): Character => ({
 	id: row.id,
 	name: row.name,
 	title: row.title,
-	avatar: row.avatar,
+	avatar: normalizeAvatarReference(row.avatar),
 	str: Number(row.str),
 	userId: row.user_id,
 	campaignId: row.campaign_id,

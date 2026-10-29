@@ -5,11 +5,12 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc --noEmit && vite build",
+		"build": "tsc --noEmit && vite build && node scripts/validate-static-image-catalog.mjs --dist",
 		"lint": "eslint . && npm run lint:theme-colors",
 		"lint:theme-colors": "node scripts/audit-theme-colors.mjs --check",
 		"test:e2e": "playwright test",
 		"validate:blacksmith-source": "node scripts/validate-blacksmith-source.mjs",
+		"validate:static-images": "node scripts/validate-static-image-catalog.mjs",
 		"split:item-icons": "node .scripts/items-icon-splitter/index.js",
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit"

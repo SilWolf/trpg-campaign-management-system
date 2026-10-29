@@ -29,10 +29,13 @@ import { Button, Checkbox, Input, Select, Textarea } from '@/components/ui';
 import { ITEM_CATEGORY_LABELS } from '@/data';
 import ItemIcon from './ItemIcon';
 import { ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
+import { ItemImageUploadField } from '@/components/ItemImageUploadField';
 
 interface HomebrewModalProps {
 	isOpen: boolean;
 	isEditing?: boolean;
+	campaignId: string;
+	canManageItemImage: boolean;
 	form: HomebrewForm;
 	setForm: Dispatch<SetStateAction<HomebrewForm>>;
 	onSubmit: (e: FormEvent<HTMLFormElement>) => void;
@@ -59,6 +62,8 @@ const ICON_OPTIONS = [
 export default function HomebrewModal({
 	isOpen,
 	isEditing = false,
+	campaignId,
+	canManageItemImage,
 	form,
 	setForm,
 	onSubmit,
@@ -71,6 +76,8 @@ export default function HomebrewModal({
 	if (!isOpen) return null;
 	const affixes = form.affixes || [];
 	const isImageIcon = form.icon.startsWith(ITEM_IMAGE_ICON_PREFIX);
+	const isStorageImage = form.icon.startsWith('storage:');
+	const displaysImage = isImageIcon || isStorageImage;
 	const imageUrl = isImageIcon
 		? form.icon.slice(ITEM_IMAGE_ICON_PREFIX.length)
 		: '';
@@ -386,14 +393,17 @@ export default function HomebrewModal({
 							</label>
 							<Select
 								aria-label='物品圖示來源'
-								value={isImageIcon ? 'image' : 'icon'}
+								value={displaysImage ? 'image' : 'icon'}
+								disabled={displaysImage && !canManageItemImage}
 								onChange={(e) =>
 									setForm({
 										...form,
 										icon:
 											e.target.value === 'image'
-												? `${ITEM_IMAGE_ICON_PREFIX}${imageUrl}`
-												: isImageIcon
+												? displaysImage
+													? form.icon
+													: `${ITEM_IMAGE_ICON_PREFIX}`
+												: displaysImage
 													? 'Sword'
 													: form.icon,
 									})
@@ -401,24 +411,29 @@ export default function HomebrewModal({
 								className='w-full bg-card border border-border rounded px-2.5 py-1.5 text-foreground outline-none'
 							>
 								<option value='icon'>使用 Lucide 圖示</option>
-								<option value='image'>使用圖片網址</option>
+								<option value='image' disabled={!canManageItemImage}>
+									使用圖片網址或上傳圖片
+								</option>
 							</Select>
-							{isImageIcon ? (
+							{displaysImage ? (
 								<div className='mt-2 flex items-center gap-3'>
-									<Input
-										aria-label='物品圖片網址'
-										type='url'
-										required
-										value={imageUrl}
-										onChange={(e) =>
-											setForm({
-												...form,
-												icon: `${ITEM_IMAGE_ICON_PREFIX}${e.target.value}`,
-											})
-										}
-										placeholder='https://example.com/item-image'
-										className='min-w-0 flex-1 bg-card border border-border rounded px-3 py-1.5 text-foreground outline-none'
-									/>
+									{isImageIcon && (
+										<Input
+											aria-label='物品圖片網址'
+											type='url'
+											required
+											disabled={!canManageItemImage}
+											value={imageUrl}
+											onChange={(e) =>
+												setForm({
+													...form,
+													icon: `${ITEM_IMAGE_ICON_PREFIX}${e.target.value}`,
+												})
+											}
+											placeholder='https://example.com/item-image'
+											className='min-w-0 flex-1 bg-card border border-border rounded px-3 py-1.5 text-foreground outline-none'
+										/>
+									)}
 									<div className='relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background'>
 										<ItemIcon
 											iconName={form.icon}
@@ -443,6 +458,16 @@ export default function HomebrewModal({
 							<p className='mt-1 text-[10px] text-muted-foreground'>
 								圖片網址須使用 HTTPS，建議使用正方形圖片。
 							</p>
+							{canManageItemImage && (
+								<div className='mt-3'>
+									<ItemImageUploadField
+										bucket='campaign-assets'
+										scopeId={campaignId}
+										value={form.icon}
+										onChange={(icon) => setForm((current) => ({ ...current, icon }))}
+									/>
+								</div>
+							)}
 						</div>
 						<div>
 							<label className='block text-muted-foreground mb-1'>

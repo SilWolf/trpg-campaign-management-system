@@ -71,7 +71,10 @@ test('DM 可在商店分頁多選戰役官方規則書', async ({ page }) => {
 test('一般成員只能檢視 Campaign 設定，且不能修改自己的權限列', async ({
 	page,
 }) => {
-	await mockSupabase(page, { campaignSettingsRole: 'player' });
+	await mockSupabase(page, {
+		campaignSettingsRole: 'player',
+		campaignSettingsCharacterOwner: 'other-player-id',
+	});
 	await seedAuthenticatedSession(page);
 	await page.goto(campaignSettingsUrl);
 
@@ -96,6 +99,10 @@ test('一般成員只能檢視 Campaign 設定，且不能修改自己的權限�
 		page.getByTestId(
 			'character-permission-journey-settings-character-a77ecb75-91dc-43a2-a20e-0a4c32fe8841',
 		),
+	).toBeDisabled();
+	await expect(page.getByTestId('character-avatar')).toBeDisabled();
+	await expect(
+		page.getByRole('button', { name: '上傳自訂頭像' }),
 	).toBeDisabled();
 	await expect(page.getByTestId('character-transfer')).toHaveCount(0);
 });
