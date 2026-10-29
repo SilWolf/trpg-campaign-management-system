@@ -106,7 +106,7 @@
 
 ### 階段一：Schema 與授權交易
 
-**本機實作狀態（尚未部署）：**已新增 [`20261029000000_unidentified_item_security.sql`](../supabase/migrations/20261029000000_unidentified_item_security.sql)，在 migration 中實作下列 schema、資料隔離、交易及資料庫授權。來源欄位移除與重建物品列流程當時尚未完成，已於階段二補齊。這些本機變更不代表真實 Supabase 已套用或驗收。
+**本機實作狀態（尚未部署）：**已新增 [`20261029000000_unidentified_item_security.sql`](../supabase/migrations/20261030000012_v0_1_0.sql)，在 migration 中實作下列 schema、資料隔離、交易及資料庫授權。來源欄位移除與重建物品列流程當時尚未完成，已於階段二補齊。這些本機變更不代表真實 Supabase 已套用或驗收。
 
 1. **已完成 schema 與歷史資料轉換。**新增三張資料表的私有快照欄位、商店及訂單的公開 `is_identified`，讓商店公開快照可為 `NULL`，並加入快照 JSON 檢查。Migration 先檢查現有商品、未鑑定背包物品及待審訂單的 `item_base`；無法安全保留時即中止。未鑑定公開資料只保留摘要，完整定義寫入私有欄位。
 2. **已完成資料庫交易保護。**訂單寫入 trigger 從已鎖定的商店商品複製安全快照及私有快照；既有購物車／單項購買與核准仍沿用同一交易和資料列鎖。結帳 RPC 建立背包物品時保留私有定義，完成、拒絕或取消後清除訂單私有快照。DM 商品拆分／寫入改由 `save_campaign_shop_item` 處理，回應只含商品 ID。
@@ -124,7 +124,7 @@
 1. **購買與鑑定 Edge Functions 已新增。**[`campaign-shop-purchase`](../supabase/functions/campaign-shop-purchase/index.ts) 與 [`identify-inventory-item`](../supabase/functions/identify-inventory-item/index.ts) 均要求 JWT；先驗證 bearer token，再使用伺服器端 service-role client 呼叫受限交易 RPC。請求具欄位白名單、大小與數量限制，回應只含識別碼／安全錯誤，不回傳資料列或隱藏快照；函式 JWT 設定已加入 [`config.toml`](../supabase/config.toml)。
 2. **客戶端商店服務已改接安全介面。**購買 UI 使用購買 Function；商品新增／編輯使用 `save_campaign_shop_item`，儲存 RPC 僅回傳商品 ID，之後由安全欄位 projection 重新載入。鑑定操作使用鑑定 Function，不再提供客戶端直接切換未鑑定狀態的路徑。
 3. **背包與商店讀取已改用明確欄位清單。**秘密快照不加入前端型別與轉換器。安全 Broadcast 訂閱按 campaign 共用單一 channel 並支援多個 listener；收到通知後重新讀取安全 projection，避免 row-based Realtime 傳送完整資料列。
-4. **商店來源欄位及刷新語意已更新。**[`20261030000000_unidentified_item_clients.sql`](../supabase/migrations/20261030000000_unidentified_item_clients.sql) 移除商店商品來源欄位與相依刷新比對；來源 ID 只作為刷新請求中的暫時政策候選驗證，不保存至資料列、不用來補貨或合併。保留模式會新增本次選取列；清除模式停用既有列並將庫存歸零，保留歷史訂單。介面已改用「新增／停用」文案。
+4. **商店來源欄位及刷新語意已更新。**[`20261030000000_unidentified_item_clients.sql`](../supabase/migrations/20261030000012_v0_1_0.sql) 移除商店商品來源欄位與相依刷新比對；來源 ID 只作為刷新請求中的暫時政策候選驗證，不保存至資料列、不用來補貨或合併。保留模式會新增本次選取列；清除模式停用既有列並將庫存歸零，保留歷史訂單。介面已改用「新增／停用」文案。
 5. **拆堆與移轉已改用資料庫交易。**拆堆／移轉 RPC 在伺服器端複製完整資料列及秘密快照；移轉堆疊合併會比較私有快照，避免不同的未鑑定物品定義被合併。
 6. **E2E 測試替身與舊契約預期已更新。**本機 mock 驗證新 Function／RPC 呼叫與刷新停用語意；這些測試不替代真實 Supabase 的 RLS、Realtime、service-role、交易併發或回滾驗收。
 

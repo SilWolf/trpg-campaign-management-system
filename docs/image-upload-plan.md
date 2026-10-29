@@ -293,14 +293,14 @@
 ### 階段二部署與檢查順序
 
 1. 維護者先確認目標 Supabase 專案、既有 migration history、目標 bucket 的用途、設定及既有物件。migration 會將三個 bucket 設為公開且更新大小與 MIME 限制；若既有內容不適合公開，必須先處理，不能直接套用。
-2. 確認先前必要 migration 已完成後，依專案既有部署程序執行 [Storage migration](../supabase/migrations/20261030000009_image_storage_permissions.sql)。若手動執行 SQL，須依維護者流程核對並記錄 migration history；不要只建立 bucket 而省略 policies 和頭像權限 trigger。
+2. 確認先前必要 migration 已完成後，依專案既有部署程序執行 [Storage migration](../supabase/migrations/20261030000012_v0_1_0.sql)。若手動執行 SQL，須依維護者流程核對並記錄 migration history；不要只建立 bucket 而省略 policies 和頭像權限 trigger。
 3. 確認 migration 成功並提交後，再執行 [Storage 驗收 SQL](../supabase/tests/image_storage_permissions.sql)。該檔案只是檢查，最後會 `ROLLBACK`，不會建立或修改 bucket；不可與尚未提交的 migration 放在同一個交易中執行，否則回滾可能撤銷 migration。
 4. 若驗收回報 bucket 不符，先以唯讀 SQL 查詢三個 bucket 的 `public`、`file_size_limit` 與 `allowed_mime_types`；新版驗收 SQL 也會列出缺少或不符的 bucket。確認 migration 的執行結果及目標專案後再處理，不要只修改驗收條件。
 5. SQL 結構檢查通過不代表 Storage API、現有 grants／policies 與不同使用者的實際權限已驗收；仍須在隔離專案依上述權限矩陣實測。
 
 ### 階段四部署與檢查順序
 
-1. 維護者確認目標 Supabase 專案及 migration history，並確認階段三 avatar reference migration 已正確完成，再依專案既有流程套用 [戰役物品圖片權限 migration](../supabase/migrations/20261030000011_guard_campaign_item_image_references.sql)。本次未連線或部署此 migration。
+1. 維護者確認目標 Supabase 專案及 migration history，並確認階段三 avatar reference migration 已正確完成，再依專案既有流程套用 [戰役物品圖片權限 migration](../supabase/migrations/20261030000012_v0_1_0.sql)。本次未連線或部署此 migration。
 2. migration 成功提交後，執行 [戰役物品圖片權限結構檢查](../supabase/tests/campaign_item_image_permissions.sql)；該檔案只檢查 trigger 與 SECURITY DEFINER 固定 search_path，最後會 `ROLLBACK`。
 3. 在隔離環境以不同真實 Auth 使用者驗證：非 DM 直接更新既有背包物品 `icon` 或 `item_base.icon` 為／從圖片參照時遭拒；非圖片欄位的既有權限行為不變；該戰役 DM 可完成圖片替換。另以 Storage API 驗證非 DM 上傳 campaign-assets 遭拒及 DM 上傳成功。
 4. 已知公開 URL 的讀取、campaign 跨範圍隔離、共享工坊來源圖不可覆寫／刪除，以及跨客戶端 Realtime／重載結果，仍須依階段二與階段四驗收標準實測。Migration／結構檢查通過不等於 Auth、Storage API 或 Realtime 已驗收。

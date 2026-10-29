@@ -165,7 +165,7 @@ DM 調整庫存時只編輯可用數量，且不得使庫存為負數。已保�
 3. [x] 新增直接購買、建立待審請求、核准、拒絕及取消 RPC。DM 商店／商品管理採受欄位權限與 RLS 保護的直接資料操作；訂單只能由 RPC 建立或轉換狀態。
 4. [ ] 以兩個以上帳號在隔離 Supabase 專案驗證權限、RLS、Realtime 及併發交易，再由維護者手動部署。
 
-**目前實作：** 基礎 migration 為 [`20261026000000_campaign_shops.sql`](../supabase/migrations/20261026000000_campaign_shops.sql)，整車結帳增量 migration 為 [`20261027000000_campaign_shop_cart_checkout.sql`](../supabase/migrations/20261027000000_campaign_shop_cart_checkout.sql)。原始 schema 只支援單項 RPC 結帳；新增 `checkout_id` 與 `checkout_campaign_shop_cart` 後，多項商品會在單一 PostgreSQL 交易內一併扣款／交付，或在包含任一審查商品時全數建立為同組待審記錄。核准、拒絕與取消也是整組處理。交易函式以資料列鎖保護商品庫存、訂單及角色錢包；價格以最多兩位小數的 gp 儲存並換算為整數 cp，找零只寫回訂單綁定的同一錢包。待審請求先保留庫存；其付款錢包種類只存於一般使用者不可讀寫的輔助表，不列入公開訂單欄位。付款不足或任何交付失敗會令 PostgreSQL 整筆交易回滾。
+**目前實作：** 基礎 migration 為 [`20261026000000_campaign_shops.sql`](../supabase/migrations/20261030000012_v0_1_0.sql)，整車結帳增量 migration 為 [`20261027000000_campaign_shop_cart_checkout.sql`](../supabase/migrations/20261030000012_v0_1_0.sql)。原始 schema 只支援單項 RPC 結帳；新增 `checkout_id` 與 `checkout_campaign_shop_cart` 後，多項商品會在單一 PostgreSQL 交易內一併扣款／交付，或在包含任一審查商品時全數建立為同組待審記錄。核准、拒絕與取消也是整組處理。交易函式以資料列鎖保護商品庫存、訂單及角色錢包；價格以最多兩位小數的 gp 儲存並換算為整數 cp，找零只寫回訂單綁定的同一錢包。待審請求先保留庫存；其付款錢包種類只存於一般使用者不可讀寫的輔助表，不列入公開訂單欄位。付款不足或任何交付失敗會令 PostgreSQL 整筆交易回滾。
 
 **尚未驗證／不可宣稱完成：** 此環境沒有 `psql` 或 Supabase CLI，本次未套用 migration，也未連線任何 Supabase 專案。兩帳號 RLS、Realtime、併發超賣及失敗回滾驗收仍待維護者在確認過的隔離專案執行；完成前不可視為已部署或通過資料庫驗收。
 

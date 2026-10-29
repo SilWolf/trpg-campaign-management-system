@@ -1,5 +1,7 @@
 # 戰役商店：手動部署與隔離環境驗收
 
+> v0.1.0 已將本文件列出的歷史商店及相依 migrations 依時間順序整合至 [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql)。下文出現的舊檔名用來說明來源與歷史依賴，不代表它們仍是獨立 migration。整合不會同步更新遠端 migration history；部署前須先由維護者核對並在隔離環境驗收，禁止直接推送整合檔。
+
 本文件涵蓋戰役商店 migrations `20261026000000_campaign_shops.sql`、`20261026000001_campaign_shop_item_delete.sql`、`20261027000000_campaign_shop_cart_checkout.sql`、`20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql`，以及後續的 `20261028000000_item_base_unification.sql`、`20261028000001_campaign_shop_refresh_categories.sql`、`20261028000002_campaign_official_catalogs.sql`、`20261028000003_campaign_shop_refresh_latest_rulebooks.sql`、`20261028000004_campaign_shop_unidentified_items.sql`、`20261029000000_unidentified_item_security.sql`、`20261030000000_unidentified_item_clients.sql`、`20261030000001_campaign_shop_refresh_latest_rulebooks.sql`、`20261030000002_campaign_shop_flat_item_snapshots.sql`。第二個 migration 補上 `authenticated` 刪除商品所需的 SQL 權限，並將 RLS 刪除權限限定為該戰役 DM；第三個 migration 新增購物車交易識別碼、整車原子結帳及整筆審查處理；第四個 migration 新增刷新政策欄位與驗證，以及 DM 專用的原子刷新 RPC；第五個 migration 讓刷新清除模式在同一交易內實際刪除退役商品，並回報刪除數量；第六個 migration 新增 `inventory_items.item_base` 與 `blacksmith_items.item_base` canonical JSON、擴充分類約束，並更新範例建團、鍛造匯入及購買交付 RPC 保存巢狀屬性。第七個 migration 更新刷新政策驗證，讓篩選器接受新版物品分類；第八個 migration 在 `campaigns.official_catalog_ids` 儲存每個戰役可用的官方規則書 ID，並以 CHECK constraint 驗證清單形狀與 ID 格式；第九個 migration 讓「此戰役的規則書」候選以動態標記儲存，於每次預覽重新讀取最新戰役目錄設定，並於刷新 RPC 中依最新設定展開來源；第十個 migration 讓商店商品快照保存鑑定狀態，並在結帳交付時沿用該狀態；第十一次 migration 新增未鑑定物品的秘密快照、資料庫交易與欄位授權；第十二個 migration 更新未鑑定物品用刷新 RPC，保留依最新戰役規則書設定展開來源的伺服器端驗證；第十三個 migration 將商店與訂單快照中的完整物品定義展平至 JSON 根層、回填舊格式，並新增僅 DM 可呼叫的未鑑定商品定義讀取 RPC。第六個 migration 不回填既有資料，部署前仍須由維護者確認規劃中的空資料表前提。本文不會替維護者連線、套用 SQL、部署或修改任何 Supabase 專案。本機 Playwright 使用 mock；測試通過不代表實際資料庫、RLS、Realtime 或交易 RPC 已驗收。
 
 本次另新增 `20261030000003_campaign_shop_refresh_hard_delete.sql`，讓清除刷新刪除舊商品時保留訂單快照；`20261030000004_campaign_shop_refresh_unidentified_items.sql` 修正刷新 RPC 對未鑑定商品的驗證與私有定義儲存；`20261030000005_campaign_shop_flavor.sql` 為商店新增風味描述欄位，預設空字串以相容既有商店。
@@ -10,7 +12,7 @@
 
 商店 migration 預期目標資料庫已具備本專案既有的 `campaigns`、`characters`、`campaign_members`、`character_permissions`、`inventory_items` 表格及 `is_campaign_member_or_dm(text)`、`is_campaign_dm(text)` 函式。它會先驗證必要欄位及型別；前置條件不符時應中止，不可略過檢查後強行部署。
 
-在 repository 的 migration 順序中，商店 migration 位於既有 schema baseline、戰役安全增量 migration 與鍛造工坊 migrations 之後。部署前須確認所有先決 migration 已在目標環境套用，遠端 migration history 與 repository 一致，且沒有其他未經本次變更核准的 pending migration。
+在整合前的 repository migration 順序中，商店 migration 位於既有 schema baseline、戰役安全增量 migration 與鍛造工坊 migrations 之後；該順序已保留在 v0.1.0 整合檔的來源區段中。部署前須確認所有先決 schema 條件，並先完成遠端 migration history 對齊；不得將舊版的逐檔套用步驟直接套用至目前的整合檔。
 
 商店 migration 新增：
 
@@ -36,6 +38,8 @@
 **未鑑定物品 migration 尚未部署，且目前不可單獨部署。**其權限收斂會中斷舊版商店直接寫入及整列 Realtime；須先完成規劃書階段二的 Edge Function、安全 projection、Broadcast listener，以及可保留秘密快照的拆堆／移轉流程。來源欄位 `source_type/source_id` 目前保留，待刷新 RPC 與客戶端同步改版後再移除。
 
 ## 部署前安全檢查
+
+> 以下逐檔部署命令與 migration ID 清單是整合前的歷史程序，**不可直接用於 v0.1.0**。先由維護者確認目標環境及舊 migration history，另行核准整合檔的套用／history 對齊方案；不得以舊清單、`--linked` 或 `db push` 自行推送。
 
 1. 由維護者確認部署目標、環境用途、專案參照及目前資料庫備份／還原方式。先選用可丟棄的隔離 Supabase 專案，不在未確認目標時登入、連結或執行部署命令。
 2. 確認隔離專案的 schema、migration history、先決 helper functions 與 publication，並檢視本文件所列的商店 migrations。
@@ -263,4 +267,4 @@ Playwright 對 Auth、REST、RPC 與 Edge Function 使用測試替身，適合�
 
 ## 目前狀態
 
-刷新 migrations `20261027000001_campaign_shop_refresh.sql`、`20261027000002_campaign_shop_refresh_delete.sql`、物品型別 migration `20261028000000_item_base_unification.sql` 及未鑑定商品 migration `20261028000004_campaign_shop_unidentified_items.sql` 已新增至 repository，但本文件與前端測試不代表 migration 已執行。本次工作不連線 Supabase、不執行 SQL、不部署任何 migration，也不修改 Secrets。目標環境的空資料表前提、schema、migration history、RLS、Realtime、併發交易及回滾狀態，均須由維護者依上列步驟手動驗收。
+上述功能的 SQL 已納入 v0.1.0 整合 migration；本文件與前端測試不代表整合檔已部署。本次工作不連線 Supabase、不執行 SQL、不部署任何 migration，也不修改 Secrets。目標環境的空資料表前提、schema、migration history、RLS、Realtime、併發交易及回滾狀態，均須由維護者先完成 history 對齊，再於隔離環境手動驗收。

@@ -151,14 +151,14 @@ interface CampaignShopRefreshRange {
 **本機實作紀錄（2026-10-27）**
 
 - 已完成政策型別、清除模式預設值、執行時驗證及舊商店缺少 `refresh_policy` 時的相容 fallback，實作於 [`src/types.ts`](../src/types.ts)、[`src/lib/campaignShopRefresh.ts`](../src/lib/campaignShopRefresh.ts) 與 [`src/lib/supabase.ts`](../src/lib/supabase.ts)。
-- 新增 [`supabase/migrations/20261027000001_campaign_shop_refresh.sql`](../supabase/migrations/20261027000001_campaign_shop_refresh.sql)：加入 `campaign_shops.refresh_policy`、JSONB 結構與範圍檢查、authenticated 欄位權限，以及 `refresh_campaign_shop_items` DM 專用交易 RPC。
+- 歷史來源 migration `20261027000001_campaign_shop_refresh.sql`（現已納入 [v0.1.0 整合檔](../supabase/migrations/20261030000012_v0_1_0.sql)）：加入 `campaign_shops.refresh_policy`、JSONB 結構與範圍檢查、authenticated 欄位權限，以及 `refresh_campaign_shop_items` DM 專用交易 RPC。
 - 商店資料服務已支援儲存政策和呼叫刷新 RPC，實作於 [`src/lib/campaignShops.ts`](../src/lib/campaignShops.ts)。確認刷新時以商店 `updated_at` 及全部商品的 ID／`updated_at` 快照拒絕過期預覽，依「商店列 → 商品列 ID 順序」鎖定；新增的刪除 migration 會在單一交易內移除清除模式的商品及其關聯訂單／付款列。
 - 官方目錄 ID 在前端儲存政策與組裝 RPC 變更時會對照 `catalog-index.json`；資料庫沒有官方目錄索引資料表，因此 RPC 只驗證來源識別格式及商品是否屬於當前政策列出的目錄／指定商品，不能獨立證明該目錄 ID 仍存在於靜態目錄索引。階段二候選解析器會在產生預覽時再次對照目前索引並驗證載入商品的目錄來源。
 - 已新增商店資料轉換 E2E 覆蓋政策序列化、舊商店 fallback、無效目錄及庫存上限，位於 [`tests/e2e/campaign-shop-data.spec.ts`](../tests/e2e/campaign-shop-data.spec.ts)。
 - 已同步更新 [`docs/campaign-shop-deployment.md`](./campaign-shop-deployment.md)，加入新 migration 的唯讀 schema／RPC 權限檢查，以及 DM 授權、過期預覽、回滾、待審保留庫存和 Realtime 的隔離驗收步驟。
 - 本機驗證：`npm run typecheck`、`npm run build`、`npm run test:e2e -- tests/e2e/campaign-shop-data.spec.ts`（2 項通過）；E2E 執行時並行 Lint 曾碰到 Playwright 清理 `test-results` 的掃描競態，之後單獨重跑 `npm run lint` 成功，只有商店路由既有的 unused eslint-disable 警告。
 - **部署狀態待核對：** 過往紀錄曾提及維護者已手動部署階段一 migration；但目前 [`campaign-shop-deployment.md`](./campaign-shop-deployment.md) 註明本工作未執行 migration，且本輪沒有目標環境或 migration history 的驗收證據。請維護者在確認的隔離環境核對實際狀態；在取得證據前，不將 migration 部署或資料庫驗收標記為完成。
-- 新增 [`supabase/migrations/20261027000002_campaign_shop_refresh_delete.sql`](../supabase/migrations/20261027000002_campaign_shop_refresh_delete.sql)：刷新清除模式會在原子 RPC 交易中刪除已退役商品列；依既有外鍵，相關訂單及付款輔助列一併刪除。RPC 回傳值改以 `deleted` 回報刪除數量。這項 migration 尚未部署，須依商店部署文件由維護者在確認的隔離環境手動驗收。
+- 歷史來源 migration `20261027000002_campaign_shop_refresh_delete.sql`（現已納入 [v0.1.0 整合檔](../supabase/migrations/20261030000012_v0_1_0.sql)）：刷新清除模式會在原子 RPC 交易中刪除已退役商品列；依既有外鍵，相關訂單及付款輔助列一併刪除。RPC 回傳值改以 `deleted` 回報刪除數量。整合前此來源 migration 尚未部署；整合 ID 的部署及資料庫驗收仍待維護者處理。
 
 ### 階段二：候選解析與抽樣
 

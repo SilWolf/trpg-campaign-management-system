@@ -4,44 +4,48 @@
 
 此 repo 的 Supabase CLI 目標固定為正式專案 `qbnghekzezuedzhkeotr`，部署命令會明確帶入此 project ref，不依賴本機目前連結的專案。npm scripts 透過 `npx` 使用固定版本 Supabase CLI `2.122.0`；可使用 `npm run supabase:login` 登入。不要將 access token、資料庫密碼或 service-role key 加入 repo、Vite 環境變數或聊天內容。
 
+## v0.1.0 migration 整合說明
+
+v0.1.0 將原本 27 個時間戳記 migration 依原順序合併至 [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql)；SQL 內的 `來源 migration` 註記保留各段來源。既有文件中的舊 migration 名稱是整合前的歷史名稱，不再是可個別套用的檔案。
+
+此整合不會改寫任何 Supabase 專案的 migration history。既有環境若登記了舊的 27 個版本，不能直接把整合檔當成一般 pending migration 執行；需由維護者先確認目標專案、遠端版本與資料備份，並在隔離環境規劃及驗證 history 對齊。這項工作未連線、套用 SQL、執行 migration repair 或部署任何 Supabase 資源。
+
+整合檔包含 `existing_schema_baseline` 檢核，要求核心應用程式資料表已存在且欄位型別相符；它不是可在全新空資料庫上建立所有核心資料表的初始化腳本。另有物品 schema 空資料表前提，若目標環境已有相關資料，必須先規劃資料修復，不可直接套用。
+
 ## 部署前檢核
 
 1. 在目標 Supabase 專案確認既有 `campaigns`、`campaign_members`、`characters`、`inventory_items` 等資料表與 Schema 保留。此處假設資料列已清空，不代表資料表也已刪除。
-2. 核對 `campaigns.id`、`campaigns.dm_id`、角色及物品 ID／`campaign_id` 為 `text`，`campaign_members.user_id` 為 `uuid`，並比對 `external/schema.md` 及 `supabase/migrations/20261023000000_existing_schema_baseline.sql`。基線 migration 只驗證保留中的 Schema，不會從空資料庫建立表格。
+2. 核對 `campaigns.id`、`campaigns.dm_id`、角色及物品 ID／`campaign_id` 為 `text`，`campaign_members.user_id` 為 `uuid`，並比對 `external/schema.md` 及 v0.1.0 整合 migration 中的 `existing_schema_baseline` 段落。該檢核只驗證保留中的 Schema，不會從空資料庫建立表格。
 3. 確認所有 `inventory_items.campaign_id` 均有值且指向既有戰役。增量 migration 不推測未知的戰役歸屬；遇到 `NULL` 或既有非 cascade 外鍵時會停止，先由維護者處理。
 4. 核對遠端 migration history。如歷史版本與此 repo 不一致，先處理基線／版本對齊，不可直接標記 migration 已套用。
 5. 先在隔離的 Supabase 專案驗證 SQL、RLS、函式權限和 Edge Function，再部署正式環境。
 
 ## 套用資料庫 migration
 
-先查詢遠端 migration history，檢視基線及 [20261023000001_campaign_creation_and_security.sql](../supabase/migrations/20261023000001_campaign_creation_and_security.sql)，再預覽推送計畫：
+先查詢遠端 migration history 並檢視 v0.1.0 整合 migration。由於整合前的遠端 history 仍可能保留舊版的 27 個 migration ID，以下只讀查詢／預覽不可視為已完成版本對齊：
 
 ```sh
 npm run supabase:migrations:list
 npm run supabase:db:dry-run
 ```
 
-確認 CLI 輸出的 project ref 為 `qbnghekzezuedzhkeotr`、遠端歷史與預覽 migration 均符合預期後，才明確執行：
+在維護者完成 history 對齊、隔離環境驗收並明確核准前，**不可執行 `db:push`**。不得用 `migration repair`、`--include-all` 或直接修改遠端 history 繞過差異。
 
-```sh
-npm run supabase:db:push
-```
-
-`db:push` 會套用遠端尚未執行的 migrations；不得略過 history 核對或 dry-run。若 CLI 顯示需要修正 migration history、baseline 或 DB 密碼，先停止並由維護者處理，不可用 `migration repair` 或 `--include-all` 繞過。
+整合前文件所記錄的「正式專案 dry-run 為 up-to-date」只適用於當時仍有 27 個獨立 migration 檔案的版本；不得據此推斷目前整合後的 repo 與任何遠端 history 一致。
 
 此 SQL 會新增 `campaigns.camp_chest_currency`；強制 `inventory_items.campaign_id`、外鍵、索引及 camp-chest 不可設私人等限制；限制 campaign、角色、物品、成員、邀請及角色權限資料依 campaign 成員資格存取；玩家只能更新 campaign 的公共營地箱錢包，DM 才能更新其他 campaign 欄位或刪除戰役。直接建立 campaign 或 campaign member 列會被限制，需使用安全函式。Migration 另提供邀請碼加入 RPC、僅 `service_role` 可執行的建團 RPC，並確認 `campaigns` 在 `supabase_realtime` publication 中。它不建立範本表、不放入範例 seed，也不建立 `default` 戰役。
 
 ### 物品驗證函式權限
 
-若修改物品時出現 `permission denied for function is_valid_item_base`，先確認目標專案與 migration history。[20261028000000_item_base_unification.sql](../supabase/migrations/20261028000000_item_base_unification.sql) 原已授權 `authenticated` 與 `service_role`；錯誤可能表示遠端權限或版本與此 repo 不一致，不能單憑訊息判定原因。
+若修改物品時出現 `permission denied for function is_valid_item_base`，先確認目標專案與 migration history。[20261028000000_item_base_unification.sql](../supabase/migrations/20261030000012_v0_1_0.sql) 原已授權 `authenticated` 與 `service_role`；錯誤可能表示遠端權限或版本與此 repo 不一致，不能單憑訊息判定原因。
 
-[20261030000007_item_base_validator_grants.sql](../supabase/migrations/20261030000007_item_base_validator_grants.sql) 重新授予上述角色執行物品定義驗證函式及其相依的附魔驗證函式，並維持 `PUBLIC`、`anon` 不直接取得執行權限。維護者應依前述流程先在隔離專案核對並套用所有待執行 migration；不要只修改已套用的歷史 migration。此變更不授予資料表存取權，也不取代 RLS。
+[20261030000007_item_base_validator_grants.sql](../supabase/migrations/20261030000012_v0_1_0.sql) 重新授予上述角色執行物品定義驗證函式及其相依的附魔驗證函式，並維持 `PUBLIC`、`anon` 不直接取得執行權限。維護者應依前述流程先在隔離專案核對並套用所有待執行 migration；不要只修改已套用的歷史 migration。此變更不授予資料表存取權，也不取代 RLS。
 
 套用後，由具備切換至 `authenticated`、`service_role` 權限的維護者在隔離專案執行 [item_base_validator_permissions.sql](../supabase/tests/item_base_validator_permissions.sql)。腳本檢查函式權限與既有 CHECK constraint，以兩個角色測試有效資料的寫入及無效資料的拒絕，最後回滾。另以實際登入帳號裝備、修改物品並保存鍛造樣板，確認真實資料表與 RLS 互動；測試腳本不取代這些驗收。
 
 ## 冒險筆記 Schema 與授權 migration
 
-[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；正式專案 Functions 清單確認此 Function 為 ACTIVE，但清單不驗證實際請求行為。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
+[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000012_v0_1_0.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；正式專案 Functions 清單確認此 Function 為 ACTIVE，但清單不驗證實際請求行為。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
 
 此 migration 會檢查所依賴的既有欄位型別、角色主鍵、授權 helper、物品 owner 關聯及 `supabase_realtime` 設定。既有角色擁有者權限列會取得 `journey_access = 2`；新增或轉移擁有權時亦由 DB trigger 同步。另以 restrictive RLS policy 阻止直接刪除角色，只有受限交易 RPC 能執行完整刪除。遇到缺欄位、型別不符、遺留孤兒物品或整個 schema 的 Realtime publication 時會停止，請先人工釐清，不要略過檢查或直接修改正式資料。migration 另以物品 owner trigger 與角色列鎖，避免刪角交易期間新增／移轉物品形成孤兒 owner。
 
@@ -54,11 +58,11 @@ npm run supabase:db:push
 - `anon`／`authenticated` 直接執行角色刪除 RPC 被拒；`service_role` 搭配未授權 actor 仍被拒。授權刪除後筆記轉公開且保留、背包和雙錢包併入營地箱；透過隔離測試觸發交易中途失敗，確認物品、貨幣、筆記與角色全部回滾。
 - 以平行角色移轉／新增物品及刪角請求驗證 owner 鎖定；確認不會留下指向已刪角色的物品，並確認每個戰役至少保留一名實體角色。
 
-本節記錄此功能的隔離環境驗收要求，不代表已完成真實 Supabase RLS／Realtime／交易驗收。維護者確認正式專案的 migrations 曾手動套用後，本次僅將版本登記到 migration history，沒有重新執行 SQL；正式 Function 的 ACTIVE 狀態也不等同於整合驗收完成。
+本節記錄此功能的隔離環境驗收要求，不代表已完成真實 Supabase RLS／Realtime／交易驗收。整合前曾記錄維護者確認正式專案的 migrations 已手動套用，且只更新 migration history、沒有重新執行 SQL；該紀錄不代表整合後的新 migration ID 已部署或已完成 history 對齊。正式 Function 的 ACTIVE 狀態也不等同於整合驗收完成。
 
 ### 冒險筆記隔離部署步驟
 
-以下步驟是**隔離 Supabase 專案**的驗收與首次部署流程，不是目前正式專案的待辦命令。正式專案已由維護者確認 migrations 曾手動套用，本次只補登 history；正式專案 dry-run 為 up-to-date。
+以下步驟是**隔離 Supabase 專案**的驗收與首次部署流程。關於正式專案曾手動套用 migrations 及 dry-run 為 up-to-date 的說明，均是整合前的歷史紀錄；目前不得將其視為 v0.1.0 整合 migration 已套用。
 
 1. **備份並核對目標。** 建立可還原的資料庫備份／還原點，確認 CLI 登入帳號、project ref、既有 Schema 與 migration history。核對必要前置 migration（包含既有 campaign 授權及 `20261030000007_item_base_validator_grants.sql`）已套用。只有在維護者確認 SQL 已手動執行後，才可將 `20261030000008_campaign_journeys.sql` 登記為已套用；不得只為消除待套用清單而標記。
 
@@ -150,6 +154,8 @@ supabase functions deploy delete-campaign-character --project-ref <正確的專�
 - camp-chest 物品若設 `is_private = true`，資料庫應拒絕寫入。
 
 ## 部署狀態
+
+> 以下是 v0.1.0 整合前的歷史紀錄，不代表目前整合 migration 的遠端狀態。
 
 使用者確認 repo 內 27 個 migrations 與既有 Edge Functions 曾手動部署，且正式資料庫留有手動測試資料。經使用者明確授權，本次以 `supabase migration repair --status applied` 將 27 個版本寫入正式專案 migration history；此操作只更新 migration tracking metadata，沒有執行 SQL migration 或改動應用資料。之後 `supabase migration list` 顯示 27 個版本一致，`supabase db push --dry-run` 回報 up-to-date。沒有清除測試資料、部署 Function 或存取／變更 secrets。
 

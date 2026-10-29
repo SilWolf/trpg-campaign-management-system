@@ -23,6 +23,8 @@ DM 可將任一目錄物品複製到自己有權管理的戰役及角色／營�
 
 **已知限制：**目前 537 筆包含 147 筆 `Consumable`、63 筆 `Weapon`、32 筆 `Armor`、295 筆 `Misc`；有 63 筆非空 `damage`、32 筆 `ac`，但沒有附魔詞條樣本。資料的授權名稱、版本與 URL 亦未包含在 JSON 中，發布來源內容前仍須由維護者確認。
 
+v0.1.0 已將本文件提及的 SQL 來源 migration 合併至 [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql)。下方原始檔名是 SQL 區段的歷史名稱；整合前維護者回報的手動執行紀錄，不代表新的整合 migration ID 已部署或完成資料庫驗收。
+
 **階段二已完成。**定義官方目錄型別，實作靜態目錄載入、結構／lookup 驗證及唯讀瀏覽 UI。現行路由為 `/blacksmith` 工坊大廳、`/blacksmith/officials` 規則書清單、`/blacksmith/officials/$catelogId` 單本目錄內容；`catelogId` 是既有路由參數拼字，新增功能沿用目前網址，不手動修改自動產生的路由樹。
 
 **階段三已完成程式實作、本機型別與 UI 測試。**已新增獨立 `blacksmith_items` migration、snake_case ↔ camelCase 轉換、雲端 CRUD 服務及 `/blacksmith/workshop` 鍛造／分享頁。migration 依維護者回報已在 Supabase 手動執行；多帳號 RLS、實際 schema 相容、取消分享後的拒絕仍未由真實資料庫驗收。
@@ -197,7 +199,7 @@ public/data/blacksmith/
 | 資料來源 | `public/data/blacksmith/catalog-index.json`、`public/data/blacksmith/catalogs/*`（由 `src/lib/blacksmithCatalog.ts` 讀取及驗證） |
 | 型別 | `src/types.ts`，新增 `BlacksmithItem` 及必要來源型別 |
 | snake_case ↔ camelCase 轉換 | `src/lib/supabase.ts`，新增 `DbBlacksmithItem`、轉換器及目錄正規化 helper（若適合） |
-| Supabase Schema／RLS | 新增 `supabase/migrations/<timestamp>_blacksmith_items.sql` |
+| Supabase Schema／RLS | SQL 已納入 [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql) 的 v0.1.0 整合檔 |
 | Supabase CRUD | `src/lib/blacksmithItems.ts` |
 | 頂層路由 | `src/routes/_protected/blacksmith/route.tsx`、`index.tsx`、`officials/` 及 `workshop.tsx` |
 | 大廳入口 | `src/routes/_protected/index.tsx` |
@@ -229,7 +231,7 @@ public/data/blacksmith/
 ### 階段三：資料庫、鍛造及分享
 
 - **狀態：程式實作及 mock 驗收完成；維護者已手動執行 migration，真實 RLS 驗收待完成。**
-- `supabase/migrations/20261024000000_blacksmith_items.sql` 建立獨立樣板資料表、owner／shared 查詢索引、欄位與附魔 JSONB 結構限制、更新時間 trigger，以及作者 CRUD／已登入者僅讀已分享列的 RLS。作者 ID 為 `uuid` 並 FK 至 `auth.users(id)`；不關聯 campaign 或 inventory。
+- 歷史來源 migration `20261024000000_blacksmith_items.sql`（現已納入 [v0.1.0 整合 migration](../supabase/migrations/20261030000012_v0_1_0.sql)）建立獨立樣板資料表、owner／shared 查詢索引、欄位與附魔 JSONB 結構限制、更新時間 trigger，以及作者 CRUD／已登入者僅讀已分享列的 RLS。作者 ID 為 `uuid` 並 FK 至 `auth.users(id)`；不關聯 campaign 或 inventory。
 - `BlacksmithTemplate` 型別及 `DbBlacksmithItem` 正反轉換位於 `src/types.ts`、`src/lib/supabase.ts`；`src/lib/blacksmithItems.ts` 實作讀取、建立、更新、刪除。建立由前端產生新的 UUID 樣板 ID，作者 ID 取自已登入 session；DB trigger 維護 `updated_at`。
 - `/blacksmith/workshop` 提供「我的樣板」與「冒險者分享」清單、名稱／類型／效果搜尋、建立／編輯／刪除及分享切換。新樣板預設私人；共享樣板為唯讀；取消分享只影響他人後續讀取，不會修改其他戰役中的既有副本。無 Supabase 或訪客模式會明確提示未保存，沒有本機成功假象。
 - 分享會公開完整樣板列，包含鍛造備註與附魔詞條；表單已提示備註會隨分享公開。共享清單目前以「分享樣板」標示，不揭露帳號 UUID 或作者姓名；未建立 profiles 關聯顯示機制。
@@ -244,7 +246,7 @@ public/data/blacksmith/
 - **狀態：前端與資料庫 migration 程式已完成；本機驗收後，新增匯入 RPC migration 仍待維護者手動部署及真實 Supabase 驗收。**
 - `src/components/blacksmith/BlacksmithImportButton.tsx` 提供共用匯入流程，已接在官方目錄物品詳情及鍛造／分享樣板卡片；戰役選擇僅列出 `campaigns.dm_id` 為目前使用者的戰役，接收目標為該戰役角色或虛擬 `camp-chest`。
 - `src/lib/blacksmithImport.ts` 將官方 `BlacksmithItem` 或 `BlacksmithTemplate` 明確轉為匯入定義，不沿用來源 ID、作者 ID 或分享狀態。官方物品初始化為非 homebrew，描述／來源分別映射至效果／風味；樣板則保留其物品定義屬性。
-- 新增 `supabase/migrations/20261024000001_blacksmith_campaign_import.sql`，建立 `SECURITY DEFINER` RPC `public.import_blacksmith_item`。RPC 於單一資料庫交易內驗證登入者、DM 身分、目標角色／戰役歸屬及數量，並以全新 UUID 字串 ID 建立 `inventory_items` 列。實例狀態初始化為未裝備、未調諧、未鑑定及目前充能 0；`camp-chest` 強制公開。RPC 限制僅 `authenticated` 可執行，不依賴前端 picker 作為授權邊界，也不變更現有 inventory 一般寫入 policy。
+- 歷史來源 migration `20261024000001_blacksmith_campaign_import.sql`（現已納入 [v0.1.0 整合 migration](../supabase/migrations/20261030000012_v0_1_0.sql)）建立 `SECURITY DEFINER` RPC `public.import_blacksmith_item`。RPC 於單一資料庫交易內驗證登入者、DM 身分、目標角色／戰役歸屬及數量，並以全新 UUID 字串 ID 建立 `inventory_items` 列。實例狀態初始化為未裝備、未調諧、未鑑定及目前充能 0；`camp-chest` 強制公開。RPC 限制僅 `authenticated` 可執行，不依賴前端 picker 作為授權邊界，也不變更現有 inventory 一般寫入 policy。
 - 匯入成功顯示戰役、接收角色及數量；失敗會顯示錯誤並保留匯入視窗。匯入寫入由 RPC 在單一列交易完成，之後由既有戰役初始載入及 inventory Realtime 訂閱顯示；此流程不涉及多列轉帳，不宣稱跨列原子性。
 - 本機驗證：`npm run build`（含 TypeScript typecheck）、受影響檔案 `npx eslint`、`npm run validate:blacksmith-source`、`git diff --check`，以及 `npm run test:e2e -- tests/e2e/blacksmith.spec.ts`（7 項）通過。E2E 使用 Supabase 測試替身，只證明 UI 與 RPC request contract，未驗證真實 RPC、RLS、資料庫 migration 或 Realtime。
 - **既有 inventory policy 邊界：**匯入介面只呼叫上述 DM 驗證 RPC；本階段沒有收窄既有 `inventory_items` 成員寫入 policy，避免破壞依角色 ACL 的日常新增物品、背包編輯及移轉流程。因此不能宣稱一般成員無法以既有直接 inventory REST INSERT 建立內容相同的物品列。若產品要求封鎖這種等效直寫，須另行設計並驗證兼容既有 ACL／新增／移轉的資料庫授權，不可只加 DM-only INSERT policy。
