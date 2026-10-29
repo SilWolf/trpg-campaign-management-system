@@ -21,11 +21,7 @@ import {
 	Trash2,
 	X,
 } from 'lucide-react';
-import {
-	ITEM_CATEGORY_LABELS,
-	RARITY_CONFIG,
-	WEAPON_MASTERIES,
-} from '@/data';
+import { ITEM_CATEGORY_LABELS, RARITY_CONFIG, WEAPON_MASTERIES } from '@/data';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/FeedbackContext';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
@@ -37,9 +33,7 @@ import {
 	subscribeCampaignSecureChanges,
 	type CampaignShopItemValues,
 } from '@/lib/campaignShops';
-import {
-	blacksmithItemToCampaignShopSnapshot,
-} from '@/lib/campaignShopRefresh';
+import { blacksmithItemToCampaignShopSnapshot } from '@/lib/campaignShopRefresh';
 import {
 	loadBlacksmithCatalogDefinitions,
 	loadBlacksmithCatalogs,
@@ -484,7 +478,8 @@ function CampaignShopsPage() {
 					setErrorMessage(getErrorMessage(error, '同步商品資料失敗。')),
 				);
 			},
-			(error) => setErrorMessage(getErrorMessage(error, '安全同步頻道連線失敗。')),
+			(error) =>
+				setErrorMessage(getErrorMessage(error, '安全同步頻道連線失敗。')),
 		);
 		return () => {
 			void supabase?.removeChannel(channel);
@@ -580,7 +575,9 @@ function CampaignShopsPage() {
 		const affixes = parseAffixes(itemForm.affixesJson);
 		const common = {
 			name,
-			subTypes: itemForm.subTypes.map((subType) => subType.trim()).filter(Boolean),
+			subTypes: itemForm.subTypes
+				.map((subType) => subType.trim())
+				.filter(Boolean),
 			rarity: itemForm.rarity,
 			icon: itemForm.icon.trim(),
 			weight,
@@ -945,13 +942,13 @@ function CampaignShopsPage() {
 												尚無商品
 											</div>
 										) : (
-											<div className='max-h-[38rem] divide-y divide-border overflow-y-auto'>
+											<div className='max-h-[39rem] divide-y divide-border overflow-y-auto'>
 												{paginatedItems.map((item) => {
 													const isSelected = selectedItem?.id === item.id;
 													return (
 														<article
 															key={item.id}
-															className='flex min-w-0 items-center gap-2 p-2'
+															className='flex min-w-0 items-center gap-2'
 															data-testid='shop-item-card'
 														>
 															<Button
@@ -960,6 +957,7 @@ function CampaignShopsPage() {
 																aria-label={`查看${item.itemSnapshot.name}`}
 																aria-pressed={isSelected}
 																onClick={() => setSelectedItemId(item.id)}
+																className='flex-1 text-left py-2 rounded-none'
 															>
 																<div className='flex min-w-0 flex-1 items-center gap-2'>
 																	<div className='relative h-9 w-9 shrink-0 overflow-hidden rounded border border-border bg-background'>
@@ -993,7 +991,7 @@ function CampaignShopsPage() {
 																	</div>
 																</div>
 																<div className='flex shrink-0 flex-col items-end gap-2'>
-																	<span className='font-mono text-sm text-primary-foreground'>
+																	<span className='font-mono text-sm text-money'>
 																		{item.unitPriceGp.toLocaleString('zh-TW')}{' '}
 																		gp
 																	</span>
@@ -1019,8 +1017,7 @@ function CampaignShopsPage() {
 																onClick={() => startItemEdit(item)}
 																aria-label={`編輯${item.itemSnapshot.name}`}
 																prefixIcon={<Pencil />}
-															>
-															</Button>
+															></Button>
 														</article>
 													);
 												})}
@@ -1064,9 +1061,7 @@ function CampaignShopsPage() {
 														onClick={() =>
 															setRequestedPage((page) => Math.max(1, page - 1))
 														}
-														prefixIcon={<ChevronLeft
-															aria-hidden='true'
-														/>}
+														prefixIcon={<ChevronLeft aria-hidden='true' />}
 													>
 														上一頁
 													</Button>
@@ -1081,11 +1076,7 @@ function CampaignShopsPage() {
 																Math.min(pageCount, page + 1),
 															)
 														}
-														prefixIcon={
-															<ChevronRight
-																aria-hidden='true'
-															/>
-														}
+														prefixIcon={<ChevronRight aria-hidden='true' />}
 													>
 														下一頁
 													</Button>
@@ -1141,7 +1132,9 @@ function CampaignShopsPage() {
 												<div className='grid grid-cols-2 gap-2 border-b border-border py-3 text-sm'>
 													{getItemDamage(selectedItem.itemSnapshot) && (
 														<div>
-															<p className='text-[11px] text-muted-foreground'>傷害</p>
+															<p className='text-[11px] text-muted-foreground'>
+																傷害
+															</p>
 															<p className='font-mono text-primary-foreground'>
 																{getItemDamage(selectedItem.itemSnapshot)}
 															</p>
@@ -1153,12 +1146,15 @@ function CampaignShopsPage() {
 																護甲等級
 															</p>
 															<p className='font-mono text-foreground'>
-																AC {getItemArmorClass(selectedItem.itemSnapshot)}
+																AC{' '}
+																{getItemArmorClass(selectedItem.itemSnapshot)}
 															</p>
 														</div>
 													)}
 													<div>
-														<p className='text-[11px] text-muted-foreground'>重量</p>
+														<p className='text-[11px] text-muted-foreground'>
+															重量
+														</p>
 														<p className='font-mono text-foreground'>
 															{selectedItem.itemSnapshot.weight} lb
 														</p>
@@ -1209,7 +1205,9 @@ function CampaignShopsPage() {
 														<span className='text-foreground'>消耗品</span>
 													)}
 													{selectedItem.itemSnapshot.isImportant && (
-														<span className='text-primary-foreground'>重要物品</span>
+														<span className='text-primary-foreground'>
+															重要物品
+														</span>
 													)}
 													{selectedItem.requiresApproval && (
 														<span className='text-foreground'>
@@ -1264,7 +1262,7 @@ function CampaignShopsPage() {
 												)}
 												<Button
 													type='button'
-													variant='ghost'
+													variant='secondary'
 													onClick={() => startItemEdit(selectedItem)}
 													prefixIcon={<Pencil />}
 												>
@@ -1317,8 +1315,7 @@ function CampaignShopsPage() {
 													setDeleteConfirmationItemId(null);
 												}}
 												prefixIcon={<X />}
-											>
-											</Button>
+											></Button>
 										</div>
 
 										<div className='grid gap-3 sm:grid-cols-2'>
@@ -1430,7 +1427,9 @@ function CampaignShopsPage() {
 													<label className='text-sm text-foreground'>
 														武器特性（以頓號分隔）
 														<Input
-															value={itemForm.weaponProperties.properties.join('、')}
+															value={itemForm.weaponProperties.properties.join(
+																'、',
+															)}
 															onChange={(event) =>
 																updateItemForm('weaponProperties', {
 																	...itemForm.weaponProperties,
@@ -1450,7 +1449,8 @@ function CampaignShopsPage() {
 															onChange={(event) =>
 																updateItemForm('weaponProperties', {
 																	...itemForm.weaponProperties,
-																	mastery: event.target.value as WeaponItemMastery | '',
+																	mastery: event.target.value as
+																		WeaponItemMastery | '',
 																})
 															}
 															className={`mt-1 ${INPUT_CLASS}`}
@@ -1555,11 +1555,7 @@ function CampaignShopsPage() {
 										<div className='grid gap-2 sm:grid-cols-2'>
 											{(
 												[
-													[
-														'isRequireAttunement',
-														'需要調諧',
-														'accent-primary',
-													],
+													['isRequireAttunement', '需要調諧', 'accent-primary'],
 													['isEquippable', '可裝備', 'accent-primary'],
 													['isConsumable', '消耗品', 'accent-primary'],
 													['isImportant', '重要物品', 'accent-primary'],
@@ -1637,7 +1633,10 @@ function CampaignShopsPage() {
 										{editingItem && (
 											<div className='border-t border-destructive/60 pt-3'>
 												{deleteConfirmationItemId === editingItem.id && (
-													<p role='alert' className='mb-2 text-sm text-destructive-foreground'>
+													<p
+														role='alert'
+														className='mb-2 text-sm text-destructive-foreground'
+													>
 														刪除商品會一併刪除其所有關聯訂單（包括待審與已完成），且無法復原。
 													</p>
 												)}
@@ -1705,8 +1704,7 @@ function CampaignShopsPage() {
 												aria-label='關閉鍛造工坊匯入'
 												onClick={() => setIsImportDialogOpen(false)}
 												prefixIcon={<X />}
-											>
-											</Button>
+											></Button>
 										</div>
 										<div
 											className='mt-4 flex flex-wrap gap-2'
@@ -1740,7 +1738,10 @@ function CampaignShopsPage() {
 											aria-label='搜尋商品來源'
 										/>
 										{sourceError && (
-											<p role='alert' className='mt-3 text-sm text-destructive-foreground'>
+											<p
+												role='alert'
+												className='mt-3 text-sm text-destructive-foreground'
+											>
 												{sourceError}
 											</p>
 										)}

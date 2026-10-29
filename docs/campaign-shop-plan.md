@@ -222,6 +222,8 @@ DM 調整庫存時只編輯可用數量，且不得使庫存為負數。已保�
 
 **尚未完成／部署限制：** 真實 Supabase migration、RLS、Realtime、RPC 併發及回滾未由本次執行；本次不連線、不執行 SQL、不部署或修改 Secrets。完成手動部署文件不等於已套用 migration 或已通過隔離驗收。
 
+**後續 GP-only 回歸驗證：** [campaign-shop-purchase.spec.ts](../tests/e2e/campaign-shop-purchase.spec.ts) 使用 Supabase mock 驗證指定公開／私人錢包的 `0.01 GP` 足額與不足情境；[currency-converters.spec.ts](../tests/e2e/currency-converters.spec.ts) 驗證角色雙錢包及營地箱在 GP／舊 JSONB 相容格式間的往返與金額拒絕規則。這些本機測試不驗證實際 RPC 權限、鎖定、併發或 PostgreSQL rollback。
+
 **完成條件：** 專案 typecheck、lint、build 與相關 E2E 全數通過；隔離 Supabase 的 RLS、Realtime、幣值與競爭交易由維護者實際驗收。兩項皆完成前，不得宣稱商店已部署或資料庫交易已通過驗收。
 
 ## 驗收清單

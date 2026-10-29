@@ -12,6 +12,14 @@ v0.1.0 將原本 27 個時間戳記 migration 依原順序合併至 [`2026103000
 
 整合檔包含 `existing_schema_baseline` 檢核，要求核心應用程式資料表已存在且欄位型別相符；它不是可在全新空資料庫上建立所有核心資料表的初始化腳本。另有物品 schema 空資料表前提，若目標環境已有相關資料，必須先規劃資料修復，不可直接套用。
 
+## GP-only 錢包 migration 狀態
+
+[`20261030000013_gp_wallet_schema_foundation.sql`](../supabase/migrations/20261030000013_gp_wallet_schema_foundation.sql) 新增 `characters.gp`、`characters.private_gp` 與 `campaigns.camp_chest_gp`，並由舊錢包回填及設定 GP 精度／範圍限制；舊 JSONB 欄位仍保留作相容鏡像。依維護者確認，foundation migration 已發佈及驗證；此確認不代表本次重新連線檢查，亦不代表後續 GP cutover 已部署。
+
+[`20261030000014_gp_wallet_shop_checkout.sql`](../supabase/migrations/20261030000014_gp_wallet_shop_checkout.sql) 將商店付款與結帳切換為扣除指定的公開或私人 GP 錢包，且在交易內維護舊 JSONB 相容鏡像。Repo 中該 migration 尚未標示為已套用；部署前仍須依本文件前述流程核對目標、migration history、隔離驗收與維護者授權。
+
+本機 [gp_wallet_schema_foundation.sql](../supabase/tests/gp_wallet_schema_foundation.sql) 是需在相符的隔離資料庫執行的 SQL 合約測試；Playwright E2E 與 Supabase mock 則只驗證前端／mock 契約。兩者皆不能代替隔離 Supabase 的多帳號 RLS、Realtime、RPC 授權、競爭交易及失敗回滾測試。`external/schema.md` 是歷史 schema 快照，目前仍記錄舊 JSONB 欄位；只有維護者核對實際部署 schema 後才可更新，不可用 migration source 或本機 mock 推定遠端狀態。
+
 ## 部署前檢核
 
 1. 在目標 Supabase 專案確認既有 `campaigns`、`campaign_members`、`characters`、`inventory_items` 等資料表與 Schema 保留。此處假設資料列已清空，不代表資料表也已刪除。

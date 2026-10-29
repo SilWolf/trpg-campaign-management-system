@@ -8,11 +8,11 @@
 
 ## 已確認的現況
 
-- `characters.currencies` 與 `characters.private_currencies` 是 JSONB 五面額錢包；`campaigns.camp_chest_currency` 是營地箱的 JSONB 錢包。資料庫基線及 schema 快照記載於 [20261030000012_v0_1_0.sql](../supabase/migrations/20261030000012_v0_1_0.sql) 與 [external/schema.md](../external/schema.md)。
-- 前端 `Character` 型別、`CurrencyType`、角色／營地箱資料轉換器及建團 seed 都依賴五面額格式，見 [types.ts](../src/types.ts)、[supabase.ts](../src/lib/supabase.ts)、[data.ts](../src/data.ts) 及 [create-campaign/index.ts](../supabase/functions/create-campaign/index.ts)。
-- 錢包 UI 包含五種幣值增減、面額選擇、轉帳、公私錢包互轉、營地箱平分及「一鍵將零錢換整為金幣」；入口與摘要也逐一顯示面額。相關位置為 [CurrencyPanel.tsx](../src/routes/_protected/campaigns/$campaignId/-parts/CurrencyPanel.tsx)、[CharacterStatusBar.tsx](../src/routes/_protected/campaigns/$campaignId/-parts/CharacterStatusBar.tsx) 及 [campaign/$campaignId/index.tsx](../src/routes/_protected/campaigns/$campaignId/index.tsx)。
-- 錢幣重量目前以錢幣枚數除以 50 計算，且依錢包閱讀 ACL 過濾；新算法必須保留此資訊隔離。錢包修改、角色間／營地箱移轉、平分及刪角併入營地箱分別涉及 [useInventoryActions.ts](../src/hooks/useInventoryActions.ts)、[useCampaignSync.ts](../src/hooks/useCampaignSync.ts) 及資料庫角色刪除交易。
-- 商店直接購買與核准流程目前將 JSONB 面額換算成整數 CP，再以所選公開或私人錢包付款。前端位於 [ShopTransactionsPanel.tsx](../src/routes/_protected/campaigns/$campaignId/shops/-parts/ShopTransactionsPanel.tsx)；資料庫包含 `shop_wallet_total_cp`、`shop_wallet_from_cp`、購物／結帳／核准 RPC 與 `campaign_shop_settle_order`。商店下單、待審保留庫存、核准、拒絕、取消及付款需維持資料庫交易原子性。
+- v0.1.0 基線以 `characters.currencies`、`characters.private_currencies` 及 `campaigns.camp_chest_currency` 儲存 JSONB 五面額錢包；foundation migration 已新增 GP 欄位但暫保留舊欄位作相容鏡像。基線及 schema 快照記載於 [20261030000012_v0_1_0.sql](../supabase/migrations/20261030000012_v0_1_0.sql) 與 [external/schema.md](../external/schema.md)。
+- 前端角色／營地箱轉換器以 GP 欄位為餘額來源，仍保留 `CurrencyType` 相容格式；範例 seed 與 `create-campaign` Edge Function 尚未切換到 GP API。相關位置為 [types.ts](../src/types.ts)、[supabase.ts](../src/lib/supabase.ts)、[data.ts](../src/data.ts) 及 [create-campaign/index.ts](../supabase/functions/create-campaign/index.ts)。
+- 背包錢包 UI 已改為 GP 單一餘額；保留公開／私人分頁、錢包 ACL、轉帳與營地箱操作，已移除面額選擇及換整功能。現況見 [CurrencyPanel.tsx](../src/routes/_protected/campaigns/$campaignId/-parts/CurrencyPanel.tsx)、[CharacterStatusBar.tsx](../src/routes/_protected/campaigns/$campaignId/-parts/CharacterStatusBar.tsx) 及 [campaign/$campaignId/index.tsx](../src/routes/_protected/campaigns/$campaignId/index.tsx)。
+- 錢幣重量改依可讀錢包的整數 GP 計算，每滿 1 GP 計 `0.02 lb`，並保留 ACL 隔離及計重切換。GP 修改、角色間／營地箱移轉與平分已在前端以整數分運算；跨列遠端移轉仍不是單一資料庫交易。
+- 商店結帳已從選定公開／私人 `gp` 錢包扣款，不再以 CP helper 換算或找零；待審、核准、拒絕、取消與付款仍由資料庫交易 RPC 處理。GP migration 尚未部署及通過隔離 Supabase 驗收。
 
 ## 建議的新資料與數值合約
 
@@ -98,9 +98,13 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 
 ### 5. 測試、mock 與文件
 
-- 修改 `tests/e2e/supabase-mock.ts` 的角色／campaign 欄位、seed 及 shop checkout mock；同步更新 [phase-1-baseline.spec.ts](../tests/e2e/phase-1-baseline.spec.ts)、[phase-3-inventory.spec.ts](../tests/e2e/phase-3-inventory.spec.ts) 和 [campaign-shop-purchase.spec.ts](../tests/e2e/campaign-shop-purchase.spec.ts)。
-- 搜尋並更新所有 `CurrencyType`、`currencies`、`privateCurrencies`、`camp_chest_currency`、幣值 key、幣值測試 ID、CP helper 及「換整」文案／測試；不要修改歷史發行紀錄來假裝舊版本已採用新規則。
-- 更新當前 schema／部署文件及商店規格，清楚區分「程式／mock 測試通過」與「隔離 Supabase 的 migration、RLS、Realtime、RPC 交易已驗收」。
+- [x] 檢視並更新 GP-only UI／shop checkout 對應的角色 GP 欄位、舊 JSONB 相容鏡像及 RPC 行為 mock；更新 [phase-1-baseline.spec.ts](../tests/e2e/phase-1-baseline.spec.ts)、[phase-3-inventory.spec.ts](../tests/e2e/phase-3-inventory.spec.ts) 和 [campaign-shop-purchase.spec.ts](../tests/e2e/campaign-shop-purchase.spec.ts)。建團 seed 目前仍採舊欄位是因 Edge Function／建團 RPC 尚未 cut over，不可把測試改成尚未實作的 API 合約。
+- [x] 更新 GP 操作與商店付款 E2E，新增 [currency-converters.spec.ts](../tests/e2e/currency-converters.spec.ts) 覆蓋角色公開／私人錢包及營地箱的 GP 往返、精度／上限邊界、不合法金額與相容欄位不一致。
+- [x] 搜尋幣值 ID、舊 CP helper 與「換整」文案／測試；保留 `CurrencyType`、`currencies`、`privateCurrencies` 及 `camp_chest_currency` 僅作未切換讀寫端所需相容欄位，不修改歷史發行紀錄。
+- [x] 更新 [campaign-shop-plan.md](./campaign-shop-plan.md) 與 [database-template-migration.md](./database-template-migration.md)，明確區分本機程式／mock／SQL 合約檢查及真實隔離 Supabase 驗收。未經維護者核對的 [schema.md](../external/schema.md) 快照維持原狀，不以規劃內容冒充實際 schema。
+- [x] 驗證 `npm run typecheck`、`npm run lint`、`npm run test:e2e` 及 `npm run build`；具體結果記於本階段下方。SQL 合約檔案為 [gp_wallet_schema_foundation.sql](../supabase/tests/gp_wallet_schema_foundation.sql)，本次未連線資料庫執行。
+
+**階段五執行結果：** 本機 Playwright E2E 共 117 項通過；新增轉換器回歸測試覆蓋 `0`、`0.01`、`0.99`、`1`、`1.99`、`999,999.99`、`1,000,000.00 GP` 的公開／私人角色錢包及營地箱往返，並確認負數、`0.001`、超限、NaN／Infinity、無效字串及新舊欄位不一致會被拒絕。上述結果不代表已執行資料庫 SQL 測試，也不代表隔離 Supabase 的 RLS、Realtime、RPC 權限、併發或回滾已驗收。
 
 ## 驗收清單
 
@@ -133,7 +137,7 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 2. [ ] 在隔離資料庫完成只讀資料盤點及 migration 預演，取得維護者核准後建立增量 migration。
 3. [ ] 更新 DB 型別、seed／建團 RPC、角色刪除 RPC、商店交易 RPC 及 schema 文件。
 4. [ ] 更新 TypeScript 型別／轉換器、同步 hook、錢包行為、重量與 UI。（錢包行為、重量與 UI 的階段三已完成；其他 GP cutover 仍待辦。）
-5. [ ] 更新 mock、E2E、資料庫測試與商店規劃文件；執行 typecheck、lint、相關測試及 build。（階段三 mock／E2E 與程式檢查已完成；資料庫及商店驗收仍待辦。）
+5. [x] 更新 mock、E2E 與商店／部署規劃文件，並執行 typecheck、lint、E2E 及 build。資料庫 SQL 合約測試已有版本，但本次未在資料庫執行；真實隔離 Supabase 驗收仍待辦。
 6. [ ] 先在隔離專案完成 migration、RLS、Realtime、交易與真實登入流程驗收；再由維護者確認部署目標、migration history 與備份，按核准順序部署。
 7. [ ] 以協調的首次上線流程部署已驗收的 migration、Edge Function 與前端；更新並核對正式 schema 快照。
 

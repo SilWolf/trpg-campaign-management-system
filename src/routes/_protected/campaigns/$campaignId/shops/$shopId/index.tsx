@@ -250,7 +250,9 @@ function CampaignShopDetail() {
 		return (
 			<main className='rounded-lg border border-border bg-card/60 p-8 text-center'>
 				<Store className='mx-auto mb-3 h-8 w-8 text-muted-foreground' />
-				<p className='text-muted-foreground'>找不到這家商店，或商店目前未營業。</p>
+				<p className='text-muted-foreground'>
+					找不到這家商店，或商店目前未營業。
+				</p>
 				<Link
 					to='/campaigns/$campaignId/shops'
 					params={{ campaignId }}
@@ -283,11 +285,7 @@ function CampaignShopDetail() {
 						to='/campaigns/$campaignId/shops/$shopId/settings'
 						params={{ campaignId, shopId }}
 					>
-						<Button
-							type='button'
-							variant='secondary'
-							prefixIcon={<Pencil />}
-						>
+						<Button type='button' variant='secondary' prefixIcon={<Pencil />}>
 							商店設定
 						</Button>
 					</Link>
@@ -329,7 +327,7 @@ function CampaignShopDetail() {
 								尚無商品
 							</div>
 						) : (
-							<div className='max-h-[38rem] divide-y divide-border overflow-y-auto'>
+							<div className='h-[39rem] divide-y divide-border overflow-y-auto'>
 								{paginatedItems.map((item) => {
 									const isSelected = selectedItem?.id === item.id;
 									const quantity = cartQuantities[item.id] ?? 0;
@@ -360,6 +358,7 @@ function CampaignShopDetail() {
 												aria-pressed={isSelected}
 												onClick={() => setSelectedItemId(item.id)}
 												data-testid='shop-item-card'
+												className='flex-1 py-2 rounded-none text-left'
 											>
 												<div className='flex min-w-0 flex-1 items-center gap-2'>
 													<div
@@ -432,8 +431,7 @@ function CampaignShopDetail() {
 														}))
 													}
 													prefixIcon={<Minus />}
-												>
-												</Button>
+												></Button>
 												<span
 													className='min-w-6 text-center font-mono text-sm text-foreground'
 													data-testid={`shop-cart-quantity-${item.id}`}
@@ -453,8 +451,7 @@ function CampaignShopDetail() {
 														}))
 													}
 													prefixIcon={<Plus />}
-												>
-												</Button>
+												></Button>
 											</div>
 										</div>
 									);
@@ -506,11 +503,7 @@ function CampaignShopDetail() {
 										onClick={() =>
 											setRequestedPage((page) => Math.min(pageCount, page + 1))
 										}
-										prefixIcon={
-											<ChevronRight
-												aria-hidden='true'
-											/>
-										}
+										prefixIcon={<ChevronRight aria-hidden='true' />}
 									>
 										下一頁
 									</Button>
@@ -567,7 +560,9 @@ function CampaignShopDetail() {
 									{!selectedItemIsUnidentified &&
 										getItemDamage(selectedItem.itemSnapshot) && (
 											<div>
-												<p className='text-[11px] text-muted-foreground'>傷害</p>
+												<p className='text-[11px] text-muted-foreground'>
+													傷害
+												</p>
 												<p className='font-mono text-primary-foreground'>
 													{getItemDamage(selectedItem.itemSnapshot)}
 												</p>
@@ -576,7 +571,9 @@ function CampaignShopDetail() {
 									{!selectedItemIsUnidentified &&
 										getItemArmorClass(selectedItem.itemSnapshot) && (
 											<div>
-												<p className='text-[11px] text-muted-foreground'>護甲等級</p>
+												<p className='text-[11px] text-muted-foreground'>
+													護甲等級
+												</p>
 												<p className='font-mono text-foreground'>
 													AC {getItemArmorClass(selectedItem.itemSnapshot)}
 												</p>
@@ -591,13 +588,17 @@ function CampaignShopDetail() {
 										</div>
 									)}
 									<div>
-										<p className='text-[11px] text-muted-foreground'>商店價格</p>
+										<p className='text-[11px] text-muted-foreground'>
+											商店價格
+										</p>
 										<p className='font-mono text-money'>
 											{selectedItem.unitPriceGp.toLocaleString('zh-TW')} gp
 										</p>
 									</div>
 									<div>
-										<p className='text-[11px] text-muted-foreground'>可用庫存</p>
+										<p className='text-[11px] text-muted-foreground'>
+											可用庫存
+										</p>
 										<p className='font-mono text-foreground'>
 											{selectedItem.stockAvailable}
 										</p>
