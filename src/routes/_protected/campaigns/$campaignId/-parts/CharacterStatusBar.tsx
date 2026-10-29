@@ -29,7 +29,10 @@ export interface CharacterStatusBarProps {
 	displayedGp: number;
 	isDisplayingPrivateWallet: boolean;
 	canReadDisplayedWallet: boolean;
+	canEditDisplayedWallet: boolean;
+	isDm: boolean;
 	onOpenCurrencyPanel: () => void;
+	onOpenCurrencyEdit: () => void;
 }
 
 export default function CharacterStatusBar({
@@ -50,7 +53,10 @@ export default function CharacterStatusBar({
 	displayedGp,
 	isDisplayingPrivateWallet,
 	canReadDisplayedWallet,
+	canEditDisplayedWallet,
+	isDm,
 	onOpenCurrencyPanel,
+	onOpenCurrencyEdit,
 }: CharacterStatusBarProps) {
 	if (placement === 'characters') {
 		return (
@@ -229,30 +235,57 @@ export default function CharacterStatusBar({
 									: '角色公開錢包'}
 						</span>
 					</span>
-					<Button
-						type='button'
-						variant='secondary'
-						size='sm'
-						data-testid='inventory-currency-open'
-						onClick={onOpenCurrencyPanel}
-					>
-						管理錢包
-					</Button>
+					<div className='flex items-center gap-1.5'>
+						{isDm && (
+							<Button
+								type='button'
+								variant='secondary'
+								size='sm'
+								data-testid='inventory-currency-edit'
+								onClick={onOpenCurrencyEdit}
+							>
+								修改
+							</Button>
+						)}
+						{canEditDisplayedWallet && (
+							<Button
+								type='button'
+								variant='secondary'
+								size='sm'
+								data-testid='inventory-currency-open'
+								onClick={onOpenCurrencyPanel}
+							>
+								轉帳
+							</Button>
+						)}
+					</div>
 				</div>
 
-				<Button
-					type='button'
-					variant='ghost'
-					size='sm'
-					data-testid='currency-summary-gp'
-					onClick={onOpenCurrencyPanel}
-					aria-label='GP 餘額，點擊開啟錢包管理'
-				>
+				{canEditDisplayedWallet ? (
+					<Button
+						type='button'
+						variant='ghost'
+						size='sm'
+						data-testid='currency-summary-gp'
+						onClick={onOpenCurrencyPanel}
+						aria-label='GP 餘額，點擊開啟轉帳'
+					>
+						<div className='text-xs font-mono font-bold text-money'>
+							{canReadDisplayedWallet ? `${displayedGp} GP` : '🔒'}
+						</div>
+						<div className='text-[9px] opacity-80'>GP 餘額</div>
+					</Button>
+				) : (
+					<div
+						data-testid='currency-summary-gp'
+						className='inline-flex flex-col items-center justify-center rounded-control px-3 py-2 text-sm'
+					>
 					<div className='text-xs font-mono font-bold text-money'>
 						{canReadDisplayedWallet ? `${displayedGp} GP` : '🔒'}
 					</div>
 					<div className='text-[9px] opacity-80'>GP 餘額</div>
-				</Button>
+					</div>
+				)}
 			</div>
 		</div>
 	);

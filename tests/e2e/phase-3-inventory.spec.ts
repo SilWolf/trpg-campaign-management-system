@@ -40,17 +40,19 @@ test('一般成員只能閱讀公開背包與公開錢包，私人資料和負�
 	);
 	await expect(page.getByTestId('inventory-encumbrance')).toContainText('1.4 / 150 lbs');
 
-	await page.getByTestId('inventory-currency-open').last().click();
-	await expect(page.getByTestId('currency-panel')).toBeVisible();
-	await expect(page.getByTestId('currency-balance-gp')).toContainText('20');
-	await expect(page.getByTestId('currency-wallet-private')).toBeDisabled();
-	await expect(page.getByTestId('currency-balance-gp')).not.toContainText('80');
+	await expect(page.getByTestId('inventory-currency-edit')).toHaveCount(0);
+	await expect(page.getByTestId('inventory-currency-open')).toHaveCount(0);
+	await expect(page.getByTestId('currency-summary-gp')).not.toHaveAttribute(
+		'aria-label',
+		'GP 餘額，點擊開啟轉帳',
+	);
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
 	await expect(page.getByTestId('currency-summary-pp')).toHaveCount(0);
 	await expect(page.getByText('一鍵將零錢換整為金幣 (GP)')).toHaveCount(0);
 });
 
-test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', async ({ page }) => {
-	const { requests, characterWrites } = await mockSupabase(page, {
+test('DM 可切換公開與私人背包、搜尋檢視並開啟轉帳', async ({ page }) => {
+	const { requests } = await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 	});
 	await seedAuthenticatedSession(page);
@@ -117,25 +119,75 @@ test('DM 可切換公開與私人背包、搜尋檢視並編輯公開錢包', as
 		.toBe(true);
 
 	await page.getByTestId('inventory-currency-open').last().click();
-	await expect(page.getByTestId('currency-wallet-public')).toBeEnabled();
-	await page.getByTestId('currency-add-gp-1').click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('21');
-	await page.getByTestId('currency-add-gp-cent').click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('21.01');
-	await page.getByTestId('currency-remove-gp-cent').click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('21');
+	await expect(page.getByTestId('currency-source-wallet')).toHaveValue(
+		JSON.stringify(['inventory-character', 'public']),
+	);
+	await expect(page.getByTestId('currency-source-wallet')).toContainText(
+		'測試冒險者 — 公開錢包（20 GP）',
+	);
+	await expect(page.getByTestId('currency-panel')).not.toContainText('+1');
+	await expect(page.getByTestId('currency-panel')).not.toContainText('−1');
+	await expect(page.getByTestId('currency-panel')).not.toContainText('+0.01');
+	await expect(page.getByTestId('currency-panel')).not.toContainText('−0.01');
+	await page.getByRole('button', { name: '取消' }).click();
+	await page.getByRole('button', { name: /私人暗袋/ }).click();
+	await page.getByTestId('inventory-currency-open').last().click();
+	await expect(page.getByTestId('currency-source-wallet')).toHaveValue(
+		JSON.stringify(['inventory-character', 'private']),
+	);
+	await page.getByRole('button', { name: '取消' }).click();
+	await expect(requests.some((request) => request.startsWith('POST /rest/v1/characters'))).toBe(
+		false,
+	);
+});
+
+test('只有 DM 可開啟修改存款表單並直接設定各戶口金額', async ({ page }) => {
+	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
+		campaignInventoryRole: 'dm',
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(inventoryUrl);
+
+	await expect(page.getByTestId('inventory-currency-edit').last()).toBeVisible();
+	await page.getByTestId('inventory-currency-edit').last().click();
+	await expect(page.getByTestId('currency-edit-panel')).toBeVisible();
+	await expect(page.getByTestId('currency-edit-balance')).toHaveValue('20');
+	await page.getByTestId('currency-edit-balance').fill('123.45');
+	await page.getByTestId('currency-edit-save').click();
+	await expect(page.getByTestId('currency-edit-panel')).toHaveCount(0);
 	await expect
 		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
 		.toMatchObject({
-			gp: 21,
-			private_gp: 80,
-			currencies: { gp: 21, cp: 0 },
+			gp: 123.45,
+			currencies: { gp: 123, cp: 45 },
 		});
+
+	await page.getByTestId('inventory-currency-edit').last().click();
+	await page.getByTestId('currency-edit-wallet').selectOption({
+		label: '測試冒險者 — 私人錢包（80 GP）',
+	});
+	await expect(page.getByTestId('currency-edit-balance')).toHaveValue('80');
+	await page.getByTestId('currency-edit-balance').fill('0');
+	await page.getByTestId('currency-edit-save').click();
 	await expect
-		.poll(() =>
-			requests.some((request) => request.startsWith('POST /rest/v1/characters')),
-		)
-		.toBe(true);
+		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
+		.toMatchObject({
+			private_gp: 0,
+			private_currencies: { gp: 0, cp: 0 },
+		});
+
+	await page.getByTestId('inventory-currency-edit').last().click();
+	await page.getByTestId('currency-edit-wallet').selectOption({
+		label: '營地儲物箱 — 公共錢包（0 GP）',
+	});
+	await page.getByTestId('currency-edit-balance').fill('5.67');
+	await page.getByTestId('currency-edit-save').click();
+	await expect
+		.poll(() => campaignUpdates.at(-1))
+		.toMatchObject({
+			camp_chest_gp: 5.67,
+			camp_chest_currency: { gp: 5, cp: 67 },
+		});
 });
 
 test('裝備沒有武器精通的護甲時同步使用 None', async ({ page }) => {
@@ -220,8 +272,10 @@ test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列',
 	);
 
 	await page.getByTestId('inventory-currency-open').last().click();
-	await page.getByTestId('currency-add-gp-1').click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('1');
+	await expect(page.getByTestId('currency-source-wallet')).toContainText(
+		'營地儲物箱 — 公共錢包（0 GP）',
+	);
+	await expect(page.getByTestId('currency-transfer-submit')).toBeDisabled();
 	expect(
 		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
 	).toBe(false);
@@ -230,24 +284,10 @@ test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列',
 			request.startsWith('POST /rest/v1/inventory_items'),
 		),
 	).toBe(false);
-	await expect
-		.poll(() =>
-			requests.some(
-				(request) =>
-					request.startsWith('PATCH /rest/v1/campaigns') &&
-					request.includes('id=eq.inventory-campaign'),
-			),
-		)
-		.toBe(true);
-	await expect.poll(() => campaignUpdates).toEqual([
-		{
-			camp_chest_gp: 1,
-			camp_chest_currency: { pp: 0, gp: 1, ep: 0, sp: 0, cp: 0 },
-		},
-	]);
+	await expect.poll(() => campaignUpdates).toEqual([]);
 });
 
-test('GP 可精確轉給角色、存入營地箱、互轉錢包及從營地箱領出', async ({
+test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async ({
 	page,
 }) => {
 	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
@@ -257,95 +297,78 @@ test('GP 可精確轉給角色、存入營地箱、互轉錢包及從營地箱�
 	await page.goto(inventoryUrl);
 	await page.getByTestId('inventory-currency-open').last().click();
 
-	const amountInput = page.getByRole('spinbutton', { name: '轉出 GP 數量' });
+	const amountInput = page.getByRole('spinbutton', { name: '金額（GP）' });
 	await amountInput.fill('0.01');
-	await page.getByRole('button', { name: /轉給.*移轉目標/ }).click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('19.99');
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '移轉目標 — 公開錢包（0 GP）',
+	});
+	await page.getByTestId('currency-transfer-submit').click();
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
 	await expect
 		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
 		.toMatchObject({
 			gp: 0.01,
 			currencies: { gp: 0, cp: 1 },
 		});
-
-	await page.getByRole('button', { name: /存入營地公庫/ }).click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('19.98');
 	await expect
-		.poll(() =>
-			campaignUpdates.some(
-				(update) =>
-					typeof update === 'object' &&
-					update !== null &&
-					'camp_chest_gp' in update &&
-					update.camp_chest_gp === 0.01,
-			),
-		)
-		.toBe(true);
+		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
+		.toMatchObject({ gp: 19.99 });
 
-	await page.getByRole('button', { name: /藏入私人錢包/ }).click();
-	await page.getByTestId('currency-wallet-private').click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('80.01');
-
-	await page
-		.getByTestId('currency-panel')
-		.getByRole('button', { name: '關閉', exact: true })
-		.click();
-	await page.getByTestId('inventory-character-camp-chest').click();
 	await page.getByTestId('inventory-currency-open').last().click();
-	await page.getByRole('spinbutton', { name: '轉出 GP 數量' }).fill('0.01');
-	await page.getByRole('button', { name: /轉給.*移轉目標/ }).click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('0');
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
-		.toMatchObject({
-			gp: 0.02,
-			currencies: { gp: 0, cp: 2 },
-		});
-});
-
-test('營地箱平分以 GP 分計算並將無法平分的分數 GP 留在公庫', async ({
-	page,
-}) => {
-	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
-		campaignInventoryRole: 'dm',
+	await page.getByTestId('currency-source-wallet').selectOption({
+		label: '測試冒險者 — 公開錢包（19.99 GP）',
 	});
-	await seedAuthenticatedSession(page);
-	await page.goto(inventoryUrl);
-	await page.getByTestId('inventory-character-camp-chest').click();
-	await page.getByTestId('inventory-currency-open').last().click();
-
-	for (let cent = 0; cent < 5; cent += 1) {
-		await page.getByTestId('currency-add-gp-cent').click();
-	}
-	await page.getByRole('button', { name: /平分所有 GP/ }).click();
-
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('0.01');
-	await expect
-		.poll(() =>
-			campaignUpdates.some(
-				(update) =>
-					typeof update === 'object' &&
-					update !== null &&
-					'camp_chest_gp' in update &&
-					update.camp_chest_gp === 0.01,
-			),
-		)
-		.toBe(true);
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '測試冒險者 — 私人錢包（80 GP）',
+	});
+	await amountInput.fill('0.01');
+	await page.getByTestId('currency-transfer-submit').click();
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
 	await expect
 		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
 		.toMatchObject({
-			gp: 20.02,
-			currencies: { gp: 20, cp: 2 },
+			gp: 19.98,
+			private_gp: 80.01,
 		});
+
+	await page.getByTestId('inventory-character-camp-chest').click();
+	await page.getByTestId('inventory-currency-open').last().click();
+	await page.getByTestId('currency-source-wallet').selectOption({
+		label: '測試冒險者 — 公開錢包（19.98 GP）',
+	});
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '營地儲物箱 — 公共錢包（0 GP）',
+	});
+	await amountInput.fill('0.02');
+	await page.getByTestId('currency-transfer-submit').click();
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
+	await expect
+		.poll(() => campaignUpdates.at(-1))
+		.toMatchObject({
+			camp_chest_gp: 0.02,
+		});
+
+	await page.getByTestId('inventory-currency-open').last().click();
+	await page.getByTestId('currency-source-wallet').selectOption({
+		label: '營地儲物箱 — 公共錢包（0.02 GP）',
+	});
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '移轉目標 — 私人錢包（0 GP）',
+	});
+	await amountInput.fill('0.01');
+	await page.getByTestId('currency-transfer-submit').click();
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
 	await expect
 		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
 		.toMatchObject({
-			gp: 0.02,
-			currencies: { gp: 0, cp: 2 },
+			private_gp: 0.01,
 		});
+	await expect
+		.poll(() => campaignUpdates.at(-1))
+		.toMatchObject({ camp_chest_gp: 0.01 });
 });
 
-test('GP 轉帳拒絕超過兩位小數、超出可用餘額及超過目標上限', async ({
+test('轉帳驗證至少 0.01 GP、來源餘額與不同戶口', async ({
 	page,
 }) => {
 	await mockSupabase(page, {
@@ -357,37 +380,58 @@ test('GP 轉帳拒絕超過兩位小數、超出可用餘額及超過目標上�
 	await page.goto(inventoryUrl);
 	await page.getByTestId('inventory-currency-open').last().click();
 
-	const amountInput = page.getByRole('spinbutton', { name: '轉出 GP 數量' });
-	const transferButton = page.getByRole('button', { name: /轉給.*移轉目標/ });
+	const amountInput = page.getByRole('spinbutton', { name: '金額（GP）' });
+	const transferButton = page.getByTestId('currency-transfer-submit');
 	await amountInput.fill('0.001');
 	await expect(amountInput).toHaveAttribute('aria-invalid', 'true');
 	await expect(transferButton).toBeDisabled();
 	await amountInput.fill('0.02');
-	await expect(amountInput).toHaveAttribute('aria-invalid', 'false');
+	await expect(amountInput).toHaveAttribute('aria-invalid', 'true');
 	await expect(transferButton).toBeDisabled();
 
 	await amountInput.fill('0.01');
-	await expect(transferButton).toBeEnabled();
-	await transferButton.click();
 	await expect(
-		page.getByText('目標錢包餘額不可超過 1,000,000.00 GP。'),
-	).toBeVisible();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('0.01');
+		page.getByTestId('currency-target-wallet').locator('option:disabled'),
+	).toContainText('與轉出戶口相同');
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '移轉目標 — 公開錢包（1000000 GP）',
+	});
+	await expect(transferButton).toBeDisabled();
 });
 
-test('餘額達到 1,000,000 GP 後停止提供加值操作', async ({ page }) => {
-	await mockSupabase(page, {
+test('全部會填入來源餘額，平分轉帳排除來源與公庫並保留零頭', async ({
+	page,
+}) => {
+	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
-		campaignInventoryWalletGp: { public: 999_999.99, private: 0 },
+		campaignInventoryThirdCharacter: true,
 	});
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 	await page.getByTestId('inventory-currency-open').last().click();
 
-	await page.getByTestId('currency-add-gp-cent').click();
-	await expect(page.getByTestId('currency-balance-gp')).toHaveText('1000000');
-	await expect(page.getByTestId('currency-add-gp-cent')).toBeDisabled();
-	await expect(page.getByTestId('currency-add-gp-1')).toBeDisabled();
+	const amountInput = page.getByRole('spinbutton', { name: '金額（GP）' });
+	await page.getByTestId('currency-transfer-all').click();
+	await expect(amountInput).toHaveValue('20');
+	await amountInput.fill('0.05');
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '平分給其他角色（2 名）',
+	});
+	await expect(page.getByTestId('currency-transfer-submit')).toBeEnabled();
+	await page.getByTestId('currency-transfer-submit').click();
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
+
+	await expect
+		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
+		.toMatchObject({ gp: 0.02, currencies: { gp: 0, cp: 2 } });
+	await expect
+		.poll(() => findCharacterWrite(characterWrites, 'inventory-third-character'))
+		.toMatchObject({ gp: 0.02, currencies: { gp: 0, cp: 2 } });
+	await expect
+		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
+		.toMatchObject({ gp: 19.96 });
+	await expect(page.getByText(/未能平分的 0.01 GP 留在轉出戶口/)).toBeVisible();
+	expect(campaignUpdates).toEqual([]);
 });
 
 for (const { gp, coinWeight, totalWeight } of [

@@ -8,6 +8,8 @@ import { Button } from '@/components/ui';
 import AppHeader from './-parts/AppHeader';
 import CharacterStatusBar from './-parts/CharacterStatusBar';
 import CurrencyPanel from './-parts/CurrencyPanel';
+import CurrencyEditPanel from './-parts/CurrencyEditPanel';
+import type { CurrencyWalletOption } from './-parts/CurrencyPanel';
 import HomebrewModal from './-parts/HomebrewModal';
 import InventoryGrid from './-parts/InventoryGrid';
 import InventoryToolbar from './-parts/InventoryToolbar';
@@ -15,7 +17,10 @@ import ItemTooltip from './-parts/ItemTooltip';
 import { useCampaignSync } from '@/hooks/useCampaignSync';
 import { gpFromLegacyCurrencyWallet } from '@/lib/supabase';
 import { useInventoryActions } from '@/hooks/useInventoryActions';
-import { useCharacterPermissions } from '@/hooks/useCharacterPermissions';
+import {
+	evaluateCharacterPermissions,
+	useCharacterPermissions,
+} from '@/hooks/useCharacterPermissions';
 import { checkIsAuthenticated, useAuth } from '@/contexts/AuthContext';
 import {
 	INITIAL_CHARACTERS,
@@ -103,6 +108,7 @@ function CampaignInventoryPage() {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [countCoinWeight, setCountCoinWeight] = useState(true);
 	const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
+	const [isCurrencyEditOpen, setIsCurrencyEditOpen] = useState(false);
 	const showToast = (message: string, kind: ToastKind = 'success') => {
 		toast[kind](message);
 	};
@@ -136,6 +142,87 @@ function CampaignInventoryPage() {
 	);
 
 	const isCampChestActive = activeCharId === CAMP_CHEST_ID;
+	const currencyWalletOptions = useMemo(() => {
+		const sourceWallets: CurrencyWalletOption[] = [];
+		const destinationWallets: CurrencyWalletOption[] = [];
+
+		for (const character of characters) {
+			if (character.id === CAMP_CHEST_ID) continue;
+			const walletPermissions = evaluateCharacterPermissions(
+				character.id,
+				user?.id,
+				permissions,
+				isDm,
+				viewMode,
+				character.userId,
+			);
+			const wallets = [
+				{
+					walletType: 'public' as const,
+					balanceGp: character.gp,
+					canEdit: walletPermissions.canEditPublicWallet,
+					canRead: walletPermissions.canReadPublicWallet,
+				},
+				{
+					walletType: 'private' as const,
+					balanceGp: character.privateGp,
+					canEdit: walletPermissions.canEditPrivateWallet,
+					canRead: walletPermissions.canReadPrivateWallet,
+				},
+			];
+
+			for (const wallet of wallets) {
+				const option = {
+					characterId: character.id,
+					characterName: character.name,
+					walletType: wallet.walletType,
+				};
+				destinationWallets.push({
+					...option,
+					...(wallet.canRead ? { balanceGp: wallet.balanceGp } : {}),
+				});
+				if (wallet.canEdit) {
+					sourceWallets.push({ ...option, balanceGp: wallet.balanceGp });
+				}
+			}
+		}
+
+		const campChestWallet: CurrencyWalletOption = {
+			characterId: CAMP_CHEST_ID,
+			characterName: '營地儲物箱',
+			walletType: 'public',
+			balanceGp: gpFromLegacyCurrencyWallet(campChestCurrency),
+		};
+		sourceWallets.push(campChestWallet);
+		destinationWallets.push(campChestWallet);
+
+		return { sourceWallets, destinationWallets };
+	}, [characters, permissions, user?.id, isDm, viewMode, campChestCurrency]);
+	const dmCurrencyWallets = useMemo<CurrencyWalletOption[]>(() => {
+		const wallets = characters.flatMap((character) => [
+			{
+				characterId: character.id,
+				characterName: character.name,
+				walletType: 'public' as const,
+				balanceGp: character.gp,
+			},
+			{
+				characterId: character.id,
+				characterName: character.name,
+				walletType: 'private' as const,
+				balanceGp: character.privateGp,
+			},
+		]);
+		return [
+			...wallets,
+			{
+				characterId: CAMP_CHEST_ID,
+				characterName: '營地儲物箱',
+				walletType: 'public',
+				balanceGp: gpFromLegacyCurrencyWallet(campChestCurrency),
+			},
+		];
+	}, [characters, campChestCurrency]);
 	const canViewPrivateBag = !isCampChestActive && charPerms.canReadPrivateBag;
 	const currentBagTab = !canViewPrivateBag ? 'public' : bagTab;
 
@@ -180,6 +267,9 @@ function CampaignInventoryPage() {
 	const canReadDisplayedWallet = isDisplayingPrivateWallet
 		? charPerms.canReadPrivateWallet
 		: charPerms.canReadPublicWallet;
+	const canEditDisplayedWallet = isDisplayingPrivateWallet
+		? charPerms.canEditPrivateWallet
+		: charPerms.canEditPublicWallet;
 	const displayedGp = isDisplayingPrivateWallet
 		? activeCharacter.privateGp
 		: activeCharacter.gp;
@@ -325,7 +415,10 @@ function CampaignInventoryPage() {
 				displayedGp={displayedGp}
 				isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 				canReadDisplayedWallet={canReadDisplayedWallet}
+				canEditDisplayedWallet={canEditDisplayedWallet}
+				isDm={isDm}
 				onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
+				onOpenCurrencyEdit={() => setIsCurrencyEditOpen(true)}
 			/>
 
 			<main className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-5 flex flex-col lg:flex-row lg:items-start gap-6'>
@@ -348,7 +441,10 @@ function CampaignInventoryPage() {
 						displayedGp={displayedGp}
 						isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 						canReadDisplayedWallet={canReadDisplayedWallet}
+						canEditDisplayedWallet={canEditDisplayedWallet}
+						isDm={isDm}
 						onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
+						onOpenCurrencyEdit={() => setIsCurrencyEditOpen(true)}
 					/>
 
 					<InventoryToolbar
@@ -501,18 +597,25 @@ function CampaignInventoryPage() {
 			<CurrencyPanel
 				isOpen={isCoinModalOpen}
 				activeCharacter={activeCharacter}
-				characters={characters}
 				initialWalletTab={currentBagTab}
-				canReadPublicWallet={charPerms.canReadPublicWallet}
-				canEditPublicWallet={charPerms.canEditPublicWallet}
-				canReadPrivateWallet={charPerms.canReadPrivateWallet}
-				canEditPrivateWallet={charPerms.canEditPrivateWallet}
+				sourceWallets={currencyWalletOptions.sourceWallets}
+				destinationWallets={currencyWalletOptions.destinationWallets}
 				onClose={() => setIsCoinModalOpen(false)}
-				onUpdateCurrency={actions.updateCurrency}
 				onTransferCurrency={actions.transferCurrency}
-				onTransferBetweenOwnWallets={actions.transferBetweenOwnWallets}
-				onSplitCampCoinToParty={actions.splitCampCoinToParty}
 			/>
+
+			{isDm && isCurrencyEditOpen && (
+				<CurrencyEditPanel
+					isOpen={isCurrencyEditOpen}
+					wallets={dmCurrencyWallets}
+					initialWalletId={JSON.stringify([
+						activeCharacter.id,
+						isCampChestActive ? 'public' : currentBagTab,
+					])}
+					onClose={() => setIsCurrencyEditOpen(false)}
+					onSave={actions.setCurrencyBalance}
+				/>
+			)}
 
 		</div>
 	);

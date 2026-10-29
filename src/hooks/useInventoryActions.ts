@@ -76,6 +76,21 @@ function formatGpCents(cents: number): string {
 	return (cents / 100).toFixed(2).replace(/\.?0+$/, '');
 }
 
+function updateCharacterWallet(
+	character: Character,
+	walletType: 'public' | 'private',
+	balanceCents: number,
+): Character {
+	const gpField = walletType === 'private' ? 'privateGp' : 'gp';
+	const legacyField =
+		walletType === 'private' ? 'privateCurrencies' : 'currencies';
+	return {
+		...character,
+		[gpField]: balanceCents / 100,
+		[legacyField]: legacyWalletFromGpCents(BigInt(balanceCents)),
+	};
+}
+
 function formToAllItem(form: HomebrewForm): AllItem {
 	const maxCharges = Number.parseInt(form.maxCharges, 10) || 0;
 	const common = {
@@ -446,283 +461,232 @@ export function useInventoryActions({
 		showToast(`✨ 已將詞條「${copiedAffix.name}」貼上至「${item.name}」！`);
 	};
 
-	const updateCurrency = (
-		deltaCents: number,
-		walletType: 'public' | 'private' = 'public',
-	) => {
-		if (!Number.isSafeInteger(deltaCents) || deltaCents === 0) {
-			showToast('請輸入有效的 GP 金額。', 'warning');
-			return;
+	const setCurrencyBalance = (
+		characterId: string,
+		walletType: 'public' | 'private',
+		balanceCents: number,
+	): boolean => {
+		if (!isDm) {
+			showToast('只有 DM 可以直接修改戶口存款。', 'warning');
+			return false;
 		}
-		if (activeCharId === CAMP_CHEST_ID) {
-			try {
-				const currentCents = Number(
-					legacyWalletToGpCents(campChestCurrency),
-				);
-				const nextCents = currentCents + deltaCents;
-				if (nextCents < 0 || nextCents > MAX_GP_CENTS) {
-					showToast('GP 餘額不可低於 0 或超過 1,000,000.00 GP。', 'warning');
-					return;
+		if (
+			!Number.isSafeInteger(balanceCents) ||
+			balanceCents < 0 ||
+			balanceCents > MAX_GP_CENTS
+		) {
+			showToast('存款必須是 0 至 1,000,000.00 間、最多兩位小數的 GP。', 'warning');
+			return false;
+		}
+
+		try {
+			if (characterId === CAMP_CHEST_ID) {
+				if (walletType !== 'public') {
+					showToast('營地公庫只有公開錢包。', 'warning');
+					return false;
 				}
-				setCampChestCurrency(legacyWalletFromGpCents(BigInt(nextCents)));
-			} catch (error) {
-				showToast(
-					error instanceof Error ? error.message : '無法更新 GP 餘額。',
-					'error',
+				setCampChestCurrency(legacyWalletFromGpCents(BigInt(balanceCents)));
+			} else {
+				const character = characters.find((entry) => entry.id === characterId);
+				if (!character || !['public', 'private'].includes(walletType)) {
+					showToast('找不到要修改的角色戶口。', 'error');
+					return false;
+				}
+				setCharacters((previous) =>
+					previous.map((entry) =>
+						entry.id === characterId
+							? updateCharacterWallet(entry, walletType, balanceCents)
+							: entry,
+					),
 				);
 			}
-			return;
-		}
 
-		const activeGp =
-			walletType === 'private' ? activeCharacter.privateGp : activeCharacter.gp;
-		let nextCents: number;
-		try {
-			nextCents = gpToCents(activeGp) + deltaCents;
+			showToast(`已將戶口存款修改為 ${formatGpCents(balanceCents)} GP。`);
+			return true;
 		} catch (error) {
 			showToast(
-				error instanceof Error ? error.message : '無法更新 GP 餘額。',
+				error instanceof Error ? error.message : '修改戶口存款失敗。',
 				'error',
 			);
-			return;
+			return false;
 		}
-		if (nextCents < 0 || nextCents > MAX_GP_CENTS) {
-			showToast('GP 餘額不可低於 0 或超過 1,000,000.00 GP。', 'warning');
-			return;
-		}
-		const gpField = walletType === 'private' ? 'privateGp' : 'gp';
-		const legacyField =
-			walletType === 'private' ? 'privateCurrencies' : 'currencies';
-		setCharacters((prev) =>
-			prev.map((char) => {
-				if (char.id !== activeCharId) return char;
-				return {
-					...char,
-					[gpField]: nextCents / 100,
-					[legacyField]: legacyWalletFromGpCents(BigInt(nextCents)),
-				};
-			}),
-		);
-	};
-
-	const transferBetweenOwnWallets = (
-		fromWallet: 'public' | 'private',
-		amountCents: number,
-	) => {
-		if (activeCharId === CAMP_CHEST_ID) return;
-		if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
-			showToast('轉帳金額必須至少為 0.01 GP。', 'warning');
-			return;
-		}
-		const sourceIsPrivate = fromWallet === 'private';
-		const sourceCents = gpToCents(
-			sourceIsPrivate ? activeCharacter.privateGp : activeCharacter.gp,
-		);
-		const targetCents = gpToCents(
-			sourceIsPrivate ? activeCharacter.gp : activeCharacter.privateGp,
-		);
-		if (amountCents > sourceCents) {
-			showToast('GP 餘額不足，無法轉移。', 'warning');
-			return;
-		}
-		if (targetCents + amountCents > MAX_GP_CENTS) {
-			showToast('目標錢包餘額不可超過 1,000,000.00 GP。', 'warning');
-			return;
-		}
-		const sourceGpField = sourceIsPrivate ? 'privateGp' : 'gp';
-		const targetGpField = sourceIsPrivate ? 'gp' : 'privateGp';
-		const sourceLegacyField = sourceIsPrivate
-			? 'privateCurrencies'
-			: 'currencies';
-		const targetLegacyField = sourceIsPrivate
-			? 'currencies'
-			: 'privateCurrencies';
-		setCharacters((prev) =>
-			prev.map((char) => {
-				if (char.id !== activeCharId) return char;
-				const currentSourceCents = gpToCents(char[sourceGpField]);
-				const currentTargetCents = gpToCents(char[targetGpField]);
-				return {
-					...char,
-					[sourceGpField]: (currentSourceCents - amountCents) / 100,
-					[targetGpField]: (currentTargetCents + amountCents) / 100,
-					[sourceLegacyField]: legacyWalletFromGpCents(
-						BigInt(currentSourceCents - amountCents),
-					),
-					[targetLegacyField]: legacyWalletFromGpCents(
-						BigInt(currentTargetCents + amountCents),
-					),
-				};
-			}),
-		);
-
-		showToast(
-			fromWallet === 'public'
-				? `🔒 已將 ${formatGpCents(amountCents)} GP 藏入私人錢包！`
-				: `🌐 已將 ${formatGpCents(amountCents)} GP 移回公開錢包！`,
-		);
 	};
 
 	const transferCurrency = (
-		targetCharId: string,
+		sourceCharacterId: string,
+		sourceWallet: 'public' | 'private',
+		targetCharacterId: string | null,
+		targetWallet: 'public' | 'private',
 		amountCents: number,
-		fromWallet: 'public' | 'private' = 'public',
 	) => {
-		if (targetCharId === activeCharId) return;
+		if (
+			sourceCharacterId === targetCharacterId &&
+			sourceWallet === targetWallet
+		) {
+			showToast('轉出戶口與轉入戶口不可相同。', 'warning');
+			return false;
+		}
 		if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
 			showToast('轉帳金額必須至少為 0.01 GP。', 'warning');
-			return;
+			return false;
 		}
-		const isCampChestSource = activeCharId === CAMP_CHEST_ID;
-		const sourceCents = isCampChestSource
-			? Number(legacyWalletToGpCents(campChestCurrency))
-			: gpToCents(
-					fromWallet === 'private'
-						? activeCharacter.privateGp
-						: activeCharacter.gp,
-				);
-		if (amountCents > sourceCents) {
-			showToast('GP 餘額不足，無法轉出。', 'warning');
-			return;
-		}
-		const targetCharacter =
-			targetCharId === CAMP_CHEST_ID
+		const sourceCharacter =
+			sourceCharacterId === CAMP_CHEST_ID
 				? undefined
-				: characters.find((character) => character.id === targetCharId);
-		if (targetCharId !== CAMP_CHEST_ID && !targetCharacter) {
-			showToast('找不到轉帳目標角色。', 'error');
-			return;
+				: characters.find((character) => character.id === sourceCharacterId);
+		const splitRecipients =
+			targetCharacterId === null
+				? characters.filter(
+						(character) =>
+							character.id !== CAMP_CHEST_ID &&
+							character.id !== sourceCharacterId,
+					)
+				: [];
+		const targetCharacter =
+			targetCharacterId === null || targetCharacterId === CAMP_CHEST_ID
+				? undefined
+				: characters.find((character) => character.id === targetCharacterId);
+		if (
+			(sourceCharacterId !== CAMP_CHEST_ID && !sourceCharacter) ||
+			(targetCharacterId !== null &&
+				targetCharacterId !== CAMP_CHEST_ID &&
+				!targetCharacter)
+		) {
+			showToast('找不到轉帳來源或目標角色。', 'error');
+			return false;
 		}
-		const targetCents =
-			targetCharacter
-				? gpToCents(targetCharacter.gp)
+		if (
+			(sourceCharacterId === CAMP_CHEST_ID && sourceWallet === 'private') ||
+			((targetCharacterId === CAMP_CHEST_ID ||
+				targetCharacterId === null) &&
+				targetWallet === 'private')
+		) {
+			showToast('平分轉帳與營地公庫只支援公開錢包。', 'warning');
+			return false;
+		}
+		if (targetCharacterId === null && splitRecipients.length === 0) {
+			showToast('沒有可分配的其他角色。', 'warning');
+			return false;
+		}
+
+		try {
+			const sourceCents = sourceCharacter
+				? gpToCents(
+						sourceWallet === 'private'
+							? sourceCharacter.privateGp
+							: sourceCharacter.gp,
+					)
 				: Number(legacyWalletToGpCents(campChestCurrency));
-		if (targetCents + amountCents > MAX_GP_CENTS) {
-			showToast('目標錢包餘額不可超過 1,000,000.00 GP。', 'warning');
-			return;
-		}
-		const targetName =
-			targetCharacter?.name ?? '🏕️ 營地儲物箱';
+			const targetCents =
+				targetCharacterId === CAMP_CHEST_ID
+					? Number(legacyWalletToGpCents(campChestCurrency))
+					: targetCharacter
+						? gpToCents(
+								targetWallet === 'private'
+									? targetCharacter.privateGp
+									: targetCharacter.gp,
+							)
+						: 0;
+			const shareCents =
+				targetCharacterId === null
+					? Math.floor(amountCents / splitRecipients.length)
+					: amountCents;
+			const remainderCents =
+				targetCharacterId === null
+					? amountCents % splitRecipients.length
+					: 0;
 
-		if (isCampChestSource) {
-			setCampChestCurrency(
-				legacyWalletFromGpCents(BigInt(sourceCents - amountCents)),
-			);
-			setCharacters((prev) =>
-				prev.map((char) =>
-					char.id === targetCharId
-						? {
-								...char,
-								gp: (gpToCents(char.gp) + amountCents) / 100,
-								currencies: legacyWalletFromGpCents(
-									BigInt(gpToCents(char.gp) + amountCents),
-								),
-							}
-						: char,
-				),
-			);
-		} else if (targetCharId === CAMP_CHEST_ID) {
-			const sourceGpField =
-				fromWallet === 'private' ? 'privateGp' : 'gp';
-			const sourceLegacyField =
-				fromWallet === 'private' ? 'privateCurrencies' : 'currencies';
-			setCharacters((prev) =>
-				prev.map((char) => {
-					if (char.id !== activeCharId) return char;
-					const currentCents = gpToCents(char[sourceGpField]);
-					const nextCents = currentCents - amountCents;
-					return {
-						...char,
-						[sourceGpField]: nextCents / 100,
-						[sourceLegacyField]: legacyWalletFromGpCents(BigInt(nextCents)),
-					};
+			if (targetCharacterId === null && shareCents <= 0) {
+				showToast('轉帳金額不足以分配給每名角色至少 0.01 GP。', 'warning');
+				return false;
+			}
+
+			if (amountCents > sourceCents) {
+				showToast('GP 餘額不足，無法轉出。', 'warning');
+				return false;
+			}
+			if (
+				targetCharacterId !== null &&
+				targetCents + amountCents > MAX_GP_CENTS
+			) {
+				showToast('目標錢包餘額不可超過 1,000,000.00 GP。', 'warning');
+				return false;
+			}
+			const overflowedRecipient =
+				targetCharacterId === null
+					? splitRecipients.find(
+							(character) =>
+								gpToCents(character.gp) + shareCents > MAX_GP_CENTS,
+						)
+					: undefined;
+			if (overflowedRecipient) {
+				showToast(
+					`角色「${overflowedRecipient.name}」的公開錢包餘額將超過 1,000,000.00 GP，無法平分。`,
+					'warning',
+				);
+				return false;
+			}
+
+			if (sourceCharacterId === CAMP_CHEST_ID) {
+				setCampChestCurrency(
+					legacyWalletFromGpCents(
+						BigInt(sourceCents - amountCents + remainderCents),
+					),
+				);
+			}
+			if (targetCharacterId === CAMP_CHEST_ID) {
+				setCampChestCurrency(
+					legacyWalletFromGpCents(BigInt(targetCents + amountCents)),
+				);
+			}
+			setCharacters((previous) =>
+				previous.map((character) => {
+					let updated = character;
+					if (character.id === sourceCharacterId) {
+						updated = updateCharacterWallet(
+							updated,
+							sourceWallet,
+							sourceCents - amountCents + remainderCents,
+						);
+					}
+					if (targetCharacterId === null) {
+						if (splitRecipients.some((recipient) => recipient.id === character.id)) {
+							const currentCents = gpToCents(character.gp);
+							updated = updateCharacterWallet(
+								updated,
+								'public',
+								currentCents + shareCents,
+							);
+						}
+					} else if (character.id === targetCharacterId) {
+						updated = updateCharacterWallet(
+							updated,
+							targetWallet,
+							targetCents + amountCents,
+						);
+					}
+					return updated;
 				}),
 			);
-			setCampChestCurrency(
-				legacyWalletFromGpCents(BigInt(targetCents + amountCents)),
-			);
-		} else {
-			const sourceGpField =
-				fromWallet === 'private' ? 'privateGp' : 'gp';
-			const sourceLegacyField =
-				fromWallet === 'private' ? 'privateCurrencies' : 'currencies';
-			setCharacters((prev) =>
-				prev.map((char) => {
-					if (char.id === activeCharId) {
-						const currentCents = gpToCents(char[sourceGpField]);
-						const nextCents = currentCents - amountCents;
-						return {
-							...char,
-							[sourceGpField]: nextCents / 100,
-							[sourceLegacyField]: legacyWalletFromGpCents(
-								BigInt(nextCents),
-							),
-						};
-					}
-					if (char.id === targetCharId) {
-						const nextCents = gpToCents(char.gp) + amountCents;
-						return {
-							...char,
-							gp: nextCents / 100,
-							currencies: legacyWalletFromGpCents(BigInt(nextCents)),
-						};
-					}
-					return char;
-				}),
-			);
-		}
 
-		showToast(
-			`🪙 已將 ${formatGpCents(amountCents)} GP 轉入 ${targetName} 的公開錢包！`,
-		);
-	};
-
-	const splitCampCoinToParty = () => {
-		if (activeCharId !== CAMP_CHEST_ID) return;
-		const partyMembers = characters.filter(
-			(character) => character.id !== CAMP_CHEST_ID,
-		);
-		if (partyMembers.length === 0) return;
-
-		const totalCents = Number(legacyWalletToGpCents(campChestCurrency));
-		const eachShareCents = Math.floor(totalCents / partyMembers.length);
-		const remainderCents = totalCents % partyMembers.length;
-
-		if (eachShareCents <= 0) {
+			const sourceName = sourceCharacter?.name ?? '營地儲物箱';
+			const targetName =
+				targetCharacterId === null
+					? `其他 ${splitRecipients.length} 名角色`
+					: (targetCharacter?.name ?? '營地儲物箱');
 			showToast(
-				`公庫 GP 不足以平均分給 ${partyMembers.length} 名隊員，每人至少需 0.01 GP。`,
-				'warning',
+				targetCharacterId === null
+					? `🪙 已將 ${formatGpCents(shareCents)} GP 平分轉入其他 ${splitRecipients.length} 名角色的公開錢包，每人獲得 ${formatGpCents(shareCents)} GP；未能平分的 ${formatGpCents(remainderCents)} GP 留在轉出戶口。`
+					: `🪙 已將 ${formatGpCents(amountCents)} GP 從「${sourceName}」${sourceWallet === 'private' ? '私人' : '公開'}錢包轉入「${targetName}」${targetWallet === 'private' ? '私人' : '公開'}錢包！`,
 			);
-			return;
-		}
-
-		const overflowedCharacter = partyMembers.find(
-			(character) => gpToCents(character.gp) + eachShareCents > MAX_GP_CENTS,
-		);
-		if (overflowedCharacter) {
+			return true;
+		} catch (error) {
 			showToast(
-				`角色「${overflowedCharacter.name}」的餘額將超過 1,000,000.00 GP，無法平分。`,
-				'warning',
+				error instanceof Error ? error.message : '轉帳失敗，請稍後重試。',
+				'error',
 			);
-			return;
+			return false;
 		}
-
-		setCampChestCurrency(legacyWalletFromGpCents(BigInt(remainderCents)));
-		setCharacters((prev) =>
-			prev.map((char) => {
-				if (char.id === CAMP_CHEST_ID) return char;
-				const nextCents = gpToCents(char.gp) + eachShareCents;
-				return {
-					...char,
-					gp: nextCents / 100,
-					currencies: legacyWalletFromGpCents(BigInt(nextCents)),
-				};
-			}),
-		);
-
-		showToast(
-			`🎉 已將公庫 GP 平分給全隊，每人獲得 ${formatGpCents(eachShareCents)} GP（餘 ${formatGpCents(remainderCents)} GP 留存公庫）！`,
-		);
 	};
 
 	const handleSaveCharacter = (charData: Character) => {
@@ -956,10 +920,8 @@ export function useInventoryActions({
 		updateItemAffixes,
 		handleCopyAffix,
 		handlePasteAffixToItem,
-		updateCurrency,
-		transferBetweenOwnWallets,
+		setCurrencyBalance,
 		transferCurrency,
-		splitCampCoinToParty,
 		handleSaveCharacter,
 		handleDeleteCharacter,
 		isHomebrewModalOpen,

@@ -50,6 +50,7 @@ export async function mockSupabase(
 		campaignInventoryRole?: CampaignSettingsRole;
 		campaignInventoryWalletGp?: { public: number; private: number };
 		campaignInventoryTargetGp?: number;
+		campaignInventoryThirdCharacter?: boolean;
 		extraInventoryItems?: Record<string, unknown>[];
 		createCampaignError?: string;
 		deleteCampaignCharacterError?: string;
@@ -286,6 +287,21 @@ export async function mockSupabase(
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		},
 	];
+	if (options.campaignInventoryThirdCharacter) {
+		inventoryCharacters.push({
+			id: 'inventory-third-character',
+			name: '第三名角色',
+			title: '法師',
+			str: 10,
+			avatar: '🧙',
+			user_id: 'third-player-id',
+			campaign_id: 'inventory-campaign',
+			gp: 0,
+			private_gp: 0,
+			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+		});
+	}
 	const inventoryItems = [
 		{
 			id: 'inventory-public-potion',
