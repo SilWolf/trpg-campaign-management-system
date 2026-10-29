@@ -37,7 +37,7 @@ supabase db push --linked
 
 ## 冒險筆記 Schema 與授權 migration
 
-[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；程式碼已完成，但尚未部署至目標 Supabase。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
+[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；使用者已確認此 Edge Function 部署完成，但本文件未獨立驗證目標專案或實際請求。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
 
 此 migration 會檢查所依賴的既有欄位型別、角色主鍵、授權 helper、物品 owner 關聯及 `supabase_realtime` 設定。既有角色擁有者權限列會取得 `journey_access = 2`；新增或轉移擁有權時亦由 DB trigger 同步。另以 restrictive RLS policy 阻止直接刪除角色，只有受限交易 RPC 能執行完整刪除。遇到缺欄位、型別不符、遺留孤兒物品或整個 schema 的 Realtime publication 時會停止，請先人工釐清，不要略過檢查或直接修改正式資料。migration 另以物品 owner trigger 與角色列鎖，避免刪角交易期間新增／移轉物品形成孤兒 owner。
 
@@ -50,7 +50,7 @@ supabase db push --linked
 - `anon`／`authenticated` 直接執行角色刪除 RPC 被拒；`service_role` 搭配未授權 actor 仍被拒。授權刪除後筆記轉公開且保留、背包和雙錢包併入營地箱；透過隔離測試觸發交易中途失敗，確認物品、貨幣、筆記與角色全部回滾。
 - 以平行角色移轉／新增物品及刪角請求驗證 owner 鎖定；確認不會留下指向已刪角色的物品，並確認每個戰役至少保留一名實體角色。
 
-完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL、不部署 Edge Function，也不代表真實 Supabase RLS／Realtime／交易已驗收或上線。
+完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL 或部署 Edge Function。使用者回報 Edge Function 已部署，但這不代表真實 Supabase RLS／Realtime／交易已驗收或上線。
 
 ## 部署 Edge Function
 
@@ -64,7 +64,7 @@ supabase db push --linked
 
 4. `supabase/config.toml` 對此 function 開啟 gateway JWT 驗證；程式內仍以 Supabase Auth `getUser(token)` 驗證實際登入者，並只把該 user UUID 傳入交易 RPC。函式不接受客戶端提供任意種子資料或建立者 ID。
 
-角色刪除 Edge Function 亦需由維護者在 migration 成功套用後部署：
+使用者已回報角色刪除 Edge Function 部署完成。下列命令供維護者確認正確專案及 migration 前置條件後，用於重新部署或更新：
 
 ```sh
 supabase functions deploy delete-campaign-character --project-ref <正確的專案參照>
@@ -109,4 +109,4 @@ supabase functions deploy delete-campaign-character --project-ref <正確的專�
 
 ## 部署狀態
 
-此工作階段僅編輯 migration、前端呼叫、Edge Function 與文件；沒有連線 Supabase、執行 SQL、部署 Edge Function 或存取 service role secrets。目標環境 Schema、migration history、Secrets 與資料庫／RLS 整合測試須由維護者手動確認。
+使用者已確認 `delete-campaign-character` Edge Function 部署完成；本工作階段未連線 Supabase 或獨立驗證部署目標、執行 SQL、部署 Function 或存取 service role secrets。目標環境 Schema、migration history、Secrets 與資料庫／RLS／Realtime／交易整合測試，仍須由維護者在隔離專案手動確認。

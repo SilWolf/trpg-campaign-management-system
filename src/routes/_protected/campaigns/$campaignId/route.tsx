@@ -7,7 +7,14 @@ import {
 	Link,
 	useParams,
 } from '@tanstack/react-router';
-import { Backpack, Settings, Shield, ArrowLeft, Store } from 'lucide-react';
+import {
+	Backpack,
+	Settings,
+	Shield,
+	ArrowLeft,
+	Store,
+	BookOpenText,
+} from 'lucide-react';
 import { SystemLinkBar } from '@/components/SystemLinkBar';
 
 export const Route = createFileRoute('/_protected/campaigns/$campaignId')({
@@ -46,12 +53,16 @@ function CampaignLayout() {
 						</div>
 
 						{/* 戰役內部分頁切換：全面開放所有成員進入設定中心 */}
-						<nav className='flex items-center gap-2 bg-card p-1 rounded-lg border border-border'>
+						<nav
+							aria-label='戰役分頁'
+							className='w-full overflow-x-auto rounded-lg border border-border bg-card p-1 sm:w-auto'
+						>
+							<div className='flex w-max min-w-full items-center gap-1'>
 							<Link
 								to='/campaigns/$campaignId'
 								params={{ campaignId }}
 								activeOptions={{ exact: true }}
-								className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition [&.active]:bg-primary/80 [&.active]:text-primary-foreground text-muted-foreground hover:text-foreground'
+								className='flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground [&.active]:bg-primary/80 [&.active]:text-primary-foreground'
 							>
 								<Backpack className='w-3.5 h-3.5' />
 								<span>軍械庫與背包</span>
@@ -60,20 +71,30 @@ function CampaignLayout() {
 							<Link
 								to='/campaigns/$campaignId/shops'
 								params={{ campaignId }}
-								className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition [&.active]:bg-primary/80 [&.active]:text-primary-foreground text-muted-foreground hover:text-foreground'
+								className='flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground [&.active]:bg-primary/80 [&.active]:text-primary-foreground'
 							>
 								<Store className='w-3.5 h-3.5' />
 								<span>戰役商店</span>
 							</Link>
 
 							<Link
+								to='/campaigns/$campaignId/journeys'
+								params={{ campaignId }}
+								className='flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground [&.active]:bg-primary/80 [&.active]:text-primary-foreground'
+							>
+								<BookOpenText className='h-3.5 w-3.5' />
+								<span>冒險筆記</span>
+							</Link>
+
+							<Link
 								to='/campaigns/$campaignId/settings'
 								params={{ campaignId }}
-								className='flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition [&.active]:bg-primary/80 [&.active]:text-primary-foreground text-muted-foreground hover:text-foreground'
+								className='flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground [&.active]:bg-primary/80 [&.active]:text-primary-foreground'
 							>
 								<Settings className='w-3.5 h-3.5' />
 								<span>戰役與角色設定</span>
 							</Link>
+							</div>
 						</nav>
 					</div>
 				</div>

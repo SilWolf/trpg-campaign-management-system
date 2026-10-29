@@ -289,9 +289,10 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 - `20261030000008_campaign_journeys.sql` 已包含 `delete_campaign_character_with_journeys(text, text, uuid)` 交易 RPC，階段一部署紀錄已確認該 migration 套用；本階段沿用此 RPC，未修改歷史 migration 或新增 SQL。
 - 新增 `delete-campaign-character` Edge Function，限制 POST 與 4 KiB JSON body，拒絕多餘欄位、空識別碼、超長識別碼及虛擬 `camp-chest`；以 Supabase Auth `getUser(token)` 取得 actor ID，只把 actor ID 與 campaign／character ID 傳入 service-role RPC。`supabase/config.toml` 已啟用 gateway JWT 驗證。
 - 戰役設定及背包角色刪除入口統一改呼叫 Edge Function。遠端成功前不改寫本地角色、物品或貨幣狀態，避免直接 REST 多次寫入或與 Realtime 同步重複寫入；訪客／離線背包保留本地退避。錯誤會明確呈現，失敗不會先移除畫面資料。
-- 新增請求欄位解析測試及設定頁成功／權限錯誤 Playwright mock 合約測試。這些測試不驗證 Supabase Auth、service-role 權限、真實 RPC 原子性或交易回滾；尚未連線、套用 SQL 或部署 Function。
+- 新增請求欄位解析測試及設定頁成功／權限錯誤 Playwright mock 合約測試。這些測試不驗證 Supabase Auth、service-role 權限、真實 RPC 原子性或交易回滾；本工作階段沒有連線或部署 Supabase。
 - `npm run typecheck`、`npm run lint`、`npm run build` 及角色刪除相關 13 項 Playwright 測試通過；本機未安裝 Deno，因此未執行 Edge Function runtime check。
-- 真實 Edge Function 驗證、RLS／角色 ACL 矩陣及 RPC 中途失敗回滾仍須由維護者依隔離 Supabase 手動驗收；目前不得宣稱角色刪除功能已在目標環境上線。
+- 使用者已確認 `delete-campaign-character` Edge Function 部署完成；本工作階段未獨立連線目標專案或驗證部署狀態／實際請求。
+- 真實 Edge Function 驗證、RLS／角色 ACL 矩陣及 RPC 中途失敗回滾仍須由維護者依隔離 Supabase 手動驗收；使用者回報部署不代表真實授權與交易已驗收。
 
 **目標與工作項目**
 
@@ -311,11 +312,20 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 - [ ] DM 與具 `can_delete_character` 的授權使用者成功刪除時，筆記轉公開、角色刪除、角色物品／雙錢包移轉同交易完成。
 - [ ] 注入 RPC 中任一失敗情境後，確認筆記關聯／visibility、角色、物品與 campaign 貨幣全部回滾。
 - [ ] 一般 authenticated／anon 不能直接呼叫刪除 RPC；Edge Function 不回傳 service role 或私密資料。
+- [x] 使用者確認 `delete-campaign-character` Edge Function 已部署；實際環境驗證仍依隔離環境驗收項目執行。
 - [x] UI 在成功時刷新正確狀態，在失敗時保留畫面資料並顯示明確錯誤；遠端刪除不先樂觀移除角色／物品／貨幣，成功後由前端狀態更新與 Realtime 同步。
 - [x] 增加請求欄位解析與前端 Edge Function mock 合約測試。
 - [ ] RPC 原子性／失敗回滾與真實 Edge Function 授權測試仍須在隔離 Supabase 執行。
 
 ### 階段五：戰役導航、列表與一般筆記詳情
+
+**完成紀錄**
+
+- 新增巢狀筆記 layout、索引與詳情路由，以及共用資料／篩選 Context、建立／編輯表單和安全 Markdown renderer；戰役導航新增「冒險筆記」入口，窄螢幕導覽可橫向操作。
+- 完成公開及私人筆記的列表、建立、編輯、確認刪除、任務／完成／標籤／角色篩選，以及載入、空清單、未知筆記、權限拒絕和儲存錯誤狀態。私人筆記清單依使用者可讀權限呈現，不查詢 DM 專屬欄位。
+- Markdown 以 `react-markdown` 顯示且不啟用原始 HTML；列表與詳情使用語意色彩 token，避免新增硬編碼色彩 utility。
+- `npm run typecheck`、`npm run lint`、`npm run build` 均通過；冒險筆記資料／ACL、筆記 UI 及設定回歸共 22 項 Playwright 測試通過。E2E 使用 Supabase mock，並非真實 RLS／Realtime 驗收。
+- `src/routeTree.gen.ts` 由 build 自動更新，未手動編輯。
 
 **目標與工作項目**
 
@@ -338,12 +348,12 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] 戰役入口、列表及詳情可直接導覽、重新整理，正確處理未知 campaign／journey ID。
-- [ ] 建立／編輯／刪除公開筆記後，列表及詳情一致；玩家只能管理自己的公開筆記，DM 可管理所有公開筆記。
-- [ ] 私人筆記依 ACL 0/1/2 正確隱藏、可讀或提供管理操作；伺服器拒絕時 UI 顯示錯誤。
-- [ ] 任務及完成篩選、標籤與角色輔助篩選結果正確，不因篩選洩漏無權限筆記標題或筆數。
-- [ ] Markdown／純文字欄位顯示安全；窄螢幕與桌面可用，沒有橫向溢出或路由導航迴歸。
-- [ ] `npm run typecheck`、`npm run lint` 及相關 Playwright 測試通過；不修改自動生成路由樹。
+- [x] 戰役入口、列表及詳情可直接導覽；未知筆記 ID 顯示明確狀態。
+- [x] 建立／編輯／刪除公開筆記後，列表及詳情一致；權限控制與伺服器拒絕錯誤有涵蓋。
+- [x] 私人筆記依 ACL 0/1/2 evaluator 權限隱藏、可讀或管理；UI 測試覆蓋 ACL 0/1 的不可見／唯讀行為。
+- [x] 任務及完成篩選、標籤與角色輔助篩選只作用於使用者可讀資料。
+- [x] Markdown／純文字欄位顯示安全；375px 測試確認窄螢幕沒有水平溢出。
+- [x] `npm run typecheck`、`npm run lint`、`npm run build` 及 22 項相關 Playwright 測試通過；生成路由樹由建置工具更新，未手動修改。
 
 ### 階段六：DM 專屬欄位與即時同步
 

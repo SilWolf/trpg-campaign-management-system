@@ -21,8 +21,11 @@ import { Route as InviteCampaignIdIndexRouteImport } from './routes/invite/$camp
 import { Route as ProtectedBlacksmithOfficialsIndexRouteImport } from './routes/_protected/blacksmith/officials/index'
 import { Route as ProtectedBlacksmithOfficialsCatelogIdRouteImport } from './routes/_protected/blacksmith/officials/$catelogId'
 import { Route as ProtectedCampaignsCampaignIdIndexRouteImport } from './routes/_protected/campaigns/$campaignId/index'
+import { Route as ProtectedCampaignsCampaignIdJourneysRouteRouteImport } from './routes/_protected/campaigns/$campaignId/journeys/route'
 import { Route as ProtectedCampaignsCampaignIdShopsRouteRouteImport } from './routes/_protected/campaigns/$campaignId/shops/route'
 import { Route as ProtectedSettingsProfileIndexRouteImport } from './routes/_protected/settings/profile/index'
+import { Route as ProtectedCampaignsCampaignIdJourneysIndexRouteImport } from './routes/_protected/campaigns/$campaignId/journeys/index'
+import { Route as ProtectedCampaignsCampaignIdJourneysJourneyIdRouteImport } from './routes/_protected/campaigns/$campaignId/journeys/$journeyId'
 import { Route as ProtectedCampaignsCampaignIdSettingsIndexRouteImport } from './routes/_protected/campaigns/$campaignId/settings/index'
 import { Route as ProtectedCampaignsCampaignIdShopsIndexRouteImport } from './routes/_protected/campaigns/$campaignId/shops/index'
 import { Route as ProtectedCampaignsCampaignIdShopsShopIdRouteImport } from './routes/_protected/campaigns/$campaignId/shops/$shopId'
@@ -95,6 +98,12 @@ const ProtectedCampaignsCampaignIdIndexRoute =
     path: '/',
     getParentRoute: () => ProtectedCampaignsCampaignIdRouteRoute,
   } as any)
+const ProtectedCampaignsCampaignIdJourneysRouteRoute =
+  ProtectedCampaignsCampaignIdJourneysRouteRouteImport.update({
+    id: '/journeys',
+    path: '/journeys',
+    getParentRoute: () => ProtectedCampaignsCampaignIdRouteRoute,
+  } as any)
 const ProtectedCampaignsCampaignIdShopsRouteRoute =
   ProtectedCampaignsCampaignIdShopsRouteRouteImport.update({
     id: '/shops',
@@ -106,6 +115,18 @@ const ProtectedSettingsProfileIndexRoute =
     id: '/profile/',
     path: '/profile/',
     getParentRoute: () => ProtectedSettingsRouteRoute,
+  } as any)
+const ProtectedCampaignsCampaignIdJourneysIndexRoute =
+  ProtectedCampaignsCampaignIdJourneysIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProtectedCampaignsCampaignIdJourneysRouteRoute,
+  } as any)
+const ProtectedCampaignsCampaignIdJourneysJourneyIdRoute =
+  ProtectedCampaignsCampaignIdJourneysJourneyIdRouteImport.update({
+    id: '/$journeyId',
+    path: '/$journeyId',
+    getParentRoute: () => ProtectedCampaignsCampaignIdJourneysRouteRoute,
   } as any)
 const ProtectedCampaignsCampaignIdSettingsIndexRoute =
   ProtectedCampaignsCampaignIdSettingsIndexRouteImport.update({
@@ -147,12 +168,15 @@ export interface FileRoutesByFullPath {
   '/blacksmith/workshop': typeof ProtectedBlacksmithWorkshopRoute
   '/blacksmith/': typeof ProtectedBlacksmithIndexRoute
   '/invite/$campaignId/': typeof InviteCampaignIdIndexRoute
+  '/campaigns/$campaignId/journeys': typeof ProtectedCampaignsCampaignIdJourneysRouteRouteWithChildren
   '/campaigns/$campaignId/shops': typeof ProtectedCampaignsCampaignIdShopsRouteRouteWithChildren
   '/blacksmith/officials/$catelogId': typeof ProtectedBlacksmithOfficialsCatelogIdRoute
   '/blacksmith/officials/': typeof ProtectedBlacksmithOfficialsIndexRoute
   '/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/settings/profile/': typeof ProtectedSettingsProfileIndexRoute
+  '/campaigns/$campaignId/journeys/$journeyId': typeof ProtectedCampaignsCampaignIdJourneysJourneyIdRoute
   '/campaigns/$campaignId/shops/$shopId': typeof ProtectedCampaignsCampaignIdShopsShopIdRouteWithChildren
+  '/campaigns/$campaignId/journeys/': typeof ProtectedCampaignsCampaignIdJourneysIndexRoute
   '/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
   '/campaigns/$campaignId/shops/': typeof ProtectedCampaignsCampaignIdShopsIndexRoute
   '/campaigns/$campaignId/shops/$shopId/settings': typeof ProtectedCampaignsCampaignIdShopsShopIdSettingsRoute
@@ -169,6 +193,8 @@ export interface FileRoutesByTo {
   '/blacksmith/officials': typeof ProtectedBlacksmithOfficialsIndexRoute
   '/campaigns/$campaignId': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/settings/profile': typeof ProtectedSettingsProfileIndexRoute
+  '/campaigns/$campaignId/journeys/$journeyId': typeof ProtectedCampaignsCampaignIdJourneysJourneyIdRoute
+  '/campaigns/$campaignId/journeys': typeof ProtectedCampaignsCampaignIdJourneysIndexRoute
   '/campaigns/$campaignId/settings': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
   '/campaigns/$campaignId/shops': typeof ProtectedCampaignsCampaignIdShopsIndexRoute
   '/campaigns/$campaignId/shops/$shopId/settings': typeof ProtectedCampaignsCampaignIdShopsShopIdSettingsRoute
@@ -185,12 +211,15 @@ export interface FileRoutesById {
   '/_protected/blacksmith/workshop': typeof ProtectedBlacksmithWorkshopRoute
   '/_protected/blacksmith/': typeof ProtectedBlacksmithIndexRoute
   '/invite/$campaignId/': typeof InviteCampaignIdIndexRoute
+  '/_protected/campaigns/$campaignId/journeys': typeof ProtectedCampaignsCampaignIdJourneysRouteRouteWithChildren
   '/_protected/campaigns/$campaignId/shops': typeof ProtectedCampaignsCampaignIdShopsRouteRouteWithChildren
   '/_protected/blacksmith/officials/$catelogId': typeof ProtectedBlacksmithOfficialsCatelogIdRoute
   '/_protected/blacksmith/officials/': typeof ProtectedBlacksmithOfficialsIndexRoute
   '/_protected/campaigns/$campaignId/': typeof ProtectedCampaignsCampaignIdIndexRoute
   '/_protected/settings/profile/': typeof ProtectedSettingsProfileIndexRoute
+  '/_protected/campaigns/$campaignId/journeys/$journeyId': typeof ProtectedCampaignsCampaignIdJourneysJourneyIdRoute
   '/_protected/campaigns/$campaignId/shops/$shopId': typeof ProtectedCampaignsCampaignIdShopsShopIdRouteWithChildren
+  '/_protected/campaigns/$campaignId/journeys/': typeof ProtectedCampaignsCampaignIdJourneysIndexRoute
   '/_protected/campaigns/$campaignId/settings/': typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
   '/_protected/campaigns/$campaignId/shops/': typeof ProtectedCampaignsCampaignIdShopsIndexRoute
   '/_protected/campaigns/$campaignId/shops/$shopId/settings': typeof ProtectedCampaignsCampaignIdShopsShopIdSettingsRoute
@@ -207,12 +236,15 @@ export interface FileRouteTypes {
     | '/blacksmith/workshop'
     | '/blacksmith/'
     | '/invite/$campaignId/'
+    | '/campaigns/$campaignId/journeys'
     | '/campaigns/$campaignId/shops'
     | '/blacksmith/officials/$catelogId'
     | '/blacksmith/officials/'
     | '/campaigns/$campaignId/'
     | '/settings/profile/'
+    | '/campaigns/$campaignId/journeys/$journeyId'
     | '/campaigns/$campaignId/shops/$shopId'
+    | '/campaigns/$campaignId/journeys/'
     | '/campaigns/$campaignId/settings/'
     | '/campaigns/$campaignId/shops/'
     | '/campaigns/$campaignId/shops/$shopId/settings'
@@ -229,6 +261,8 @@ export interface FileRouteTypes {
     | '/blacksmith/officials'
     | '/campaigns/$campaignId'
     | '/settings/profile'
+    | '/campaigns/$campaignId/journeys/$journeyId'
+    | '/campaigns/$campaignId/journeys'
     | '/campaigns/$campaignId/settings'
     | '/campaigns/$campaignId/shops'
     | '/campaigns/$campaignId/shops/$shopId/settings'
@@ -244,12 +278,15 @@ export interface FileRouteTypes {
     | '/_protected/blacksmith/workshop'
     | '/_protected/blacksmith/'
     | '/invite/$campaignId/'
+    | '/_protected/campaigns/$campaignId/journeys'
     | '/_protected/campaigns/$campaignId/shops'
     | '/_protected/blacksmith/officials/$catelogId'
     | '/_protected/blacksmith/officials/'
     | '/_protected/campaigns/$campaignId/'
     | '/_protected/settings/profile/'
+    | '/_protected/campaigns/$campaignId/journeys/$journeyId'
     | '/_protected/campaigns/$campaignId/shops/$shopId'
+    | '/_protected/campaigns/$campaignId/journeys/'
     | '/_protected/campaigns/$campaignId/settings/'
     | '/_protected/campaigns/$campaignId/shops/'
     | '/_protected/campaigns/$campaignId/shops/$shopId/settings'
@@ -348,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedCampaignsCampaignIdIndexRouteImport
       parentRoute: typeof ProtectedCampaignsCampaignIdRouteRoute
     }
+    '/_protected/campaigns/$campaignId/journeys': {
+      id: '/_protected/campaigns/$campaignId/journeys'
+      path: '/journeys'
+      fullPath: '/campaigns/$campaignId/journeys'
+      preLoaderRoute: typeof ProtectedCampaignsCampaignIdJourneysRouteRouteImport
+      parentRoute: typeof ProtectedCampaignsCampaignIdRouteRoute
+    }
     '/_protected/campaigns/$campaignId/shops': {
       id: '/_protected/campaigns/$campaignId/shops'
       path: '/shops'
@@ -361,6 +405,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/profile/'
       preLoaderRoute: typeof ProtectedSettingsProfileIndexRouteImport
       parentRoute: typeof ProtectedSettingsRouteRoute
+    }
+    '/_protected/campaigns/$campaignId/journeys/': {
+      id: '/_protected/campaigns/$campaignId/journeys/'
+      path: '/'
+      fullPath: '/campaigns/$campaignId/journeys/'
+      preLoaderRoute: typeof ProtectedCampaignsCampaignIdJourneysIndexRouteImport
+      parentRoute: typeof ProtectedCampaignsCampaignIdJourneysRouteRoute
+    }
+    '/_protected/campaigns/$campaignId/journeys/$journeyId': {
+      id: '/_protected/campaigns/$campaignId/journeys/$journeyId'
+      path: '/$journeyId'
+      fullPath: '/campaigns/$campaignId/journeys/$journeyId'
+      preLoaderRoute: typeof ProtectedCampaignsCampaignIdJourneysJourneyIdRouteImport
+      parentRoute: typeof ProtectedCampaignsCampaignIdJourneysRouteRoute
     }
     '/_protected/campaigns/$campaignId/settings/': {
       id: '/_protected/campaigns/$campaignId/settings/'
@@ -436,6 +494,24 @@ const ProtectedSettingsRouteRouteWithChildren =
     ProtectedSettingsRouteRouteChildren,
   )
 
+interface ProtectedCampaignsCampaignIdJourneysRouteRouteChildren {
+  ProtectedCampaignsCampaignIdJourneysJourneyIdRoute: typeof ProtectedCampaignsCampaignIdJourneysJourneyIdRoute
+  ProtectedCampaignsCampaignIdJourneysIndexRoute: typeof ProtectedCampaignsCampaignIdJourneysIndexRoute
+}
+
+const ProtectedCampaignsCampaignIdJourneysRouteRouteChildren: ProtectedCampaignsCampaignIdJourneysRouteRouteChildren =
+  {
+    ProtectedCampaignsCampaignIdJourneysJourneyIdRoute:
+      ProtectedCampaignsCampaignIdJourneysJourneyIdRoute,
+    ProtectedCampaignsCampaignIdJourneysIndexRoute:
+      ProtectedCampaignsCampaignIdJourneysIndexRoute,
+  }
+
+const ProtectedCampaignsCampaignIdJourneysRouteRouteWithChildren =
+  ProtectedCampaignsCampaignIdJourneysRouteRoute._addFileChildren(
+    ProtectedCampaignsCampaignIdJourneysRouteRouteChildren,
+  )
+
 interface ProtectedCampaignsCampaignIdShopsShopIdRouteChildren {
   ProtectedCampaignsCampaignIdShopsShopIdSettingsRoute: typeof ProtectedCampaignsCampaignIdShopsShopIdSettingsRoute
   ProtectedCampaignsCampaignIdShopsShopIdIndexRoute: typeof ProtectedCampaignsCampaignIdShopsShopIdIndexRoute
@@ -473,6 +549,7 @@ const ProtectedCampaignsCampaignIdShopsRouteRouteWithChildren =
   )
 
 interface ProtectedCampaignsCampaignIdRouteRouteChildren {
+  ProtectedCampaignsCampaignIdJourneysRouteRoute: typeof ProtectedCampaignsCampaignIdJourneysRouteRouteWithChildren
   ProtectedCampaignsCampaignIdShopsRouteRoute: typeof ProtectedCampaignsCampaignIdShopsRouteRouteWithChildren
   ProtectedCampaignsCampaignIdIndexRoute: typeof ProtectedCampaignsCampaignIdIndexRoute
   ProtectedCampaignsCampaignIdSettingsIndexRoute: typeof ProtectedCampaignsCampaignIdSettingsIndexRoute
@@ -480,6 +557,8 @@ interface ProtectedCampaignsCampaignIdRouteRouteChildren {
 
 const ProtectedCampaignsCampaignIdRouteRouteChildren: ProtectedCampaignsCampaignIdRouteRouteChildren =
   {
+    ProtectedCampaignsCampaignIdJourneysRouteRoute:
+      ProtectedCampaignsCampaignIdJourneysRouteRouteWithChildren,
     ProtectedCampaignsCampaignIdShopsRouteRoute:
       ProtectedCampaignsCampaignIdShopsRouteRouteWithChildren,
     ProtectedCampaignsCampaignIdIndexRoute:

@@ -39,6 +39,9 @@ export async function mockSupabase(
 	options: {
 		campaignSettingsRole?: CampaignSettingsRole;
 		campaignSettingsSaveError?: string;
+		campaignJourneysSeed?: Record<string, unknown>[];
+		campaignJourneyPrivateAccess?: 0 | 1 | 2;
+		campaignJourneyWriteError?: string;
 		campaignOfficialCatalogIds?: string[];
 		campaignInventoryRole?: CampaignSettingsRole;
 		extraInventoryItems?: Record<string, unknown>[];
@@ -75,6 +78,7 @@ export async function mockSupabase(
 		options.campaignOfficialCatalogIds ?? ['dnd-2024-srd-5.2'];
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
+	const campaignJourneyWrites: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
 	const permissionUpdates: unknown[] = [];
 	const blacksmithImportRequests: unknown[] = [];
@@ -189,6 +193,7 @@ export async function mockSupabase(
 	const campaignSettingsRole = options.campaignSettingsRole;
 	const campaignInventoryRole = options.campaignInventoryRole;
 	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
+	const campaignJourneys = [...(options.campaignJourneysSeed ?? [])];
 	const campaignCharacters = [
 		{
 			id: 'settings-character',
@@ -1219,6 +1224,27 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/character_permissions' &&
 			method === 'GET'
 		) {
+			if (options.campaignJourneyPrivateAccess !== undefined) {
+				await route.fulfill({
+					json: [
+						{
+							id: 'journey-access-permission',
+							campaign_id: 'settings-campaign',
+							character_id: 'second-settings-character',
+							user_id: testUser.id,
+							public_bag_access: 1,
+							private_bag_access: 0,
+							public_wallet_access: 1,
+							private_wallet_access: 0,
+							journey_access: options.campaignJourneyPrivateAccess,
+							can_edit_profile: false,
+							can_delete_character: false,
+							can_manage_permissions: false,
+						},
+					],
+				});
+				return;
+			}
 			await route.fulfill({
 				json: options.campaignShopWalletAccess
 					? [
@@ -1233,6 +1259,73 @@ export async function mockSupabase(
 					: [],
 			});
 			return;
+		}
+
+		if (url.pathname === '/rest/v1/campaign_journeys') {
+			if (options.campaignJourneyWriteError && method !== 'GET') {
+				await route.fulfill({
+					status: 400,
+					json: { message: options.campaignJourneyWriteError, code: '42501' },
+				});
+				return;
+			}
+			if (method === 'GET') {
+				const visibleJourneys = campaignJourneys.filter((journey) => {
+					if (journey.campaign_id !== 'settings-campaign') return false;
+					if (journey.visibility !== 'private') return true;
+					if (campaignSettingsRole === 'dm') return true;
+					if (journey.character_id === 'settings-character') return true;
+					return (options.campaignJourneyPrivateAccess ?? 0) >= 1;
+				});
+				await route.fulfill({ json: visibleJourneys });
+				return;
+			}
+			if (method === 'POST') {
+				const body = request.postDataJSON() as Record<string, unknown>;
+				campaignJourneyWrites.push(body);
+				const journey = {
+					id: `mock-journey-${campaignJourneys.length + 1}`,
+					campaign_id: 'settings-campaign',
+					title: '',
+					tags: '',
+					content: '',
+					character_id: null,
+					created_by: testUser.id,
+					created_at: new Date().toISOString(),
+					is_quest: false,
+					is_completed: false,
+					visibility: 'public',
+					...body,
+				};
+				campaignJourneys.push(journey);
+				await route.fulfill({ status: 201, json: journey });
+				return;
+			}
+			if (method === 'PATCH') {
+				campaignJourneyWrites.push(request.postDataJSON());
+				const journeyId = url.searchParams.get('id')?.replace('eq.', '');
+				const journey = campaignJourneys.find((row) => row.id === journeyId);
+				if (!journey) {
+					await route.fulfill({ status: 404, json: { message: '筆記不存在。' } });
+					return;
+				}
+				Object.assign(journey, request.postDataJSON());
+				await route.fulfill({ json: journey });
+				return;
+			}
+			if (method === 'DELETE') {
+				const journeyId = url.searchParams.get('id')?.replace('eq.', '');
+				const journeyIndex = campaignJourneys.findIndex(
+					(row) => row.id === journeyId,
+				);
+				if (journeyIndex < 0) {
+					await route.fulfill({ json: null });
+					return;
+				}
+				const [deletedJourney] = campaignJourneys.splice(journeyIndex, 1);
+				await route.fulfill({ json: { id: deletedJourney.id } });
+				return;
+			}
 		}
 
 		if (
@@ -1299,6 +1392,7 @@ export async function mockSupabase(
 		permissionUpdates,
 		blacksmithImportRequests,
 		campaignShopRpcRequests,
+		campaignJourneyWrites,
 		setCampaignOfficialCatalogIds: (catalogIds: string[]) => {
 			currentCampaignOfficialCatalogIds = catalogIds;
 		},
