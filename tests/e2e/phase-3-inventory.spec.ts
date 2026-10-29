@@ -212,6 +212,7 @@ test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列',
 		.toBe(true);
 	await expect.poll(() => campaignUpdates).toEqual([
 		{
+			camp_chest_gp: 1,
 			camp_chest_currency: { pp: 0, gp: 1, ep: 0, sp: 0, cp: 0 },
 		},
 	]);

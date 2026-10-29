@@ -15,6 +15,7 @@ import {
 	fromDbItem,
 	toDbCharacter,
 	fromDbCharacter,
+	syncCharacterGpFromLegacyWallets,
 	toDbPermission,
 	fromDbPermission,
 	type DbInventoryItem,
@@ -110,7 +111,7 @@ export function useCampaignSync(
 				] = await Promise.all([
 					supabase
 						.from('campaigns')
-						.select('camp_chest_currency')
+						.select('camp_chest_gp')
 						.eq('id', campaignId)
 						.single(),
 					supabase.from('characters').select('*').eq('campaign_id', campaignId),
@@ -175,14 +176,23 @@ export function useCampaignSync(
 							prev.filter((c) => c.id !== deletedId),
 						);
 					} else {
-						const updatedChar = fromDbCharacter(payload.new as DbCharacter);
-						if (updatedChar.id === CAMP_CHEST_ID) return;
-						setCharactersState((prev) => {
-							const exists = prev.some((c) => c.id === updatedChar.id);
-							return exists
-								? prev.map((c) => (c.id === updatedChar.id ? updatedChar : c))
-								: [...prev, updatedChar];
-						});
+						try {
+							const updatedChar = fromDbCharacter(
+								payload.new as DbCharacter,
+							);
+							if (updatedChar.id === CAMP_CHEST_ID) return;
+							setCharactersState((prev) => {
+								const exists = prev.some((c) => c.id === updatedChar.id);
+								return exists
+									? prev.map((c) =>
+											c.id === updatedChar.id ? updatedChar : c,
+										)
+									: [...prev, updatedChar];
+							});
+						} catch (error) {
+							console.error('Realtime 角色 GP 資料無效：', error);
+							if (isMounted) setSyncStatus('error');
+						}
 					}
 				},
 			)
@@ -226,10 +236,15 @@ export function useCampaignSync(
 				},
 				(payload) => {
 					const campaignRow = payload.new as DbCampaignCurrency;
-					if (campaignRow.camp_chest_currency) {
-						const nextCurrency = fromDbCampaignCurrency(campaignRow);
-						lastQueuedCurrency.current = nextCurrency;
-						setCampChestCurrencyState(nextCurrency);
+					if (campaignRow.camp_chest_gp !== undefined) {
+						try {
+							const nextCurrency = fromDbCampaignCurrency(campaignRow);
+							lastQueuedCurrency.current = nextCurrency;
+							setCampChestCurrencyState(nextCurrency);
+						} catch (error) {
+							console.error('Realtime 營地箱 GP 資料無效：', error);
+							if (isMounted) setSyncStatus('error');
+						}
 					}
 				},
 			)
@@ -293,7 +308,9 @@ export function useCampaignSync(
 	const setCharacters: Dispatch<SetStateAction<Character[]>> = useCallback(
 		(updater) => {
 			setCharactersState((prev) => {
-				const next = typeof updater === 'function' ? updater(prev) : updater;
+				const next = (
+					typeof updater === 'function' ? updater(prev) : updater
+				).map(syncCharacterGpFromLegacyWallets);
 
 				const persistedNext = isRemoteCampaign
 					? next.filter((character) => character.id !== CAMP_CHEST_ID)

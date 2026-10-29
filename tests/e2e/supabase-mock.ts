@@ -213,6 +213,8 @@ export async function mockSupabase(
 				options.campaignSettingsCharacterOwner ??
 				(campaignSettingsRole === 'player' ? testUser.id : 'other-player-id'),
 			campaign_id: 'settings-campaign',
+			gp: 0,
+			private_gp: 0,
 			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		},
@@ -224,6 +226,8 @@ export async function mockSupabase(
 			avatar: '🎻',
 			user_id: 'other-player-id',
 			campaign_id: 'settings-campaign',
+			gp: 0,
+			private_gp: 0,
 			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		},
@@ -237,6 +241,8 @@ export async function mockSupabase(
 			avatar: '🏹',
 			user_id: 'other-player-id',
 			campaign_id: 'inventory-campaign',
+			gp: 20,
+			private_gp: 80,
 			currencies: { pp: 0, gp: 20, ep: 0, sp: 0, cp: 0 },
 			private_currencies: { pp: 0, gp: 80, ep: 0, sp: 0, cp: 0 },
 		},
@@ -248,6 +254,8 @@ export async function mockSupabase(
 			avatar: '🎻',
 			user_id: 'transfer-player-id',
 			campaign_id: 'inventory-campaign',
+			gp: 0,
+			private_gp: 0,
 			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		},
@@ -1108,11 +1116,9 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/campaigns' &&
 			method === 'GET'
 		) {
-			if (url.searchParams.get('select') === 'camp_chest_currency') {
+			if (url.searchParams.get('select') === 'camp_chest_gp') {
 				await route.fulfill({
-					json: {
-						camp_chest_currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-					},
+					json: { camp_chest_gp: 0 },
 				});
 				return;
 			}

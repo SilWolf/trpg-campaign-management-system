@@ -13,6 +13,7 @@ import InventoryGrid from './-parts/InventoryGrid';
 import InventoryToolbar from './-parts/InventoryToolbar';
 import ItemTooltip from './-parts/ItemTooltip';
 import { useCampaignSync } from '@/hooks/useCampaignSync';
+import { gpFromLegacyCurrencyWallet } from '@/lib/supabase';
 import { useInventoryActions } from '@/hooks/useInventoryActions';
 import { useCharacterPermissions } from '@/hooks/useCharacterPermissions';
 import { checkIsAuthenticated, useAuth } from '@/contexts/AuthContext';
@@ -117,6 +118,8 @@ function CampaignInventoryPage() {
 			avatar: 'avatar:default',
 			campaignId,
 			userId: '',
+			gp: gpFromLegacyCurrencyWallet(campChestCurrency),
+			privateGp: 0,
 			currencies: campChestCurrency,
 			privateCurrencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		};

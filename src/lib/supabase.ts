@@ -7,10 +7,11 @@ import {
 	type AllItem,
 	type Character,
 	type CharacterPermission,
+	type CurrencyType,
+	type LegacyCurrencyWallet,
 	type CampaignJourney,
 	type CampaignJourneyDmNote,
 	type CampaignJourneyVisibility,
-	type CurrencyType,
 	type BlacksmithTemplate,
 	type CampaignShop,
 	type CampaignShopItem,
@@ -290,33 +291,115 @@ export const supabase =
 
 export const isSupabaseConfigured = Boolean(supabase);
 
-export type CampaignCurrency = Record<CurrencyType, number>;
+export type CampaignCurrency = LegacyCurrencyWallet;
+
+const CURRENCY_TYPES: readonly CurrencyType[] = ['pp', 'gp', 'ep', 'sp', 'cp'];
+const MAX_GP_CENTS = 100_000_000n;
+const CURRENCY_TO_CENTS: Record<CurrencyType, bigint> = {
+	pp: 1000n,
+	gp: 100n,
+	ep: 50n,
+	sp: 10n,
+	cp: 1n,
+};
+
+function gpValueToCents(value: unknown, fieldName: string): bigint {
+	if (value === undefined || value === null) return 0n;
+	if (typeof value !== 'number' && typeof value !== 'string') {
+		throw new Error(`${fieldName} 必須是有效的 GP 數值。`);
+	}
+	const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(String(value).trim());
+	if (!match) {
+		throw new Error(`${fieldName} 必須是非負且最多兩位小數的 GP 數值。`);
+	}
+	const cents =
+		BigInt(match[1]) * 100n + BigInt((match[2] ?? '').padEnd(2, '0') || '0');
+	if (cents > MAX_GP_CENTS) {
+		throw new Error(`${fieldName} 不得超過 1,000,000.00 GP。`);
+	}
+	return cents;
+}
+
+function legacyWalletToCents(wallet: LegacyCurrencyWallet): bigint {
+	let cents = 0n;
+	for (const currency of CURRENCY_TYPES) {
+		const amount = wallet[currency];
+		if (!Number.isSafeInteger(amount) || amount < 0) {
+			throw new Error(`舊錢包的 ${currency.toUpperCase()} 數量必須是非負整數。`);
+		}
+		cents += BigInt(amount) * CURRENCY_TO_CENTS[currency];
+	}
+	if (cents > MAX_GP_CENTS) {
+		throw new Error('錢包餘額不得超過 1,000,000.00 GP。');
+	}
+	return cents;
+}
+
+export function gpFromLegacyCurrencyWallet(wallet: LegacyCurrencyWallet): number {
+	return Number(legacyWalletToCents(wallet)) / 100;
+}
+
+function legacyWalletFromUnknown(value: unknown): LegacyCurrencyWallet {
+	const wallet =
+		typeof value === 'object' && value !== null && !Array.isArray(value)
+			? (value as Record<string, unknown>)
+			: {};
+	return Object.fromEntries(
+		CURRENCY_TYPES.map((currency) => {
+			const amount = wallet[currency];
+			return [
+				currency,
+				typeof amount === 'number' &&
+				Number.isSafeInteger(amount) &&
+				amount >= 0
+					? amount
+					: 0,
+			];
+		}),
+	) as LegacyCurrencyWallet;
+}
+
+function legacyWalletFromGpCents(cents: bigint): LegacyCurrencyWallet {
+	return {
+		pp: 0,
+		gp: Number(cents / 100n),
+		ep: 0,
+		sp: 0,
+		cp: Number(cents % 100n),
+	};
+}
+
+export function syncCharacterGpFromLegacyWallets(
+	character: Character,
+): Character {
+	return {
+		...character,
+		gp: gpFromLegacyCurrencyWallet(character.currencies),
+		privateGp: gpFromLegacyCurrencyWallet(character.privateCurrencies),
+	};
+}
 
 export interface DbCampaignCurrency {
+	camp_chest_gp?: number | string | null;
 	camp_chest_currency?: Partial<CampaignCurrency> | null;
 }
 
 export const toDbCampaignCurrency = (
 	currency: CampaignCurrency,
-): Pick<DbCampaignCurrency, 'camp_chest_currency'> => ({
-	camp_chest_currency: currency,
-});
+): Pick<DbCampaignCurrency, 'camp_chest_gp' | 'camp_chest_currency'> => {
+	const cents = legacyWalletToCents(currency);
+	return {
+		camp_chest_gp: Number(cents) / 100,
+		camp_chest_currency: currency,
+	};
+};
 
 export const fromDbCampaignCurrency = (
 	row: DbCampaignCurrency | null | undefined,
 ): CampaignCurrency => {
-	const currency = row?.camp_chest_currency;
-	const valueFor = (coin: CurrencyType) => {
-		const value = currency?.[coin];
-		return typeof value === 'number' && Number.isFinite(value) ? value : 0;
-	};
-	return {
-		pp: valueFor('pp'),
-		gp: valueFor('gp'),
-		ep: valueFor('ep'),
-		sp: valueFor('sp'),
-		cp: valueFor('cp'),
-	};
+	return legacyWalletFromGpCents(
+		gpValueToCents(row?.camp_chest_gp, '營地箱 GP'),
+	);
 };
 
 export interface DbCampaignShop {
@@ -835,45 +918,76 @@ export interface DbCharacter {
 	str: number;
 	user_id: string;
 	campaign_id: string;
-	currencies: Character['currencies'];
-	private_currencies?: Character['privateCurrencies'];
+	gp?: number | string | null;
+	private_gp?: number | string | null;
+	currencies?: Partial<LegacyCurrencyWallet> | null;
+	private_currencies?: Partial<LegacyCurrencyWallet> | null;
 }
 
-export const toDbCharacter = (char: Character): DbCharacter => ({
-	id: char.id,
-	name: char.name,
-	title: char.title,
-	avatar: normalizeAvatarReference(char.avatar),
-	str: Number(char.str),
-	user_id: char.userId,
-	campaign_id: char.campaignId,
-	currencies: char.currencies,
-	private_currencies: char.privateCurrencies || {
-		pp: 0,
-		gp: 0,
-		ep: 0,
-		sp: 0,
-		cp: 0,
-	},
-});
+export const toDbCharacter = (char: Character): DbCharacter => {
+	const gpCents = gpValueToCents(char.gp, '角色公開錢包 GP');
+	const privateGpCents = gpValueToCents(char.privateGp, '角色私人錢包 GP');
+	if (
+		legacyWalletToCents(char.currencies) !== gpCents ||
+		legacyWalletToCents(char.privateCurrencies) !== privateGpCents
+	) {
+		throw new Error('角色 GP 餘額與舊錢包相容資料不一致。');
+	}
+	return {
+		id: char.id,
+		name: char.name,
+		title: char.title,
+		avatar: normalizeAvatarReference(char.avatar),
+		str: Number(char.str),
+		user_id: char.userId,
+		campaign_id: char.campaignId,
+		gp: Number(gpCents) / 100,
+		private_gp: Number(privateGpCents) / 100,
+		currencies: char.currencies,
+		private_currencies: char.privateCurrencies,
+	};
+};
 
-export const fromDbCharacter = (row: DbCharacter): Character => ({
-	id: row.id,
-	name: row.name,
-	title: row.title,
-	avatar: normalizeAvatarReference(row.avatar),
-	str: Number(row.str),
-	userId: row.user_id,
-	campaignId: row.campaign_id,
-	currencies: row.currencies || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
-	privateCurrencies: row.private_currencies || {
-		pp: 0,
-		gp: 0,
-		ep: 0,
-		sp: 0,
-		cp: 0,
-	},
-});
+export const fromDbCharacter = (row: DbCharacter): Character => {
+	const gpCents = gpValueToCents(row.gp, `角色 ${row.id} 公開錢包 GP`);
+	const privateGpCents = gpValueToCents(
+		row.private_gp,
+		`角色 ${row.id} 私人錢包 GP`,
+	);
+	const currencies = legacyWalletFromUnknown(row.currencies);
+	const privateCurrencies = legacyWalletFromUnknown(row.private_currencies);
+	if (
+		row.currencies != null &&
+		legacyWalletToCents(currencies) !== gpCents
+	) {
+		throw new Error(`角色 ${row.id} 公開錢包 GP 與相容欄位不一致。`);
+	}
+	if (
+		row.private_currencies != null &&
+		legacyWalletToCents(privateCurrencies) !== privateGpCents
+	) {
+		throw new Error(`角色 ${row.id} 私人錢包 GP 與相容欄位不一致。`);
+	}
+	return {
+		id: row.id,
+		name: row.name,
+		title: row.title,
+		avatar: normalizeAvatarReference(row.avatar),
+		str: Number(row.str),
+		userId: row.user_id,
+		campaignId: row.campaign_id,
+		gp: Number(gpCents) / 100,
+		privateGp: Number(privateGpCents) / 100,
+		currencies:
+			row.currencies == null
+				? legacyWalletFromGpCents(gpCents)
+				: currencies,
+		privateCurrencies:
+			row.private_currencies == null
+				? legacyWalletFromGpCents(privateGpCents)
+				: privateCurrencies,
+	};
+};
 
 export interface DbCampaignJourney {
 	id: string;

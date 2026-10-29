@@ -74,7 +74,9 @@ export type WeaponMasteryKey =
 	| 'Vex';
 export type WeaponItemMastery = Exclude<WeaponMasteryKey, 'None'>;
 export type WeaponMasteryInfo = { name: string; desc: string };
+// 舊錢包相容層；GP-only UI 完成後移除。
 export type CurrencyType = 'pp' | 'gp' | 'ep' | 'sp' | 'cp';
+export type LegacyCurrencyWallet = Record<CurrencyType, number>;
 export type ViewMode = 'player' | 'dm';
 export type CampaignShopOrderStatus =
 	| 'completed'
@@ -335,8 +337,10 @@ export type Character = {
 	title: string;
 	str: number;
 	avatar: string;
-	currencies: Record<CurrencyType, number>; // 公開錢包
-	privateCurrencies: Record<CurrencyType, number>; // 私人暗袋錢包
+	gp: number;
+	privateGp: number;
+	currencies: LegacyCurrencyWallet;
+	privateCurrencies: LegacyCurrencyWallet;
 };
 
 export type HomebrewForm = {

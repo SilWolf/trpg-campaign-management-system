@@ -73,6 +73,8 @@ export default function CharacterModal({
 			avatar,
 			userId: character ? character.userId : userId,
 			campaignId: character ? character.campaignId : campaignId,
+			gp: character ? character.gp : 51,
+			privateGp: character ? character.privateGp : 0,
 			currencies: character
 				? character.currencies
 				: { pp: 0, gp: 50, ep: 0, sp: 10, cp: 0 },
