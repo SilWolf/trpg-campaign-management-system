@@ -37,7 +37,7 @@ supabase db push --linked
 
 ## 冒險筆記 Schema 與授權 migration
 
-[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權；持有 service role 並不會替使用者取得角色刪除權。
+[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；程式碼已完成，但尚未部署至目標 Supabase。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
 
 此 migration 會檢查所依賴的既有欄位型別、角色主鍵、授權 helper、物品 owner 關聯及 `supabase_realtime` 設定。既有角色擁有者權限列會取得 `journey_access = 2`；新增或轉移擁有權時亦由 DB trigger 同步。另以 restrictive RLS policy 阻止直接刪除角色，只有受限交易 RPC 能執行完整刪除。遇到缺欄位、型別不符、遺留孤兒物品或整個 schema 的 Realtime publication 時會停止，請先人工釐清，不要略過檢查或直接修改正式資料。migration 另以物品 owner trigger 與角色列鎖，避免刪角交易期間新增／移轉物品形成孤兒 owner。
 
@@ -50,7 +50,7 @@ supabase db push --linked
 - `anon`／`authenticated` 直接執行角色刪除 RPC 被拒；`service_role` 搭配未授權 actor 仍被拒。授權刪除後筆記轉公開且保留、背包和雙錢包併入營地箱；透過隔離測試觸發交易中途失敗，確認物品、貨幣、筆記與角色全部回滾。
 - 以平行角色移轉／新增物品及刪角請求驗證 owner 鎖定；確認不會留下指向已刪角色的物品，並確認每個戰役至少保留一名實體角色。
 
-完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL、不部署 Edge Function，也不代表真實 Supabase RLS／Realtime／交易已驗收或上線。呼叫此 RPC 的 Edge Function 與前端整合屬後續階段，部署前必須先完成該整合並重新驗證。
+完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL、不部署 Edge Function，也不代表真實 Supabase RLS／Realtime／交易已驗收或上線。
 
 ## 部署 Edge Function
 
@@ -63,6 +63,14 @@ supabase db push --linked
    ```
 
 4. `supabase/config.toml` 對此 function 開啟 gateway JWT 驗證；程式內仍以 Supabase Auth `getUser(token)` 驗證實際登入者，並只把該 user UUID 傳入交易 RPC。函式不接受客戶端提供任意種子資料或建立者 ID。
+
+角色刪除 Edge Function 亦需由維護者在 migration 成功套用後部署：
+
+```sh
+supabase functions deploy delete-campaign-character --project-ref <正確的專案參照>
+```
+
+此 Function 同樣使用 `SUPABASE_URL`、`SUPABASE_ANON_KEY` 與 `SUPABASE_SERVICE_ROLE_KEY`；service role key 僅供伺服器端使用。請求只接受 `campaignId`／`characterId`，actor ID 一律由已驗證的 Auth token 取得。設定與背包兩個刪除入口都呼叫此 Function，不可由前端直接執行交易 RPC 或以多次 REST 寫入代替。
 
 前端從 `src/data.ts` 組出 3 名真正角色與 9 件示範物品後放入 `seed`；會排除虛擬 `camp-chest`，不寫入角色列。Function 不自行產生或替換 seed，而是將收到的內容傳給交易 RPC。選用 `sample` 時送出範例內容；`blank` 則送出空角色／物品陣列與零餘額公共錢包。Function 限制陣列數量及資料形狀；SQL 交易為完整原子操作，任何角色／物品欄位錯誤都會回滾整筆建立。
 
@@ -90,6 +98,9 @@ supabase db push --linked
 - 每件物品的 `campaign_id` 指向剛建立的戰役，角色物品 owner 映射至新角色；camp-chest 物品若存在，維持 `owner_id = 'camp-chest'` 且非私人。
 - `blank` 建團只建立 campaign 和 DM 成員，沒有角色／物品，公共錢包五幣種皆為零。
 - 故意傳入無效物品欄位觸發 RPC 錯誤，確認 campaign、成員、角色、物品均完全回滾。
+- 在隔離環境以有效／無效 token、未授權玩家、跨戰役或不存在角色、`camp-chest`、最後一名實體角色測試 `delete-campaign-character`；拒絕請求不得改變資料。
+- 以 DM 與具 `can_delete_character` 權限的玩家刪除角色，確認筆記解除角色關聯並轉公開、角色物品／雙錢包合併及角色刪除同一交易完成；刻意在交易末段觸發錯誤，確認所有資料回滾。
+- 驗證 authenticated／anon 不能直接執行角色刪除 RPC，Edge Function 回應不含 service role 或私密資料。Playwright Supabase mock 只驗證請求合約及 UI 錯誤處理，不等於上述真實環境驗收。
 - 一般 `authenticated`／`anon` 不能直接執行 `create_campaign_from_seed`；只有 `service_role` 有 EXECUTE 權限。
 - 有效邀請碼透過加入 RPC 後可以讀取新戰役；無效邀請碼失敗，重複加入不會改變既有成員角色。
 - 非成員無法讀取另一戰役 campaign row、物品或 Realtime 事件。不同 campaign 的 camp-chest 錢包及物品互相隔離。

@@ -19,6 +19,7 @@ import {
 import type { ToastKind } from '@/components/ui/ToastViewport';
 import { getItemImageUrl, ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 import { identifyInventoryItem } from '@/lib/campaignShops';
+import { deleteCampaignCharacter } from '@/lib/campaignCharacterDeletion';
 import {
 	splitInventoryStack,
 	transferInventoryStack,
@@ -692,7 +693,7 @@ export function useInventoryActions({
 		showToast(`✨ 角色「${charData.name}」資料已更新！`);
 	};
 
-	const handleDeleteCharacter = (charId: string) => {
+	const handleDeleteCharacter = async (charId: string) => {
 		if (charId === CAMP_CHEST_ID) return;
 		const realCharacters = characters.filter(
 			(character) => character.id !== CAMP_CHEST_ID,
@@ -703,6 +704,22 @@ export function useInventoryActions({
 		}
 		const targetChar = characters.find((c) => c.id === charId);
 		if (!targetChar) return;
+
+		if (isRemoteCampaign) {
+			try {
+				await deleteCampaignCharacter(campaignId, charId);
+				showToast(
+					`🏕️ 已移除角色「${targetChar.name}」，其物品與雙錢包已併入營地儲物箱！`,
+				);
+			} catch (error) {
+				showToast(
+					'移除角色失敗：' +
+						(error instanceof Error ? error.message : '未知錯誤'),
+					'error',
+				);
+			}
+			return;
+		}
 
 		const publicWallet = targetChar.currencies;
 		const privateWallet = targetChar.privateCurrencies;

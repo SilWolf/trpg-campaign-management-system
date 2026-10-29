@@ -181,7 +181,7 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 - Migration `20261030000008_campaign_journeys.sql` 已由維護者回報部署成功；新增的 Schema、授權 helper／policies、Realtime 設定與角色刪除交易 RPC 已套用至目標資料庫。
 - 部署期間曾修正前置檢查對尚未建立之 `journey_access` 欄位的解析問題，並將 ACL helper 的門檻參數改為 `integer`，以符合 RLS policy 中整數常值的函式解析。
 - `supabase/tests/campaign_journeys_permissions.sql` 已新增，但尚無回報表示已在目標資料庫執行；RLS 角色矩陣、拒絕／回滾路徑與 Realtime payload 的真實資料庫驗收仍待完成。
-- 階段二至後續階段的前端型別、資料存取、Edge Function 與 UI 尚未完成。因此目前角色刪除 RPC 尚未由 Edge Function 呼叫，現有前端刪角流程不可視為已整合或驗收。
+- 當時階段二至後續階段的前端型別、資料存取、Edge Function 與 UI 尚未完成；角色刪除 RPC 與前端流程已在階段四補上 Edge Function 整合。真實資料庫授權、交易回滾及正式環境部署仍待維護者驗收。
 
 **目標與工作項目**
 
@@ -284,6 +284,15 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 ### 階段四：角色刪除 Edge Function 與交易 RPC
 
+**進度紀錄（2026-10-29）**
+
+- `20261030000008_campaign_journeys.sql` 已包含 `delete_campaign_character_with_journeys(text, text, uuid)` 交易 RPC，階段一部署紀錄已確認該 migration 套用；本階段沿用此 RPC，未修改歷史 migration 或新增 SQL。
+- 新增 `delete-campaign-character` Edge Function，限制 POST 與 4 KiB JSON body，拒絕多餘欄位、空識別碼、超長識別碼及虛擬 `camp-chest`；以 Supabase Auth `getUser(token)` 取得 actor ID，只把 actor ID 與 campaign／character ID 傳入 service-role RPC。`supabase/config.toml` 已啟用 gateway JWT 驗證。
+- 戰役設定及背包角色刪除入口統一改呼叫 Edge Function。遠端成功前不改寫本地角色、物品或貨幣狀態，避免直接 REST 多次寫入或與 Realtime 同步重複寫入；訪客／離線背包保留本地退避。錯誤會明確呈現，失敗不會先移除畫面資料。
+- 新增請求欄位解析測試及設定頁成功／權限錯誤 Playwright mock 合約測試。這些測試不驗證 Supabase Auth、service-role 權限、真實 RPC 原子性或交易回滾；尚未連線、套用 SQL 或部署 Function。
+- `npm run typecheck`、`npm run lint`、`npm run build` 及角色刪除相關 13 項 Playwright 測試通過；本機未安裝 Deno，因此未執行 Edge Function runtime check。
+- 真實 Edge Function 驗證、RLS／角色 ACL 矩陣及 RPC 中途失敗回滾仍須由維護者依隔離 Supabase 手動驗收；目前不得宣稱角色刪除功能已在目標環境上線。
+
 **目標與工作項目**
 
 - 新增專用 Edge Function（建議 `supabase/functions/delete-campaign-character/index.ts`），限制 POST、驗證請求大小／欄位、驗證 Authorization token 並以 Supabase Auth 取得 actor ID。
@@ -297,13 +306,14 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] 未登入、無效 token、格式錯誤或超量請求被拒絕且不觸碰資料。
+- [ ] 隔離環境驗證未登入、無效 token、格式錯誤或超量請求被拒絕且不觸碰資料；本地 parser／mock 測試僅覆蓋請求欄位與前端合約。
 - [ ] 無刪除權限玩家、跨戰役角色 ID、虛擬角色及最後一名實體角色均被拒絕。
 - [ ] DM 與具 `can_delete_character` 的授權使用者成功刪除時，筆記轉公開、角色刪除、角色物品／雙錢包移轉同交易完成。
 - [ ] 注入 RPC 中任一失敗情境後，確認筆記關聯／visibility、角色、物品與 campaign 貨幣全部回滾。
 - [ ] 一般 authenticated／anon 不能直接呼叫刪除 RPC；Edge Function 不回傳 service role 或私密資料。
-- [ ] UI 在成功時刷新正確狀態，在失敗時保留畫面資料並顯示明確錯誤；不可樂觀移除後不回復。
-- [ ] 增加 Edge Function 請求合約測試及 SQL 交易測試；mock 通過後仍須列出隔離 Supabase 真實驗收步驟。
+- [x] UI 在成功時刷新正確狀態，在失敗時保留畫面資料並顯示明確錯誤；遠端刪除不先樂觀移除角色／物品／貨幣，成功後由前端狀態更新與 Realtime 同步。
+- [x] 增加請求欄位解析與前端 Edge Function mock 合約測試。
+- [ ] RPC 原子性／失敗回滾與真實 Edge Function 授權測試仍須在隔離 Supabase 執行。
 
 ### 階段五：戰役導航、列表與一般筆記詳情
 

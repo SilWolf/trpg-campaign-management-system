@@ -4,24 +4,18 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useConfirm, useToast } from '@/contexts/FeedbackContext';
 import {
 	supabase,
-	fromDbCampaignCurrency,
 	fromDbCharacter,
-	fromDbItem,
 	fromDbPermission,
-	toDbCampaignCurrency,
 	toDbCharacter,
-	toDbItem,
-	type DbInventoryItem,
 } from '@/lib/supabase';
+import { deleteCampaignCharacter } from '@/lib/campaignCharacterDeletion';
 import { useUserCampaignRole } from '@/hooks/useUserCampaignRole';
 import { loadBlacksmithCatalogDefinitions } from '@/lib/blacksmithCatalog';
 import {
 	CAMP_CHEST_ID,
-	canStackItems,
 	type Character,
 	type CharacterPermission,
 	type AccessLevel,
-	type InventoryItem,
 } from '@/types';
 import { CampaignSettingsView } from './-parts/CampaignSettingsView';
 import type { DisplayMember } from './-parts/types';
@@ -708,105 +702,13 @@ function CampaignSettingsPage() {
 
 		try {
 			if (supabase) {
-				const { data: itemRows, error: itemError } = await supabase
-					.from('inventory_items')
-					.select('*')
-					.eq('campaign_id', campaignId);
-
-				if (itemError) throw itemError;
-				if (!itemRows) {
-					throw new Error('無法載入角色物品，未執行角色移除。');
-				}
-
-				const allItems = (itemRows as DbInventoryItem[]).map(fromDbItem);
-				const campItems = allItems
-					.filter((i) => i.ownerId === CAMP_CHEST_ID)
-					.map((i) => ({ ...i }));
-				const charItems = allItems.filter((i) => i.ownerId === char.id);
-				const itemsToDelete: string[] = [];
-
-				charItems.forEach((item) => {
-					const movedItem: InventoryItem = {
-						...item,
-						ownerId: CAMP_CHEST_ID,
-						equipped: false,
-						attuned: false,
-						isPrivate: false,
-					};
-					const existingStack = campItems.find((target) =>
-						canStackItems(target, movedItem),
-					);
-					if (existingStack) {
-						existingStack.quantity += movedItem.quantity;
-						itemsToDelete.push(item.id);
-					} else {
-						campItems.push(movedItem);
-					}
-				});
-
-				if (campItems.length > 0) {
-					const { error } = await supabase.from('inventory_items').upsert(
-						campItems.map((i) => ({
-							...toDbItem(i),
-							campaign_id: campaignId,
-						})),
-					);
-					if (error) throw error;
-				}
-				if (itemsToDelete.length > 0) {
-					const { error } = await supabase
-						.from('inventory_items')
-						.delete()
-						.in('id', itemsToDelete)
-						.eq('campaign_id', campaignId);
-					if (error) throw error;
-				}
-
-				const { data: campaignRow, error: campaignError } = await supabase
-					.from('campaigns')
-					.select('camp_chest_currency')
-					.eq('id', campaignId)
-					.single();
-				if (campaignError) throw campaignError;
-
-				const campChestCurrency = fromDbCampaignCurrency(campaignRow);
-				const mergedCurrencies = {
-					pp:
-						campChestCurrency.pp +
-						(char.currencies?.pp ?? 0) +
-						(char.privateCurrencies?.pp ?? 0),
-					gp:
-						campChestCurrency.gp +
-						(char.currencies?.gp ?? 0) +
-						(char.privateCurrencies?.gp ?? 0),
-					ep:
-						campChestCurrency.ep +
-						(char.currencies?.ep ?? 0) +
-						(char.privateCurrencies?.ep ?? 0),
-					sp:
-						campChestCurrency.sp +
-						(char.currencies?.sp ?? 0) +
-						(char.privateCurrencies?.sp ?? 0),
-					cp:
-						campChestCurrency.cp +
-						(char.currencies?.cp ?? 0) +
-						(char.privateCurrencies?.cp ?? 0),
-				};
-				const { error: currencyError } = await supabase
-					.from('campaigns')
-					.update(toDbCampaignCurrency(mergedCurrencies))
-					.eq('id', campaignId);
-				if (currencyError) throw currencyError;
-
-				const { error: characterError } = await supabase
-					.from('characters')
-					.delete()
-					.eq('id', char.id)
-					.eq('campaign_id', campaignId);
-				if (characterError) throw characterError;
+				await deleteCampaignCharacter(campaignId, char.id);
 			}
 
 			setCampaignCharacters((prev) => prev.filter((c) => c.id !== char.id));
+			setAllPermissions((prev) =>
+				prev.filter((permission) => permission.characterId !== char.id),
+			);
 			setActiveTab('characters');
 			setActiveCharacterId(
 				campaignCharacters.find(

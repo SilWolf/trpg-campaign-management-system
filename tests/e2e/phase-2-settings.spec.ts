@@ -248,7 +248,7 @@ test('DM 可在角色分頁新增冒險者角色', async ({ page }) => {
 test('移除角色時將錢幣併入戰役營地箱且不建立虛擬角色列', async ({
 	page,
 }) => {
-	const { requests, campaignUpdates } = await mockSupabase(page, {
+	const { requests, functionRequests } = await mockSupabase(page, {
 		campaignSettingsRole: 'dm',
 	});
 	await seedAuthenticatedSession(page);
@@ -264,17 +264,55 @@ test('移除角色時將錢幣併入戰役營地箱且不建立虛擬角色列',
 	await deleteDialog.getByRole('button', { name: '移除角色' }).click();
 
 	await expect(page.getByRole('status').filter({ hasText: '已移除角色' })).toBeVisible();
+	expect(functionRequests).toContainEqual({
+		name: 'delete-campaign-character',
+		body: {
+			campaignId: 'settings-campaign',
+			characterId: 'settings-character',
+		},
+	});
 	expect(
-		requests.some((request) => request.startsWith('PATCH /rest/v1/campaigns')),
-	).toBe(true);
-	expect(
-		requests.some((request) => request.startsWith('DELETE /rest/v1/characters')),
-	).toBe(true);
+		requests.some(
+			(request) =>
+				request.startsWith('PATCH /rest/v1/campaigns') ||
+				request.startsWith('DELETE /rest/v1/characters') ||
+				request.startsWith('PATCH /rest/v1/inventory_items') ||
+				request.startsWith('POST /rest/v1/inventory_items'),
+		),
+	).toBe(false);
 	expect(
 		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
 	).toBe(false);
-	expect(campaignUpdates).toContainEqual({
-		camp_chest_currency: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+});
+
+test('角色刪除交易失敗時保留角色並顯示錯誤', async ({ page }) => {
+	const { functionRequests } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		deleteCampaignCharacterError: '沒有權限移除此角色。',
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(campaignSettingsUrl);
+
+	await page.getByTestId('campaign-settings-tab-characters').click();
+	await page.getByTestId('campaign-settings-tab-settings-character').click();
+	await page.getByTestId('character-delete').click();
+	const deleteDialog = page.getByRole('dialog', {
+		name: '移除角色並收納遺物',
+	});
+	await deleteDialog.getByRole('button', { name: '移除角色' }).click();
+
+	await expect(
+		page.getByRole('alert').filter({ hasText: '移除角色失敗：沒有權限' }),
+	).toBeVisible();
+	await expect(
+		page.getByRole('tab', { name: /測試冒險者/ }),
+	).toBeVisible();
+	expect(functionRequests).toContainEqual({
+		name: 'delete-campaign-character',
+		body: {
+			campaignId: 'settings-campaign',
+			characterId: 'settings-character',
+		},
 	});
 });
 

@@ -43,6 +43,7 @@ export async function mockSupabase(
 		campaignInventoryRole?: CampaignSettingsRole;
 		extraInventoryItems?: Record<string, unknown>[];
 		createCampaignError?: string;
+		deleteCampaignCharacterError?: string;
 		blankCampaign?: boolean;
 		blacksmithSharedItems?: Record<string, unknown>[];
 		blacksmithImportCampaigns?: { id: string; name: string }[];
@@ -411,6 +412,31 @@ export async function mockSupabase(
 
 		if (url.pathname === '/auth/v1/user' && method === 'GET') {
 			await route.fulfill({ json: testUser });
+			return;
+		}
+
+		if (
+			url.pathname === '/functions/v1/delete-campaign-character' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as {
+				campaignId: string;
+				characterId: string;
+			};
+			functionRequests.push({
+				name: 'delete-campaign-character',
+				body,
+			});
+			if (options.deleteCampaignCharacterError) {
+				await route.fulfill({
+					status: 403,
+					json: { error: options.deleteCampaignCharacterError },
+				});
+				return;
+			}
+			await route.fulfill({
+				json: { deleted: true, characterId: body.characterId },
+			});
 			return;
 		}
 
