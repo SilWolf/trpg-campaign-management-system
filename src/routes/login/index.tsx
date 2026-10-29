@@ -122,15 +122,9 @@ function LoginPage() {
 								size='sm'
 								onClick={() => setShowPassword((visible) => !visible)}
 								aria-label={showPassword ? '隱藏密碼' : '顯示密碼'}
-								prefixIcon={
-									showPassword ? (
-										<EyeOff />
-									) : (
-										<Eye />
-									)
-								}
-							>
-							</Button>
+								prefixIcon={showPassword ? <EyeOff /> : <Eye />}
+								className='absolute right-0 bottom-0 top-0'
+							></Button>
 						</div>
 					</div>
 
@@ -156,6 +150,7 @@ function LoginPage() {
 						data-testid='login-submit'
 						type='submit'
 						loading={isSubmitting}
+						className='w-full mt-3'
 					>
 						{isSubmitting
 							? '處理中...'
@@ -170,6 +165,7 @@ function LoginPage() {
 					type='button'
 					variant='ghost'
 					size='sm'
+					className='w-full mt-3'
 					onClick={() => {
 						setIsSignUp((value) => !value);
 						setMessage(null);
@@ -192,6 +188,7 @@ function LoginPage() {
 					variant='secondary'
 					onClick={handleGuestLogin}
 					prefixIcon={<Dice6 />}
+					className='w-full mt-3'
 				>
 					<span>🎲 免登入・以訪客身分體驗測試戰役</span>
 				</Button>
