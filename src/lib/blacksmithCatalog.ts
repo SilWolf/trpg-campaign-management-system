@@ -11,6 +11,7 @@ import type {
 	WeaponItem,
 	WeaponItemMastery,
 } from '@/types';
+import { resolveItemImageUrl } from '@/lib/imageReferences';
 
 export const BLACKSMITH_CATEGORY_LABELS = ITEM_CATEGORY_LABELS;
 
@@ -533,10 +534,11 @@ export function filterBlacksmithCatalogItems(
 }
 
 export function getBlacksmithIconUrl(icon: string): string {
-	const baseUrl = import.meta.env.BASE_URL.endsWith('/')
-		? import.meta.env.BASE_URL
-		: `${import.meta.env.BASE_URL}/`;
-	return `${baseUrl}${icon.slice(2)}`;
+	const imageUrl = resolveItemImageUrl(icon, import.meta.env.BASE_URL);
+	if (!imageUrl) {
+		throw new Error('鍛造工坊圖示參照格式無效。');
+	}
+	return imageUrl;
 }
 
 export async function loadBlacksmithCatalogDefinitions(): Promise<

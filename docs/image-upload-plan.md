@@ -104,6 +104,15 @@
 - 維持道具既有靜態路徑及 HTTPS 圖片 URL 的顯示相容性；角色 Emoji 不屬於相容目標，按階段二遷移。
 - 新增可測試的影像規格化函式，涵蓋尺寸、WebP 轉換、錯誤輸入與資源釋放。
 
+**進度紀錄（2026-10-29）**
+
+- 已完成共用參照解析：保留 `./images/...` 與 `image:https://...`，新增 `avatar:default` 穩定識別值，以及 `storage:<bucket>/<object-path>` 解析。
+- Storage resolver 僅接受 `user-uploads`、`blacksmith-assets`、`campaign-assets` 三個已知 bucket 和符合各用途路徑形狀的參照；它只回傳 bucket／object path，不產生公開 URL。未知 bucket、未知頭像 ID、不安全路徑及非 HTTPS 外部 URL 會明確解析失敗。
+- 已新增 `avatar:default` 對應的通用靜態 WebP fallback，以及瀏覽器圖片規格化：驗證 JPEG／PNG／WebP／AVIF 檔案簽章，限制原始檔 10 MiB、解碼影像 4,000 萬像素；輸出頭像 256×256、物品 128／512 變體及最大寬度 1,200 的 WebP，並在完成或錯誤時釋放 ImageBitmap 與 Canvas 暫存資源。頭像採置中方形裁切；物品與筆記保持比例且不放大小圖。
+- 背包物品與鍛造工坊圖示解析共用同一 resolver；Storage 參照保持為 bucket／path 中繼資料，待後續有權限驗證的讀取流程時才取得可載入 URL。
+- 階段一自動化驗收涵蓋舊格式相容、BASE_URL 子路徑、預設頭像／工坊／campaign／筆記參照、未知 bucket 與不安全參照拒絕、WebP 輸出尺寸及無效／損毀輸入。
+- **驗證結果：**`npm run build`、圖片模組 ESLint 及 `npx playwright test tests/e2e/image-format.spec.ts --project chromium` 通過（3 項）。本結果僅驗證前端解析與轉換；Storage 尚未部署或實測。本階段不連線、不執行 SQL、不宣稱 Supabase Storage 或 RLS 已驗收。
+
 **階段驗收標準**
 
 - 預設頭像 ID、預設道具圖示、工坊來源圖、campaign 覆寫圖及既有 `./images/...`、`image:https://...` 都有明確且互不混淆的解析結果；無效格式、非 HTTPS 外部 URL 及未知 bucket 不會產生可載入 URL。
