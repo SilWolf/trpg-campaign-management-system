@@ -221,3 +221,75 @@ test('儲存遭拒時保留編輯內容並顯示錯誤', async ({ page }) => {
 	await expect(page.getByRole('alert')).toContainText('目前帳號沒有修改權限');
 	await expect(page.getByTestId('journey-title')).toHaveValue('尚未儲存的內容');
 });
+
+test('玩家不查詢 DM 專屬資料，DM 可新增及更新私密 Markdown 筆記', async ({
+	page,
+}) => {
+	const player = await mockSupabase(page, {
+		campaignSettingsRole: 'player',
+		campaignJourneysSeed: [journey()],
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${journeysUrl}/journey-public-1`);
+	await expect(page.getByTestId('journey-detail-title')).toHaveText('灰港的線索');
+	await expect(page.getByTestId('journey-dm-note')).toHaveCount(0);
+	expect(
+		player.requests.some((request) =>
+			request.includes('/rest/v1/campaign_journey_dm_notes'),
+		),
+	).toBe(false);
+
+	const dmPage = await page.context().newPage();
+	const dm = await mockSupabase(dmPage, {
+		campaignSettingsRole: 'dm',
+		campaignJourneysSeed: [journey()],
+	});
+	await seedAuthenticatedSession(dmPage);
+	await dmPage.goto(`${journeysUrl}/journey-public-1`);
+	const dmSection = dmPage.getByTestId('journey-dm-note');
+	await expect(dmSection).toContainText('尚未建立 DM 專屬筆記');
+	await dmSection.getByTestId('journey-dm-note-edit').click();
+	await dmPage
+		.getByTestId('journey-dm-note-content')
+		.fill('## 幕後真相\n\n密使是城主的代理人。');
+	await dmSection.getByTestId('journey-dm-note-save').click();
+	await expect(dmSection).toContainText('幕後真相');
+	await expect(dmSection).toContainText('密使是城主的代理人。');
+
+	await dmSection.getByTestId('journey-dm-note-edit').click();
+	await dmPage
+		.getByTestId('journey-dm-note-content')
+		.fill('更新後：密使受影界勢力指使。');
+	await dmSection.getByTestId('journey-dm-note-save').click();
+	await expect(dmSection).toContainText('更新後：密使受影界勢力指使。');
+
+	expect(dm.campaignJourneyDmNoteWrites).toHaveLength(2);
+	expect(dm.campaignJourneyWrites).toEqual([]);
+	expect(
+		dm.requests.filter((request) =>
+			request.includes('/rest/v1/campaign_journey_dm_notes'),
+		),
+	).toHaveLength(3);
+	await dmPage.close();
+});
+
+test('DM 私密筆記儲存失敗時保留草稿並顯示錯誤', async ({ page }) => {
+	await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+		campaignJourneyDmNoteWriteError: 'DM 筆記目前無法儲存。',
+		campaignJourneysSeed: [journey()],
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(`${journeysUrl}/journey-public-1`);
+
+	const dmSection = page.getByTestId('journey-dm-note');
+	await dmSection.getByTestId('journey-dm-note-edit').click();
+	const draft = '暫存的幕後線索';
+	await page.getByTestId('journey-dm-note-content').fill(draft);
+	await dmSection.getByTestId('journey-dm-note-save').click();
+
+	await expect(dmSection.getByRole('alert')).toContainText(
+		'DM 筆記目前無法儲存',
+	);
+	await expect(page.getByTestId('journey-dm-note-content')).toHaveValue(draft);
+});

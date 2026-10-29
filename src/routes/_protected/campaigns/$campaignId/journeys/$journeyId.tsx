@@ -1,14 +1,26 @@
 /* eslint-disable react-refresh/only-export-components -- TanStack Router 路由模組需匯出 Route. */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, LockKeyhole, Pencil, ScrollText, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, Textarea } from '@/components/ui';
 import { useConfirm } from '@/contexts/FeedbackContext';
 import { evaluateCharacterPermissions } from '@/hooks/useCharacterPermissions';
-import { deleteCampaignJourney } from '@/lib/campaignJourneys';
+import {
+	deleteCampaignJourney,
+	loadCampaignJourneyDmNote,
+	saveCampaignJourneyDmNote,
+} from '@/lib/campaignJourneys';
 import { useCampaignJourneys } from './-parts/CampaignJourneysContext';
 import { CampaignJourneyMarkdown } from './-parts/CampaignJourneyMarkdown';
 import { JourneyForm } from './-parts/JourneyForm';
+import type { CampaignJourneyDmNote } from '@/types';
+
+type DmNoteState = {
+	key: string;
+	status: 'loading' | 'ready' | 'error';
+	note: CampaignJourneyDmNote | null;
+	error?: string;
+};
 
 export const Route = createFileRoute(
 	'/_protected/campaigns/$campaignId/journeys/$journeyId',
@@ -34,7 +46,29 @@ function CampaignJourneyDetails() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [deleteError, setDeleteError] = useState<string | null>(null);
+	const [dmNoteState, setDmNoteState] = useState<DmNoteState>({
+		key: '',
+		status: 'loading',
+		note: null,
+	});
+	const [dmNoteDraft, setDmNoteDraft] = useState('');
+	const [isEditingDmNote, setIsEditingDmNote] = useState(false);
+	const [isSavingDmNote, setIsSavingDmNote] = useState(false);
+	const [dmNoteReloadVersion, setDmNoteReloadVersion] = useState(0);
+	const dmNoteRequestVersion = useRef(0);
 	const journey = journeys.find((entry) => entry.id === journeyId);
+	const currentJourneyId = journey?.id ?? null;
+	const dmNoteKey = JSON.stringify([
+		campaignId,
+		userId,
+		journeyId,
+		isDm,
+		roleLoading,
+	]);
+	const currentDmNoteState =
+		dmNoteState.key === dmNoteKey
+			? dmNoteState
+			: { key: dmNoteKey, status: 'loading' as const, note: null };
 	const character = characters.find(
 		(entry) => entry.id === journey?.characterId,
 	);
@@ -54,6 +88,98 @@ function CampaignJourneyDetails() {
 							).canManagePrivateJourneys,
 					))
 		: false;
+
+	useEffect(() => {
+		const version = ++dmNoteRequestVersion.current;
+		let active = true;
+		if (!roleLoading && (!isDm || !userId || !currentJourneyId)) {
+			setDmNoteState({ key: dmNoteKey, status: 'ready', note: null });
+			setDmNoteDraft('');
+			setIsEditingDmNote(false);
+			return () => {
+				active = false;
+				if (dmNoteRequestVersion.current === version) {
+					dmNoteRequestVersion.current += 1;
+				}
+			};
+		}
+		if (roleLoading || !isDm || !userId || !currentJourneyId) {
+			return () => {
+				active = false;
+				if (dmNoteRequestVersion.current === version) {
+					dmNoteRequestVersion.current += 1;
+				}
+			};
+		}
+
+		setDmNoteState({ key: dmNoteKey, status: 'loading', note: null });
+		setDmNoteDraft('');
+		setIsEditingDmNote(false);
+		void loadCampaignJourneyDmNote(campaignId, currentJourneyId, true)
+			.then((note) => {
+				if (!active || dmNoteRequestVersion.current !== version) return;
+				setDmNoteState({ key: dmNoteKey, status: 'ready', note });
+				setDmNoteDraft(note?.content ?? '');
+			})
+			.catch((error: unknown) => {
+				if (!active || dmNoteRequestVersion.current !== version) return;
+				setDmNoteState({
+					key: dmNoteKey,
+					status: 'error',
+					note: null,
+					error:
+						error instanceof Error
+							? error.message
+							: '載入 DM 專屬筆記失敗。',
+				});
+			});
+
+		return () => {
+			active = false;
+			if (dmNoteRequestVersion.current === version) {
+				dmNoteRequestVersion.current += 1;
+			}
+		};
+	}, [
+		campaignId,
+		currentJourneyId,
+		dmNoteKey,
+		dmNoteReloadVersion,
+		isDm,
+		roleLoading,
+		userId,
+	]);
+
+	async function handleSaveDmNote() {
+		if (!isDm || roleLoading || !journey || isSavingDmNote) return;
+		const version = dmNoteRequestVersion.current;
+		setIsSavingDmNote(true);
+		setDmNoteState((current) => ({ ...current, error: undefined }));
+		try {
+			const note = await saveCampaignJourneyDmNote(
+				campaignId,
+				journey.id,
+				dmNoteDraft,
+				true,
+			);
+			if (dmNoteRequestVersion.current !== version) return;
+			setDmNoteState({ key: dmNoteKey, status: 'ready', note });
+			setDmNoteDraft(note.content);
+			setIsEditingDmNote(false);
+		} catch (error) {
+			if (dmNoteRequestVersion.current !== version) return;
+			setDmNoteState((current) => ({
+				...current,
+				status: 'error',
+				error:
+					error instanceof Error ? error.message : '儲存 DM 專屬筆記失敗。',
+			}));
+		} finally {
+			if (dmNoteRequestVersion.current === version) {
+				setIsSavingDmNote(false);
+			}
+		}
+	}
 
 	async function handleDelete() {
 		if (!journey || !canManage || isDeleting) return;
@@ -273,6 +399,112 @@ function CampaignJourneyDetails() {
 					<p className='text-sm italic text-muted-foreground'>尚無筆記內容。</p>
 				)}
 			</article>
+			{!roleLoading && isDm && (
+				<section
+					data-testid='journey-dm-note'
+					className='border-t border-primary/40 bg-primary/10 p-4 sm:p-6'
+				>
+					<div className='flex flex-wrap items-center justify-between gap-3'>
+						<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+							DM 專屬筆記
+						</h2>
+						{currentDmNoteState.status === 'ready' && !isEditingDmNote && (
+							<Button
+								type='button'
+								variant='secondary'
+								onClick={() => {
+									setDmNoteDraft(currentDmNoteState.note?.content ?? '');
+									setIsEditingDmNote(true);
+								}}
+								prefixIcon={<Pencil />}
+								data-testid='journey-dm-note-edit'
+							>
+								{currentDmNoteState.note ? '編輯 DM 筆記' : '新增 DM 筆記'}
+							</Button>
+						)}
+					</div>
+					{currentDmNoteState.status === 'loading' ? (
+						<p className='mt-3 text-sm text-muted-foreground'>
+							載入 DM 專屬筆記中…
+						</p>
+					) : currentDmNoteState.status === 'error' &&
+					  !isEditingDmNote ? (
+						<div className='mt-3 grid gap-2'>
+							<p role='alert' className='text-sm text-destructive-foreground'>
+								{currentDmNoteState.error}
+							</p>
+							<Button
+								type='button'
+								variant='secondary'
+								onClick={() =>
+									setDmNoteReloadVersion((version) => version + 1)
+								}
+								data-testid='journey-dm-note-retry'
+							>
+								重新載入
+							</Button>
+						</div>
+					) : isEditingDmNote ? (
+						<div className='mt-3 grid gap-3'>
+							{currentDmNoteState.status === 'error' &&
+								currentDmNoteState.error && (
+									<p
+										role='alert'
+										className='text-sm text-destructive-foreground'
+									>
+										{currentDmNoteState.error}
+									</p>
+								)}
+							<Textarea
+								label='DM 專屬內容'
+								value={dmNoteDraft}
+								onChange={(event) => setDmNoteDraft(event.target.value)}
+								rows={8}
+								description='僅戰役 DM 可讀取；支援 Markdown。'
+								data-testid='journey-dm-note-content'
+							/>
+							<div className='flex flex-wrap justify-end gap-2'>
+								<Button
+									type='button'
+									variant='secondary'
+									onClick={() => {
+										setDmNoteDraft(
+											currentDmNoteState.note?.content ?? '',
+										);
+										setIsEditingDmNote(false);
+									}}
+								>
+									取消
+								</Button>
+								<Button
+									type='button'
+									loading={isSavingDmNote}
+									onClick={() => void handleSaveDmNote()}
+									data-testid='journey-dm-note-save'
+								>
+									儲存 DM 筆記
+								</Button>
+							</div>
+						</div>
+					) : currentDmNoteState.note ? (
+						currentDmNoteState.note.content ? (
+							<div className='mt-3'>
+								<CampaignJourneyMarkdown
+									content={currentDmNoteState.note.content}
+								/>
+							</div>
+						) : (
+							<p className='mt-3 text-sm italic text-muted-foreground'>
+								DM 筆記已建立，但目前沒有內容。
+							</p>
+						)
+					) : (
+						<p className='mt-3 text-sm italic text-muted-foreground'>
+							尚未建立 DM 專屬筆記。
+						</p>
+					)}
+				</section>
+			)}
 		</main>
 	);
 }

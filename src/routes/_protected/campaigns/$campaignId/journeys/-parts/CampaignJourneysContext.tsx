@@ -65,15 +65,18 @@ export function CampaignJourneysProvider({
 }) {
 	const { user, isGuest, loading: authLoading } = useAuth();
 	const { isDm, loading: roleLoading } = useUserCampaignRole(campaignId);
+	const identityKey = JSON.stringify([campaignId, user?.id ?? null, isGuest]);
 	const [journeys, setJourneys] = useState<CampaignJourney[]>([]);
 	const [characters, setCharacters] = useState<JourneyCharacter[]>([]);
 	const [permissions, setPermissions] = useState<CharacterPermission[]>([]);
+	const [dataIdentityKey, setDataIdentityKey] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [filter, setFilter] = useState<CampaignJourneyListFilter>('all');
 	const [characterFilter, setCharacterFilter] = useState('');
 	const [tagFilter, setTagFilter] = useState('');
 	const requestVersion = useRef(0);
+	const journeyRequestVersion = useRef(0);
 	const availabilityMessage = !isSupabaseConfigured
 		? '冒險筆記需要設定 Supabase 並登入；離線模式不會建立本機筆記或假冒雲端同步。'
 		: isGuest
@@ -82,15 +85,17 @@ export function CampaignJourneysProvider({
 
 	const reload = useCallback(async () => {
 		const version = ++requestVersion.current;
+		const journeyVersion = ++journeyRequestVersion.current;
+		setDataIdentityKey(identityKey);
+		setJourneys([]);
+		setCharacters([]);
+		setPermissions([]);
+		setErrorMessage(null);
 		if (authLoading) {
 			setLoading(true);
 			return;
 		}
 		if (!isSupabaseConfigured || isGuest || !user?.id || !supabase) {
-			setJourneys([]);
-			setCharacters([]);
-			setPermissions([]);
-			setErrorMessage(null);
 			setLoading(false);
 			return;
 		}
@@ -114,9 +119,12 @@ export function CampaignJourneysProvider({
 				]);
 			if (characterResult.error) throw characterResult.error;
 			if (permissionResult.error) throw permissionResult.error;
-			if (version !== requestVersion.current) return;
-
-			setJourneys(nextJourneys);
+			if (
+				version !== requestVersion.current
+			) return;
+			if (journeyVersion === journeyRequestVersion.current) {
+				setJourneys(nextJourneys);
+			}
 			setCharacters(
 				(characterResult.data ?? []).map((character) => ({
 					id: character.id,
@@ -130,7 +138,9 @@ export function CampaignJourneysProvider({
 				),
 			);
 		} catch (error) {
-			if (version !== requestVersion.current) return;
+			if (
+				version !== requestVersion.current
+			) return;
 			setJourneys([]);
 			setCharacters([]);
 			setPermissions([]);
@@ -140,28 +150,80 @@ export function CampaignJourneysProvider({
 		} finally {
 			if (version === requestVersion.current) setLoading(false);
 		}
-	}, [authLoading, campaignId, isGuest, user?.id]);
+	}, [authLoading, campaignId, identityKey, isGuest, user?.id]);
+
+	const refreshJourneys = useCallback(async () => {
+		if (!isSupabaseConfigured || isGuest || !user?.id || !supabase) return;
+		const version = ++journeyRequestVersion.current;
+		try {
+			const nextJourneys = await loadCampaignJourneys(campaignId);
+			if (version === journeyRequestVersion.current) {
+				setJourneys(nextJourneys);
+				setErrorMessage(null);
+			}
+		} catch (error) {
+			if (version === journeyRequestVersion.current) {
+				setErrorMessage(
+					error instanceof Error ? error.message : '同步冒險筆記失敗。',
+				);
+			}
+		}
+	}, [campaignId, isGuest, user?.id]);
 
 	useEffect(() => {
 		void Promise.resolve().then(reload);
 		return () => {
 			requestVersion.current += 1;
+			journeyRequestVersion.current += 1;
 		};
 	}, [reload]);
 
+	useEffect(() => {
+		if (
+			authLoading ||
+			!isSupabaseConfigured ||
+			isGuest ||
+			!user?.id ||
+			!supabase
+		) {
+			return;
+		}
+
+		const channel = supabase
+			.channel(`campaign-journeys-${campaignId}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'campaign_journeys',
+					filter: `campaign_id=eq.${campaignId}`,
+				},
+				() => {
+					void refreshJourneys();
+				},
+			)
+			.subscribe();
+
+		return () => {
+			void supabase?.removeChannel(channel);
+		};
+	}, [authLoading, campaignId, isGuest, refreshJourneys, user?.id]);
+
+	const hasCurrentIdentityData = dataIdentityKey === identityKey;
 	const value = useMemo(
 		() => ({
 			campaignId,
-			journeys,
+			journeys: hasCurrentIdentityData ? journeys : [],
 			setJourneys,
-			characters,
-			permissions,
+			characters: hasCurrentIdentityData ? characters : [],
+			permissions: hasCurrentIdentityData ? permissions : [],
 			isDm,
 			roleLoading,
 			userId: user?.id ?? null,
 			isGuest,
-			loading,
-			errorMessage,
+			loading: loading || authLoading || !hasCurrentIdentityData,
+			errorMessage: hasCurrentIdentityData ? errorMessage : null,
 			availabilityMessage,
 			filter,
 			setFilter,
@@ -172,11 +234,13 @@ export function CampaignJourneysProvider({
 		}),
 		[
 			availabilityMessage,
+			authLoading,
 			campaignId,
 			characters,
 			characterFilter,
 			errorMessage,
 			filter,
+			hasCurrentIdentityData,
 			isDm,
 			isGuest,
 			journeys,

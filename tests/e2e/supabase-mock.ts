@@ -42,6 +42,8 @@ export async function mockSupabase(
 		campaignJourneysSeed?: Record<string, unknown>[];
 		campaignJourneyPrivateAccess?: 0 | 1 | 2;
 		campaignJourneyWriteError?: string;
+		campaignJourneyDmNoteWriteError?: string;
+		campaignJourneyDmNotesSeed?: Record<string, unknown>[];
 		campaignOfficialCatalogIds?: string[];
 		campaignInventoryRole?: CampaignSettingsRole;
 		extraInventoryItems?: Record<string, unknown>[];
@@ -79,6 +81,7 @@ export async function mockSupabase(
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
 	const campaignJourneyWrites: unknown[] = [];
+	const campaignJourneyDmNoteWrites: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
 	const permissionUpdates: unknown[] = [];
 	const blacksmithImportRequests: unknown[] = [];
@@ -194,6 +197,9 @@ export async function mockSupabase(
 	const campaignInventoryRole = options.campaignInventoryRole;
 	const campaignRole = campaignInventoryRole ?? campaignSettingsRole;
 	const campaignJourneys = [...(options.campaignJourneysSeed ?? [])];
+	const campaignJourneyDmNotes = [
+		...(options.campaignJourneyDmNotesSeed ?? []),
+	];
 	const campaignCharacters = [
 		{
 			id: 'settings-character',
@@ -1328,6 +1334,54 @@ export async function mockSupabase(
 			}
 		}
 
+		if (url.pathname === '/rest/v1/campaign_journey_dm_notes') {
+			if (campaignSettingsRole !== 'dm') {
+				await route.fulfill({
+					status: 403,
+					json: { message: 'Only campaign DMs can access DM journey notes.' },
+				});
+				return;
+			}
+			if (options.campaignJourneyDmNoteWriteError && method !== 'GET') {
+				await route.fulfill({
+					status: 400,
+					json: {
+						message: options.campaignJourneyDmNoteWriteError,
+						code: '42501',
+					},
+				});
+				return;
+			}
+			if (method === 'GET') {
+				const journeyId = url.searchParams
+					.get('journey_id')
+					?.replace('eq.', '');
+				const note = campaignJourneyDmNotes.find(
+					(row) =>
+						row.campaign_id === 'settings-campaign' &&
+						row.journey_id === journeyId,
+				);
+				await route.fulfill({ json: note ?? null });
+				return;
+			}
+			if (method === 'POST' || method === 'PATCH') {
+				const body = request.postDataJSON() as Record<string, unknown>;
+				campaignJourneyDmNoteWrites.push(body);
+				const note = campaignJourneyDmNotes.find(
+					(row) =>
+						row.campaign_id === body.campaign_id &&
+						row.journey_id === body.journey_id,
+				);
+				if (note) Object.assign(note, body);
+				else campaignJourneyDmNotes.push(body);
+				await route.fulfill({
+					status: method === 'POST' ? 201 : 200,
+					json: note ?? body,
+				});
+				return;
+			}
+		}
+
 		if (
 			url.pathname === '/rest/v1/campaign_shop_orders' &&
 			method === 'GET'
@@ -1393,6 +1447,7 @@ export async function mockSupabase(
 		blacksmithImportRequests,
 		campaignShopRpcRequests,
 		campaignJourneyWrites,
+		campaignJourneyDmNoteWrites,
 		setCampaignOfficialCatalogIds: (catalogIds: string[]) => {
 			currentCampaignOfficialCatalogIds = catalogIds;
 		},

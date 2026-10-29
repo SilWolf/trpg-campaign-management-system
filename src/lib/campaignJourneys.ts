@@ -175,28 +175,14 @@ export async function saveCampaignJourneyDmNote(
 	isDm: boolean,
 ): Promise<CampaignJourneyDmNote> {
 	requireDm(isDm);
-	const client = requireSupabase();
-	const existing = await client
+	const result = await requireSupabase()
 		.from('campaign_journey_dm_notes')
+		.upsert(
+			{ campaign_id: campaignId, journey_id: journeyId, content },
+			{ onConflict: 'journey_id' },
+		)
 		.select(CAMPAIGN_JOURNEY_DM_NOTE_SELECT)
-		.eq('campaign_id', campaignId)
-		.eq('journey_id', journeyId)
-		.maybeSingle();
-	if (existing.error) throwSupabaseError(existing.error);
-
-	const result = existing.data
-		? await client
-				.from('campaign_journey_dm_notes')
-				.update({ content })
-				.eq('campaign_id', campaignId)
-				.eq('journey_id', journeyId)
-				.select(CAMPAIGN_JOURNEY_DM_NOTE_SELECT)
-				.single()
-		: await client
-				.from('campaign_journey_dm_notes')
-				.insert({ campaign_id: campaignId, journey_id: journeyId, content })
-				.select(CAMPAIGN_JOURNEY_DM_NOTE_SELECT)
-				.single();
+		.single();
 	if (result.error) throwSupabaseError(result.error);
 	return fromDbCampaignJourneyDmNote(
 		result.data as DbCampaignJourneyDmNote,

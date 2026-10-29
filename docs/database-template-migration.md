@@ -52,6 +52,41 @@ supabase db push --linked
 
 完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL 或部署 Edge Function。使用者回報 Edge Function 已部署，但這不代表真實 Supabase RLS／Realtime／交易已驗收或上線。
 
+### 冒險筆記隔離部署步驟
+
+以下步驟只供維護者在已確認的**隔離 Supabase 專案**執行。本次開發工作不會連線、套用 migration、部署 Function 或讀取／設定 Secrets。
+
+1. **備份並核對目標。** 建立可還原的資料庫備份／還原點，確認 CLI 登入帳號、project ref、既有 Schema 與 migration history。核對必要前置 migration（包含既有 campaign 授權及 `20261030000007_item_base_validator_grants.sql`）已套用，且 `20261030000008_campaign_journeys.sql` 尚未被錯誤標記為已套用。若遠端歷史或欄位與 repo 不一致，停止並先由維護者釐清；不要略過 migration preflight。
+
+   ```sh
+   supabase migration list --linked
+   supabase db push --dry-run --linked
+   ```
+
+   確認 CLI 輸出的 project ref 與待套用清單正確後，維護者才明確執行：
+
+   ```sh
+   supabase db push --linked
+   ```
+
+   預期依 migration 順序套用 `20261030000008_campaign_journeys.sql`。此 migration 會檢查既有欄位型別、授權 helper、角色／物品關聯及 Realtime publication；檢查失敗即停止，應先查明資料狀態，不要移除檢查或直接改正式資料。
+
+2. **檢查資料庫設定。** 在同一隔離專案執行 [campaign_journeys_permissions.sql](../supabase/tests/campaign_journeys_permissions.sql)。它只驗證 schema、policy、grants、trigger 與 publication 設定，透過 `ROLLBACK` 不保留資料變更；這不是角色矩陣或列層級 RLS 的行為測試。
+
+3. **部署刪角 Edge Function。** 確認 migration 成功後，再明確指定同一個隔離專案部署；`supabase/config.toml` 中 `delete-campaign-character` 必須維持 gateway JWT 驗證啟用。
+
+   ```sh
+   supabase functions deploy delete-campaign-character --project-ref <隔離專案參照>
+   ```
+
+   由維護者在 Supabase Functions 設定中確認伺服器端可用的 Secrets **名稱**為 `SUPABASE_URL`、`SUPABASE_ANON_KEY`、`SUPABASE_SERVICE_ROLE_KEY`。本文件及前端不得記錄或使用這些值；`SUPABASE_SERVICE_ROLE_KEY` 僅可供伺服器端 Function 使用。Function 以登入 token 取得 actor，再呼叫 `delete_campaign_character_with_journeys(text, text, uuid)`；資料庫只授予 `service_role` 執行 RPC，RPC 仍會依資料庫狀態驗證 actor 權限。一般使用者不可直接執行該 RPC。
+
+4. **執行真實環境驗收。** 準備 DM、筆記建立者、ACL `0`／`1`／`2` 玩家、非成員，以及至少兩個測試戰役。依前一節逐項檢查真實 REST/RLS、Realtime payload、刪角授權與失敗回滾；另外確認有效／無效 token、拒絕狀態及成功後筆記、角色、物品與雙錢包結果。保留驗收結果及 migration version，避免在測試資料或身份不明時操作。
+
+5. **失敗與回復。** 若 migration、RLS 檢查或 Function 驗收失敗，停止後續部署和測試寫入，記錄錯誤並保留 migration history。此 migration 沒有供維護者直接執行的 down migration；不可手動刪表、移除 policy／trigger 或標記 migration 已回退。先依備份與還原點評估影響，再以經審查的向前修正 migration 修復；只有無法安全向前修正且已評估資料損失時，才由維護者按既定災難復原程序還原。Function 部署失敗可在確認前端相容性後重新部署修正版；不要以停用授權或公開 service role 權限作為回復方式。
+
+Playwright／Supabase mock 只驗證前端流程與 API 合約；所有隔離專案實測須另行記錄。未完成維護者驗收前，不得將本地測試通過描述為 Supabase 上線或真實 RLS／Realtime／交易驗收完成。
+
 ## 部署 Edge Function
 
 1. 維護者確認資料庫 migration 已成功套用，`create_campaign_from_seed(text, uuid, jsonb)` 僅授予 `service_role` 執行。

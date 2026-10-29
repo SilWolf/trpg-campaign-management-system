@@ -357,6 +357,13 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 ### 階段六：DM 專屬欄位與即時同步
 
+**進度紀錄（2026-10-29）**
+
+- 冒險筆記詳情只在 campaign／登入者身分已完成確認、且目前使用者是 DM 後，才呼叫 DM 私密資料 helper；玩家介面不渲染 DM 區塊，也不送出 DM 表查詢。DM 首次讀取無資料時顯示「尚未建立」，已存在但空白的內容另有狀態。
+- DM 編輯器只呼叫 DM 專用 helper。首次新增與更新統一使用 `journey_id` 唯一鍵 upsert，避免先查再寫的競爭視窗；錯誤會保留編輯草稿並可重試。主筆記新增／更新 payload 不包含 DM 內容。
+- 主筆記 `campaign_journeys` 訂閱只處理變更通知，收到事件後依目前登入身分重新查詢 RLS 可讀資料；未訂閱 `campaign_journey_dm_notes`，DM 筆記透過載入及成功儲存回應同步。換 campaign／登入者時會清空列表與角色資料，身份仍載入期間不發 DM 查詢，請求版本避免舊回應覆蓋新狀態。
+- 新增 Playwright mock 合約測試，覆蓋玩家零 DM 表請求、DM 新增／更新及寫入失敗保留草稿；冒險筆記資料／介面測試 12 項、`npm run typecheck`、`npm run lint` 及 `npm run build` 通過。這些測試不驗證目標 Supabase 的實際 Realtime、RLS、使用者切換競速或 DM 併發寫入；尚未連線或部署 Supabase。
+
 **目標與工作項目**
 
 - 只有確認 `isDm` 且 campaign 身分已載入後，才讀取 `campaign_journey_dm_notes`；未知／載入中的身分不得先發出 DM 私密查詢。
@@ -368,14 +375,23 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] 玩家操作時 Network／mock 呼叫紀錄中沒有 DM 私密表查詢、寫入或訂閱。
-- [ ] DM 可建立／更新 DM 專屬 Markdown 筆記；玩家直接 REST/RPC 嘗試讀寫均被 RLS 拒絕。
-- [ ] DM 私密內容不出現在一般 query、主表 Realtime payload、錯誤訊息、非 DM DOM 或客戶端 log。
-- [ ] 戰役／登入切換、請求競速及登出後不會殘留或回填前一狀態的內容。
-- [ ] 多使用者修改主筆記時列表與詳情一致；DM 私密更新按選定策略同步，無權限事件不洩漏內容。
-- [ ] 相關測試涵蓋角色載入時序、權限變更、同步錯誤與 campaign 切換；`npm run typecheck`、`npm run lint` 通過。
+- [x] 玩家操作時 Network／mock 呼叫紀錄中沒有 DM 私密表查詢或寫入；DM 表不加入訂閱。
+- [x] DM 可建立／更新 DM 專屬 Markdown 筆記；mock 測試覆蓋首次寫入、更新及寫入失敗保留草稿。
+- [ ] 隔離環境直接測試玩家 REST/RPC 讀寫 DM 筆記均被真實 RLS 拒絕。
+- [x] DM 私密內容不在一般主筆記 query／寫入 payload 或非 DM DOM 中；DM 私密表未加入 Realtime publication。
+- [ ] 隔離環境檢查實際 REST／Realtime payload、RLS 與使用者切換／登出競速，確認無私密資料外洩。
+- [x] campaign／登入者／DM 身分改變時以身份 key 隔離角色結果並隱藏舊列表，請求版本阻止過期回應回填。
+- [x] 主筆記更新事件會重新依 RLS 載入清單；DM 私密筆記採載入／儲存回應同步，不廣播 DM payload。
+- [ ] 隔離環境由多使用者實測 Realtime 更新與刪除，以及 DM 重新載入／多視窗同步行為。
+- [x] 相關 mock 測試覆蓋玩家無 DM 查詢、DM 新增／更新與儲存錯誤；`npm run typecheck`、`npm run lint`、`npm run build` 與 12 項冒險筆記 Playwright 測試通過。
 
 ### 階段七：整合驗收與手動部署文件
+
+**進度紀錄（2026-10-29）**
+
+- 已在 [database-template-migration.md](./database-template-migration.md) 補上冒險筆記隔離部署步驟，涵蓋部署前置檢查、migration 順序與 dry-run、權限檢查腳本、`delete-campaign-character` 部署、Secrets 名稱、RPC 授權邊界、真實環境驗收及失敗回復原則。
+- `npm run typecheck`、`npm run lint`、`npm run build` 通過；build 有既有的單一 bundle 超過 500 kB 提示。冒險筆記資料／UI／刪角相關 Playwright 測試 13 項通過，完整 `npm run test:e2e` 重跑 94 項通過，`git diff --check` 通過。第一次完整 E2E 執行有 4 項商店／鍛造工坊測試失敗；四項單獨重跑均通過，之後完整重跑亦通過。
+- 本階段不連線 Supabase、不執行 SQL、不部署 Edge Function；隔離環境的真實 RLS／Realtime／交易驗收仍由維護者完成並記錄。
 
 **目標與工作項目**
 
@@ -387,11 +403,11 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] 所有自動化指令結果與必要的既存問題均記錄清楚；完整測試通過或有可重現、明確描述的環境阻塞。
+- [x] 所有自動化指令結果與必要的既存問題均記錄清楚；完整測試通過或有可重現、明確描述的環境阻塞。
 - [ ] 隔離 Supabase 以 DM、筆記建立者、其他成員 ACL 0／1／2、非成員測試真實 RLS；檢查 REST 與 Realtime payload 不含 DM 內容。
 - [ ] 真實 Edge Function 測試涵蓋有效／無效 token、權限拒絕、成功刪除及交易回滾。
-- [ ] 部署說明包含 migration／Function 順序、驗收清單與失敗處理；不含任何 Secrets。
-- [ ] 文件明確聲明 mock/E2E 通過不等於 Supabase 真實環境驗收；正式部署需維護者確認並執行。
+- [x] 部署說明包含 migration／Function 順序、驗收清單與失敗處理；只列 Secrets 名稱，不含 Secret 值。
+- [x] 文件明確聲明 mock/E2E 通過不等於 Supabase 真實環境驗收；正式部署需維護者確認並執行。
 
 ### 新對話開工順序
 
