@@ -45,9 +45,9 @@
 
 - `user-uploads`：大頭貼等使用者個人圖片。
 - `blacksmith-assets`：由鍛造工坊建立及管理的來源物品圖片；campaign 匯入物品可唯讀沿用這些參照。
-- `campaign-assets`：自訂道具圖示及符合公開可見性設定的戰役內容圖片。
+- `campaign-assets`：自訂道具圖示及戰役內容圖片；整個 bucket 都公開讀取，不依內容可見性區分圖片存取。
 
-資產可見性必須跟隨所屬角色／物品／筆記的實際可見性。公開內容可使用公開讀取物件，但不能因此允許匿名寫入或列舉檔案；私人暗袋物品及 DM 專屬筆記圖片使用私有物件，讀取須經 Storage RLS 或短期簽名 URL，不能把公開 URL 當作權限控制。建立、覆寫及刪除一律由 Storage RLS 限制。
+三個圖片 bucket 都採公開讀取：任何人只要取得物件 URL，即使不是該戰役成員也能讀取圖片；公開讀取不代表允許匿名列舉物件、上傳、覆寫或刪除。已登入的資產擁有者可列出自己的個人／鍛造工坊圖片，戰役 DM 可列出所屬戰役圖片。請勿上傳足以洩漏角色暗袋、DM 筆記或其他敏感資訊的圖片。角色／物品／筆記資料本身仍由資料庫 RLS 保護，但圖片 bytes 不受該資料列權限保護。建立及刪除由 Storage RLS 限制，更新採新路徑而非原地覆寫。
 
 路徑需可判斷資產用途並避免互相覆寫，例如：
 
@@ -58,16 +58,16 @@
 - `campaign-assets/<campaign-id>/items/<asset-id>/512.webp`
 - `campaign-assets/<campaign-id>/journeys/<journey-id>/<asset-id>/image.webp`
 
-使用不可預測的 asset ID 建立新物件，更新圖片採新路徑上傳、資料參照切換成功後再清除舊物件。禁止用使用者提供的檔名直接當物件路徑。當所屬內容具有私人／DM-only 可見性時，物件亦須存入私有 bucket，路徑格式相同但 bucket 與讀取方式不同。
+使用不可預測的 asset ID 建立新物件，更新圖片採新路徑上傳、資料參照切換成功後再清除舊物件。禁止用使用者提供的檔名直接當物件路徑。私人／DM-only 內容的圖片仍是公開可讀的圖片資產，不可把物件 URL 當成內容權限控制。
 
 鍛造工坊來源圖片採不可變的版本路徑；匯入只保存來源 bucket／object path，不複製檔案。DM 替換圖片時建立新的 campaign-scoped 物件，僅將該 campaign 物品的有效圖片參照切換至新物件（copy-on-write）。不得原地覆寫工坊物件，也不得因 campaign 刪除／替換圖片而刪除來源資產。
 
 ### RLS 與權限
 
 - `user-uploads` 上傳及刪除需驗證路徑中的 UUID 等於 `auth.uid()`；一般使用者不得寫入其他 UID 路徑。
-- `blacksmith-assets` 上傳及刪除需驗證路徑中的 UUID 等於登入者，且該使用者有權編輯該鍛造工坊物品；已被匯入的來源資產需保持可讀，不允許任意覆寫或刪除造成已匯入物品斷圖。
-- `campaign-assets` 上傳、更新及刪除需驗證使用者是該 campaign 成員，且具有符合該操作的角色／資產權限。戰役物品由 DM 上傳替代圖；冒險筆記依現有筆記編輯權限授權。僅檢查路徑包含某 campaign ID 不足以授權。
-- Storage 讀取權限須對應公開背包／私人暗袋、公開筆記／DM-only 筆記等資料可見性。私有圖片不得因共用同一公開 bucket 而可被未授權者透過 URL 讀取；若採 signed URL，需處理到期更新及 Markdown 顯示。
+- `blacksmith-assets` 上傳需驗證路徑中的 UUID 等於登入者；物品參照的新增／修改另由 `blacksmith_items` RLS 驗證擁有者。來源資產不可原地覆寫或直接刪除，避免已匯入的物品斷圖。
+- `campaign-assets` 的戰役物品圖片由 DM 上傳；冒險筆記圖片依現有筆記編輯權限授權上傳。物件使用新路徑建立，原地更新一律拒絕；campaign 圖片刪除目前僅 DM 可執行。僅檢查路徑包含某 campaign ID 不足以授權。
+- 三個 bucket 均為公開讀取；匿名與非戰役成員可直接取得已知圖片 URL，但不能列舉他人或其他戰役的物件。Storage RLS 只授權範圍內的列舉、寫入／刪除，不提供圖片保密性；敏感圖片不得上傳。
 - 角色大頭像的上傳以使用者自己的 UID 作資產路徑；只有具該角色 `can_edit_profile` 權限的玩家能更新角色指向的圖片。預設頭像圖庫是唯讀靜態資產，不需上傳權限。
 - 刪除工坊資產前需確定沒有任何工坊物品或匯入戰役物品仍參照該資產；若無法可靠檢查跨範圍引用，保留來源圖片，不提供使用者立即硬刪除。
 - 既有 RLS 防遞迴規則照常適用：需要跨表檢查時，使用固定 `search_path` 的 `SECURITY DEFINER` 輔助函式；campaign／角色 ID 是 `text`，使用者 ID 是 `uuid`，比較角色 owner 與 `auth.uid()` 時使用 `auth.uid()::text`。
@@ -82,7 +82,7 @@
 - 道具 `icon` 保留既有 `image:https://...` 及 `./images/...` 格式相容；擴充 [getItemImageUrl](../src/lib/itemIcon.ts) 或其共用 resolver 支援預設圖庫 ID、鍛造工坊來源 path 與 campaign 覆寫 path。
 - 匯入的工坊物品保留來源圖片參照，除非 DM 上傳替代圖；有效解析順序需明確（campaign override 優先，否則 forge source）。campaign 覆寫只影響該 campaign，不回寫鍛造工坊原物品。
 - 預設圖鑑識別值使用固定前綴或既有靜態路徑格式，解析到部署基底下的 `public/` 圖片。不得將靜態預設資產誤判為 Storage 上傳物件。
-- 冒險筆記 Markdown 內容保存 campaign／journey-scoped Storage path 的圖片語法；筆記本身繼續使用既有 campaign／journey 權限與隔離，DM-only 筆記的圖片使用私有讀取策略。
+- 冒險筆記 Markdown 內容保存 campaign／journey-scoped Storage path 的圖片語法；筆記本身繼續使用既有 campaign／journey 權限與隔離，但圖片可公開讀取，不能放入敏感內容。
 - 所有資料轉換器需容忍欄位為 `NULL` 及既有道具 URL 格式；角色 avatar 依遷移結果使用預設頭像 fallback，不保留 Emoji fallback。
 
 ## 前端處理與上傳流程
@@ -92,8 +92,8 @@
 1. 選取檔案後檢查檔案大小、圖片解碼結果、寬高與像素總數；使用允許的 raster 圖片格式。拒絕 SVG、非圖片內容、超限檔案及無法解碼的輸入，不能只信任副檔名或瀏覽器提供的 MIME type。選取本地預設頭像時只保存圖庫 ID，不上傳檔案。
 2. 使用 Canvas／瀏覽器影像解碼 API 於本機裁切、縮放並輸出 WebP Blob。預設圖示大小按 UI 用途載入；不得先把 512 版本顯示於所有高密度背包格子。
 3. 角色大頭像產生一張 256 圖片；鍛造工坊及戰役物品一次產生 128、512 兩張圖片；冒險筆記圖片產生一張最大寬度 1,200 px 的圖片。
-4. 顯示預覽、上傳進度、取消與明確錯誤；只在所有必要變體成功上傳後，才更新資料參照。多張物品圖示其中一張失敗時，刪除本次已建立的孤立物件並回報失敗，不將半成品設為目前圖片。
-5. 更新資料成功後清除舊圖片；若更新失敗，保留舊參照並嘗試清理新圖片。清理失敗需記錄可追蹤錯誤，不能靜默當作成功。工坊來源圖片及仍在其他資料中使用的 campaign 圖片不得清除；角色圖片上傳者失去權限或刪除帳號時亦不能造成仍有效角色引用失效。
+4. 顯示預覽、上傳進度、取消與明確錯誤；只在所有必要變體成功上傳後，才更新資料參照。多張物品圖示其中一張失敗時，嘗試清理本次已建立的物件並回報失敗，不將半成品設為目前圖片。
+5. 更新資料成功後，僅在可確認不再被引用且具刪除權限時清除舊圖片；若更新失敗，保留舊參照並嘗試清理新圖片。清理失敗需記錄可追蹤錯誤，不能靜默當作成功。鍛造工坊來源圖目前不可直接刪除；campaign 圖片刪除由 DM 管理，正式清理仍須遵守引用檢查。角色圖片上傳者失去權限或刪除帳號時亦不能造成仍有效角色引用失效。
 6. 刪除角色、campaign、冒險筆記或物品時，依其資產參照清理相應 Storage 物件；確認使用中的共用工坊來源不會因其中一筆資料刪除而被誤刪。若無法可靠確認引用數，先採新增版本及保留舊物件的安全策略，另行規劃受控清理程序。
 
 ## 分階段執行
@@ -124,18 +124,30 @@
 ### 階段二：Supabase Storage 與資料庫權限
 
 - 建立 buckets、容量／MIME 限制及 Storage policies。
-- 調整角色大頭像欄位以保存圖庫 ID 或圖片 path，新增工坊／campaign 圖片參照欄位，並確認冒險筆記 Markdown 的 Storage path 格式。
-- 更新相關 RLS、型別及轉換器；角色歷史 Emoji 值遷移為預設頭像圖庫 ID。Migration 不得把 Emoji 繼續視作有效 avatar 格式。
+- 既有 `characters.avatar`、物品 `icon` 與冒險筆記 Markdown 欄位已是可保存穩定參照的文字欄位；本階段不重複新增圖片欄位。工坊／campaign 資產沿用現有 `icon` 參照格式，筆記沿用 campaign／journey Storage path。
+- 將三個 bucket 設為公開讀取、限制 WebP MIME 與單檔容量，禁止公開列舉及原地覆寫；上傳、刪除依使用者 UID、DM 或筆記編輯權限控制。
+- **頭像 Emoji 資料遷移移至階段三同一版本完成**：目前顯示與選擇介面仍直接處理 Emoji，若先改資料會讓既有客戶端顯示參照字串或送回舊格式。階段三需先完成參照顯示／選取，再用資料庫遷移把歷史值轉成預設圖庫 ID，並阻止舊格式重新寫入。
+- 圖片內容可被持有 URL 的任何人讀取（包含非戰役成員）；角色暗袋、DM-only 筆記等資料的資料列仍受資料庫 RLS 保護，但其圖片不得視為私密。
 - 逐項驗證 Storage 對象的讀取、上傳、覆寫及刪除權限；驗證 campaign 權限不會因錯誤路徑或猜測 object ID 而繞過。
 - SQL migration 與 Storage 設定仍須由維護者確認目標 Supabase 專案及 migration history 後手動部署；此規劃本身不代表已執行。
+
+**進度紀錄（2026-10-29）**
+
+- 新增 `20261030000009_image_storage_permissions.sql`：建立／更新 `user-uploads`、`blacksmith-assets`、`campaign-assets` 三個公開 bucket，僅接受 WebP、單檔上限 10 MiB。
+- Storage policy 以嚴格物件路徑形狀及登入者 UID 限制個人與鍛造工坊上傳；戰役物品圖片僅 DM 可上傳；冒險筆記圖片需 DM、筆記建立者或具筆記修改權限者。更新一律拒絕，必須使用新路徑；個人頭像可由路徑 UID 本人刪除，戰役圖片僅 DM 可刪除，鍛造工坊來源圖禁止直接刪除。
+- 新增 `characters.avatar` 更新 trigger：DM 可更新所有角色；其他登入者必須有該角色 `can_edit_profile` 權限，只有角色擁有者且尚無明確 ACL 列時沿用預設擁有者權限。此限制由資料庫執行，不依賴前端隱藏控制項。
+- 個人及鍛造工坊物件限定寫入者自己的 UUID 目錄；鍛造工坊物件 ID 尚未與資料列 ID 一對一綁定，因此 Storage 允許物件擁有者建立自己的圖片物件，物品圖示參照仍由 `blacksmith_items` 資料列 RLS 控制。
+- 對目標 bucket 的 Storage 物件清單查詢限制為擁有者（個人／鍛造工坊）或該 campaign 的 DM；公開 bucket 仍可透過已知 URL 讀取圖片。
+- 本次無需新增資料欄位：角色頭像、鍛造工坊／戰役物品圖示及筆記內容已有 `text` 欄位可保存階段一定義的參照。歷史 Emoji 轉換與新格式驗證待階段三 UI 參照支援時一併實作，避免目前直接顯示／輸入 Emoji 的客戶端壞掉。
+- **狀態：Storage／資料庫權限程式碼已完成；頭像格式遷移依賴階段三；待 Supabase 部署及隔離環境驗收。** 未連線、部署或執行 SQL；不代表 bucket、Storage RLS 或真實 Auth 權限已驗收。
 
 **階段驗收標準**
 
 - Migration 可在確認過的既有 Schema 上重複安全部署；檢查欄位、索引、bucket、MIME／大小限制及 policies 的預期狀態，並有明確錯誤而非靜默略過不符的基線。
-- 正式／隔離環境的 Storage policy 實測覆蓋：未登入寫入被拒、登入者不可寫入其他 UID、非成員不可寫入 campaign、具權限者可執行允許操作、無權限成員無法讀取私人暗袋與 DM-only 筆記圖片。
+- 正式／隔離環境的 Storage policy 實測覆蓋：未登入寫入被拒、登入者不可寫入其他 UID、非成員不可寫入 campaign、具權限者可執行允許操作；已知公開圖片 URL 可由非成員讀取，物件清單僅能由資產擁有者或 campaign DM 讀取。
 - 預設靜態資產不需 Storage 權限；工坊來源圖片可由獲授權的匯入戰役讀取，但 campaign 使用者不能覆寫或刪除來源資產。
 - 角色 `can_edit_profile`、DM、工坊物品擁有者、campaign 成員及筆記編輯權限均以真實 Auth／Storage API 測試，不只驗證前端隱藏控制項；所有未授權的直接 REST／Storage 請求均遭拒絕。
-- 角色 Emoji 舊值遷移後皆為合法預設頭像 ID；空值亦有 fallback，且沒有任何遷移步驟將 Emoji 當成圖片 URL。
+- 階段三完成後，角色 Emoji 舊值遷移為合法預設頭像 ID；空值亦有 fallback，且沒有任何遷移步驟將 Emoji 當成圖片 URL。
 - 留存部署前／後 Schema 與 policy 檢查結果。若維護者尚未確認隔離專案或未手動部署，階段狀態只能標記為「程式碼完成、待部署驗收」，不得標記為資料庫已驗收。
 
 ### 階段三：角色大頭像
@@ -162,7 +174,7 @@
 - 在戰役背包與商店物品編輯流程提供圖片預覽、DM 替換圖片及權限檢查；背包格子顯示 128 版本，詳情／商店顯示 512 版本。
 - 鍛造工坊匯入流程保存並沿用來源圖片參照；campaign 中沒有覆寫時顯示工坊原圖。DM 上傳替代圖後，以 campaign-scoped 圖片覆寫來源參照，不能改寫工坊原圖或影響其他匯入的戰役。
 - 圖片清理依來源及 campaign 資產範圍執行；campaign 刪除或覆寫不得刪除仍被引用的鍛造工坊圖片。
-- 私人背包物品及 DM-only 筆記圖片採私有讀取，並依既有物品／筆記權限授權，不以隱藏圖片 URL 當成安全控制。
+- 私人背包物品及 DM-only 筆記的資料列維持既有權限；對應圖片仍為公開讀取，不得放置敏感圖像或依賴隱藏 URL 保護內容。
 
 **階段驗收標準**
 
@@ -171,7 +183,7 @@
 - DM 上傳 campaign 覆寫後，只該 campaign／該物品使用覆寫圖；其他戰役及鍛造工坊仍使用原圖。背包格子請求 128 版本，詳情與商店使用 512 版本。
 - 只有獲授權的工坊物品編輯者能上傳工坊圖；只有 DM 能替換戰役商店／背包物品圖片。UI 測試及直接資料／Storage 請求均驗證相同權限。
 - 以跨戰役案例驗證：覆寫圖片、刪除 campaign 物品、刪除 campaign 或清理替換圖片，不會更改或刪除工坊來源圖及其他 campaign 資產。
-- 私人背包圖片只有符合 ACL 的使用者可讀；沒有閱讀權限者無法由圖片 URL、Storage REST API 或猜測 path 取得圖像。
+- 驗證背包／筆記資料列 ACL 不變；已知 campaign 圖片 URL 對非成員可讀，campaign 物件清單只對 DM 開放。此公開讀取行為是明確產品決策，不是 ACL 洩漏。
 - 至少覆蓋直接建立物品、工坊匯入、更新既有圖片、任一變體失敗、Realtime 更新及重載後解析等整合／E2E 流程。
 
 ### 階段五：冒險筆記與靜態圖庫
@@ -186,8 +198,8 @@
 
 - 有筆記編輯權限者可上傳圖片並插入 Markdown；重新編輯、儲存、重新載入及不同授權客戶端檢視時，圖片參照均保留且正確顯示。
 - 筆記圖片以最大寬度 1,200 px 的 WebP 上傳，長寬比依規格保留；非編輯者無法上傳或替換筆記圖片。
-- Markdown renderer 僅允許核准的 HTTPS／受控 Storage 圖片 URL；`javascript:`、`data:`、不允許的協定、HTML 注入及任意未授權私有圖片來源不會被呈現或執行。
-- DM-only 筆記使用私有圖片讀取方式；非 DM 即使取得或猜測物件 path 也無法讀取。公開筆記的圖片可依其設定顯示，不會錯誤變成私人或公開。
+- Markdown renderer 僅允許核准的 HTTPS／受控 Storage 圖片 URL；`javascript:`、`data:`、不允許的協定、HTML 注入及任意非核准圖片來源不會被呈現或執行。
+- DM-only 筆記文字仍只有 DM 可讀；其圖片若已取得 URL 仍可公開讀取，因此上傳流程與文件必須提示不得放入敏感圖像。公開筆記圖片同樣可由非成員讀取。
 - 預設道具圖鑑與預設頭像各有穩定索引 ID；所有已提供素材均可由索引定位，重複執行的檔名／索引檢查通過，正式 build 輸出含該靜態檔案。
 - 靜態圖示解析在根路徑與非根 `BASE_URL` 部署均正確；沒有素材或索引項目時回到明確 fallback。靜態資產不會寫入 Storage，也不會複製到 campaign。
 - 圖片上傳、筆記內容儲存及 Markdown 顯示均有自動化測試；私有讀取需由隔離 Supabase 實測，不以 mock 測試取代。
@@ -220,7 +232,7 @@
 - 128 圖示用於高密度列表，512 圖示只在詳情等需要較大尺寸的視圖載入。
 - 取消、超限、轉換失敗、任一變體上傳失敗、資料庫參照更新失敗及刪除失敗均有清楚狀態；資料不會指向缺失或半完成的圖片。
 - campaign 上傳的覆寫不影響來源工坊圖片或其他戰役；campaign／物品／筆記刪除及圖片替換不會刪除仍被其他資料引用的物件。
-- 私人背包或 DM-only 筆記圖片不能由未授權成員透過匿名請求、猜測路徑或重用過期／他人簽名 URL 讀取。
+- 已知圖片 URL 可由匿名者及非戰役成員讀取；Storage policy 不允許匿名寫入／刪除，也不允許非擁有者／非 DM 列舉物件。私人資料的圖片不得含敏感內容。
 
 ### 安全與資料隔離
 
@@ -237,4 +249,12 @@
 
 ## 部署與安全注意
 
-目前僅完成規劃，尚未建立 buckets、修改 Schema、部署 Edge Function 或執行 SQL。公開圖片使用 Supabase 公開 Storage 物件，私有圖片依父項目的可見性使用受 RLS 保護的私有物件；兩者都不需要把 service-role key 放入 Vite。鍛造工坊來源圖及戰役覆寫圖採不同資產範圍及不可變路徑。私有圖片若以短期簽名 URL 顯示，須另外處理授權讀取與 URL 到期更新。
+階段一已完成；階段二已新增 Storage migration 與部署後 SQL 驗收檢查，但尚未在 Supabase 環境部署或執行。三個圖片 bucket 都使用 Supabase 公開 Storage 物件，不提供圖片 bytes 的保密性；不需要把 service-role key 放入 Vite。鍛造工坊來源圖及戰役覆寫圖採不同資產範圍及不可變路徑。部署前仍須由維護者確認目標專案與 migration history，部署後完成真實 Auth／Storage API 驗收，否則不得標記已上線。
+
+### 階段二部署與檢查順序
+
+1. 維護者先確認目標 Supabase 專案、既有 migration history、目標 bucket 的用途、設定及既有物件。migration 會將三個 bucket 設為公開且更新大小與 MIME 限制；若既有內容不適合公開，必須先處理，不能直接套用。
+2. 確認先前必要 migration 已完成後，依專案既有部署程序執行 [Storage migration](../supabase/migrations/20261030000009_image_storage_permissions.sql)。若手動執行 SQL，須依維護者流程核對並記錄 migration history；不要只建立 bucket 而省略 policies 和頭像權限 trigger。
+3. 確認 migration 成功並提交後，再執行 [Storage 驗收 SQL](../supabase/tests/image_storage_permissions.sql)。該檔案只是檢查，最後會 `ROLLBACK`，不會建立或修改 bucket；不可與尚未提交的 migration 放在同一個交易中執行，否則回滾可能撤銷 migration。
+4. 若驗收回報 bucket 不符，先以唯讀 SQL 查詢三個 bucket 的 `public`、`file_size_limit` 與 `allowed_mime_types`；新版驗收 SQL 也會列出缺少或不符的 bucket。確認 migration 的執行結果及目標專案後再處理，不要只修改驗收條件。
+5. SQL 結構檢查通過不代表 Storage API、現有 grants／policies 與不同使用者的實際權限已驗收；仍須在隔離專案依上述權限矩陣實測。
