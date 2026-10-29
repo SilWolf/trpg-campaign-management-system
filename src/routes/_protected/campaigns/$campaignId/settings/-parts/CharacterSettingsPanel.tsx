@@ -232,6 +232,9 @@ export function CharacterSettingsPanel({
 									const privWallet = isTargetDm
 										? 2
 										: (perm?.privateWalletAccess ?? (isTargetCreator ? 2 : 0));
+									const journeyAccess = isTargetDm
+										? 2
+										: (perm?.journeyAccess ?? (isTargetCreator ? 2 : 0));
 									const editProfile = isTargetDm
 										? true
 										: (perm?.canEditProfile ?? isTargetCreator);
@@ -282,7 +285,7 @@ export function CharacterSettingsPanel({
 												</div>
 											</div>
 
-											<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs'>
+											<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs'>
 												{/* 公開背包權限 */}
 												<div>
 													<Select
@@ -381,6 +384,34 @@ export function CharacterSettingsPanel({
 														<option value={1}>1 - 僅閱讀餘額</option>
 														<option value={2}>2 - 閱讀 + 修改/轉出</option>
 													</Select>
+												</div>
+
+												{/* 冒險筆記權限 */}
+												<div>
+													<Select
+														data-testid={`character-permission-journey-${currentSelectedChar.id}-${member.id}`}
+														label='📜 冒險筆記權限'
+														labelClassName='block text-muted-foreground mb-1'
+														containerClassName='gap-0'
+														disabled={rowDisabled}
+														value={journeyAccess}
+														onChange={(e) =>
+															onUpdatePermission(
+																currentSelectedChar,
+																member.id,
+																'journeyAccess',
+																parseInt(e.target.value, 10) as AccessLevel,
+															)
+														}
+														className='bg-background px-2.5 py-1.5 text-foreground'
+													>
+														<option value={0}>0 - 無權限</option>
+														<option value={1}>1 - 可閱讀私人筆記</option>
+														<option value={2}>2 - 可閱讀與管理私人筆記</option>
+													</Select>
+													<p className='mt-1 text-[10px] text-muted-foreground'>
+														等級 1 僅可閱讀；等級 2 可新增、修改與刪除。
+													</p>
 												</div>
 											</div>
 

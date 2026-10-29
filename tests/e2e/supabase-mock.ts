@@ -75,6 +75,7 @@ export async function mockSupabase(
 	const requests: string[] = [];
 	const functionRequests: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
+	const permissionUpdates: unknown[] = [];
 	const blacksmithImportRequests: unknown[] = [];
 	const blacksmithItems = [...(options.blacksmithSharedItems ?? [])];
 	const campaignShops: Record<string, unknown>[] = options.campaignShopSeed
@@ -345,6 +346,12 @@ export async function mockSupabase(
 		const url = new URL(request.url());
 		const method = request.method();
 		requests.push(`${method} ${url.pathname}${url.search}`);
+		if (
+			url.pathname === '/rest/v1/character_permissions' &&
+			method === 'POST'
+		) {
+			permissionUpdates.push(request.postDataJSON());
+		}
 
 		if (url.pathname === '/auth/v1/signup' && method === 'POST') {
 			await route.fulfill({
@@ -1263,6 +1270,7 @@ export async function mockSupabase(
 		requests,
 		functionRequests,
 		campaignUpdates,
+		permissionUpdates,
 		blacksmithImportRequests,
 		campaignShopRpcRequests,
 		setCampaignOfficialCatalogIds: (catalogIds: string[]) => {

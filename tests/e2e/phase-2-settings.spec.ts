@@ -92,7 +92,46 @@ test('一般成員只能檢視 Campaign 設定，且不能修改自己的權限�
 			'character-permission-public-bag-settings-character-a77ecb75-91dc-43a2-a20e-0a4c32fe8841',
 		),
 	).toBeDisabled();
+	await expect(
+		page.getByTestId(
+			'character-permission-journey-settings-character-a77ecb75-91dc-43a2-a20e-0a4c32fe8841',
+		),
+	).toBeDisabled();
 	await expect(page.getByTestId('character-transfer')).toHaveCount(0);
+});
+
+test('DM 可設定冒險筆記等級並將 journey_access 寫入 permission row', async ({
+	page,
+}) => {
+	const { permissionUpdates } = await mockSupabase(page, {
+		campaignSettingsRole: 'dm',
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(campaignSettingsUrl);
+
+	await page.getByTestId('campaign-settings-tab-characters').click();
+	await page.getByTestId('campaign-settings-tab-settings-character').click();
+
+	const journeyAccess = page.getByTestId(
+		'character-permission-journey-settings-character-transfer-player-id',
+	);
+	await expect(journeyAccess).toHaveValue('0');
+	await expect(journeyAccess).toBeEnabled();
+	await journeyAccess.selectOption('1');
+	await expect(journeyAccess).toHaveValue('1');
+	expect(permissionUpdates).toEqual([
+		expect.objectContaining({
+			campaign_id: 'settings-campaign',
+			character_id: 'settings-character',
+			user_id: 'transfer-player-id',
+			journey_access: 1,
+		}),
+	]);
+
+	await journeyAccess.selectOption('2');
+	expect(permissionUpdates[1]).toEqual(
+		expect.objectContaining({ journey_access: 2 }),
+	);
 });
 
 test('Campaign 設定頁籤支援鍵盤操作，角色移轉確認可取消', async ({

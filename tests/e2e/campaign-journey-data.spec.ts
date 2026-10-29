@@ -96,6 +96,92 @@ test('冒險筆記轉換器 round-trip 涵蓋可見性、角色、旗標與標�
 	expect(results.parsedTags).toEqual(['線索', '任務']);
 });
 
+test('角色冒險筆記權限涵蓋 DM、角色建立者與 ACL 0/1/2', async ({
+	page,
+}) => {
+	await page.goto('/');
+	const result = await page.evaluate(async () => {
+		const { evaluateCharacterPermissions } = await import(
+			'/src/hooks/useCharacterPermissions.ts'
+		);
+		const { fromDbPermission, toDbPermission } = await import(
+			'/src/lib/supabase.ts'
+		);
+		const permission = {
+			id: 'permission-1',
+			campaignId: 'campaign-1',
+			characterId: 'character-1',
+			userId: 'reader',
+			publicBagAccess: 1 as const,
+			privateBagAccess: 0 as const,
+			publicWalletAccess: 1 as const,
+			privateWalletAccess: 0 as const,
+			journeyAccess: 1 as const,
+			canEditProfile: false,
+			canDeleteCharacter: false,
+			canManagePermissions: false,
+		};
+		const evaluate = (
+			permissions: typeof permission[],
+			isDm: boolean,
+			ownerId?: string,
+		) =>
+			evaluateCharacterPermissions(
+				'character-1',
+				'reader',
+				permissions,
+				isDm,
+				'player',
+				ownerId,
+			);
+		const dbRow = toDbPermission(permission);
+		const legacyRow = { ...dbRow, journey_access: undefined };
+		return {
+			default: evaluate([], false),
+			owner: evaluate([], false, 'reader'),
+			read: evaluate([permission], false),
+			manage: evaluate([{ ...permission, journeyAccess: 2 }], false),
+			denied: evaluate([{ ...permission, journeyAccess: 0 }], false),
+			dmOverride: evaluate([{ ...permission, journeyAccess: 0 }], true),
+			converted: fromDbPermission(dbRow).journeyAccess,
+			legacyDefault: fromDbPermission(legacyRow).journeyAccess,
+		};
+	});
+
+	expect(result.default).toMatchObject({
+		journeyAccess: 0,
+		canReadPrivateJourneys: false,
+		canManagePrivateJourneys: false,
+	});
+	expect(result.owner).toMatchObject({
+		journeyAccess: 2,
+		canReadPrivateJourneys: true,
+		canManagePrivateJourneys: true,
+	});
+	expect(result.read).toMatchObject({
+		journeyAccess: 1,
+		canReadPrivateJourneys: true,
+		canManagePrivateJourneys: false,
+	});
+	expect(result.manage).toMatchObject({
+		journeyAccess: 2,
+		canReadPrivateJourneys: true,
+		canManagePrivateJourneys: true,
+	});
+	expect(result.denied).toMatchObject({
+		journeyAccess: 0,
+		canReadPrivateJourneys: false,
+		canManagePrivateJourneys: false,
+	});
+	expect(result.dmOverride).toMatchObject({
+		journeyAccess: 2,
+		canReadPrivateJourneys: true,
+		canManagePrivateJourneys: true,
+	});
+	expect(result.converted).toBe(1);
+	expect(result.legacyDefault).toBe(0);
+});
+
 test('冒險筆記資料存取限制 campaign 範圍且非 DM 不會查詢 DM 表', async ({
 	page,
 }) => {

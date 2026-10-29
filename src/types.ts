@@ -149,6 +149,7 @@ export interface CharacterPermission {
 	privateBagAccess: AccessLevel;
 	publicWalletAccess: AccessLevel;
 	privateWalletAccess: AccessLevel;
+	journeyAccess: AccessLevel;
 	canEditProfile: boolean;
 	canDeleteCharacter: boolean;
 	canManagePermissions: boolean;

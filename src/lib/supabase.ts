@@ -971,6 +971,7 @@ export interface DbCharacterPermission {
 	private_bag_access: 0 | 1 | 2;
 	public_wallet_access: 0 | 1 | 2;
 	private_wallet_access: 0 | 1 | 2;
+	journey_access?: 0 | 1 | 2 | null;
 	can_edit_profile: boolean;
 	can_delete_character: boolean;
 	can_manage_permissions: boolean;
@@ -987,6 +988,7 @@ export const toDbPermission = (
 	private_bag_access: perm.privateBagAccess,
 	public_wallet_access: perm.publicWalletAccess,
 	private_wallet_access: perm.privateWalletAccess,
+	journey_access: perm.journeyAccess,
 	can_edit_profile: perm.canEditProfile,
 	can_delete_character: perm.canDeleteCharacter,
 	can_manage_permissions: perm.canManagePermissions,
@@ -1003,6 +1005,7 @@ export const fromDbPermission = (
 	privateBagAccess: row.private_bag_access ?? 0,
 	publicWalletAccess: row.public_wallet_access ?? 1,
 	privateWalletAccess: row.private_wallet_access ?? 0,
+	journeyAccess: row.journey_access ?? 0,
 	canEditProfile: Boolean(row.can_edit_profile),
 	canDeleteCharacter: Boolean(row.can_delete_character),
 	canManagePermissions: Boolean(row.can_manage_permissions),

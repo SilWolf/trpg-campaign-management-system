@@ -250,6 +250,14 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 ### 階段三：角色權限設定
 
+**進度紀錄（2026-10-29）**
+
+- 已將 `journeyAccess`／`journey_access` 加入 domain／DB permission 型別、轉換器、戰役設定載入、權限 upsert、角色擁有權移轉及既有 Realtime 轉換路徑；舊資料缺欄位時以前端預設 `0` 相容。
+- `useCharacterPermissions` 已提供冒險筆記閱讀與管理能力：`0` 無權限、`1` 僅閱讀、`2` 可管理；DM 不依賴逐角色 permission row，始終評估為 `2`。未設定權限列的角色建立者預設為 `2`，其他玩家為 `0`。
+- 角色權限矩陣新增「冒險筆記權限」選單與等級說明，沿用 DM 專屬列唯讀及一般玩家不可修改自己權限列的防自鎖規則。
+- 已核對階段一 migration：`journey_access` 為 `smallint NOT NULL DEFAULT 0` 並限制 `0/1/2`，既有角色建立者資料會回填為 `2`，新增 permission row 與角色擁有權移轉亦有 DB trigger 保證建立者預設。此階段未新增 migration。
+- 權限 evaluator／轉換器及設定 UI 的 Playwright 測試通過（相關 15 項）；`npm run typecheck`、`npm run lint` 通過。測試使用 Supabase mock，並未驗證目標資料庫的即時 RLS；真實 RLS 驗收仍依階段一部署文件待維護者於隔離環境執行。
+
 **目標與工作項目**
 
 - 擴充 `CharacterPermission`、`DbCharacterPermission`、轉換器、Realtime／同步資料路徑與所有明確建構 permission object 的位置，新增 `journeyAccess`／`journey_access`。
@@ -268,11 +276,11 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] 每個 permission 建構、DB 轉換及 upsert 都包含 `journeyAccess`，舊資料缺欄位時不造成 undefined。
-- [ ] 權限矩陣測試覆蓋 DM、角色建立者、其他玩家及 `0/1/2`，並與 RLS 規則一致。
-- [ ] UI 顯示中文名稱及明確等級描述；玩家不能藉 UI 修改自己的權限列。
-- [ ] DM 權限無法被 permission row 的低值、缺值或 Realtime 更新降級。
-- [ ] `npm run typecheck` 與 `npm run lint` 通過；相關權限 UI 測試通過。
+- [x] 每個 permission 建構、DB 轉換及 upsert 都包含 `journeyAccess`，舊資料缺欄位時不造成 undefined。
+- [x] 權限矩陣測試覆蓋 DM、角色建立者、其他玩家及 `0/1/2`；前端邏輯與 migration 中的 ACL 預設相符。真實資料庫 RLS 矩陣仍待隔離環境驗收。
+- [x] UI 顯示中文名稱及明確等級描述；玩家不能藉 UI 修改自己的權限列。
+- [x] DM 權限不會被 permission row 的低值或缺值降級；Realtime 更新使用相同 evaluator。
+- [x] `npm run typecheck` 與 `npm run lint` 通過；相關權限 UI 測試通過。
 
 ### 階段四：角色刪除 Edge Function 與交易 RPC
 
