@@ -1,10 +1,9 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
-import { CAMP_CHEST_ID, type Character, type CurrencyType } from '@/types';
+import { CAMP_CHEST_ID, type Character } from '@/types';
 import {
 	Coins,
 	X,
-	Sparkles,
 	Send,
 	Users,
 	Globe,
@@ -12,7 +11,7 @@ import {
 	ArrowLeftRight,
 	Tent,
 } from 'lucide-react';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { CharacterAvatar } from '@/components/CharacterAvatar';
 
 interface CurrencyPanelProps {
@@ -25,57 +24,33 @@ interface CurrencyPanelProps {
 	canReadPrivateWallet: boolean;
 	canEditPrivateWallet: boolean;
 	onClose: () => void;
-	onUpdateCurrency: (
-		coinType: CurrencyType,
-		delta: number,
-		walletType: 'public' | 'private',
-	) => void;
-	onConsolidateCoinsToGold: (walletType: 'public' | 'private') => void;
+	onUpdateCurrency: (deltaCents: number, walletType: 'public' | 'private') => void;
 	onTransferCurrency: (
 		targetCharId: string,
-		coinType: CurrencyType,
-		amount: number,
+		amountCents: number,
 		fromWallet: 'public' | 'private',
 	) => void;
 	onTransferBetweenOwnWallets: (
 		fromWallet: 'public' | 'private',
-		coinType: CurrencyType,
-		amount: number,
+		amountCents: number,
 	) => void;
-	onSplitCampCoinToParty?: (coinType: CurrencyType) => void;
+	onSplitCampCoinToParty?: () => void;
 }
 
-const COIN_META: {
-	key: CurrencyType;
-	name: string;
-	rate: string;
-}[] = [
-	{
-		key: 'pp',
-		name: '鉑金幣 (PP)',
-		rate: '1 PP = 10 GP',
-	},
-	{
-		key: 'gp',
-		name: '金幣 (GP)',
-		rate: '標準通用貨幣',
-	},
-	{
-		key: 'ep',
-		name: '電金幣 (EP)',
-		rate: '2 EP = 1 GP',
-	},
-	{
-		key: 'sp',
-		name: '銀幣 (SP)',
-		rate: '10 SP = 1 GP',
-	},
-	{
-		key: 'cp',
-		name: '銅幣 (CP)',
-		rate: '100 CP = 1 GP',
-	},
-];
+const MAX_GP_CENTS = 100_000_000;
+
+function parseGpInputToCents(value: string): number | null {
+	const match = /^(\d+)(?:\.(\d{0,2}))?$/.exec(value.trim());
+	if (!match) return null;
+	const cents =
+		Number(match[1]) * 100 +
+		Number((match[2] ?? '').padEnd(2, '0') || '0');
+	return Number.isSafeInteger(cents) && cents <= MAX_GP_CENTS ? cents : null;
+}
+
+function formatGpCents(cents: number): string {
+	return (cents / 100).toFixed(2).replace(/\.?0+$/, '');
+}
 
 export default function CurrencyPanel({
 	isOpen,
@@ -88,7 +63,6 @@ export default function CurrencyPanel({
 	canEditPrivateWallet,
 	onClose,
 	onUpdateCurrency,
-	onConsolidateCoinsToGold,
 	onTransferCurrency,
 	onTransferBetweenOwnWallets,
 	onSplitCampCoinToParty,
@@ -96,8 +70,7 @@ export default function CurrencyPanel({
 	const [walletTab, setWalletTab] = useState<'public' | 'private'>(
 		initialWalletTab,
 	);
-	const [transferCoin, setTransferCoin] = useState<CurrencyType>('gp');
-	const [transferAmount, setTransferAmount] = useState<number>(10);
+	const [transferAmount, setTransferAmount] = useState('10.00');
 
 	const isCampChest = activeCharacter.id === CAMP_CHEST_ID;
 
@@ -121,16 +94,10 @@ export default function CurrencyPanel({
 
 	if (!isOpen) return null;
 
-	const currentWallet =
+	const currentGp =
 		walletTab === 'private' && !isCampChest
-			? activeCharacter.privateCurrencies || {
-					pp: 0,
-					gp: 0,
-					ep: 0,
-					sp: 0,
-					cp: 0,
-				}
-			: activeCharacter.currencies;
+			? activeCharacter.privateGp
+			: activeCharacter.gp;
 
 	const canReadCurrent =
 		walletTab === 'private' ? canReadPrivateWallet : canReadPublicWallet;
@@ -138,8 +105,12 @@ export default function CurrencyPanel({
 		walletTab === 'private' ? canEditPrivateWallet : canEditPublicWallet;
 	const canTransferBetweenOwn =
 		!isCampChest && canEditPublicWallet && canEditPrivateWallet;
-
-	const maxAvailable = currentWallet[transferCoin] ?? 0;
+	const currentBalanceCents = parseGpInputToCents(String(currentGp)) ?? 0;
+	const amountCents = parseGpInputToCents(transferAmount);
+	const validTransferAmount =
+		amountCents !== null &&
+		amountCents > 0 &&
+		amountCents <= currentBalanceCents;
 
 	return (
 		<div className='fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto'>
@@ -222,61 +193,73 @@ export default function CurrencyPanel({
 							</div>
 						)}
 
-						{/* 五種貨幣增減列表 */}
-						<div className='space-y-2.5'>
-							{COIN_META.map((coin) => (
-								<div
-									key={coin.key}
-									className={`p-2.5 rounded-md border border-border flex items-center justify-between`}
-								>
-									<div>
-										<div className={`text-xs font-bold`}>{coin.name}</div>
-										<div className='text-[10px] opacity-75'>{coin.rate}</div>
-									</div>
-
-									<div className='flex items-center gap-1.5'>
-										{canEditCurrent &&
-											[-10, -1].map((delta) => (
-												<Button
-													key={delta}
-													type='button'
-													variant='secondary'
-													size='sm'
-													data-testid={`currency-remove-${coin.key}-${Math.abs(delta)}`}
-													onClick={() =>
-														onUpdateCurrency(coin.key, delta, walletTab)
-													}
-												>
-													{delta}
-												</Button>
-											))}
-										<span
-											data-testid={`currency-balance-${coin.key}`}
-											className={`w-14 text-center font-mono font-bold text-sm ${coin.key === 'gp' ? 'text-money' : ''}`}
-										>
-											{currentWallet[coin.key] ?? 0}
-										</span>
-										{canEditCurrent &&
-											[1, 10].map((delta) => (
-												<Button
-													key={delta}
-													type='button'
-													variant='secondary'
-													size='sm'
-													data-testid={`currency-add-${coin.key}-${delta}`}
-													onClick={() =>
-														onUpdateCurrency(coin.key, delta, walletTab)
-													}
-												>
-													+{delta}
-												</Button>
-											))}
+						<div className='p-3 rounded-md border border-border space-y-3'>
+							<div className='flex items-center justify-between gap-3'>
+								<div>
+									<div className='text-xs font-bold'>GP 餘額</div>
+									<div className='text-[10px] opacity-75'>
+										最小單位 0.01 GP
 									</div>
 								</div>
-							))}
+								<div className='flex items-center gap-1.5'>
+									{canEditCurrent && (
+										<>
+											<Button
+												type='button'
+												variant='secondary'
+												size='sm'
+												data-testid='currency-remove-gp-cent'
+												disabled={currentBalanceCents < 1}
+												onClick={() => onUpdateCurrency(-1, walletTab)}
+											>
+												−0.01
+											</Button>
+											<Button
+												type='button'
+												variant='secondary'
+												size='sm'
+												data-testid='currency-remove-gp-1'
+												disabled={currentBalanceCents < 100}
+												onClick={() => onUpdateCurrency(-100, walletTab)}
+											>
+												−1
+											</Button>
+										</>
+									)}
+									<span
+										data-testid='currency-balance-gp'
+										className='min-w-20 text-center font-mono font-bold text-sm text-money'
+									>
+										{formatGpCents(currentBalanceCents)}
+									</span>
+									{canEditCurrent && (
+										<>
+											<Button
+												type='button'
+												variant='secondary'
+												size='sm'
+												data-testid='currency-add-gp-cent'
+												disabled={currentBalanceCents >= MAX_GP_CENTS}
+												onClick={() => onUpdateCurrency(1, walletTab)}
+											>
+												+0.01
+											</Button>
+											<Button
+												type='button'
+												variant='secondary'
+												size='sm'
+												data-testid='currency-add-gp-1'
+												disabled={currentBalanceCents + 100 > MAX_GP_CENTS}
+												onClick={() => onUpdateCurrency(100, walletTab)}
+											>
+												+1
+											</Button>
+										</>
+									)}
+								</div>
+							</div>
 						</div>
 
-						{/* 轉交隊友 / 存入公庫 / 公私錢包互轉（只要擁有當前錢包的修改權即可單向轉出） */}
 						{canEditCurrent && (
 							<div className='mt-4 pt-3.5 border-t border-border space-y-2.5 text-xs'>
 								<div className='flex items-center justify-between'>
@@ -284,53 +267,37 @@ export default function CurrencyPanel({
 										<Send className='w-3.5 h-3.5 text-highlight' />
 										<span>
 											{isCampChest
-												? '從營地公庫發放 / 均分貨幣'
+												? '從營地公庫發放 / 均分 GP'
 												: `從${walletTab === 'private' ? '私人錢包' : '公開錢包'}單向轉出`}
 										</span>
 									</span>
-									<span
-										className={`text-[11px] font-mono ${transferCoin === 'gp' ? 'text-money' : 'text-muted-foreground'}`}
-									>
-										可用: {maxAvailable} {transferCoin.toUpperCase()}
+									<span className='text-[11px] font-mono text-money'>
+										可用：{formatGpCents(currentBalanceCents)} GP
 									</span>
 								</div>
 
 								<div className='flex items-center gap-2'>
-									<Select
-										value={transferCoin}
-										aria-label='轉出貨幣類型'
-										onChange={(e) =>
-											setTransferCoin(e.target.value as CurrencyType)
-										}
-									>
-										<option value='pp'>PP 鉑金幣</option>
-										<option value='gp'>GP 金幣</option>
-										<option value='ep'>EP 電金幣</option>
-										<option value='sp'>SP 銀幣</option>
-										<option value='cp'>CP 銅幣</option>
-									</Select>
-
 									<Input
 										type='number'
-										min={1}
-										max={Math.max(1, maxAvailable)}
+										min='0.01'
+										max={currentBalanceCents / 100}
+										step='0.01'
 										value={transferAmount}
-										aria-label='轉出貨幣數量'
-										onChange={(e) =>
-											setTransferAmount(
-												Math.max(1, parseInt(e.target.value, 10) || 1),
-											)
-										}
+										aria-label='轉出 GP 數量'
+										aria-invalid={transferAmount !== '' && amountCents === null}
+										onChange={(e) => setTransferAmount(e.target.value)}
 									/>
 
 									<Button
 										type='button'
 										variant='secondary'
 										size='sm'
-										onClick={() => setTransferAmount(maxAvailable)}
-										disabled={maxAvailable <= 0}
+										onClick={() =>
+											setTransferAmount(formatGpCents(currentBalanceCents))
+										}
+										disabled={currentBalanceCents <= 0}
 									>
-										全部 ({maxAvailable})
+										全部 ({formatGpCents(currentBalanceCents)} GP)
 									</Button>
 								</div>
 
@@ -340,20 +307,19 @@ export default function CurrencyPanel({
 										type='button'
 										variant='secondary'
 										size='sm'
-										disabled={maxAvailable <= 0}
+										disabled={!validTransferAmount}
 										onClick={() =>
 											onTransferBetweenOwnWallets(
 												walletTab,
-												transferCoin,
-												transferAmount,
+												amountCents ?? 0,
 											)
 										}
 										prefixIcon={<ArrowLeftRight />}
 									>
 										<span>
 											{walletTab === 'public'
-												? `🔒 將 ${transferAmount} ${transferCoin.toUpperCase()} 藏入私人錢包`
-												: `🌐 將 ${transferAmount} ${transferCoin.toUpperCase()} 移回公開錢包`}
+												? `🔒 將 ${formatGpCents(amountCents ?? 0)} GP 藏入私人錢包`
+												: `🌐 將 ${formatGpCents(amountCents ?? 0)} GP 移回公開錢包`}
 										</span>
 									</Button>
 								)}
@@ -365,12 +331,11 @@ export default function CurrencyPanel({
 											type='button'
 											variant='secondary'
 											size='sm'
-											disabled={maxAvailable <= 0}
+											disabled={!validTransferAmount}
 											onClick={() =>
 												onTransferCurrency(
 													CAMP_CHEST_ID,
-													transferCoin,
-													transferAmount,
+													amountCents ?? 0,
 													walletTab,
 												)
 											}
@@ -384,11 +349,11 @@ export default function CurrencyPanel({
 											type='button'
 											variant='secondary'
 											size='sm'
-											disabled={maxAvailable <= 0}
-											onClick={() => onSplitCampCoinToParty(transferCoin)}
+											disabled={currentBalanceCents <= 0}
+											onClick={onSplitCampCoinToParty}
 											prefixIcon={<Users />}
 										>
-											<span>平分所有 {transferCoin.toUpperCase()} 給全隊</span>
+											<span>平分所有 GP 給全隊</span>
 										</Button>
 									)}
 
@@ -403,12 +368,11 @@ export default function CurrencyPanel({
 												type='button'
 												variant='secondary'
 												size='sm'
-												disabled={maxAvailable <= 0}
+												disabled={!validTransferAmount}
 												onClick={() =>
 													onTransferCurrency(
 														target.id,
-														transferCoin,
-														transferAmount,
+														amountCents ?? 0,
 														walletTab,
 													)
 												}
@@ -426,20 +390,7 @@ export default function CurrencyPanel({
 							</div>
 						)}
 
-						{/* 底部一鍵換整金幣按鈕 */}
-						<div className='mt-4 pt-3 border-t border-border flex items-center justify-between gap-2'>
-							{canEditCurrent ? (
-								<Button
-									type='button'
-									variant='secondary'
-									onClick={() => onConsolidateCoinsToGold(walletTab)}
-									prefixIcon={<Sparkles />}
-								>
-									<span>一鍵將零錢換整為金幣 (GP)</span>
-								</Button>
-							) : (
-								<div />
-							)}
+						<div className='mt-4 pt-3 border-t border-border flex justify-end'>
 							<Button type='button' variant='secondary' onClick={onClose}>
 								關閉
 							</Button>

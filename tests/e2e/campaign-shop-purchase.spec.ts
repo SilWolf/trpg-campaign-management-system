@@ -304,7 +304,8 @@ test('玩家只能使用具有修改權的私人錢包付款', async ({ page }) 
 	const { campaignShopRpcRequests } = await mockSupabase(page, {
 		campaignSettingsRole: 'player',
 		campaignShopSeed: true,
-		campaignShopWalletGp: 100,
+		campaignShopDirectPriceGp: 0.01,
+		campaignShopWalletGp: 0.01,
 		campaignShopWalletAccess: { public: 1, private: 2 },
 	});
 	await seedAuthenticatedSession(page);
@@ -324,6 +325,54 @@ test('玩家只能使用具有修改權的私人錢包付款', async ({ page }) 
 				(request.body as Record<string, unknown>).p_wallet_type === 'private',
 		),
 	).toBe(true);
+});
+
+test('商店可用精確 0.01 GP 的足額餘額完成結帳', async ({ page }) => {
+	const { campaignShopRpcRequests } = await mockSupabase(page, {
+		campaignSettingsRole: 'player',
+		campaignShopSeed: true,
+		campaignShopDirectPriceGp: 0.01,
+		campaignShopWalletGp: 0.01,
+		campaignShopWalletAccess: { public: 2, private: 0 },
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(shopUrl);
+
+	await addToCart(page, '治療藥水');
+	await openCheckout(page);
+	await page.getByLabel('結帳角色').selectOption('settings-character');
+	await expect(
+		page
+			.getByTestId('shop-checkout-item-shop-item-direct')
+			.getByText('0.01 gp', { exact: true }),
+	).toHaveCount(2);
+	await expect(page.getByTestId('shop-checkout-confirm')).toBeEnabled();
+	await page.getByTestId('shop-checkout-confirm').click();
+
+	await expect(page.getByRole('status')).toContainText('結帳完成');
+	expect(
+		campaignShopRpcRequests.some(
+			(request) => request.name === 'checkout_campaign_shop_cart',
+		),
+	).toBe(true);
+});
+
+test('商店餘額少於 0.01 GP 時不可結帳', async ({ page }) => {
+	const { campaignShopRpcRequests } = await mockSupabase(page, {
+		campaignSettingsRole: 'player',
+		campaignShopSeed: true,
+		campaignShopDirectPriceGp: 0.01,
+		campaignShopWalletGp: 0,
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(shopUrl);
+
+	await addToCart(page, '治療藥水');
+	await openCheckout(page);
+	await page.getByLabel('結帳角色').selectOption('settings-character');
+
+	await expect(page.getByTestId('shop-checkout-confirm')).toBeDisabled();
+	expect(campaignShopRpcRequests).toHaveLength(0);
 });
 
 test('沒有錢包修改權的角色不可送出購買', async ({ page }) => {

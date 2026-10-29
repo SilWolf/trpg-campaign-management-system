@@ -4,7 +4,6 @@ import { CharacterAvatar } from '@/components/CharacterAvatar';
 import {
 	CAMP_CHEST_ID,
 	type Character,
-	type CurrencyType,
 	type ViewMode,
 } from '@/types';
 
@@ -27,8 +26,7 @@ export interface CharacterStatusBarProps {
 	countCoinWeight: boolean;
 	setCountCoinWeight: (count: boolean) => void;
 	coinWeight: number;
-	totalValueInGp: number;
-	displayedCurrencies: Record<CurrencyType, number>;
+	displayedGp: number;
 	isDisplayingPrivateWallet: boolean;
 	canReadDisplayedWallet: boolean;
 	onOpenCurrencyPanel: () => void;
@@ -49,8 +47,7 @@ export default function CharacterStatusBar({
 	countCoinWeight,
 	setCountCoinWeight,
 	coinWeight,
-	totalValueInGp,
-	displayedCurrencies,
+	displayedGp,
 	isDisplayingPrivateWallet,
 	canReadDisplayedWallet,
 	onOpenCurrencyPanel,
@@ -229,14 +226,7 @@ export default function CharacterStatusBar({
 								? '營地公庫錢包'
 								: isDisplayingPrivateWallet
 									? '私人暗袋錢包'
-									: '角色公開錢包'}{' '}
-							(折合{' '}
-							<span
-								className={`font-mono ${canReadDisplayedWallet ? 'text-money' : 'text-muted-foreground'}`}
-							>
-								{canReadDisplayedWallet ? `${totalValueInGp} GP` : '???'}
-							</span>
-							)
+									: '角色公開錢包'}
 						</span>
 					</span>
 					<Button
@@ -250,49 +240,19 @@ export default function CharacterStatusBar({
 					</Button>
 				</div>
 
-				<div className='grid grid-cols-5 gap-1.5 text-center'>
-					{[
-						{
-							key: 'pp',
-							label: 'PP 鉑',
-						},
-						{
-							key: 'gp',
-							label: 'GP 金',
-						},
-						{
-							key: 'ep',
-							label: 'EP 電',
-						},
-						{
-							key: 'sp',
-							label: 'SP 銀',
-						},
-						{
-							key: 'cp',
-							label: 'CP 銅',
-						},
-					].map((coin) => (
-						<Button
-							type='button'
-							variant='ghost'
-							size='sm'
-							key={coin.key}
-							data-testid={`currency-summary-${coin.key}`}
-							onClick={onOpenCurrencyPanel}
-							aria-label={`${coin.label}，點擊開啟錢包管理`}
-						>
-							<div
-								className={`text-xs font-mono font-bold ${coin.key === 'gp' && canReadDisplayedWallet ? 'text-money' : ''}`}
-							>
-								{canReadDisplayedWallet
-									? (displayedCurrencies[coin.key as CurrencyType] ?? 0)
-									: '🔒'}
-							</div>
-							<div className='text-[9px] opacity-80'>{coin.label}</div>
-						</Button>
-					))}
-				</div>
+				<Button
+					type='button'
+					variant='ghost'
+					size='sm'
+					data-testid='currency-summary-gp'
+					onClick={onOpenCurrencyPanel}
+					aria-label='GP 餘額，點擊開啟錢包管理'
+				>
+					<div className='text-xs font-mono font-bold text-money'>
+						{canReadDisplayedWallet ? `${displayedGp} GP` : '🔒'}
+					</div>
+					<div className='text-[9px] opacity-80'>GP 餘額</div>
+				</Button>
 			</div>
 		</div>
 	);

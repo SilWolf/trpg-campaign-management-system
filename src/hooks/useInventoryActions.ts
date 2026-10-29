@@ -21,6 +21,10 @@ import { getItemImageUrl, ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 import { identifyInventoryItem } from '@/lib/campaignShops';
 import { deleteCampaignCharacter } from '@/lib/campaignCharacterDeletion';
 import {
+	legacyWalletFromGpCents,
+	legacyWalletToGpCents,
+} from '@/lib/supabase';
+import {
 	splitInventoryStack,
 	transferInventoryStack,
 } from '@/lib/inventoryTransactions';
@@ -52,6 +56,25 @@ const DEFAULT_FORM: HomebrewForm = {
 	isImportant: false,
 	affixes: [],
 };
+
+const MAX_GP_CENTS = 100_000_000;
+
+function gpToCents(gp: number): number {
+	const cents = Math.round(gp * 100);
+	if (
+		!Number.isFinite(gp) ||
+		gp < 0 ||
+		Math.abs(gp * 100 - cents) > 1e-7 ||
+		cents > MAX_GP_CENTS
+	) {
+		throw new Error('GP 餘額必須是 0 至 1,000,000.00 間、最多兩位小數的數值。');
+	}
+	return cents;
+}
+
+function formatGpCents(cents: number): string {
+	return (cents / 100).toFixed(2).replace(/\.?0+$/, '');
+}
 
 function formToAllItem(form: HomebrewForm): AllItem {
 	const maxCharges = Number.parseInt(form.maxCharges, 10) || 0;
@@ -424,214 +447,224 @@ export function useInventoryActions({
 	};
 
 	const updateCurrency = (
-		coinType: CurrencyType,
-		delta: number,
+		deltaCents: number,
 		walletType: 'public' | 'private' = 'public',
 	) => {
+		if (!Number.isSafeInteger(deltaCents) || deltaCents === 0) {
+			showToast('請輸入有效的 GP 金額。', 'warning');
+			return;
+		}
 		if (activeCharId === CAMP_CHEST_ID) {
-			setCampChestCurrency((wallet) => ({
-				...wallet,
-				[coinType]: Math.max(0, (wallet[coinType] ?? 0) + delta),
-			}));
+			try {
+				const currentCents = Number(
+					legacyWalletToGpCents(campChestCurrency),
+				);
+				const nextCents = currentCents + deltaCents;
+				if (nextCents < 0 || nextCents > MAX_GP_CENTS) {
+					showToast('GP 餘額不可低於 0 或超過 1,000,000.00 GP。', 'warning');
+					return;
+				}
+				setCampChestCurrency(legacyWalletFromGpCents(BigInt(nextCents)));
+			} catch (error) {
+				showToast(
+					error instanceof Error ? error.message : '無法更新 GP 餘額。',
+					'error',
+				);
+			}
 			return;
 		}
 
+		const activeGp =
+			walletType === 'private' ? activeCharacter.privateGp : activeCharacter.gp;
+		let nextCents: number;
+		try {
+			nextCents = gpToCents(activeGp) + deltaCents;
+		} catch (error) {
+			showToast(
+				error instanceof Error ? error.message : '無法更新 GP 餘額。',
+				'error',
+			);
+			return;
+		}
+		if (nextCents < 0 || nextCents > MAX_GP_CENTS) {
+			showToast('GP 餘額不可低於 0 或超過 1,000,000.00 GP。', 'warning');
+			return;
+		}
+		const gpField = walletType === 'private' ? 'privateGp' : 'gp';
+		const legacyField =
+			walletType === 'private' ? 'privateCurrencies' : 'currencies';
 		setCharacters((prev) =>
 			prev.map((char) => {
 				if (char.id !== activeCharId) return char;
-				const field =
-					walletType === 'private' ? 'privateCurrencies' : 'currencies';
-				const currentWallet = char[field] || {
-					pp: 0,
-					gp: 0,
-					ep: 0,
-					sp: 0,
-					cp: 0,
-				};
-				const nextVal = Math.max(0, (currentWallet[coinType] ?? 0) + delta);
 				return {
 					...char,
-					[field]: { ...currentWallet, [coinType]: nextVal },
+					[gpField]: nextCents / 100,
+					[legacyField]: legacyWalletFromGpCents(BigInt(nextCents)),
 				};
 			}),
 		);
 	};
 
-	const consolidateCoinsToGold = (
-		walletType: 'public' | 'private' = 'public',
-	) => {
-		const convertWallet = (wallet: Record<CurrencyType, number>) => {
-			const pp = wallet.pp;
-			let { gp, ep, sp, cp } = wallet;
-			sp += Math.floor(cp / 10);
-			cp = cp % 10;
-			gp += Math.floor(sp / 10) + Math.floor(ep / 2);
-			sp = sp % 10;
-			ep = ep % 2;
-			return { ...wallet, pp, gp, ep, sp, cp };
-		};
-		if (activeCharId === CAMP_CHEST_ID) {
-			setCampChestCurrency(convertWallet(campChestCurrency));
-		} else {
-			setCharacters((prev) =>
-				prev.map((char) => {
-					if (char.id !== activeCharId) return char;
-					const field =
-						walletType === 'private' ? 'privateCurrencies' : 'currencies';
-					const wallet = char[field] || {
-						pp: 0,
-						gp: 0,
-						ep: 0,
-						sp: 0,
-						cp: 0,
-					};
-					return { ...char, [field]: convertWallet(wallet) };
-				}),
-			);
-		}
-		showToast('🪙 已自動將銅幣、銀幣與電金幣換算為金幣 (GP)！');
-	};
-
 	const transferBetweenOwnWallets = (
 		fromWallet: 'public' | 'private',
-		coinType: CurrencyType,
-		amount: number,
+		amountCents: number,
 	) => {
-		if (activeCharId === CAMP_CHEST_ID || amount <= 0) return;
-		const fromField =
-			fromWallet === 'private' ? 'privateCurrencies' : 'currencies';
-		const toField =
-			fromWallet === 'private' ? 'currencies' : 'privateCurrencies';
-		const available = activeCharacter[fromField]?.[coinType] ?? 0;
-		const actualAmount = Math.min(available, amount);
-
-		if (actualAmount <= 0) {
-			showToast('該幣種餘額不足，無法轉移！', 'warning');
+		if (activeCharId === CAMP_CHEST_ID) return;
+		if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
+			showToast('轉帳金額必須至少為 0.01 GP。', 'warning');
 			return;
 		}
-
+		const sourceIsPrivate = fromWallet === 'private';
+		const sourceCents = gpToCents(
+			sourceIsPrivate ? activeCharacter.privateGp : activeCharacter.gp,
+		);
+		const targetCents = gpToCents(
+			sourceIsPrivate ? activeCharacter.gp : activeCharacter.privateGp,
+		);
+		if (amountCents > sourceCents) {
+			showToast('GP 餘額不足，無法轉移。', 'warning');
+			return;
+		}
+		if (targetCents + amountCents > MAX_GP_CENTS) {
+			showToast('目標錢包餘額不可超過 1,000,000.00 GP。', 'warning');
+			return;
+		}
+		const sourceGpField = sourceIsPrivate ? 'privateGp' : 'gp';
+		const targetGpField = sourceIsPrivate ? 'gp' : 'privateGp';
+		const sourceLegacyField = sourceIsPrivate
+			? 'privateCurrencies'
+			: 'currencies';
+		const targetLegacyField = sourceIsPrivate
+			? 'currencies'
+			: 'privateCurrencies';
 		setCharacters((prev) =>
 			prev.map((char) => {
 				if (char.id !== activeCharId) return char;
-				const src = char[fromField] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
-				const dst = char[toField] || { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+				const currentSourceCents = gpToCents(char[sourceGpField]);
+				const currentTargetCents = gpToCents(char[targetGpField]);
 				return {
 					...char,
-					[fromField]: {
-						...src,
-						[coinType]: (src[coinType] ?? 0) - actualAmount,
-					},
-					[toField]: {
-						...dst,
-						[coinType]: (dst[coinType] ?? 0) + actualAmount,
-					},
+					[sourceGpField]: (currentSourceCents - amountCents) / 100,
+					[targetGpField]: (currentTargetCents + amountCents) / 100,
+					[sourceLegacyField]: legacyWalletFromGpCents(
+						BigInt(currentSourceCents - amountCents),
+					),
+					[targetLegacyField]: legacyWalletFromGpCents(
+						BigInt(currentTargetCents + amountCents),
+					),
 				};
 			}),
 		);
 
 		showToast(
 			fromWallet === 'public'
-				? `🔒 已將 ${actualAmount} ${coinType.toUpperCase()} 藏入私人錢包！`
-				: `🌐 已將 ${actualAmount} ${coinType.toUpperCase()} 移回公開錢包！`,
+				? `🔒 已將 ${formatGpCents(amountCents)} GP 藏入私人錢包！`
+				: `🌐 已將 ${formatGpCents(amountCents)} GP 移回公開錢包！`,
 		);
 	};
 
 	const transferCurrency = (
 		targetCharId: string,
-		coinType: CurrencyType,
-		amount: number,
+		amountCents: number,
 		fromWallet: 'public' | 'private' = 'public',
 	) => {
-		if (targetCharId === activeCharId || amount <= 0) return;
-		const fromField =
-			fromWallet === 'private' && activeCharId !== CAMP_CHEST_ID
-				? 'privateCurrencies'
-				: 'currencies';
-		const sourceWallet =
-			activeCharId === CAMP_CHEST_ID
-				? campChestCurrency
-				: activeCharacter[fromField];
-		const available = sourceWallet?.[coinType] ?? 0;
-		const actualAmount = Math.min(available, amount);
-
-		if (actualAmount <= 0) {
-			showToast('該幣種餘額不足，無法轉出！', 'warning');
+		if (targetCharId === activeCharId) return;
+		if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
+			showToast('轉帳金額必須至少為 0.01 GP。', 'warning');
 			return;
 		}
-
-		const targetName =
+		const isCampChestSource = activeCharId === CAMP_CHEST_ID;
+		const sourceCents = isCampChestSource
+			? Number(legacyWalletToGpCents(campChestCurrency))
+			: gpToCents(
+					fromWallet === 'private'
+						? activeCharacter.privateGp
+						: activeCharacter.gp,
+				);
+		if (amountCents > sourceCents) {
+			showToast('GP 餘額不足，無法轉出。', 'warning');
+			return;
+		}
+		const targetCharacter =
 			targetCharId === CAMP_CHEST_ID
-				? '🏕️ 營地儲物箱'
-				: characters.find((c) => c.id === targetCharId)?.name;
+				? undefined
+				: characters.find((character) => character.id === targetCharId);
+		if (targetCharId !== CAMP_CHEST_ID && !targetCharacter) {
+			showToast('找不到轉帳目標角色。', 'error');
+			return;
+		}
+		const targetCents =
+			targetCharacter
+				? gpToCents(targetCharacter.gp)
+				: Number(legacyWalletToGpCents(campChestCurrency));
+		if (targetCents + amountCents > MAX_GP_CENTS) {
+			showToast('目標錢包餘額不可超過 1,000,000.00 GP。', 'warning');
+			return;
+		}
+		const targetName =
+			targetCharacter?.name ?? '🏕️ 營地儲物箱';
 
-		if (activeCharId === CAMP_CHEST_ID) {
-			setCampChestCurrency((wallet) => ({
-				...wallet,
-				[coinType]: Math.max(0, wallet[coinType] - actualAmount),
-			}));
+		if (isCampChestSource) {
+			setCampChestCurrency(
+				legacyWalletFromGpCents(BigInt(sourceCents - amountCents)),
+			);
 			setCharacters((prev) =>
 				prev.map((char) =>
 					char.id === targetCharId
 						? {
 								...char,
-								currencies: {
-									...char.currencies,
-									[coinType]: (char.currencies[coinType] ?? 0) + actualAmount,
-								},
+								gp: (gpToCents(char.gp) + amountCents) / 100,
+								currencies: legacyWalletFromGpCents(
+									BigInt(gpToCents(char.gp) + amountCents),
+								),
 							}
 						: char,
 				),
 			);
 		} else if (targetCharId === CAMP_CHEST_ID) {
+			const sourceGpField =
+				fromWallet === 'private' ? 'privateGp' : 'gp';
+			const sourceLegacyField =
+				fromWallet === 'private' ? 'privateCurrencies' : 'currencies';
 			setCharacters((prev) =>
 				prev.map((char) => {
 					if (char.id !== activeCharId) return char;
-					const source = char[fromField] || {
-						pp: 0,
-						gp: 0,
-						ep: 0,
-						sp: 0,
-						cp: 0,
-					};
+					const currentCents = gpToCents(char[sourceGpField]);
+					const nextCents = currentCents - amountCents;
 					return {
 						...char,
-						[fromField]: {
-							...source,
-							[coinType]: Math.max(0, source[coinType] - actualAmount),
-						},
+						[sourceGpField]: nextCents / 100,
+						[sourceLegacyField]: legacyWalletFromGpCents(BigInt(nextCents)),
 					};
 				}),
 			);
-			setCampChestCurrency((wallet) => ({
-				...wallet,
-				[coinType]: wallet[coinType] + actualAmount,
-			}));
+			setCampChestCurrency(
+				legacyWalletFromGpCents(BigInt(targetCents + amountCents)),
+			);
 		} else {
+			const sourceGpField =
+				fromWallet === 'private' ? 'privateGp' : 'gp';
+			const sourceLegacyField =
+				fromWallet === 'private' ? 'privateCurrencies' : 'currencies';
 			setCharacters((prev) =>
 				prev.map((char) => {
 					if (char.id === activeCharId) {
-						const source = char[fromField] || {
-							pp: 0,
-							gp: 0,
-							ep: 0,
-							sp: 0,
-							cp: 0,
-						};
+						const currentCents = gpToCents(char[sourceGpField]);
+						const nextCents = currentCents - amountCents;
 						return {
 							...char,
-							[fromField]: {
-								...source,
-								[coinType]: Math.max(0, source[coinType] - actualAmount),
-							},
+							[sourceGpField]: nextCents / 100,
+							[sourceLegacyField]: legacyWalletFromGpCents(
+								BigInt(nextCents),
+							),
 						};
 					}
 					if (char.id === targetCharId) {
+						const nextCents = gpToCents(char.gp) + amountCents;
 						return {
 							...char,
-							currencies: {
-								...char.currencies,
-								[coinType]: (char.currencies[coinType] ?? 0) + actualAmount,
-							},
+							gp: nextCents / 100,
+							currencies: legacyWalletFromGpCents(BigInt(nextCents)),
 						};
 					}
 					return char;
@@ -640,45 +673,55 @@ export function useInventoryActions({
 		}
 
 		showToast(
-			`🪙 已將 ${actualAmount} ${coinType.toUpperCase()} 轉入 ${targetName} 的公開錢包！`,
+			`🪙 已將 ${formatGpCents(amountCents)} GP 轉入 ${targetName} 的公開錢包！`,
 		);
 	};
 
-	const splitCampCoinToParty = (coinType: CurrencyType) => {
+	const splitCampCoinToParty = () => {
 		if (activeCharId !== CAMP_CHEST_ID) return;
 		const partyMembers = characters.filter(
 			(character) => character.id !== CAMP_CHEST_ID,
 		);
 		if (partyMembers.length === 0) return;
 
-		const total = campChestCurrency[coinType];
-		const eachShare = Math.floor(total / partyMembers.length);
-		const remainder = total % partyMembers.length;
+		const totalCents = Number(legacyWalletToGpCents(campChestCurrency));
+		const eachShareCents = Math.floor(totalCents / partyMembers.length);
+		const remainderCents = totalCents % partyMembers.length;
 
-		if (eachShare <= 0) {
+		if (eachShareCents <= 0) {
 			showToast(
-				`公庫的 ${coinType.toUpperCase()} 不足平分給 ${partyMembers.length} 名隊員！`,
+				`公庫 GP 不足以平均分給 ${partyMembers.length} 名隊員，每人至少需 0.01 GP。`,
 				'warning',
 			);
 			return;
 		}
 
-		setCampChestCurrency((wallet) => ({ ...wallet, [coinType]: remainder }));
+		const overflowedCharacter = partyMembers.find(
+			(character) => gpToCents(character.gp) + eachShareCents > MAX_GP_CENTS,
+		);
+		if (overflowedCharacter) {
+			showToast(
+				`角色「${overflowedCharacter.name}」的餘額將超過 1,000,000.00 GP，無法平分。`,
+				'warning',
+			);
+			return;
+		}
+
+		setCampChestCurrency(legacyWalletFromGpCents(BigInt(remainderCents)));
 		setCharacters((prev) =>
 			prev.map((char) => {
 				if (char.id === CAMP_CHEST_ID) return char;
+				const nextCents = gpToCents(char.gp) + eachShareCents;
 				return {
 					...char,
-					currencies: {
-						...char.currencies,
-						[coinType]: char.currencies[coinType] + eachShare,
-					},
+					gp: nextCents / 100,
+					currencies: legacyWalletFromGpCents(BigInt(nextCents)),
 				};
 			}),
 		);
 
 		showToast(
-			`🎉 已將公庫 ${coinType.toUpperCase()} 平分給全隊，每人獲得 ${eachShare} ${coinType.toUpperCase()}（餘 ${remainder} 留存公庫）！`,
+			`🎉 已將公庫 GP 平分給全隊，每人獲得 ${formatGpCents(eachShareCents)} GP（餘 ${formatGpCents(remainderCents)} GP 留存公庫）！`,
 		);
 	};
 
@@ -914,7 +957,6 @@ export function useInventoryActions({
 		handleCopyAffix,
 		handlePasteAffixToItem,
 		updateCurrency,
-		consolidateCoinsToGold,
 		transferBetweenOwnWallets,
 		transferCurrency,
 		splitCampCoinToParty,

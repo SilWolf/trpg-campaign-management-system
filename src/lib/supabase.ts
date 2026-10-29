@@ -320,7 +320,7 @@ function gpValueToCents(value: unknown, fieldName: string): bigint {
 	return cents;
 }
 
-function legacyWalletToCents(wallet: LegacyCurrencyWallet): bigint {
+export function legacyWalletToGpCents(wallet: LegacyCurrencyWallet): bigint {
 	let cents = 0n;
 	for (const currency of CURRENCY_TYPES) {
 		const amount = wallet[currency];
@@ -336,7 +336,7 @@ function legacyWalletToCents(wallet: LegacyCurrencyWallet): bigint {
 }
 
 export function gpFromLegacyCurrencyWallet(wallet: LegacyCurrencyWallet): number {
-	return Number(legacyWalletToCents(wallet)) / 100;
+	return Number(legacyWalletToGpCents(wallet)) / 100;
 }
 
 function legacyWalletFromUnknown(value: unknown): LegacyCurrencyWallet {
@@ -359,7 +359,7 @@ function legacyWalletFromUnknown(value: unknown): LegacyCurrencyWallet {
 	) as LegacyCurrencyWallet;
 }
 
-function legacyWalletFromGpCents(cents: bigint): LegacyCurrencyWallet {
+export function legacyWalletFromGpCents(cents: bigint): LegacyCurrencyWallet {
 	return {
 		pp: 0,
 		gp: Number(cents / 100n),
@@ -387,7 +387,7 @@ export interface DbCampaignCurrency {
 export const toDbCampaignCurrency = (
 	currency: CampaignCurrency,
 ): Pick<DbCampaignCurrency, 'camp_chest_gp' | 'camp_chest_currency'> => {
-	const cents = legacyWalletToCents(currency);
+	const cents = legacyWalletToGpCents(currency);
 	return {
 		camp_chest_gp: Number(cents) / 100,
 		camp_chest_currency: currency,
@@ -928,8 +928,8 @@ export const toDbCharacter = (char: Character): DbCharacter => {
 	const gpCents = gpValueToCents(char.gp, '角色公開錢包 GP');
 	const privateGpCents = gpValueToCents(char.privateGp, '角色私人錢包 GP');
 	if (
-		legacyWalletToCents(char.currencies) !== gpCents ||
-		legacyWalletToCents(char.privateCurrencies) !== privateGpCents
+		legacyWalletToGpCents(char.currencies) !== gpCents ||
+		legacyWalletToGpCents(char.privateCurrencies) !== privateGpCents
 	) {
 		throw new Error('角色 GP 餘額與舊錢包相容資料不一致。');
 	}
@@ -958,13 +958,13 @@ export const fromDbCharacter = (row: DbCharacter): Character => {
 	const privateCurrencies = legacyWalletFromUnknown(row.private_currencies);
 	if (
 		row.currencies != null &&
-		legacyWalletToCents(currencies) !== gpCents
+		legacyWalletToGpCents(currencies) !== gpCents
 	) {
 		throw new Error(`角色 ${row.id} 公開錢包 GP 與相容欄位不一致。`);
 	}
 	if (
 		row.private_currencies != null &&
-		legacyWalletToCents(privateCurrencies) !== privateGpCents
+		legacyWalletToGpCents(privateCurrencies) !== privateGpCents
 	) {
 		throw new Error(`角色 ${row.id} 私人錢包 GP 與相容欄位不一致。`);
 	}

@@ -27,8 +27,6 @@ import type {
 	CampaignShopItem,
 	CampaignShopOrder,
 	CampaignShopWalletType,
-	Character,
-	CurrencyType,
 } from '@/types';
 import ItemIcon from '../../-parts/ItemIcon';
 
@@ -56,8 +54,8 @@ interface CharacterNameRow {
 
 interface CharacterWalletRow {
 	id: string;
-	currencies: Character['currencies'];
-	private_currencies: Character['privateCurrencies'];
+	gp: number | string;
+	private_gp: number | string;
 }
 
 interface CharacterWalletPermissionRow {
@@ -69,19 +67,11 @@ interface CharacterWalletPermissionRow {
 interface PurchasableCharacter {
 	id: string;
 	name: string;
-	currencies: Character['currencies'];
-	privateCurrencies: Character['privateCurrencies'];
+	gpCents: number;
+	privateGpCents: number;
 	canUsePublicWallet: boolean;
 	canUsePrivateWallet: boolean;
 }
-
-const COIN_VALUES_CP: Record<CurrencyType, number> = {
-	pp: 1000,
-	gp: 100,
-	ep: 50,
-	sp: 10,
-	cp: 1,
-};
 
 const ORDER_STATUS_LABELS: Record<CampaignShopOrder['status'], string> = {
 	completed: '已完成',
@@ -105,18 +95,28 @@ function getErrorMessage(error: unknown, fallback: string): string {
 	return fallback;
 }
 
-function getWalletTotalCp(wallet: Character['currencies']): number {
-	return (Object.keys(COIN_VALUES_CP) as CurrencyType[]).reduce(
-		(total, coin) => total + Number(wallet?.[coin] ?? 0) * COIN_VALUES_CP[coin],
-		0,
-	);
+function gpToCents(value: number | string): number {
+	const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(String(value).trim());
+	if (!match) {
+		throw new Error('商店 GP 金額必須是非負且最多兩位小數的數值。');
+	}
+	const cents =
+		Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0') || 0);
+	if (!Number.isSafeInteger(cents)) {
+		throw new Error('商店 GP 金額超出可計算範圍。');
+	}
+	return cents;
 }
 
-function formatGpFromCp(totalCp: number): string {
-	return (totalCp / 100).toLocaleString('zh-TW', {
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 2,
-	});
+function formatGpFromCents(cents: number | bigint): string {
+	const amount = typeof cents === 'bigint' ? cents : BigInt(cents);
+	const whole = (amount / 100n).toLocaleString('zh-TW');
+	const remainder = amount % 100n;
+	const fractional =
+		remainder === 0n
+			? ''
+			: remainder.toString().padStart(2, '0').replace(/0$/, '');
+	return fractional ? `${whole}.${fractional}` : whole;
 }
 
 function getItemDisplayName(
@@ -196,25 +196,24 @@ export function ShopTransactionsPanel({
 		parsedQuantity > 0 &&
 		parsedQuantity <= 2_147_483_647 &&
 		(!selectedItem || parsedQuantity <= selectedItem.stockAvailable);
-	const walletBalanceCp = selectedCharacter
-		? getWalletTotalCp(
-				effectiveWalletType === 'public'
-					? selectedCharacter.currencies
-					: selectedCharacter.privateCurrencies,
-			)
+	const walletBalanceCents = selectedCharacter
+		? effectiveWalletType === 'public'
+			? selectedCharacter.gpCents
+			: selectedCharacter.privateGpCents
 		: 0;
-	const totalPriceGp = selectedItem
-		? selectedItem.unitPriceGp * (isValidQuantity ? parsedQuantity : 0)
-		: 0;
-	const totalPriceCp = Math.round(totalPriceGp * 100);
+	const totalPriceCents = selectedItem
+		? BigInt(gpToCents(selectedItem.unitPriceGp)) *
+			BigInt(isValidQuantity ? parsedQuantity : 0)
+		: 0n;
 	const purchasableCartItems = (cartItems ?? []).filter(
 		({ quantity: lineQuantity }) => lineQuantity > 0,
 	);
-	const cartTotalGp = purchasableCartItems.reduce(
-		(total, entry) => total + entry.item.unitPriceGp * entry.quantity,
-		0,
+	const cartTotalCents = purchasableCartItems.reduce(
+		(total, entry) =>
+			total +
+			BigInt(gpToCents(entry.item.unitPriceGp)) * BigInt(entry.quantity),
+		0n,
 	);
-	const cartTotalCp = Math.round(cartTotalGp * 100);
 	const cartHasApproval = purchasableCartItems.some(
 		(entry) => entry.item.requiresApproval,
 	);
@@ -226,8 +225,7 @@ export function ShopTransactionsPanel({
 				Number.isSafeInteger(lineQuantity) &&
 				lineQuantity >= 1 &&
 				lineQuantity <= item.stockAvailable,
-		) &&
-		Number.isSafeInteger(cartTotalCp);
+		);
 	const displayedOrders = showPublicHistory
 		? orders
 		: orders.filter(
@@ -303,7 +301,7 @@ export function ShopTransactionsPanel({
 
 		const { data: walletRows, error: walletError } = await client
 			.from('characters')
-			.select('id,currencies,private_currencies')
+			.select('id,gp,private_gp')
 			.eq('campaign_id', campaignId)
 			.in(
 				'id',
@@ -323,8 +321,8 @@ export function ShopTransactionsPanel({
 				{
 					id: row.id,
 					name: row.name,
-					currencies: wallet.currencies,
-					privateCurrencies: wallet.private_currencies,
+					gpCents: gpToCents(wallet.gp),
+					privateGpCents: gpToCents(wallet.private_gp),
 					canUsePublicWallet:
 						isDm ||
 						(permission
@@ -431,7 +429,10 @@ export function ShopTransactionsPanel({
 		) {
 			return;
 		}
-		if (!selectedItem.requiresApproval && walletBalanceCp < totalPriceCp) {
+		if (
+			!selectedItem.requiresApproval &&
+			BigInt(walletBalanceCents) < totalPriceCents
+		) {
 			setErrorMessage('所選錢包餘額不足，請調整付款錢包或購買數量。');
 			return;
 		}
@@ -481,7 +482,10 @@ export function ShopTransactionsPanel({
 		) {
 			return;
 		}
-		if (!cartHasApproval && walletBalanceCp < cartTotalCp) {
+		if (
+			!cartHasApproval &&
+			BigInt(walletBalanceCents) < cartTotalCents
+		) {
 			setErrorMessage('所選錢包餘額不足，請調整付款錢包或購物車內容。');
 			return;
 		}
@@ -614,8 +618,8 @@ export function ShopTransactionsPanel({
 											<p className='mt-1 text-xs text-muted-foreground'>
 												單價{' '}
 												<span className='font-mono'>
-													{formatGpFromCp(
-														Math.round(item.unitPriceGp * 100),
+													{formatGpFromCents(
+														gpToCents(item.unitPriceGp),
 													)}{' '}
 													gp
 												</span>
@@ -672,8 +676,9 @@ export function ShopTransactionsPanel({
 										</div>
 									</div>
 									<p className='shrink-0 font-mono text-primary-foreground'>
-										{formatGpFromCp(
-											Math.round(item.unitPriceGp * lineQuantity * 100),
+										{formatGpFromCents(
+											BigInt(gpToCents(item.unitPriceGp)) *
+												BigInt(lineQuantity),
 										)}{' '}
 										gp
 									</p>
@@ -723,12 +728,10 @@ export function ShopTransactionsPanel({
 													? '公開錢包'
 													: '私人暗袋錢包'}
 												・餘額{' '}
-												{formatGpFromCp(
-													getWalletTotalCp(
-														wallet === 'public'
-															? selectedCharacter!.currencies
-															: selectedCharacter!.privateCurrencies,
-													),
+												{formatGpFromCents(
+													wallet === 'public'
+														? selectedCharacter!.gpCents
+														: selectedCharacter!.privateGpCents,
 												)}{' '}
 												gp
 											</option>
@@ -758,7 +761,7 @@ export function ShopTransactionsPanel({
 									{cartHasApproval ? '待審交易總額' : '應付總額'}
 								</p>
 								<p className='font-mono text-xl text-primary-foreground'>
-									{formatGpFromCp(cartTotalCp)} gp
+									{formatGpFromCents(cartTotalCents)} gp
 								</p>
 								{cartHasApproval && (
 									<p className='mt-1 text-xs text-primary-foreground'>
@@ -775,7 +778,8 @@ export function ShopTransactionsPanel({
 									!selectedCharacter ||
 									!walletAllowed ||
 									availableWallets.length === 0 ||
-									(!cartHasApproval && walletBalanceCp < cartTotalCp)
+									(!cartHasApproval &&
+										BigInt(walletBalanceCents) < cartTotalCents)
 								}
 								onClick={() => void handleCartCheckout()}
 								data-testid='shop-checkout-confirm'
@@ -862,12 +866,10 @@ export function ShopTransactionsPanel({
 									availableWallets.map((wallet) => (
 										<option key={wallet} value={wallet}>
 											{wallet === 'public' ? '公開錢包' : '私人暗袋錢包'}・餘額{' '}
-											{formatGpFromCp(
-												getWalletTotalCp(
-													wallet === 'public'
-														? selectedCharacter!.currencies
-														: selectedCharacter!.privateCurrencies,
-												),
+											{formatGpFromCents(
+												wallet === 'public'
+													? selectedCharacter!.gpCents
+													: selectedCharacter!.privateGpCents,
 											)}{' '}
 											gp
 										</option>
@@ -892,7 +894,7 @@ export function ShopTransactionsPanel({
 							<div>
 								<p className='text-xs text-muted-foreground'>應付總額</p>
 								<p className='font-mono text-lg text-primary-foreground'>
-									{formatGpFromCp(totalPriceCp)} gp
+									{formatGpFromCents(totalPriceCents)} gp
 								</p>
 							</div>
 							{selectedItem?.requiresApproval && (

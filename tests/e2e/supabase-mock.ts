@@ -48,6 +48,8 @@ export async function mockSupabase(
 		campaignJourneyDmNotesSeed?: Record<string, unknown>[];
 		campaignOfficialCatalogIds?: string[];
 		campaignInventoryRole?: CampaignSettingsRole;
+		campaignInventoryWalletGp?: { public: number; private: number };
+		campaignInventoryTargetGp?: number;
 		extraInventoryItems?: Record<string, unknown>[];
 		createCampaignError?: string;
 		deleteCampaignCharacterError?: string;
@@ -63,6 +65,7 @@ export async function mockSupabase(
 		campaignShopItemUnidentified?: boolean;
 		campaignShopItemCount?: number;
 		campaignShopWalletGp?: number;
+		campaignShopDirectPriceGp?: number;
 		campaignShopWalletAccess?: { public: number; private: number };
 		campaignShopRpcErrors?: Partial<
 			Record<
@@ -84,6 +87,7 @@ export async function mockSupabase(
 	const functionRequests: unknown[] = [];
 	const campaignJourneyWrites: unknown[] = [];
 	const campaignJourneyDmNoteWrites: unknown[] = [];
+	const characterWrites: unknown[] = [];
 	const campaignUpdates: unknown[] = [];
 	const permissionUpdates: unknown[] = [];
 	const blacksmithImportRequests: unknown[] = [];
@@ -138,7 +142,7 @@ export async function mockSupabase(
 						? shopItemDefinition
 						: null,
 					is_identified: !options.campaignShopItemUnidentified,
-					unit_price_gp: 2,
+					unit_price_gp: options.campaignShopDirectPriceGp ?? 2,
 					stock_available: 4,
 					stock_reserved: 0,
 					requires_approval: false,
@@ -241,10 +245,26 @@ export async function mockSupabase(
 			avatar: '🏹',
 			user_id: 'other-player-id',
 			campaign_id: 'inventory-campaign',
-			gp: 20,
-			private_gp: 80,
-			currencies: { pp: 0, gp: 20, ep: 0, sp: 0, cp: 0 },
-			private_currencies: { pp: 0, gp: 80, ep: 0, sp: 0, cp: 0 },
+			gp: options.campaignInventoryWalletGp?.public ?? 20,
+			private_gp: options.campaignInventoryWalletGp?.private ?? 80,
+			currencies: {
+				pp: 0,
+				gp: Math.floor(options.campaignInventoryWalletGp?.public ?? 20),
+				ep: 0,
+				sp: 0,
+				cp: Math.round(
+					((options.campaignInventoryWalletGp?.public ?? 20) % 1) * 100,
+				),
+			},
+			private_currencies: {
+				pp: 0,
+				gp: Math.floor(options.campaignInventoryWalletGp?.private ?? 80),
+				ep: 0,
+				sp: 0,
+				cp: Math.round(
+					((options.campaignInventoryWalletGp?.private ?? 80) % 1) * 100,
+				),
+			},
 		},
 		{
 			id: 'inventory-target-character',
@@ -254,9 +274,15 @@ export async function mockSupabase(
 			avatar: '🎻',
 			user_id: 'transfer-player-id',
 			campaign_id: 'inventory-campaign',
-			gp: 0,
+			gp: options.campaignInventoryTargetGp ?? 0,
 			private_gp: 0,
-			currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
+			currencies: {
+				pp: 0,
+				gp: Math.floor(options.campaignInventoryTargetGp ?? 0),
+				ep: 0,
+				sp: 0,
+				cp: Math.round(((options.campaignInventoryTargetGp ?? 0) % 1) * 100),
+			},
 			private_currencies: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 },
 		},
 	];
@@ -369,6 +395,12 @@ export async function mockSupabase(
 		const url = new URL(request.url());
 		const method = request.method();
 		requests.push(`${method} ${url.pathname}${url.search}`);
+		if (
+			url.pathname === '/rest/v1/characters' &&
+			(method === 'POST' || method === 'PATCH')
+		) {
+			characterWrites.push(request.postDataJSON());
+		}
 		if (
 			url.pathname === '/rest/v1/character_permissions' &&
 			method === 'POST'
@@ -1162,9 +1194,7 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/characters' &&
 			method === 'GET'
 		) {
-			if (
-				url.searchParams.get('select') === 'id,currencies,private_currencies'
-			) {
+			if (url.searchParams.get('select') === 'id,gp,private_gp') {
 				const walletAmount = options.campaignShopWalletGp ?? 0;
 				await route.fulfill({
 					json: campaignCharacters
@@ -1173,11 +1203,8 @@ export async function mockSupabase(
 						)
 						.map((row) => ({
 							id: row.id,
-							currencies: { ...row.currencies, gp: walletAmount },
-							private_currencies: {
-								...row.private_currencies,
-								gp: walletAmount,
-							},
+							gp: walletAmount,
+							private_gp: walletAmount,
 						})),
 				});
 				return;
@@ -1478,6 +1505,7 @@ export async function mockSupabase(
 		functionRequests,
 		campaignUpdates,
 		permissionUpdates,
+		characterWrites,
 		blacksmithImportRequests,
 		campaignShopRpcRequests,
 		campaignJourneyWrites,

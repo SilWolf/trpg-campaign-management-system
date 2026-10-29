@@ -177,68 +177,29 @@ function CampaignInventoryPage() {
 	// 狀態列顯示的錢包（隨當前公開/私人分頁切換）
 	const isDisplayingPrivateWallet =
 		!isCampChestActive && currentBagTab === 'private';
-	const displayedCurrencies = useMemo(
-		() =>
-			isDisplayingPrivateWallet
-				? activeCharacter.privateCurrencies || {
-						pp: 0,
-						gp: 0,
-						ep: 0,
-						sp: 0,
-						cp: 0,
-					}
-				: activeCharacter.currencies,
-		[
-			activeCharacter.currencies,
-			activeCharacter.privateCurrencies,
-			isDisplayingPrivateWallet,
-		],
-	);
 	const canReadDisplayedWallet = isDisplayingPrivateWallet
 		? charPerms.canReadPrivateWallet
 		: charPerms.canReadPublicWallet;
+	const displayedGp = isDisplayingPrivateWallet
+		? activeCharacter.privateGp
+		: activeCharacter.gp;
 
 	const currencyStats = useMemo(() => {
-		const pub = charPerms.canReadPublicWallet
-			? activeCharacter.currencies
-			: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
-		const priv = charPerms.canReadPrivateWallet
-			? activeCharacter.privateCurrencies || {
-					pp: 0,
-					gp: 0,
-					ep: 0,
-					sp: 0,
-					cp: 0,
-				}
-			: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
-
-		const totalCoinsForWeight =
-			pub.pp +
-			pub.gp +
-			pub.ep +
-			pub.sp +
-			pub.cp +
-			(priv.pp + priv.gp + priv.ep + priv.sp + priv.cp);
-		const coinWeight = countCoinWeight
-			? +(totalCoinsForWeight / 50).toFixed(1)
-			: 0;
-
-		const { pp, gp, ep, sp, cp } = displayedCurrencies;
-		const totalValueInGp = +(
-			pp * 10 +
-			gp +
-			ep * 0.5 +
-			sp * 0.1 +
-			cp * 0.01
-		).toFixed(2);
-
-		return { coinWeight, totalValueInGp };
+		const readableGpCents =
+			(charPerms.canReadPublicWallet
+				? Math.round(activeCharacter.gp * 100)
+				: 0) +
+			(charPerms.canReadPrivateWallet
+				? Math.round(activeCharacter.privateGp * 100)
+				: 0);
+		const wholeGp = Math.floor(readableGpCents / 100);
+		const coinWeight = countCoinWeight ? (wholeGp * 2) / 100 : 0;
+		return { coinWeight };
 	}, [
 		activeCharacter,
 		charPerms.canReadPublicWallet,
 		charPerms.canReadPrivateWallet,
 		countCoinWeight,
-		displayedCurrencies,
 	]);
 
 	// 負重計算嚴格過濾無閱讀權限的背包與錢包，避免洩漏暗袋重量
@@ -251,7 +212,7 @@ function CampaignInventoryPage() {
 			(sum, item) => sum + item.weight * item.quantity,
 			0,
 		);
-		const totalWeight = +(itemsWeight + currencyStats.coinWeight).toFixed(1);
+		const totalWeight = +(itemsWeight + currencyStats.coinWeight).toFixed(2);
 		const maxWeight = activeCharacter.str * 15;
 		const percentage = Math.min(
 			100,
@@ -361,8 +322,7 @@ function CampaignInventoryPage() {
 				countCoinWeight={countCoinWeight}
 				setCountCoinWeight={setCountCoinWeight}
 				coinWeight={currencyStats.coinWeight}
-				totalValueInGp={currencyStats.totalValueInGp}
-				displayedCurrencies={displayedCurrencies}
+				displayedGp={displayedGp}
 				isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 				canReadDisplayedWallet={canReadDisplayedWallet}
 				onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
@@ -385,8 +345,7 @@ function CampaignInventoryPage() {
 						countCoinWeight={countCoinWeight}
 						setCountCoinWeight={setCountCoinWeight}
 						coinWeight={currencyStats.coinWeight}
-						totalValueInGp={currencyStats.totalValueInGp}
-						displayedCurrencies={displayedCurrencies}
+						displayedGp={displayedGp}
 						isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 						canReadDisplayedWallet={canReadDisplayedWallet}
 						onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
@@ -550,7 +509,6 @@ function CampaignInventoryPage() {
 				canEditPrivateWallet={charPerms.canEditPrivateWallet}
 				onClose={() => setIsCoinModalOpen(false)}
 				onUpdateCurrency={actions.updateCurrency}
-				onConsolidateCoinsToGold={actions.consolidateCoinsToGold}
 				onTransferCurrency={actions.transferCurrency}
 				onTransferBetweenOwnWallets={actions.transferBetweenOwnWallets}
 				onSplitCampCoinToParty={actions.splitCampCoinToParty}

@@ -56,7 +56,7 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 
 - **Schema foundation 已發佈及驗證完成（依使用者確認）：** [20261030000013_gp_wallet_schema_foundation.sql](../supabase/migrations/20261030000013_gp_wallet_schema_foundation.sql) 為三種錢包新增 GP numeric 欄位、舊五面額換算、無效錢包／歸零面額統計通知、超過新餘額上限時中止及 GP 精度／範圍限制；[gp_wallet_schema_foundation.sql](../supabase/tests/gp_wallet_schema_foundation.sql) 覆蓋換算與限制。
 - **型別實作注意：** 欄位使用不帶 `(10,2)` typmod 的 `numeric`，並以 CHECK 拒絕超過兩位有效小數的餘額；PostgreSQL 的 `numeric(10,2)` 會先四捨五入輸入，再檢查限制，無法滿足拒絕 `0.001` 而非靜默捨入的要求。
-- **仍待整合：** foundation migration 保留舊 JSONB 欄位；建團／刪角 RPC、錢包 ACL/RLS、campaign 欄位授權及相關 trigger，仍須依各階段更新。錢包 UI 與商店 RPC 也尚未完成 GP-only cutover。
+- **仍待整合：** foundation migration 保留舊 JSONB 欄位；建團／刪角 RPC、錢包 ACL/RLS、campaign 欄位授權及相關 trigger，仍須依各階段更新。背包錢包 UI／操作已完成 GP-only 切換；商店 RPC 尚未切換。
 - **驗收狀態：** foundation SQL 的發佈與驗證由使用者確認完成；此狀態不代表前端、Edge Function 或後續交易 RPC 已部署。 [external/schema.md](../external/schema.md) 快照更新仍待維護者依實際部署 schema 核對。
 - 更新 `characters`／`campaigns` 欄位、預設值、非負與兩位小數限制；移除舊 JSONB 欄位前，確認所有讀寫端與函式已遷移。
 - 更新 `existing_schema_baseline` 相關文件／未來基線檢查及 schema 快照。既有合併 migration 不回頭修改。
@@ -67,7 +67,7 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 
 ### 2. TypeScript、資料同步與本機 seed
 
-- **階段二程式碼完成：** 已新增 `Character.gp`／`privateGp`、資料庫 GP 欄位轉換與範例角色 GP seed；`useCampaignSync` 改讀營地箱 GP 並維持離線／訪客本機資料。為遵守分階段範圍，暫留五面額相容資料，角色／營地箱遠端寫入會同步更新 GP 與舊格式，供尚未切換的 UI、操作與商店 RPC 使用；後續切換完畢後必須移除雙寫及相容欄位。E2E mocks 與營地箱同步合約測試亦已更新。
+- **階段二程式碼完成：** 已新增 `Character.gp`／`privateGp`、資料庫 GP 欄位轉換與範例角色 GP seed；`useCampaignSync` 改讀營地箱 GP 並維持離線／訪客本機資料。為遵守分階段範圍，暫留五面額相容資料；角色／營地箱遠端寫入同步更新 GP 與舊格式，供尚未切換的商店 RPC 使用。背包 UI／操作已在階段三切換，但在商店 RPC 一併切換前仍須保留相容資料及雙寫；全部讀寫端切換完成後再移除。
 - **程式驗收：** `npm run typecheck`、`npm run lint`、`npm run test:e2e`（105 項通過）及 `npm run build` 通過；mock／本機驗收不代表真實 Supabase RLS、Realtime 或交易已驗收。
 - `toDbCharacter` 會拒絕不合法、超限或與相容欄位不一致的 GP 餘額；`fromDbCharacter` 以 GP 為準，並驗證既有錢包欄位，避免靜默讀取不一致資料。
 - 修改 `src/types.ts` 中 `CurrencyType`、`Character`、營地箱及所有錢包相關型別；保留 `CampaignShopWalletType = 'public' | 'private'`，因兩種付款來源仍存在。
@@ -78,21 +78,23 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 
 ### 3. 背包錢包、轉帳與負重 UI
 
-- 修改 `CurrencyPanel`：只顯示 GP 餘額；支援精確到 `0.01` 的加減、設定／轉出數量、轉給角色及存入／領出營地箱。移除面額下拉與「一鍵將零錢換整為金幣」按鈕、callback、handler、toast 及相關測試。
-- 保留公開／私人錢包分頁、無權限遮罩、自身錢包互轉、只有來源修改權即可單向轉出的規則；營地箱沒有私人錢包。
-- 營地箱「平分給全隊」改以分 GP 分（整數）計算；無法平均分配的分數 GP 留在營地箱，不能捨去。
-- 修改 `CharacterStatusBar` 的餘額摘要及「折合」標籤：直接顯示目前選定錢包 GP，不再列出 PP／EP／SP／CP。
-- 負重定義為**可閱讀錢包餘額合計中，每滿 1 整數 GP 計 `0.02 lb`，不足 1 GP 的部分不計**。先按各自 ACL 過濾公開／私人錢包，再計算 `floor(可讀 GP 合計) × 0.02`；不可把無權限的私人餘額納入總重。保留使用者的「計入硬幣重」切換。
-- 顯示及總負重精度至少保留到 `0.01 lb`，避免 `1 GP = 0.02 lb` 被現有一位小數格式四捨五入成 `0.0 lb`。整數分 GP 可先換算，再以整數分數運算重量。
-- 修改 `useInventoryActions` 的增減、兩錢包間轉移、角色間轉移、營地箱存取與平分操作；遠端、多列寫入仍不可宣稱具資料庫原子性。若需防止跨客戶端競爭或重複扣款，另行設計並驗收交易 RPC。
+- [x] `CurrencyPanel` 僅顯示 GP；提供 `0.01 GP` 加減與轉出數量輸入，支援轉給角色、存入／領出營地箱。移除面額下拉、「一鍵將零錢換整為金幣」按鈕、callback、handler、toast 與舊面額 UI 測試。
+- [x] 保留公開／私人錢包分頁、無權限遮罩、自身錢包互轉、只需來源修改權即可單向轉出的規則；營地箱仍只有公開錢包。
+- [x] 營地箱「平分給全隊」以整數分 GP 計算，無法平均分配的分數 GP 留在營地箱。
+- [x] `CharacterStatusBar` 直接顯示目前選定錢包 GP，移除「折合」標籤與 PP／EP／SP／CP 摘要。
+- [x] 負重只計入 ACL 可讀錢包；每滿 1 整數 GP 計 `0.02 lb`，不足 1 GP 不計，並保留「計入硬幣重」切換。
+- [x] 硬幣重量與總負重至少保留 `0.01 lb` 精度；GP 操作以整數分計算，避免小數累加誤差。
+- [x] `useInventoryActions` 的加減、雙錢包互轉、角色間轉帳、營地箱存取與平分均以 GP 分運算，檢查來源足額及餘額上限。遠端多列寫入仍非單一資料庫交易，不宣稱具原子性；若需防止跨客戶端競爭或重複扣款，仍須另行設計並驗收交易 RPC。
+- **階段三驗收：** 新增 E2E 覆蓋 `0.01 GP` 加減／轉帳、來源足額及目標上限、營地箱分帳餘數，以及 `0.99`、`1`、`1.99`、`2 GP` 的重量案例；測試使用 Supabase mock，不代表真實 RLS、Realtime 或跨列交易已驗收。
 
 ### 4. 商店結帳與訂單
 
-- 玩家選擇公開／私人錢包、依 ACL 顯示可用付款方式的流程不變；角色錢包查詢由 `currencies,private_currencies` 改成新 GP 欄位。
-- 以選定錢包的單一 GP 餘額比較訂單總價。移除 CP 換算及 `shop_wallet_total_cp`／`shop_wallet_from_cp` 等面額 helper；付款時只從選定錢包扣除訂單金額，不找零、不合併公開與私人餘額。
-- 更新立即結帳、待審申請、DM 核准／拒絕、玩家取消、整車結帳及其內部 settlement RPC；保留庫存保留／釋放、資料列鎖、授權檢查、訂單公開紀錄與單一 PostgreSQL 交易原子性。
-- 價格與錢包都限制至 `0.01 GP`。前端 cart 計價改用整數分 GP；RPC 驗證價格乘 `100` 是整數且錢包足額，再以 `numeric` 精確扣款。不得因浮點誤差拒絕 `0.01 GP` 或多扣／少扣。
-- 更新 [campaign-shop-plan.md](./campaign-shop-plan.md) 的五面額、CP、找零及錢包欄位敘述；保留「只從指定錢包支付」及交易原子性的規格。
+- [x] 玩家選擇公開／私人錢包及依 ACL 顯示付款方式的流程不變；角色錢包餘額改讀 `gp`／`private_gp`，不再以舊面額 JSONB 計算。
+- [x] 移除商店結帳對 `shop_wallet_total_cp`／`shop_wallet_from_cp` 的使用並刪除 helper；只從選定 GP 錢包扣除訂單金額，不找零、不合併公開與私人餘額。為尚未切換的舊端保留同交易更新的 JSONB 相容鏡像，不用它判斷餘額或付款。
+- [x] 立即結帳、待審申請、DM 核准／拒絕、玩家取消與整車結帳沿用現有 RPC／settlement 交易流程；替換 settlement 錢包扣款來源，保留庫存保留／釋放、資料列鎖、授權檢查、公開訂單紀錄與單一 PostgreSQL 交易原子性。
+- [x] 價格與錢包使用 `0.01 GP` 精度。前端購物車以整數分 GP 計價；RPC 驗證金額乘 `100` 為整數且指定錢包足額，再以 `numeric` 精確扣款，避免浮點誤差。
+- [x] 更新 [campaign-shop-plan.md](./campaign-shop-plan.md) 的 CP 換算、找零及錢包欄位規格；保留「只從指定錢包付款」及交易原子性。
+- **階段四程式完成：** 新增 [20261030000014_gp_wallet_shop_checkout.sql](../supabase/migrations/20261030000014_gp_wallet_shop_checkout.sql)，並更新商店結帳 UI、mock 與購買 E2E。`0.01 GP` 公開／私人錢包足額及不足情境由 mock E2E 驗證；migration 未套用，真實 Supabase 權限、RPC、併發及回滾仍待隔離環境驗收。
 
 ### 5. 測試、mock 與文件
 
@@ -113,16 +115,16 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 ### 權限、重量與移轉
 
 - [ ] 一般成員、角色擁有人、DM 的公開／私人錢包讀取與修改權維持原 ACL 行為；無權限資料不出現在 UI、負重、REST 或 Realtime payload。
-- [ ] 重量例：可讀餘額 `0.99 GP → 0 lb`、`1 GP → 0.02 lb`、`1.99 GP → 0.02 lb`、`2 GP → 0.04 lb`；取消計重後為 `0 lb`。
-- [ ] 只可讀公開錢包時，私人 GP 不影響顯示重量；讀取權限恢復後才計入。
-- [ ] 轉帳、公私錢包互轉、存／取營地箱與平分維持 `0` 至 `1,000,000.00 GP`；全部操作接受 `0.01 GP`，平分餘數留在來源，來源／目標任何一方超上限時整筆操作失敗。
+- [x] 重量例：可讀餘額 `0.99 GP → 0 lb`、`1 GP → 0.02 lb`、`1.99 GP → 0.02 lb`、`2 GP → 0.04 lb`；取消計重後為 `0 lb`。
+- [x] 只可讀公開錢包時，私人 GP 不影響顯示重量；此項由 UI／mock E2E 驗證，真實 ACL 尚待隔離 Supabase 驗收。
+- [x] UI 操作涵蓋 `0` 至 `1,000,000.00 GP`、`0.01 GP` 精度、分帳餘數保留及來源／目標超上限拒絕；此處不代表資料庫交易原子性或遠端競爭保護。
 - [ ] 刪除角色時公開及私人 GP 均併入當前戰役營地箱一次，其他戰役餘額不變；失敗時整個刪除交易回滾。
 
 ### 商店交易
 
-- [ ] 公開及私人錢包分別可用 `0.01 GP` 精度購物；不足 `0.01 GP` 時拒絕，正好足額時成功。
-- [ ] 直接購買、整車結帳及 DM 核准只扣所選錢包 GP，不轉換面額、不找零、不跨錢包補足。
-- [ ] 待審保留／拒絕／取消的庫存與款項行為維持原規則；結帳、扣款、交付、訂單狀態仍在一個 RPC 交易中完成或全部回滾。
+- [x] UI／mock E2E 覆蓋公開及私人錢包 `0.01 GP` 足額成功與餘額不足時禁止結帳；真實 RPC 驗收待隔離環境。
+- [x] 直接購買、整車結帳及 DM 核准的 settlement 僅扣所選錢包 GP，不換算面額、不找零、不跨錢包補足；資料庫端尚未實際執行驗收。
+- [x] 保留待審庫存、拒絕／取消釋放及交易 RPC 的原子處理程式；資料庫端回滾與併發行為仍待隔離 Supabase 驗收。
 - [ ] 隔離 Supabase 以多帳號驗證 RLS、RPC 授權、Realtime、併發重複購買、角色刪除與交易失敗回滾；mock E2E 不可替代此項。
 
 ## 建議執行順序
@@ -130,18 +132,19 @@ GP = PP × 10 + GP + EP × 0.5 + SP × 0.1 + CP × 0.01
 1. [ ] 在隔離資料庫驗證 `1,000,000.00 GP` 上限、超限拒絕、缺欄與不合格面額視為零的轉換及統計報告。
 2. [ ] 在隔離資料庫完成只讀資料盤點及 migration 預演，取得維護者核准後建立增量 migration。
 3. [ ] 更新 DB 型別、seed／建團 RPC、角色刪除 RPC、商店交易 RPC 及 schema 文件。
-4. [ ] 更新 TypeScript 型別／轉換器、同步 hook、錢包行為、重量與 UI。
-5. [ ] 更新 mock、E2E、資料庫測試與商店規劃文件；執行 typecheck、lint、相關測試及 build。
+4. [ ] 更新 TypeScript 型別／轉換器、同步 hook、錢包行為、重量與 UI。（錢包行為、重量與 UI 的階段三已完成；其他 GP cutover 仍待辦。）
+5. [ ] 更新 mock、E2E、資料庫測試與商店規劃文件；執行 typecheck、lint、相關測試及 build。（階段三 mock／E2E 與程式檢查已完成；資料庫及商店驗收仍待辦。）
 6. [ ] 先在隔離專案完成 migration、RLS、Realtime、交易與真實登入流程驗收；再由維護者確認部署目標、migration history 與備份，按核准順序部署。
 7. [ ] 以協調的首次上線流程部署已驗收的 migration、Edge Function 與前端；更新並核對正式 schema 快照。
 
 ## 已確認決策與剩餘待辦
 
 - **階段一執行狀態：** schema foundation migration 與 SQL 合約測試已發佈及驗證完成（依使用者確認）；後續 RPC、RLS／欄位授權及建團／刪角 cutover 仍待完成，不能以 foundation 驗收代替整體隔離環境驗收。
-- **Migration 限制：** 新欄位目前是一次性回填，不會與舊 JSONB 錢包同步；在所有前端、Edge Function 與商店 RPC 切換完成前不得套用。
+- **Migration 限制：** foundation migration 的 GP 欄位是一次性回填；切換期間由前端同步及商店 settlement 維持舊 JSONB 相容鏡像。仍有其他舊讀寫端尚未切換，故不得只套用 foundation 或假設舊欄位可移除。
 - **欄位命名：** `gp`、`private_gp`、`camp_chest_gp`。
 - **顯示精度：** 最多兩位小數。
 - **餘額上限：** 每個錢包最多 `1,000,000.00 GP`；任何會使餘額超限的操作均禁止。
 - **舊資料清理：** 缺少欄位、非數值、負數、非整數面額數量及非物件錢包都按零換算；遷移預檢列出受影響資料。
-- **客戶端相容：** 目前沒有已發佈上線的前端，不做新舊格式雙寫；migration 與首次前端上線需協調執行。
-- **仍待完成：** 後續資料庫 RPC／RLS 整合、前端 GP-only 錢包與商店 cutover、schema 快照更新及整體隔離環境驗收。
+- **客戶端相容：** 目前沒有已發佈上線的前端，不支援新舊前端並行；切換完成前保留舊 JSONB 相容鏡像，所有資料讀寫端遷移後再移除。
+- **階段三執行狀態：** 背包錢包 UI、GP 分轉帳／平分、ACL 過濾負重與對應 mock E2E 已完成；程式測試不代表 Supabase 真實 RLS、Realtime、RPC 或跨列交易已驗收。
+- **仍待完成：** 建團／刪角等其他資料庫 RPC／RLS 整合、移除舊錢包相容鏡像、schema 快照更新與整體隔離環境驗收；商店 GP cutover 的本機程式實作已完成，尚未部署或通過真實資料庫驗收。
