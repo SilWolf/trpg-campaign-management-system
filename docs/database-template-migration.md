@@ -1,6 +1,8 @@
-# 資料庫與 Edge Function 手動部署
+# 資料庫與 Edge Function 部署
 
-本次不建立 `campaign_templates` 或其他範本資料表。前端將選用的範例內容放入請求 body，呼叫 `create-campaign` Edge Function；Function 驗證登入者與 payload 格式，再呼叫受限的 PostgreSQL 交易 RPC，一次建立戰役、DM 成員、角色與物品。SQL 只提供維護者手動部署；本次不連線或執行任何 SQL。
+本次不建立 `campaign_templates` 或其他範本資料表。前端將選用的範例內容放入請求 body，呼叫 `create-campaign` Edge Function；Function 驗證登入者與 payload 格式，再呼叫受限的 PostgreSQL 交易 RPC，一次建立戰役、DM 成員、角色與物品。
+
+此 repo 的 Supabase CLI 目標固定為正式專案 `qbnghekzezuedzhkeotr`，部署命令會明確帶入此 project ref，不依賴本機目前連結的專案。npm scripts 透過 `npx` 使用固定版本 Supabase CLI `2.122.0`；可使用 `npm run supabase:login` 登入。不要將 access token、資料庫密碼或 service-role key 加入 repo、Vite 環境變數或聊天內容。
 
 ## 部署前檢核
 
@@ -10,20 +12,22 @@
 4. 核對遠端 migration history。如歷史版本與此 repo 不一致，先處理基線／版本對齊，不可直接標記 migration 已套用。
 5. 先在隔離的 Supabase 專案驗證 SQL、RLS、函式權限和 Edge Function，再部署正式環境。
 
-## 手動套用資料庫 migration
+## 套用資料庫 migration
 
-維護者在已登入並連結正確專案的工作站檢視基線及 [20261023000001_campaign_creation_and_security.sql](../supabase/migrations/20261023000001_campaign_creation_and_security.sql)，再按維護者的 migration 流程套用。使用 Supabase CLI 時可先檢視計畫：
-
-```sh
-supabase migration list --linked
-supabase db push --dry-run --linked
-```
-
-核對 CLI 顯示的 project ref 和 migration 清單後，才由維護者明確執行：
+先查詢遠端 migration history，檢視基線及 [20261023000001_campaign_creation_and_security.sql](../supabase/migrations/20261023000001_campaign_creation_and_security.sql)，再預覽推送計畫：
 
 ```sh
-supabase db push --linked
+npm run supabase:migrations:list
+npm run supabase:db:dry-run
 ```
+
+確認 CLI 輸出的 project ref 為 `qbnghekzezuedzhkeotr`、遠端歷史與預覽 migration 均符合預期後，才明確執行：
+
+```sh
+npm run supabase:db:push
+```
+
+`db:push` 會套用遠端尚未執行的 migrations；不得略過 history 核對或 dry-run。若 CLI 顯示需要修正 migration history、baseline 或 DB 密碼，先停止並由維護者處理，不可用 `migration repair` 或 `--include-all` 繞過。
 
 此 SQL 會新增 `campaigns.camp_chest_currency`；強制 `inventory_items.campaign_id`、外鍵、索引及 camp-chest 不可設私人等限制；限制 campaign、角色、物品、成員、邀請及角色權限資料依 campaign 成員資格存取；玩家只能更新 campaign 的公共營地箱錢包，DM 才能更新其他 campaign 欄位或刪除戰役。直接建立 campaign 或 campaign member 列會被限制，需使用安全函式。Migration 另提供邀請碼加入 RPC、僅 `service_role` 可執行的建團 RPC，並確認 `campaigns` 在 `supabase_realtime` publication 中。它不建立範本表、不放入範例 seed，也不建立 `default` 戰役。
 
@@ -37,7 +41,7 @@ supabase db push --linked
 
 ## 冒險筆記 Schema 與授權 migration
 
-[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；使用者已確認此 Edge Function 部署完成，但本文件未獨立驗證目標專案或實際請求。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
+[20261030000008_campaign_journeys.sql](../supabase/migrations/20261030000008_campaign_journeys.sql) 新增 campaign-scoped 主筆記與 DM 私密筆記資料表、`character_permissions.journey_access`、RLS、Realtime 設定，以及僅 `service_role` 可呼叫的角色刪除交易 RPC。新增的 `delete-campaign-character` Edge Function 會驗證登入 token 並呼叫該 RPC；正式專案 Functions 清單確認此 Function 為 ACTIVE，但清單不驗證實際請求行為。角色刪除 RPC 仍會依傳入的 actor UUID 從資料庫確認 DM／`can_delete_character` 授權，持有 service role 並不會替使用者取得角色刪除權。
 
 此 migration 會檢查所依賴的既有欄位型別、角色主鍵、授權 helper、物品 owner 關聯及 `supabase_realtime` 設定。既有角色擁有者權限列會取得 `journey_access = 2`；新增或轉移擁有權時亦由 DB trigger 同步。另以 restrictive RLS policy 阻止直接刪除角色，只有受限交易 RPC 能執行完整刪除。遇到缺欄位、型別不符、遺留孤兒物品或整個 schema 的 Realtime publication 時會停止，請先人工釐清，不要略過檢查或直接修改正式資料。migration 另以物品 owner trigger 與角色列鎖，避免刪角交易期間新增／移轉物品形成孤兒 owner。
 
@@ -50,13 +54,13 @@ supabase db push --linked
 - `anon`／`authenticated` 直接執行角色刪除 RPC 被拒；`service_role` 搭配未授權 actor 仍被拒。授權刪除後筆記轉公開且保留、背包和雙錢包併入營地箱；透過隔離測試觸發交易中途失敗，確認物品、貨幣、筆記與角色全部回滾。
 - 以平行角色移轉／新增物品及刪角請求驗證 owner 鎖定；確認不會留下指向已刪角色的物品，並確認每個戰役至少保留一名實體角色。
 
-完成隔離驗收後，由維護者依目標專案與部署流程決定是否套用；本次程式碼變更不連線、不執行 SQL 或部署 Edge Function。使用者回報 Edge Function 已部署，但這不代表真實 Supabase RLS／Realtime／交易已驗收或上線。
+本節記錄此功能的隔離環境驗收要求，不代表已完成真實 Supabase RLS／Realtime／交易驗收。維護者確認正式專案的 migrations 曾手動套用後，本次僅將版本登記到 migration history，沒有重新執行 SQL；正式 Function 的 ACTIVE 狀態也不等同於整合驗收完成。
 
 ### 冒險筆記隔離部署步驟
 
-以下步驟只供維護者在已確認的**隔離 Supabase 專案**執行。本次開發工作不會連線、套用 migration、部署 Function 或讀取／設定 Secrets。
+以下步驟是**隔離 Supabase 專案**的驗收與首次部署流程，不是目前正式專案的待辦命令。正式專案已由維護者確認 migrations 曾手動套用，本次只補登 history；正式專案 dry-run 為 up-to-date。
 
-1. **備份並核對目標。** 建立可還原的資料庫備份／還原點，確認 CLI 登入帳號、project ref、既有 Schema 與 migration history。核對必要前置 migration（包含既有 campaign 授權及 `20261030000007_item_base_validator_grants.sql`）已套用，且 `20261030000008_campaign_journeys.sql` 尚未被錯誤標記為已套用。若遠端歷史或欄位與 repo 不一致，停止並先由維護者釐清；不要略過 migration preflight。
+1. **備份並核對目標。** 建立可還原的資料庫備份／還原點，確認 CLI 登入帳號、project ref、既有 Schema 與 migration history。核對必要前置 migration（包含既有 campaign 授權及 `20261030000007_item_base_validator_grants.sql`）已套用。只有在維護者確認 SQL 已手動執行後，才可將 `20261030000008_campaign_journeys.sql` 登記為已套用；不得只為消除待套用清單而標記。
 
    ```sh
    supabase migration list --linked
@@ -91,13 +95,16 @@ Playwright／Supabase mock 只驗證前端流程與 API 合約；所有隔離專
 
 1. 維護者確認資料庫 migration 已成功套用，`create_campaign_from_seed(text, uuid, jsonb)` 僅授予 `service_role` 執行。
 2. 透過 Supabase Dashboard 或 CLI 的 secrets 管理機制確認 Edge Function 可取得 `SUPABASE_URL`、`SUPABASE_ANON_KEY` 及 `SUPABASE_SERVICE_ROLE_KEY`。service role key 僅能存在伺服器端，不能放入 Vite 環境變數、前端程式碼或版本控制。
-3. 使用 CLI 部署前先確認已連結正確專案：
+3. 確認資料庫前置條件完成後，部署所有 repo 中的 Edge Functions：
 
    ```sh
-   supabase functions deploy create-campaign --project-ref <正確的專案參照>
+   npm run supabase:functions:list
+   npm run supabase:functions:deploy
    ```
 
 4. `supabase/config.toml` 對此 function 開啟 gateway JWT 驗證；程式內仍以 Supabase Auth `getUser(token)` 驗證實際登入者，並只把該 user UUID 傳入交易 RPC。函式不接受客戶端提供任意種子資料或建立者 ID。
+
+`supabase:functions:deploy` 只部署 repo 內的 Functions，且不會刪除遠端多出的 Function（不可加 `--prune`）。`invite-player` source 已從正式部署下載並納入 repo，設定維持 `verify_jwt = true`；secrets 仍由 Supabase 遠端管理。
 
 使用者已回報角色刪除 Edge Function 部署完成。下列命令供維護者確認正確專案及 migration 前置條件後，用於重新部署或更新：
 
@@ -144,4 +151,6 @@ supabase functions deploy delete-campaign-character --project-ref <正確的專�
 
 ## 部署狀態
 
-使用者已確認 `delete-campaign-character` Edge Function 部署完成；本工作階段未連線 Supabase 或獨立驗證部署目標、執行 SQL、部署 Function 或存取 service role secrets。目標環境 Schema、migration history、Secrets 與資料庫／RLS／Realtime／交易整合測試，仍須由維護者在隔離專案手動確認。
+使用者確認 repo 內 27 個 migrations 與既有 Edge Functions 曾手動部署，且正式資料庫留有手動測試資料。經使用者明確授權，本次以 `supabase migration repair --status applied` 將 27 個版本寫入正式專案 migration history；此操作只更新 migration tracking metadata，沒有執行 SQL migration 或改動應用資料。之後 `supabase migration list` 顯示 27 個版本一致，`supabase db push --dry-run` 回報 up-to-date。沒有清除測試資料、部署 Function 或存取／變更 secrets。
+
+正式專案 Functions 查詢顯示 5 個 ACTIVE：`create-campaign`、`campaign-shop-purchase`、`delete-campaign-character`、`identify-inventory-item` 及 `invite-player`；目前 repo 皆有對應 source 與 JWT 驗證設定。`invite-player` source 是從正式部署匯入的，任何修改都需先檢視並依隔離環境流程驗收。部署命令不會刪除遠端 Function，不可加 `--prune`。

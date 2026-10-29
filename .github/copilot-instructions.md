@@ -42,15 +42,21 @@
    - `camp-chest` 是 UI 虛擬儲存庫，不建立 `characters` 或權限資料列；物品必須以當前 `campaign_id` 隔離，且強制維持公開。
    - 營地箱貨幣唯一遠端來源為 `campaigns.camp_chest_currency`，同步 Hook 訂閱 campaigns Realtime；不得存入虛擬角色的 `currencies`。
    - 角色錢包與營地箱錢包分屬不同資料列，前端移轉目前不是單一資料庫交易；不得宣稱跨列轉帳具原子性。需要跨使用者競爭保護時，先新增並手動部署交易 RPC。
-   - 階段三未執行 SQL；Supabase Schema 與 Edge Function 由維護者依部署文件管理。
+   - 階段三當時未執行 SQL。Supabase CLI 已設定正式專案 `qbnghekzezuedzhkeotr`；migration 與 Edge Function 部署流程見 `docs/database-template-migration.md`。
 7. **移除預設戰役特例（階段四已完成）**：
    - 戰役大廳只顯示 Supabase 回傳的戰役；不可加入固定示範戰役卡片、以 `default` ID 隱藏戰役或依 ID 授予 DM 權限。
    - `INITIAL_CHARACTERS`／`INITIAL_ITEMS` 是建立範例戰役及訪客／離線退避的範例資料，不可用來回填遠端空集合。
    - `camp-chest` 僅為 UI 虛擬角色；不得寫入 `characters`。物品須以目前 `campaign_id` 隔離，貨幣存於 `campaigns.camp_chest_currency`。
-8. **隔離環境驗收及手動上線（本機驗收完成，Supabase 驗收待維護者執行）**：
+8. **隔離環境驗收及上線（本機驗收完成，Supabase 驗收待完成）**：
    - 本機 `npm run typecheck`、`npm run lint`、`npm run test:e2e`（23 項通過）及 `npm run build` 均已通過。
    - Playwright E2E 對 Auth、REST、RPC 與 Edge Function 使用測試替身；這些結果只證明前端流程與 mock 合約，不代表真實資料庫、RLS、Realtime 或交易回滾已驗收。
-   - 未經維護者確認目標專案與 migration history，不可連線或執行 SQL、部署 Edge Function 或變更 Secrets。隔離專案的 Schema／migration、Function／Secrets、service-role 權限、建團回滾、邀請加入、RLS、Realtime、跨戰役隔離及併發轉帳仍須依 `docs/database-template-migration.md` 手動驗收；驗收完成前不可宣稱已上線。
+   - 正式專案 `qbnghekzezuedzhkeotr` 的 27 個 migration 版本已依維護者確認手動部署後登記至遠端 history；唯讀 dry-run 顯示 up-to-date。正式資料庫仍有手動測試資料，禁止清除或覆寫。
+   - 遠端 5 個 Functions 都有 repo source；`invite-player` 是從正式部署匯入，變更前必須檢視並先在隔離環境驗收。不可使用 `--prune`。
+   - 隔離專案的 Schema／migration、Function／Secrets、service-role 權限、建團回滾、邀請加入、RLS、Realtime、跨戰役隔離及併發轉帳仍須依 `docs/database-template-migration.md` 驗收；驗收完成前不可宣稱已上線。
+9. **Supabase AI 部署流程**：
+   - Supabase CLI 固定版本及正式目標已設定；部署前先執行 `npm run supabase:migrations:list` 與 `npm run supabase:db:dry-run`，並核對 project ref 和 migration history。
+   - 只有在使用者明確要求部署、隔離環境驗收完成、預覽結果正確、migration history 與 repo 一致且 DB／Function secrets 已由維護者在 Supabase 安全設定時，才可執行 `npm run supabase:db:push` 或 `npm run supabase:functions:deploy`。不得以 `migration repair`、`--include-all` 或跳過驗證來消除錯誤；只有經維護者確認已手動套用的 versions，才可明確授權登記 history。
+   - 不可讀取、輸出或提交 access token、DB 密碼或 service-role key；不可把 service-role key 放入前端環境變數。
 
 ---
 

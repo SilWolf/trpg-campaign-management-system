@@ -1,4 +1,4 @@
-project_id = "trpg-campaign-management-system"
+project_id = "qbnghekzezuedzhkeotr"
 
 [functions.create-campaign]
 verify_jwt = true
@@ -10,4 +10,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.delete-campaign-character]
+verify_jwt = true
+
+[functions.invite-player]
 verify_jwt = true

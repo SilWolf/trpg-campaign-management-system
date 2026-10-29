@@ -11,6 +11,12 @@
 		"test:e2e": "playwright test",
 		"validate:blacksmith-source": "node scripts/validate-blacksmith-source.mjs",
 		"validate:static-images": "node scripts/validate-static-image-catalog.mjs",
+		"supabase:login": "npx --yes supabase@2.122.0 login",
+		"supabase:migrations:list": "npx --yes supabase@2.122.0 migration list --project-ref qbnghekzezuedzhkeotr",
+		"supabase:db:dry-run": "npx --yes supabase@2.122.0 db push --dry-run --project-ref qbnghekzezuedzhkeotr",
+		"supabase:db:push": "npx --yes supabase@2.122.0 db push --project-ref qbnghekzezuedzhkeotr",
+		"supabase:functions:list": "npx --yes supabase@2.122.0 functions list --project-ref qbnghekzezuedzhkeotr",
+		"supabase:functions:deploy": "npx --yes supabase@2.122.0 functions deploy --project-ref qbnghekzezuedzhkeotr",
 		"split:item-icons": "node .scripts/items-icon-splitter/index.js",
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit"
