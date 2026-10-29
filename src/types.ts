@@ -154,6 +154,29 @@ export interface CharacterPermission {
 	canManagePermissions: boolean;
 }
 
+export type CampaignJourneyVisibility = 'public' | 'private';
+export type CampaignJourneyListFilter = 'all' | 'quests' | 'completed';
+
+export interface CampaignJourney {
+	id: string;
+	campaignId: string;
+	title: string;
+	tags: string[];
+	content: string;
+	characterId: string | null;
+	createdBy: string;
+	createdAt: string;
+	isQuest: boolean;
+	isCompleted: boolean;
+	visibility: CampaignJourneyVisibility;
+}
+
+export interface CampaignJourneyDmNote {
+	journeyId: string;
+	campaignId: string;
+	content: string;
+}
+
 export type ItemAffix = {
 	id: string;
 	name: string;

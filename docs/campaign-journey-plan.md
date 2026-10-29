@@ -214,6 +214,14 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 ### 階段二：型別與資料存取
 
+**進度紀錄（2026-10-29）**
+
+- 已完成冒險筆記 domain／DB 型別、雙向轉換器與穩定標籤解析／序列化，包含 nullable 欄位及舊資料 fallback。
+- 新增 campaign-scoped journey data helper，提供列表、單篇讀取、建立、更新、刪除及 DM 私密筆記讀寫；一般筆記採明確欄位 select，建立／更新 payload 不接受或送出建立者與建立時間。
+- 所有讀取、更新及刪除均同時限制 `campaign_id`；DM helper 在 `isDm` 未確認時先拒絕，不發出私密表請求。資料庫 RLS 仍為最終授權防線。
+- 新增 Playwright 資料層測試，覆蓋轉換 round-trip、fallback、campaign 範圍、不可改寫建立者／時間、非 DM 呼叫阻擋及 Supabase 錯誤傳遞；`npm run typecheck`、相關檔案 ESLint 與 3 項指定 E2E 測試通過。
+- E2E 使用 HTTP mock 驗證前端資料存取合約，不代表已驗證目標 Supabase 的真實 RLS、Realtime 或資料庫行為；仍須依隔離環境部署流程驗收。
+
 **目標與工作項目**
 
 - 在 `src/types.ts` 新增筆記 domain type、可見性型別及必要的列表篩選型別。
@@ -233,12 +241,12 @@ DM 私密內容由 DM 專用查詢分支載入；非 DM 的前端程式不得發
 
 **退出／驗收標準**
 
-- [ ] Domain type 與 DB type 分離，轉換器完整涵蓋所有欄位、null 值與 fallback。
-- [ ] 轉換器 round-trip 測試驗證公開筆記、私人筆記、無角色筆記、旗標及標籤資料。
-- [ ] 所有查詢、更新、刪除均綁定 `campaign_id`；單篇查詢不會跨 campaign 取得資料。
-- [ ] DM 欄位不出現在一般 domain query 的 select shape；非 DM 不會呼叫 DM 私密 helper。
-- [ ] Supabase 失敗會以可辨識錯誤回傳；沒有靜默忽略、預設成功或以空資料偽裝成功。
-- [ ] `npm run typecheck` 通過；若專案沒有單元測試工具，明確採用可用的既有測試方式而非安裝額外框架。
+- [x] Domain type 與 DB type 分離，轉換器完整涵蓋所有欄位、null 值與 fallback。
+- [x] 轉換器 round-trip 測試驗證公開筆記、私人筆記、無角色筆記、旗標及標籤資料。
+- [x] 所有查詢、更新、刪除均綁定 `campaign_id`；單篇查詢不會跨 campaign 取得資料。
+- [x] DM 欄位不出現在一般 domain query 的 select shape；非 DM 不會呼叫 DM 私密 helper。
+- [x] Supabase 失敗會以可辨識錯誤回傳；沒有靜默忽略、預設成功或以空資料偽裝成功。
+- [x] `npm run typecheck` 通過；使用既有 Playwright E2E 架構，未新增測試工具。
 
 ### 階段三：角色權限設定
 

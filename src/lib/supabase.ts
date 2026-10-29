@@ -7,6 +7,9 @@ import {
 	type AllItem,
 	type Character,
 	type CharacterPermission,
+	type CampaignJourney,
+	type CampaignJourneyDmNote,
+	type CampaignJourneyVisibility,
 	type CurrencyType,
 	type BlacksmithTemplate,
 	type CampaignShop,
@@ -869,6 +872,94 @@ export const fromDbCharacter = (row: DbCharacter): Character => ({
 		sp: 0,
 		cp: 0,
 	},
+});
+
+export interface DbCampaignJourney {
+	id: string;
+	campaign_id: string;
+	title: string;
+	tags?: string | null;
+	content?: string | null;
+	character_id?: string | null;
+	created_by: string;
+	created_at: string;
+	is_quest?: boolean | null;
+	is_completed?: boolean | null;
+	visibility?: string | null;
+}
+
+export interface DbCampaignJourneyDmNote {
+	journey_id: string;
+	campaign_id: string;
+	content?: string | null;
+}
+
+export const parseCampaignJourneyTags = (tags: string | null | undefined) => {
+	const uniqueTags = new Set<string>();
+	for (const tag of (tags ?? '').split(',')) {
+		const normalizedTag = tag.trim();
+		if (normalizedTag) uniqueTags.add(normalizedTag);
+	}
+	return [...uniqueTags];
+};
+
+export const serializeCampaignJourneyTags = (tags: readonly string[]) => {
+	const uniqueTags = new Set<string>();
+	for (const tag of tags) {
+		const normalizedTag = tag.trim();
+		if (normalizedTag) uniqueTags.add(normalizedTag);
+	}
+	return [...uniqueTags].join(', ');
+};
+
+export const toDbCampaignJourney = (
+	journey: CampaignJourney,
+): DbCampaignJourney => ({
+	id: journey.id,
+	campaign_id: journey.campaignId,
+	title: journey.title,
+	tags: serializeCampaignJourneyTags(journey.tags),
+	content: journey.content,
+	character_id: journey.characterId,
+	created_by: journey.createdBy,
+	created_at: journey.createdAt,
+	is_quest: journey.isQuest,
+	is_completed: journey.isCompleted,
+	visibility: journey.visibility,
+});
+
+export const fromDbCampaignJourney = (
+	row: DbCampaignJourney,
+): CampaignJourney => ({
+	id: row.id,
+	campaignId: row.campaign_id,
+	title: row.title,
+	tags: parseCampaignJourneyTags(row.tags),
+	content: row.content ?? '',
+	characterId: row.character_id ?? null,
+	createdBy: row.created_by,
+	createdAt: row.created_at,
+	isQuest: row.is_quest ?? false,
+	isCompleted: row.is_completed ?? false,
+	visibility: (row.visibility === 'private'
+		? 'private'
+		: 'public') satisfies CampaignJourneyVisibility,
+});
+
+export const toDbCampaignJourneyDmNote = (
+	note: CampaignJourneyDmNote,
+): DbCampaignJourneyDmNote => ({
+	journey_id: note.journeyId,
+	campaign_id: note.campaignId,
+	content: note.content,
+});
+
+export const fromDbCampaignJourneyDmNote = (
+	row: DbCampaignJourneyDmNote,
+): CampaignJourneyDmNote => ({
+	journeyId: row.journey_id,
+	campaignId: row.campaign_id,
+	content: row.content ?? '',
 });
 
 export interface DbCharacterPermission {
