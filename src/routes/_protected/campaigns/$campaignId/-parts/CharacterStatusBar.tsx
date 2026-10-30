@@ -1,11 +1,7 @@
 import { Coins, EyeOff, Scale, Tent } from 'lucide-react';
 import { Button, Checkbox } from '@/components/ui';
 import { CharacterAvatar } from '@/components/CharacterAvatar';
-import {
-	CAMP_CHEST_ID,
-	type Character,
-	type ViewMode,
-} from '@/types';
+import { CAMP_CHEST_ID, type Character, type ViewMode } from '@/types';
 
 export interface CharacterStatusBarProps {
 	placement: 'characters' | 'status';
@@ -222,19 +218,42 @@ export default function CharacterStatusBar({
 			</div>
 
 			<div className='lg:col-span-6 flex flex-col justify-between border-t lg:border-t-0 border-border pt-3 lg:pt-0'>
-				<div className='flex items-center justify-between mb-1.5'>
-					<span className='text-xs text-muted-foreground flex items-center gap-1'>
-						{isCampChestActive ? (
-							<Coins className='w-3.5 h-3.5 text-money' />
-						) : (
-							<EyeOff className='w-3.5 h-3.5 text-private' />
-						)}
-						<span className='text-highlight'>
-							{isCampChestActive
-								? '營地公庫錢包'
-								: '公開與私人錢包'}
-						</span>
-					</span>
+				<div className='flex items-start justify-between gap-x-4'>
+					<div className='flex-1 text-xs font-mono'>
+						<div className='flex-1 gap-x-2 text-money space-y-2'>
+							{isCampChestActive && canReadPublicWallet && (
+								<div className='flex gap-x-2 text-money'>
+									<Coins className='w-3.5 h-3.5' />
+									<span>營地公庫錢包</span>
+									<span
+										className='flex-1 font-bold text-right'
+										data-testid='campsite-public-gp'
+									>{`${formatGp(publicGp)} GP`}</span>
+								</div>
+							)}
+							{!isCampChestActive && canReadPublicWallet && (
+								<div className='flex gap-x-2 text-money'>
+									<Coins className='w-3.5 h-3.5' />
+									<span className='w-16'>公開現金</span>
+									<span
+										className='flex-1 font-bold text-right'
+										data-testid='public-gp'
+									>{`${formatGp(publicGp)} GP`}</span>
+								</div>
+							)}
+							{!isCampChestActive && canReadPrivateWallet && (
+								<div className='flex gap-x-2 text-private'>
+									<EyeOff className='w-3.5 h-3.5' />
+									<span className='w-16'>私人現金</span>
+									<span
+										className='flex-1 font-bold text-right'
+										data-testid='private-gp'
+									>{`${formatGp(privateGp)} GP`}</span>
+								</div>
+							)}
+						</div>
+					</div>
+
 					<div className='flex items-center gap-1.5'>
 						{canEditAnyWallet && (
 							<Button
@@ -249,48 +268,6 @@ export default function CharacterStatusBar({
 						)}
 					</div>
 				</div>
-
-				{canEditAnyWallet ? (
-					<Button
-						type='button'
-						variant='ghost'
-						size='sm'
-						data-testid='currency-summary-gp'
-						onClick={onOpenCurrencyPanel}
-						aria-label='GP 餘額，點擊開啟轉帳'
-					>
-						<div className='flex flex-wrap items-center justify-center gap-1.5 text-xs font-mono font-bold text-money'>
-							<span>{canReadPublicWallet ? `${formatGp(publicGp)} GP` : '🔒'}</span>
-							{!isCampChestActive && (
-								<span className='inline-flex items-center gap-1 text-private'>
-									<EyeOff className='size-3' />
-									{canReadPrivateWallet
-										? `(+ ${formatGp(privateGp)} GP)`
-										: '(+ 🔒 私人錢包)'}
-								</span>
-							)}
-						</div>
-						<div className='text-[9px] opacity-80'>GP 餘額</div>
-					</Button>
-				) : (
-					<div
-						data-testid='currency-summary-gp'
-						className='inline-flex flex-col items-center justify-center rounded-control px-3 py-2 text-sm'
-					>
-						<div className='flex flex-wrap items-center justify-center gap-1.5 text-xs font-mono font-bold text-money'>
-							<span>{canReadPublicWallet ? `${formatGp(publicGp)} GP` : '🔒'}</span>
-							{!isCampChestActive && (
-								<span className='inline-flex items-center gap-1 text-private'>
-									<EyeOff className='size-3' />
-									{canReadPrivateWallet
-										? `(+ ${formatGp(privateGp)} GP)`
-										: '(+ 🔒 私人錢包)'}
-								</span>
-							)}
-						</div>
-						<div className='text-[9px] opacity-80'>GP 餘額</div>
-					</div>
-				)}
 			</div>
 		</div>
 	);

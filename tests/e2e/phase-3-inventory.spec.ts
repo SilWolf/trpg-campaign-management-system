@@ -26,24 +26,22 @@ test('一般成員只能閱讀公開物品與錢包，私人資料和負重不�
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 
-	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
-	await expect(page.getByTestId('inventory-item-inventory-private-letter')).toHaveCount(
-		0,
-	);
+	await expect(
+		page.getByTestId('inventory-item-inventory-public-potion'),
+	).toBeVisible();
+	await expect(
+		page.getByTestId('inventory-item-inventory-private-letter'),
+	).toHaveCount(0);
 	await expect(page.getByTestId('inventory-private-group')).toHaveCount(0);
-	await expect(page.getByTestId('inventory-encumbrance')).toContainText('1.4 / 150 lbs');
-	await expect(page.getByTestId('currency-summary-gp')).toContainText('20 GP');
-	await expect(page.getByTestId('currency-summary-gp')).toContainText(
-		'私人錢包',
+	await expect(page.getByTestId('inventory-encumbrance')).toContainText(
+		'1.4 / 150 lbs',
 	);
-	await expect(page.getByTestId('currency-summary-gp')).not.toContainText('80 GP');
+	await expect(page.getByTestId('public-gp')).toBeVisible();
+	await expect(page.getByTestId('public-gp')).toContainText('20 GP');
+	await expect(page.getByTestId('private-gp')).toHaveCount(0);
 
 	await expect(page.getByTestId('inventory-currency-edit')).toHaveCount(0);
 	await expect(page.getByTestId('inventory-currency-open')).toHaveCount(0);
-	await expect(page.getByTestId('currency-summary-gp')).not.toHaveAttribute(
-		'aria-label',
-		'GP 餘額，點擊開啟轉帳',
-	);
 	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
 	await expect(page.getByTestId('currency-summary-pp')).toHaveCount(0);
 	await expect(page.getByText('一鍵將零錢換整為金幣 (GP)')).toHaveCount(0);
@@ -56,9 +54,15 @@ test('DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳', async ({
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 
-	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
-	await expect(page.getByTestId('inventory-item-inventory-private-letter')).toBeVisible();
-	await expect(page.getByTestId('inventory-private-group').first()).toBeVisible();
+	await expect(
+		page.getByTestId('inventory-item-inventory-public-potion'),
+	).toBeVisible();
+	await expect(
+		page.getByTestId('inventory-item-inventory-private-letter'),
+	).toBeVisible();
+	await expect(
+		page.getByTestId('inventory-private-group').first(),
+	).toBeVisible();
 
 	await page.getByRole('searchbox', { name: '搜尋道具名稱' }).fill('治療');
 	await expect(
@@ -114,7 +118,9 @@ test('DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳', async ({
 	await page.getByTestId('inventory-consume-item').click();
 	await expect
 		.poll(() =>
-			requests.some((request) => request.startsWith('PATCH /rest/v1/inventory_items')),
+			requests.some((request) =>
+				request.startsWith('PATCH /rest/v1/inventory_items'),
+			),
 		)
 		.toBe(true);
 
@@ -136,16 +142,16 @@ test('DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳', async ({
 	await expect(page.getByTestId('currency-panel')).not.toContainText('−0.01');
 	await page.getByRole('button', { name: '取消' }).click();
 	await page.getByTestId('inventory-currency-open').last().click();
-	await page.getByTestId('currency-source-wallet').selectOption(
-		JSON.stringify(['inventory-character', 'private']),
-	);
+	await page
+		.getByTestId('currency-source-wallet')
+		.selectOption(JSON.stringify(['inventory-character', 'private']));
 	await expect(page.getByTestId('currency-source-wallet')).toHaveValue(
 		JSON.stringify(['inventory-character', 'private']),
 	);
 	await page.getByRole('button', { name: '取消' }).click();
-	await expect(requests.some((request) => request.startsWith('POST /rest/v1/characters'))).toBe(
-		false,
-	);
+	await expect(
+		requests.some((request) => request.startsWith('POST /rest/v1/characters')),
+	).toBe(false);
 });
 
 test('秘密物品只能單向公開，且不得直接移入營地儲物箱', async ({ page }) => {
@@ -183,14 +189,18 @@ test('秘密物品只能單向公開，且不得直接移入營地儲物箱', as
 	).toBe(false);
 });
 
-test('遠端角色錢包需使用授權交易；營地箱餘額仍可由 DM 設定', async ({ page }) => {
+test('遠端角色錢包需使用授權交易；營地箱餘額仍可由 DM 設定', async ({
+	page,
+}) => {
 	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 	});
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 
-	await expect(page.getByTestId('inventory-currency-edit').last()).toBeVisible();
+	await expect(
+		page.getByTestId('inventory-currency-edit').last(),
+	).toBeVisible();
 	await page.getByTestId('inventory-currency-edit').last().click();
 	await expect(page.getByTestId('currency-edit-panel')).toBeVisible();
 	await expect(page.getByTestId('currency-edit-balance')).toHaveValue('20');
@@ -200,7 +210,9 @@ test('遠端角色錢包需使用授權交易；營地箱餘額仍可由 DM 設�
 	await expect(page.getByRole('status').last()).toContainText(
 		'遠端角色錢包目前只能透過轉帳異動',
 	);
-	expect(findCharacterWrite(characterWrites, 'inventory-character')).toBeUndefined();
+	expect(
+		findCharacterWrite(characterWrites, 'inventory-character'),
+	).toBeUndefined();
 	await page.getByRole('button', { name: '取消' }).click();
 
 	await page.getByTestId('inventory-currency-edit').last().click();
@@ -213,7 +225,9 @@ test('遠端角色錢包需使用授權交易；營地箱餘額仍可由 DM 設�
 	await expect(page.getByRole('status').last()).toContainText(
 		'遠端角色錢包目前只能透過轉帳異動',
 	);
-	expect(findCharacterWrite(characterWrites, 'inventory-character')).toBeUndefined();
+	expect(
+		findCharacterWrite(characterWrites, 'inventory-character'),
+	).toBeUndefined();
 	await page.getByRole('button', { name: '取消' }).click();
 
 	await page.getByTestId('inventory-currency-edit').last().click();
@@ -270,7 +284,9 @@ test('裝備沒有武器精通的護甲時同步使用 None', async ({ page }) =
 	});
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
-	await expect(page.getByTestId('campaign-sync-status')).toHaveText('Supabase 即時同步中');
+	await expect(page.getByTestId('campaign-sync-status')).toHaveText(
+		'Supabase 即時同步中',
+	);
 
 	await page.getByTestId('inventory-item-inventory-armor').click();
 	const update = page.waitForResponse(
@@ -285,12 +301,12 @@ test('裝備沒有武器精通的護甲時同步使用 None', async ({ page }) =
 	expect(response.request().postDataJSON()).toEqual(
 		expect.objectContaining({ mastery: 'None', equipped: true }),
 	);
-	await expect(page.getByTestId('campaign-sync-status')).toHaveText('Supabase 即時同步中');
+	await expect(page.getByTestId('campaign-sync-status')).toHaveText(
+		'Supabase 即時同步中',
+	);
 });
 
-test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列', async ({
-	page,
-}) => {
+test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列', async ({ page }) => {
 	const { campaignUpdates, requests } = await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 		blankCampaign: true,
@@ -307,9 +323,9 @@ test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列',
 	await expect(
 		page.getByTestId('inventory-character-camp-chest'),
 	).toHaveAttribute('aria-pressed', 'true');
-	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toHaveCount(
-		0,
-	);
+	await expect(
+		page.getByTestId('inventory-item-inventory-public-potion'),
+	).toHaveCount(0);
 
 	await page.getByTestId('inventory-currency-open').last().click();
 	await expect(page.getByTestId('currency-source-wallet')).toContainText(
@@ -327,9 +343,7 @@ test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列',
 	await expect.poll(() => campaignUpdates).toEqual([]);
 });
 
-test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async ({
-	page,
-}) => {
+test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async ({ page }) => {
 	const { characterWrites, campaignUpdates, campaignShopRpcRequests } =
 		await mockSupabase(page, {
 			campaignInventoryRole: 'dm',
@@ -429,9 +443,9 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	});
 
 	await page.getByTestId('inventory-currency-open').last().click();
-	await page.getByTestId('currency-source-wallet').selectOption(
-		JSON.stringify(['camp-chest', 'public']),
-	);
+	await page
+		.getByTestId('currency-source-wallet')
+		.selectOption(JSON.stringify(['camp-chest', 'public']));
 	await expect(
 		page
 			.getByTestId('currency-target-wallet')
@@ -449,9 +463,7 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	expect(campaignUpdates).toEqual([]);
 });
 
-test('轉帳驗證至少 0.01 GP、來源餘額與不同戶口', async ({
-	page,
-}) => {
+test('轉帳驗證至少 0.01 GP、來源餘額與不同戶口', async ({ page }) => {
 	await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 		campaignInventoryWalletGp: { public: 0.01, private: 0 },
@@ -488,9 +500,9 @@ test('全部會填入來源餘額，平分轉帳排除來源與公庫並保留�
 }) => {
 	const { campaignShopRpcRequests, characterWrites, campaignUpdates } =
 		await mockSupabase(page, {
-		campaignInventoryRole: 'dm',
-		campaignInventoryThirdCharacter: true,
-	});
+			campaignInventoryRole: 'dm',
+			campaignInventoryThirdCharacter: true,
+		});
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 	await page.getByTestId('inventory-currency-open').last().click();
@@ -528,16 +540,18 @@ for (const { gp, coinWeight, totalWeight } of [
 	{ gp: 1.99, coinWeight: 0.02, totalWeight: 1.02 },
 	{ gp: 2, coinWeight: 0.04, totalWeight: 1.04 },
 ]) {
-	test(`${gp} GP 的硬幣負重為 ${coinWeight.toFixed(2)} lb`, async ({ page }) => {
+	test(`${gp} GP 的硬幣負重為 ${coinWeight.toFixed(2)} lb`, async ({
+		page,
+	}) => {
 		await mockSupabase(page, {
 			campaignInventoryRole: 'player',
 			campaignInventoryWalletGp: { public: gp, private: 0 },
 		});
 		await seedAuthenticatedSession(page);
 		await page.goto(inventoryUrl);
-		await expect(page.getByTestId('inventory-count-coin-weight')).toHaveAccessibleName(
-			`計入硬幣重 (${coinWeight} lb)`,
-		);
+		await expect(
+			page.getByTestId('inventory-count-coin-weight'),
+		).toHaveAccessibleName(`計入硬幣重 (${coinWeight} lb)`);
 		await expect(page.getByTestId('inventory-encumbrance')).toContainText(
 			`${totalWeight} / 150 lbs`,
 		);
@@ -556,9 +570,9 @@ test('擁有私人錢包閱讀權限時才將其 GP 納入負重', async ({ page
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 
-	await expect(page.getByTestId('inventory-count-coin-weight')).toHaveAccessibleName(
-		'計入硬幣重 (0.02 lb)',
-	);
+	await expect(
+		page.getByTestId('inventory-count-coin-weight'),
+	).toHaveAccessibleName('計入硬幣重 (0.02 lb)');
 	await expect(page.getByTestId('inventory-encumbrance')).toContainText(
 		'2.52 / 150 lbs',
 	);
@@ -576,7 +590,9 @@ test('Campaign 背包頁在 375px 窄螢幕可用且沒有水平溢位', async (
 	await expect(
 		page.getByRole('searchbox', { name: '搜尋道具名稱' }),
 	).toBeVisible();
-	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
+	await expect(
+		page.getByTestId('inventory-item-inventory-public-potion'),
+	).toBeVisible();
 	const hasHorizontalOverflow = await page.evaluate(
 		() => document.documentElement.scrollWidth > window.innerWidth,
 	);
