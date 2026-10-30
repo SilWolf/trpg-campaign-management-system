@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { EyeOff, Gift, Plus, Search, Trash2, X } from 'lucide-react';
 
@@ -32,6 +32,7 @@ interface ItemDistributionDialogProps {
 	isOpen: boolean;
 	campaignId: string;
 	userId: string;
+	initialOwnerId: string;
 	characters: Character[];
 	items: InventoryItem[];
 	onClose: () => void;
@@ -80,6 +81,7 @@ export default function ItemDistributionDialog({
 	isOpen,
 	campaignId,
 	userId,
+	initialOwnerId,
 	characters,
 	items,
 	onClose,
@@ -112,11 +114,22 @@ export default function ItemDistributionDialog({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const requestIdRef = useRef<string | null>(null);
+	const wasOpenRef = useRef(false);
 	const dialogRef = useRef<HTMLElement | null>(null);
 	const searchImportButtonRef = useRef<HTMLButtonElement | null>(null);
 	const newDefinitionButtonRef = useRef<HTMLButtonElement | null>(null);
 	const editorReturnFocusRef = useRef<HTMLElement | null>(null);
 	const toast = useToast();
+	useEffect(() => {
+		if (isOpen && !wasOpenRef.current) {
+			setOwnerId(initialOwnerId);
+			setIsPrivate(false);
+			requestIdRef.current = null;
+			setConfirmationCount(null);
+			setErrorMessage(null);
+		}
+		wasOpenRef.current = isOpen;
+	}, [initialOwnerId, isOpen]);
 	const closeIfIdle = () => {
 		if (!isSubmitting) {
 			setIsSearchOpen(false);

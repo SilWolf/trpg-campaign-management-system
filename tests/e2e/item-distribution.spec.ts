@@ -3,6 +3,25 @@ import { mockSupabase, seedAuthenticatedSession } from './supabase-mock';
 
 const inventoryUrl = '/campaigns/inventory-campaign';
 
+test('派發物品的預設接收目標跟隨目前選取的角色或營地儲物箱', async ({
+	page,
+}) => {
+	await mockSupabase(page, { campaignInventoryRole: 'dm' });
+	await seedAuthenticatedSession(page);
+	await page.goto(inventoryUrl);
+
+	await page.getByTestId('inventory-character-inventory-character').click();
+	await page.getByTestId('inventory-dispatch-items').click();
+	await expect(page.getByLabel('派發接收目標')).toHaveValue(
+		'inventory-character',
+	);
+	await page.getByLabel('關閉物品派發').click();
+
+	await page.getByTestId('inventory-character-camp-chest').click();
+	await page.getByTestId('inventory-dispatch-items').click();
+	await expect(page.getByLabel('派發接收目標')).toHaveValue('camp-chest');
+});
+
 async function addNewDraftItem(page: import('@playwright/test').Page) {
 	await page.getByRole('button', { name: '創造新的物品' }).click();
 	await page.getByRole('textbox', { name: '道具名稱' }).fill('派發測試長劍');
@@ -22,7 +41,7 @@ test('只有 DM 可見派發入口；新增物品以單一 Function 交易提交
 	await expect(page.getByTestId('inventory-dispatch-items')).toBeVisible();
 	await page.getByTestId('inventory-dispatch-items').click();
 	await expect(page.getByRole('dialog', { name: '派發物品' })).toBeVisible();
-	await expect(page.getByLabel('設為秘密物品')).toBeDisabled();
+	await expect(page.getByLabel('設為秘密物品')).toBeEnabled();
 
 	await addNewDraftItem(page);
 	await page.getByLabel('派發接收目標').selectOption('inventory-character');

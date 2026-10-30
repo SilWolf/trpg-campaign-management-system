@@ -698,6 +698,7 @@ function CampaignInventoryPage() {
 						isOpen={isItemDistributionOpen}
 						campaignId={campaignId}
 						userId={user.id}
+						initialOwnerId={activeCharId}
 						characters={characters}
 						items={items}
 						onClose={() => setIsItemDistributionOpen(false)}
