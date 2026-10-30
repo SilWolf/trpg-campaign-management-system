@@ -28,6 +28,7 @@ v0.1.0 將原本 27 個時間戳記 migration 依原順序合併至 [`2026103000
 
 - `dispatch-campaign-items` 先驗證登入 token 與請求，再呼叫僅授權 `service_role` 的 `dispatch_campaign_items_as_actor`。RPC 以 actor claim 與 `is_campaign_dm` 再驗證 DM、campaign 目標、物品定義、數量、合併及 0–10／11–20／超過 20 筆新增列門檻；11–20 筆第一次只回報確認需求，不寫入物品或事件。相同 request ID 重送會回傳已提交結果。
 - `transfer_campaign_currency` 以資料庫交易更新來源／目標 GP 與舊錢包鏡像，並在同一交易寫入事件；玩家物品移轉及商店結帳／核准／拒絕／取消也在既有交易邊界內新增事件。私人錢包或私人背包事件僅 DM、操作者及相關角色擁有者可讀。
+- [`20261031000000_private_inventory_wallet_security.sql`](../supabase/migrations/20261031000000_private_inventory_wallet_security.sql) 是尚未套用的私人背包／錢包安全增量 migration：增加 item ACL RLS、安全錢包讀取 RPC、不可逆公開化與轉移限制，並移除 characters／inventory_items 的完整列 Realtime publication。它也撤銷 authenticated 對角色 GP 及舊錢包鏡像的直接 SELECT；因此階段二須先把前端 `characters.select('*')`、錢包讀取及角色 Realtime 改為安全投影／通知，再將 migration 部署至隔離環境驗收。這份 migration 未經資料庫執行或實際授權測試，不可視為已部署或已驗證。
 - Migration 先拒絕既有越界數量，不會截斷或拆分資料；只建立新欄位與限制，不改寫既有 migration。部署前仍須依前述程序核對 schema／history，並在隔離專案驗收角色權限、跨戰役隔離、交易回滾、併發合併／保留上限與 Realtime。
 - 遷移既有 `item_base` 時，缺少 `isStackable` 或該欄位不是 JSON boolean 的紀錄會設為 `false`，避免舊 validator 曾允許的未知／錯誤欄位值令新 CHECK constraint 建立失敗。若仍遇到 `inventory_items_item_base_stackable_check` 違反，先確認本次 SQL 是否已回滾，再以唯讀查詢找出未通過新版 validator 的記錄；不要手動刪除 constraint 或任意改寫其他物品欄位：
 

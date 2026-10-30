@@ -13,7 +13,7 @@
 - 角色錢包為 `characters.gp`／`private_gp`，營地箱只有 `campaigns.camp_chest_gp`。GP 欄位、精度及相容欄位背景見 [`currency-simplification-plan.md`](./currency-simplification-plan.md)。
 - DM 派發已有 `isPrivate` 請求欄位及營地箱強制公開的伺服器規則；現有 dialog 仍以公開／私人背包選項呈現，見 [`ItemDistributionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDistributionDialog.tsx)、[`dispatch-campaign-items/index.ts`](../supabase/functions/dispatch-campaign-items/index.ts) 及 [`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql)。
 - 目前物品轉移的本機 fallback 會把轉移品改成公開；錢包轉帳 UI 允許選來源與目的錢包。兩者都須與新規則同步，不能只改遠端 UI。相關程式為 [`useInventoryActions.ts`](../src/hooks/useInventoryActions.ts)、[`inventoryTransactions.ts`](../src/lib/inventoryTransactions.ts) 及 [`CurrencyPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/CurrencyPanel.tsx)。
-- **安全阻擋項：**本機 migration 定義中的 `inventory_items` RLS 以戰役成員資格為界，且 GP migration 對 authenticated 授予 `gp`、`private_gp` 欄位讀取權。不可把現有 UI 過濾視為網路層隔離；必須先盤點有效 grants、RLS、REST 查詢與 Realtime payload，再建立能依角色 ACL 回傳安全資料的資料庫邊界。參考 [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql) 與 [`20261030000014_gp_wallet_shop_checkout.sql`](../supabase/migrations/20261030000014_gp_wallet_shop_checkout.sql)。
+- **安全阻擋項：**歷史 migration 中的 `inventory_items` RLS 只檢查戰役成員資格，GP migration 曾授予 authenticated 直接讀取 `gp`、`private_gp` 的欄位權限。階段一已新增增量安全 migration，但尚未套用或在隔離環境驗收；不能把 repo SQL 或 UI 過濾視為有效網路層隔離。正式與隔離專案的有效 grants、RLS、REST、RPC 及 Realtime 狀態仍須由維護者實測確認。
 
 ## 已確認的行為規格
 
@@ -132,6 +132,29 @@
 2. 為前端轉移矩陣、錢包目的端選項、公開化單向性及本機 fallback 增加測試。
 3. 加入資料庫／API 層驗收：無私人讀取權限的使用者直接查詢私人 `inventory_items`、`private_gp`、安全 RPC 與 Realtime，均不得取得秘密內容或餘額；有權限者與 DM 的讀取結果須符合 ACL。
 4. 在隔離 Supabase 專案驗證 migration、RLS/grants、REST、RPC、Realtime、交易回滾及多使用者 ACL。Playwright mock、型別檢查或 SQL 靜態檢查均不能取代真實網路層驗收。
+
+## 階段一執行紀錄（2026-10-31）
+
+### Repo 靜態盤點結果
+
+- [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql) 的物品讀取政策只隔離戰役成員；authenticated 的物品欄位 grants 包含 `is_private` 及物品內容。該 migration 已將 `inventory_items` 移出 Postgres Changes publication，並以安全 Broadcast 通知 campaign、row ID 與動作，不直接廣播整列物品。
+- [`20261030000014_gp_wallet_shop_checkout.sql`](../supabase/migrations/20261030000014_gp_wallet_shop_checkout.sql) 曾授予 authenticated 直接讀取 `characters.gp`／`private_gp`；歷史角色欄位 `currencies`／`private_currencies` 亦可能經 `select('*')` 帶出。前端 [`useCampaignSync.ts`](../src/hooks/useCampaignSync.ts) 對角色訂閱完整 Postgres Changes row，且初始載入使用 `select('*')`。
+- 以上是 repo migration 與前端程式碼的靜態結果，不代表目前 Supabase 專案的有效 grants、publication、RLS 或網路回應；本階段沒有連線查詢遠端專案。
+
+### 已加入的本機交付
+
+- 新增 [`20261031000000_private_inventory_wallet_security.sql`](../supabase/migrations/20261031000000_private_inventory_wallet_security.sql)：依角色公開／私人背包 ACL 加上限制性 RLS；撤銷直接讀取兩個 GP 欄位與舊錢包鏡像；以 `get_campaign_character_wallets` 僅回傳呼叫者可讀的錢包；角色 Realtime 改用不含餘額欄位的安全通知並排除完整 row publication。
+- 同一 migration 將物品轉移改為保留 `is_private`、禁止秘密物品直接移入營地箱、按秘密狀態分開堆疊合併，並由伺服器驗證來源寫入 ACL 與同戰役目標。新增秘密至公開的單向 RPC，並封鎖直接將已公開物品改回秘密；角色 GP 與舊錢包鏡像的直接變更改由資料庫觸發器拒絕。
+- 更新 `transfer_campaign_currency` 交易 RPC：限制公開錢包不可轉入私人錢包、私人來源才可轉入角色私人錢包；允許私人轉公開（含同角色公開錢包），並拒絕相同錢包互轉。既有來源 ACL、campaign 範圍、餘額／上限檢查、列鎖及操作紀錄仍由同一資料庫交易處理。
+- 新增 [`private_inventory_wallet_security.sql`](../supabase/tests/private_inventory_wallet_security.sql) 作為 grants、RLS、RPC 執行權限、觸發器及 publication 的 SQL 合約檢查。
+
+### 驗證狀態與限制
+
+- [x] 完成 repo migration、前端查詢／Realtime 訂閱及現有交易 RPC 的靜態盤點。
+- [x] 新增增量 migration 與 SQL 合約測試；未改寫既有 migration。
+- [ ] 尚未在隔離 PostgreSQL/Supabase 套用 migration 或執行 SQL 合約測試；目前環境沒有 `psql`、Supabase CLI 或 Docker。
+- [ ] 尚未以匿名、不同 ACL 使用者及 DM 對 REST、RPC、Realtime 做真實網路驗收，也未驗證競爭交易與失敗回滾。
+- [ ] 階段二尚未更新 `useCampaignSync.ts` 等前端查詢；新欄位邊界會使舊的角色 `select('*')`／完整角色 Realtime 流程不再可用，因此**不可單獨部署此階段的 migration**。部署前須完成階段二並在隔離環境驗收；正式環境仍未部署。
 
 ## 驗收清單
 
