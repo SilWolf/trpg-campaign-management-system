@@ -95,6 +95,91 @@ test('主題可用鍵盤切換，並在重新載入後保留偏好', async ({ pa
 	expect(mainBackground).toBe('rgb(255, 255, 255)');
 });
 
+test('DM 語境色彩依主題切換並維持文字對比', async ({ page }) => {
+	await page.goto('/login');
+
+	const colors = await page.evaluate(() => {
+		const root = document.documentElement;
+		return ['default', 'dnd', 'printing'].map((theme) => {
+			root.dataset.theme = theme;
+			const styles = getComputedStyle(root);
+			const probe = document.createElement('span');
+			probe.style.color = 'var(--color-dm)';
+			probe.style.backgroundColor = 'var(--color-dm-foreground)';
+			document.body.append(probe);
+			const utilityColors = getComputedStyle(probe);
+			const mappedDm = utilityColors.color;
+			const mappedForeground = utilityColors.backgroundColor;
+			probe.remove();
+			return {
+				theme,
+				dm: styles.getPropertyValue('--dm').trim(),
+				foreground: styles.getPropertyValue('--dm-foreground').trim(),
+				mappedDm,
+				mappedForeground,
+			};
+		});
+	});
+
+	expect(colors).toEqual([
+		{
+			theme: 'default',
+			dm: '#38bdf8',
+			foreground: '#082f49',
+			mappedDm: 'rgb(56, 189, 248)',
+			mappedForeground: 'rgb(8, 47, 73)',
+		},
+		{
+			theme: 'dnd',
+			dm: '#2563eb',
+			foreground: '#ffffff',
+			mappedDm: 'rgb(37, 99, 235)',
+			mappedForeground: 'rgb(255, 255, 255)',
+		},
+		{
+			theme: 'printing',
+			dm: '#7e22ce',
+			foreground: '#ffffff',
+			mappedDm: 'rgb(126, 34, 206)',
+			mappedForeground: 'rgb(255, 255, 255)',
+		},
+	]);
+
+	const contrastRatios = await page.evaluate((themeColors) => {
+		const luminance = (hex: string) => {
+			const channels = hex
+				.slice(1)
+				.match(/.{2}/g)
+				?.map((channel) => parseInt(channel, 16) / 255);
+			if (!channels || channels.length !== 3) {
+				throw new Error(`無法解析 DM 主題色彩：${hex}`);
+			}
+			return channels
+				.map((channel) =>
+					channel <= 0.04045
+						? channel / 12.92
+						: ((channel + 0.055) / 1.055) ** 2.4,
+				)
+				.reduce(
+					(sum, channel, index) =>
+						sum + channel * [0.2126, 0.7152, 0.0722][index],
+					0,
+				);
+		};
+
+		return themeColors.map(({ dm, foreground }) => {
+			const [lighter, darker] = [luminance(dm), luminance(foreground)].sort(
+				(left, right) => right - left,
+			);
+			return (lighter + 0.05) / (darker + 0.05);
+		});
+	}, colors);
+
+	for (const ratio of contrastRatios) {
+		expect(ratio).toBeGreaterThanOrEqual(4.5);
+	}
+});
+
 test('六種稀有度在三套主題維持 AA 對比與灰階區別', async ({ page }) => {
 	await page.goto('/login');
 
@@ -203,6 +288,9 @@ test('六種稀有度在三套主題維持 AA 對比與灰階區別', async ({ p
 test('列印預覽移除操作介面並使用黑白背景', async ({ page }) => {
 	await page.emulateMedia({ media: 'print' });
 	await page.goto('/login');
+	await page.locator('html').evaluate((element) => {
+		element.dataset.theme = 'printing';
+	});
 
 	await expect(page.locator('nav')).toBeHidden();
 	await expect(page.getByRole('button', { name: '登入戰役軍械庫' })).toBeHidden();
@@ -212,14 +300,20 @@ test('列印預覽移除操作介面並使用黑白背景', async ({ page }) => 
 		if (!main) throw new Error('找不到主要內容區。');
 		const article = document.createElement('article');
 		const link = document.createElement('a');
+		const dmLabel = document.createElement('span');
 		article.style.border = '1px solid red';
+		article.className = 'border-dm';
+		dmLabel.className = 'text-dm';
+		dmLabel.style.color = 'red';
 		article.append(link);
+		article.append(dmLabel);
 		main.append(article);
 
 		const result = {
 			background: getComputedStyle(document.body).backgroundColor,
 			foreground: getComputedStyle(main).color,
 			articleBorder: getComputedStyle(article).borderTopColor,
+			dmText: getComputedStyle(dmLabel).color,
 			articleBreakInside: getComputedStyle(article).breakInside,
 			linkDecoration: getComputedStyle(link).textDecorationLine,
 			hasBackgroundImage: Array.from(document.querySelectorAll('*')).some(
@@ -238,7 +332,8 @@ test('列印預覽移除操作介面並使用黑白背景', async ({ page }) => 
 	expect(printStyles).toEqual({
 		background: 'rgb(255, 255, 255)',
 		foreground: 'rgb(17, 17, 17)',
-		articleBorder: 'rgb(115, 115, 115)',
+		articleBorder: 'rgb(126, 34, 206)',
+		dmText: 'rgb(126, 34, 206)',
 		articleBreakInside: 'avoid',
 		linkDecoration: 'underline',
 		hasBackgroundImage: false,

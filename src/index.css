@@ -27,6 +27,8 @@
 	--warning-foreground: #fffbeb;
 	--info: #0369a1;
 	--info-foreground: #e0f2fe;
+	--dm: #38bdf8;
+	--dm-foreground: #082f49;
 	--disabled: #292524;
 	--disabled-foreground: #78716c;
 	--border: #44403c;
@@ -96,6 +98,8 @@
 	--warning-foreground: #fffbeb;
 	--info: #075985;
 	--info-foreground: #e0f2fe;
+	--dm: #2563eb;
+	--dm-foreground: #ffffff;
 	--disabled: #e7e5e4;
 	--disabled-foreground: #57534e;
 	--border: #a8a29e;
@@ -168,6 +172,8 @@
 	--warning-foreground: #ffffff;
 	--info: #404040;
 	--info-foreground: #ffffff;
+	--dm: #7e22ce;
+	--dm-foreground: #ffffff;
 	--disabled: #e5e5e5;
 	--disabled-foreground: #525252;
 	--border: #737373;
@@ -305,6 +311,8 @@
 	--color-warning-foreground: var(--warning-foreground);
 	--color-info: var(--info);
 	--color-info-foreground: var(--info-foreground);
+	--color-dm: var(--dm);
+	--color-dm-foreground: var(--dm-foreground);
 	--color-disabled: var(--disabled);
 	--color-disabled-foreground: var(--disabled-foreground);
 	--color-border: var(--border);
@@ -369,5 +377,13 @@
 
 	a {
 		text-decoration: underline;
+	}
+
+	[class~='border-dm'] {
+		border-color: var(--dm) !important;
+	}
+
+	[class~='text-dm'] {
+		color: var(--dm) !important;
 	}
 }

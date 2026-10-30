@@ -56,9 +56,13 @@
 
 ### Phase 1：建立主題 token
 
-- 在 `src/index.css` 為 `default`、`dnd`、`printing` 定義 `--dm`、`--dm-foreground`。
-- 在 `@theme inline` 映射 `--color-dm` 與 `--color-dm-foreground`，確保 Tailwind utility 可使用透明度 modifier。
-- 核對 CSS cascade、主題切換及 `@media print` 規則，不讓列印中的全域覆寫破壞 DM 色彩識別。
+- [x] 在 `src/index.css` 為 `default`、`dnd`、`printing` 定義 `--dm`、`--dm-foreground`。
+- [x] 在 `@theme inline` 映射 `--color-dm` 與 `--color-dm-foreground`，供 Tailwind utilities 及透明度 modifier 使用。
+- [x] 核對 CSS cascade、主題切換及 `@media print` 規則；列印時保留一般黑白省墨樣式，但 `border-dm` 與 `text-dm` 明確沿用 DM token。
+
+**完成紀錄（2026-10-30）：** 三主題採用候選色值 `#38bdf8`／`#082f49`、`#2563eb`／`#ffffff`、`#7e22ce`／`#ffffff`（DM 色／前景色）；三組文字對比皆高於 WCAG AA 一般文字門檻。主題切換以根元素 `data-theme` cascade 套用，不需修改 JSX。列印全域黑白規則維持不變，僅 DM 文字與邊框保留語境色。
+
+**Phase 1 驗證：** `npm run typecheck`、`npm run lint`、`npm run build`、`npm run test:e2e -- tests/e2e/theme-system.spec.ts`（5 項通過）及 `git diff --check` 均通過；E2E 覆蓋三主題的 token／utility 對應、文字對比與列印中的 DM 邊框／文字。
 
 ### Phase 2：新增 Button variants 與使用文件
 
