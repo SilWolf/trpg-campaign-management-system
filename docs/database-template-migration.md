@@ -20,6 +20,33 @@ v0.1.0 將原本 27 個時間戳記 migration 依原順序合併至 [`2026103000
 
 本機 [gp_wallet_schema_foundation.sql](../supabase/tests/gp_wallet_schema_foundation.sql) 是需在相符的隔離資料庫執行的 SQL 合約測試；Playwright E2E 與 Supabase mock 則只驗證前端／mock 契約。兩者皆不能代替隔離 Supabase 的多帳號 RLS、Realtime、RPC 授權、競爭交易及失敗回滾測試。`external/schema.md` 是歷史 schema 快照，目前仍記錄舊 JSONB 欄位；只有維護者核對實際部署 schema 後才可更新，不可用 migration source 或本機 mock 推定遠端狀態。
 
+## 戰役操作紀錄、貨幣交易與 DM 物品派發
+
+[`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql) 是新的增量 migration，尚未套用或連線驗證。它新增 `inventory_items.blacksmith_item_id`、`ItemBase.isStackable` 相容驗證、數量 1–1,000,000 限制、共用唯讀 `campaign_activity_log`（每戰役最多保留 100 筆），並以 transaction-scoped advisory lock 序列化事件新增及裁切。
+
+- `dispatch-campaign-items` 先驗證登入 token 與請求，再呼叫僅授權 `service_role` 的 `dispatch_campaign_items_as_actor`。RPC 以 actor claim 與 `is_campaign_dm` 再驗證 DM、campaign 目標、物品定義、數量、合併及 0–10／11–20／超過 20 筆新增列門檻；11–20 筆第一次只回報確認需求，不寫入物品或事件。相同 request ID 重送會回傳已提交結果。
+- `transfer_campaign_currency` 以資料庫交易更新來源／目標 GP 與舊錢包鏡像，並在同一交易寫入事件；玩家物品移轉及商店結帳／核准／拒絕／取消也在既有交易邊界內新增事件。私人錢包或私人背包事件僅 DM、操作者及相關角色擁有者可讀。
+- Migration 先拒絕既有越界數量，不會截斷或拆分資料；只建立新欄位與限制，不改寫既有 migration。部署前仍須依前述程序核對 schema／history，並在隔離專案驗收角色權限、跨戰役隔離、交易回滾、併發合併／保留上限與 Realtime。
+- 遷移既有 `item_base` 時，缺少 `isStackable` 或該欄位不是 JSON boolean 的紀錄會設為 `false`，避免舊 validator 曾允許的未知／錯誤欄位值令新 CHECK constraint 建立失敗。若仍遇到 `inventory_items_item_base_stackable_check` 違反，先確認本次 SQL 是否已回滾，再以唯讀查詢找出未通過新版 validator 的記錄；不要手動刪除 constraint 或任意改寫其他物品欄位：
+
+```sql
+SELECT id,
+	jsonb_typeof(item_base -> 'isStackable') AS stackability_type,
+	public.is_valid_item_base(item_base) AS valid_item_base
+FROM public.inventory_items
+WHERE item_base IS NOT NULL
+	AND (
+		jsonb_typeof(item_base -> 'isStackable')
+			IS DISTINCT FROM 'boolean'
+		OR NOT public.is_valid_item_base(item_base)
+	)
+ORDER BY id
+LIMIT 50;
+```
+
+- 若 migration 執行失敗後，`public.is_valid_item_base` 已被重新命名，代表目標資料庫可能處於部分套用狀態；先檢查 migration history、函式名稱、欄位及 constraint 狀態，再按隔離環境流程修復，不要直接重跑整份非冪等 migration。
+- 本次 repo 變更與 mock E2E 不等於 SQL 已套用或真實 Supabase 已驗收；正式及隔離環境均維持未部署狀態。
+
 ## 部署前檢核
 
 1. 在目標 Supabase 專案確認既有 `campaigns`、`campaign_members`、`characters`、`inventory_items` 等資料表與 Schema 保留。此處假設資料列已清空，不代表資料表也已刪除。

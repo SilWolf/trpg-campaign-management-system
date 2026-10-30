@@ -728,6 +728,7 @@ export const fromDbCampaignShopOrder = (
 export interface DbInventoryItem {
 	id: string;
 	owner_id: string;
+	blacksmith_item_id?: string | null;
 	slot: number;
 	name: string;
 	category: string;
@@ -763,6 +764,7 @@ export const toDbItem = (item: InventoryItem): DbInventoryItem => {
 	return {
 		id: item.id,
 		owner_id: item.ownerId,
+		blacksmith_item_id: item.blacksmithItemId ?? null,
 		slot: Number(item.slot ?? 0),
 		name: item.name,
 		category: legacyDbCategory(item),
@@ -815,6 +817,7 @@ export const fromDbItem = (row: DbInventoryItem): InventoryItem => {
 		...base,
 		id: row.id,
 		ownerId: row.owner_id,
+		blacksmithItemId: row.blacksmith_item_id ?? null,
 		slot: Number(row.slot),
 		icon: base.icon ?? 'Package',
 		flavor: base.flavor ?? '',

@@ -26,6 +26,7 @@ import {
 } from '@/lib/supabase';
 import {
 	splitInventoryStack,
+	transferCampaignCurrency,
 	transferInventoryStack,
 } from '@/lib/inventoryTransactions';
 import {
@@ -450,7 +451,7 @@ export function useInventoryActions({
 		}
 	};
 
-	const transferCurrency = (
+	const transferCurrency = async (
 		sourceCharacterId: string,
 		sourceWallet: 'public' | 'private',
 		targetCharacterId: string | null,
@@ -464,7 +465,11 @@ export function useInventoryActions({
 			showToast('轉出戶口與轉入戶口不可相同。', 'warning');
 			return false;
 		}
-		if (!Number.isSafeInteger(amountCents) || amountCents <= 0) {
+		if (
+			!Number.isSafeInteger(amountCents) ||
+			amountCents <= 0 ||
+			amountCents > MAX_GP_CENTS
+		) {
 			showToast('轉帳金額必須至少為 0.01 GP。', 'warning');
 			return false;
 		}
@@ -505,6 +510,37 @@ export function useInventoryActions({
 		if (targetCharacterId === null && splitRecipients.length === 0) {
 			showToast('沒有可分配的其他角色。', 'warning');
 			return false;
+		}
+
+		if (isRemoteCampaign) {
+			try {
+				const { shareCents, remainderCents, recipientCount } =
+					await transferCampaignCurrency(
+						campaignId,
+						sourceCharacterId,
+						sourceWallet,
+						targetCharacterId,
+						targetWallet,
+						amountCents,
+					);
+				const sourceName = sourceCharacter?.name ?? '營地儲物箱';
+				const targetName =
+					targetCharacterId === null
+						? `其他 ${recipientCount} 名角色`
+						: (targetCharacter?.name ?? '營地儲物箱');
+				showToast(
+					targetCharacterId === null
+						? `已將 ${formatGpCents(shareCents)} GP 平分轉入其他 ${recipientCount} 名角色的公開錢包；未能平分的 ${formatGpCents(remainderCents)} GP 留在轉出戶口。`
+						: `已將 ${formatGpCents(amountCents)} GP 從「${sourceName}」${sourceWallet === 'private' ? '私人' : '公開'}錢包轉入「${targetName}」${targetWallet === 'private' ? '私人' : '公開'}錢包。`,
+				);
+				return true;
+			} catch (error) {
+				showToast(
+					error instanceof Error ? error.message : '轉帳失敗，請稍後重試。',
+					'error',
+				);
+				return false;
+			}
 		}
 
 		try {

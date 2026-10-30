@@ -874,6 +874,39 @@ export async function mockSupabase(
 		}
 
 		if (
+			url.pathname === '/rest/v1/rpc/transfer_campaign_currency' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as Record<string, unknown>;
+			campaignShopRpcRequests.push({
+				name: 'transfer_campaign_currency',
+				body,
+			});
+			const amountCents = Number(body.p_amount_cents);
+			const recipientCount =
+				body.p_target_character_id === null
+					? options.campaignInventoryThirdCharacter
+						? 2
+						: 1
+					: 1;
+			await route.fulfill({
+				json: {
+					operationId: `mock-currency-transfer-${campaignShopRpcRequests.length}`,
+					shareCents:
+						body.p_target_character_id === null
+							? Math.floor(amountCents / recipientCount)
+							: amountCents,
+					remainderCents:
+						body.p_target_character_id === null
+							? amountCents % recipientCount
+							: 0,
+					recipientCount,
+				},
+			});
+			return;
+		}
+
+		if (
 			url.pathname.startsWith('/rest/v1/rpc/') &&
 			[
 				'save_campaign_shop_item',

@@ -290,9 +290,10 @@ test('空白戰役不回填範例資料，營地箱錢包寫入戰役資料列',
 test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async ({
 	page,
 }) => {
-	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
-		campaignInventoryRole: 'dm',
-	});
+	const { characterWrites, campaignUpdates, campaignShopRpcRequests } =
+		await mockSupabase(page, {
+			campaignInventoryRole: 'dm',
+		});
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 	await page.getByTestId('inventory-currency-open').last().click();
@@ -304,19 +305,21 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	});
 	await page.getByTestId('currency-transfer-submit').click();
 	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
-		.toMatchObject({
-			gp: 0.01,
-			currencies: { gp: 0, cp: 1 },
-		});
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
-		.toMatchObject({ gp: 19.99 });
+	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
+		name: 'transfer_campaign_currency',
+		body: {
+			p_campaign_id: 'inventory-campaign',
+			p_source_character_id: 'inventory-character',
+			p_source_wallet: 'public',
+			p_target_character_id: 'inventory-target-character',
+			p_target_wallet: 'public',
+			p_amount_cents: 1,
+		},
+	});
 
 	await page.getByTestId('inventory-currency-open').last().click();
 	await page.getByTestId('currency-source-wallet').selectOption({
-		label: '測試冒險者 — 公開錢包（19.99 GP）',
+		label: '測試冒險者 — 公開錢包（20 GP）',
 	});
 	await page.getByTestId('currency-target-wallet').selectOption({
 		label: '測試冒險者 — 私人錢包（80 GP）',
@@ -324,17 +327,21 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	await amountInput.fill('0.01');
 	await page.getByTestId('currency-transfer-submit').click();
 	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
-		.toMatchObject({
-			gp: 19.98,
-			private_gp: 80.01,
-		});
+	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
+		name: 'transfer_campaign_currency',
+		body: {
+			p_source_character_id: 'inventory-character',
+			p_source_wallet: 'public',
+			p_target_character_id: 'inventory-character',
+			p_target_wallet: 'private',
+			p_amount_cents: 1,
+		},
+	});
 
 	await page.getByTestId('inventory-character-camp-chest').click();
 	await page.getByTestId('inventory-currency-open').last().click();
 	await page.getByTestId('currency-source-wallet').selectOption({
-		label: '測試冒險者 — 公開錢包（19.98 GP）',
+		label: '測試冒險者 — 公開錢包（20 GP）',
 	});
 	await page.getByTestId('currency-target-wallet').selectOption({
 		label: '營地儲物箱 — 公共錢包（0 GP）',
@@ -342,15 +349,19 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	await amountInput.fill('0.02');
 	await page.getByTestId('currency-transfer-submit').click();
 	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
-	await expect
-		.poll(() => campaignUpdates.at(-1))
-		.toMatchObject({
-			camp_chest_gp: 0.02,
-		});
+	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
+		name: 'transfer_campaign_currency',
+		body: {
+			p_source_character_id: 'inventory-character',
+			p_source_wallet: 'public',
+			p_target_character_id: 'camp-chest',
+			p_amount_cents: 2,
+		},
+	});
 
 	await page.getByTestId('inventory-currency-open').last().click();
 	await page.getByTestId('currency-source-wallet').selectOption({
-		label: '營地儲物箱 — 公共錢包（0.02 GP）',
+		label: '測試冒險者 — 私人錢包（80 GP）',
 	});
 	await page.getByTestId('currency-target-wallet').selectOption({
 		label: '移轉目標 — 私人錢包（0 GP）',
@@ -358,14 +369,18 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	await amountInput.fill('0.01');
 	await page.getByTestId('currency-transfer-submit').click();
 	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
-		.toMatchObject({
-			private_gp: 0.01,
-		});
-	await expect
-		.poll(() => campaignUpdates.at(-1))
-		.toMatchObject({ camp_chest_gp: 0.01 });
+	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
+		name: 'transfer_campaign_currency',
+		body: {
+			p_source_character_id: 'inventory-character',
+			p_source_wallet: 'private',
+			p_target_character_id: 'inventory-target-character',
+			p_target_wallet: 'private',
+			p_amount_cents: 1,
+		},
+	});
+	expect(characterWrites).toEqual([]);
+	expect(campaignUpdates).toEqual([]);
 });
 
 test('轉帳驗證至少 0.01 GP、來源餘額與不同戶口', async ({
@@ -402,7 +417,8 @@ test('轉帳驗證至少 0.01 GP、來源餘額與不同戶口', async ({
 test('全部會填入來源餘額，平分轉帳排除來源與公庫並保留零頭', async ({
 	page,
 }) => {
-	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
+	const { campaignShopRpcRequests, characterWrites, campaignUpdates } =
+		await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 		campaignInventoryThirdCharacter: true,
 	});
@@ -421,15 +437,18 @@ test('全部會填入來源餘額，平分轉帳排除來源與公庫並保留�
 	await page.getByTestId('currency-transfer-submit').click();
 	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
 
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-target-character'))
-		.toMatchObject({ gp: 0.02, currencies: { gp: 0, cp: 2 } });
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-third-character'))
-		.toMatchObject({ gp: 0.02, currencies: { gp: 0, cp: 2 } });
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
-		.toMatchObject({ gp: 19.96 });
+	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
+		name: 'transfer_campaign_currency',
+		body: {
+			p_source_character_id: 'inventory-character',
+			p_source_wallet: 'public',
+			p_target_character_id: null,
+			p_target_wallet: 'public',
+			p_amount_cents: 5,
+		},
+	});
+	expect(characterWrites).toEqual([]);
+	expect(campaignUpdates).toEqual([]);
 	await expect(page.getByText(/未能平分的 0.01 GP 留在轉出戶口/)).toBeVisible();
 	expect(campaignUpdates).toEqual([]);
 });

@@ -23,7 +23,7 @@ interface CurrencyPanelProps {
 		targetCharacterId: string | null,
 		targetWallet: 'public' | 'private',
 		amountCents: number,
-	) => boolean;
+	) => boolean | Promise<boolean>;
 }
 
 const MAX_GP_CENTS = 100_000_000;
@@ -75,6 +75,7 @@ export default function CurrencyPanel({
 	const [sourceWalletId, setSourceWalletId] = useState('');
 	const [targetWalletId, setTargetWalletId] = useState('');
 	const [transferAmount, setTransferAmount] = useState('0.01');
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const wasOpen = useRef(false);
 
 	const sourceWallet = sourceWallets.find(
@@ -309,29 +310,35 @@ export default function CurrencyPanel({
 								type='button'
 								variant='primary'
 								data-testid='currency-transfer-submit'
-								disabled={!validTransfer}
-								onClick={() => {
+								disabled={!validTransfer || isSubmitting}
+								onClick={async () => {
 									if (
 										!sourceWallet ||
 										(!targetWallet && !isSplitTarget) ||
-										amountCents === null
+										amountCents === null ||
+										isSubmitting
 									) {
 										return;
 									}
-									const transferred = onTransferCurrency(
-										sourceWallet.characterId,
-										sourceWallet.walletType,
-										isSplitTarget ? null : (targetWallet?.characterId ?? null),
-										isSplitTarget
-											? 'public'
-											: (targetWallet?.walletType ?? 'public'),
-										amountCents,
-									);
-									if (transferred) onClose();
+									setIsSubmitting(true);
+									try {
+										const transferred = await onTransferCurrency(
+											sourceWallet.characterId,
+											sourceWallet.walletType,
+											isSplitTarget ? null : (targetWallet?.characterId ?? null),
+											isSplitTarget
+												? 'public'
+												: (targetWallet?.walletType ?? 'public'),
+											amountCents,
+										);
+										if (transferred) onClose();
+									} finally {
+										setIsSubmitting(false);
+									}
 								}}
 								prefixIcon={<Send />}
 							>
-								轉帳
+								{isSubmitting ? '處理中…' : '轉帳'}
 							</Button>
 						</div>
 					</div>

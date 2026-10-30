@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.campaign-shop-purchase]
 verify_jwt = true
 
+[functions.dispatch-campaign-items]
+verify_jwt = true
+
 [functions.identify-inventory-item]
 verify_jwt = true
 

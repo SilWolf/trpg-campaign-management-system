@@ -55,3 +55,46 @@ export function transferInventoryStack(
 		p_quantity: quantity,
 	});
 }
+
+export async function transferCampaignCurrency(
+	campaignId: string,
+	sourceCharacterId: string,
+	sourceWallet: 'public' | 'private',
+	targetCharacterId: string | null,
+	targetWallet: 'public' | 'private',
+	amountCents: number,
+): Promise<{
+	operationId: string;
+	shareCents: number;
+	remainderCents: number;
+	recipientCount: number;
+}> {
+	const { data, error } = await requireSupabase().rpc(
+		'transfer_campaign_currency',
+		{
+			p_campaign_id: campaignId,
+			p_source_character_id: sourceCharacterId,
+			p_source_wallet: sourceWallet,
+			p_target_character_id: targetCharacterId,
+			p_target_wallet: targetWallet,
+			p_amount_cents: amountCents,
+		},
+	);
+	if (error) throw error;
+	if (
+		typeof data !== 'object' ||
+		data === null ||
+		typeof data.operationId !== 'string' ||
+		typeof data.shareCents !== 'number' ||
+		typeof data.remainderCents !== 'number' ||
+		typeof data.recipientCount !== 'number'
+	) {
+		throw new Error('貨幣交易服務回傳了無效結果。');
+	}
+	return {
+		operationId: data.operationId,
+		shareCents: data.shareCents,
+		remainderCents: data.remainderCents,
+		recipientCount: data.recipientCount,
+	};
+}

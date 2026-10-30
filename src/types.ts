@@ -245,6 +245,7 @@ export function getItemWeaponMastery(
 type InventoryItemState = {
 	id: string;
 	ownerId: string;
+	blacksmithItemId?: string | null;
 	slot?: number;
 	quantity: number;
 	equipped: boolean;

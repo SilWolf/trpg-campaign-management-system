@@ -264,13 +264,23 @@ RPC 使用固定 `search_path`、明確撤銷 `PUBLIC`／`anon` 的執行權並�
 
 ### 階段三：交易與後端授權
 
-- [ ] 新增共用 `campaign_activity_log` migration、RLS 及保留最近 100 筆的安全機制；擴充商店購買與玩家物品轉交 RPC，並為目前非交易式的玩家貨幣轉帳建立交易 RPC。
-- [ ] 新增 `inventory_items.blacksmith_item_id` 欄位及 validator 增量 migration；派發 RPC 於單一交易內驗證 DM、campaign、接收 owner、來源 ID 與物品內容，依可堆疊規則合併至唯一列、展開不可堆疊實例並寫入 `item_dispatched` 事件。
-- [ ] 實作 11–20 列確認握手及同一派發識別碼重試；確認前不寫入資料，重試時在鎖定後重新計算，超過 20 列仍拒絕。
-- [ ] 新增 `dispatch-campaign-items` Edge Function，沿用安全的 body、token 驗證、錯誤回傳與服務端日誌慣例。
+- [x] 新增共用 `campaign_activity_log` migration、RLS 及保留最近 100 筆的安全機制；擴充商店購買與玩家物品轉交 RPC，並為目前非交易式的玩家貨幣轉帳建立交易 RPC。
+- [x] 新增 `inventory_items.blacksmith_item_id` 欄位及 validator 增量 migration；派發 RPC 於單一交易內驗證 DM、campaign、接收 owner 與物品內容，依可堆疊規則合併至唯一列、展開不可堆疊實例並寫入 `item_dispatched` 事件。鍛造工坊來源會比對目前可見資料列；官方靜態目錄目前只檢查 canonical ID 格式，尚未與伺服器端目錄快照比對。
+- [x] 實作 11–20 列確認握手及同一派發識別碼重試；確認前不寫入物品／事件，重試時重新計算，超過 20 列仍拒絕。
+- [x] 新增 `dispatch-campaign-items` Edge Function，沿用安全的 body、token 驗證、錯誤回傳與服務端日誌慣例。
 - [ ] 測試未登入、非 DM、跨戰役目標、超過 10 列、可堆疊數量不在 1 至 1,000,000、不可堆疊數量不在 1 至 20、私人營地箱、來源 ID 與定義不符、預計新增超過 20 列及多物品其中一筆無效時的拒絕與完整回滾。
-- [ ] 測試 stackable 同 ID 合併至唯一列、更新後超過 1,000,000 整筆拒絕、不可堆疊不合併、被編輯／複製及同名無來源物品不合併、併發派發不超量。
-- [ ] 驗證各種操作皆在原交易內寫入事件；並發操作仍只保留 campaign 最近 100 筆，唯讀權限及私人事件隔離符合規則。
+- [x] 實作 stackable 同 ID 合併至唯一列、更新後超過 1,000,000 整筆拒絕、不可堆疊不合併、無來源物品不合併及交易鎖定；資料庫併發／回滾驗收尚待隔離環境。
+- [x] 實作購物車、貨幣轉帳、玩家物品移轉及 DM 派發在原交易寫入事件；每戰役 100 筆裁切、唯讀權限及私人事件 RLS 已加入 migration，實際資料庫驗收尚待隔離環境。
+
+#### 階段三執行紀錄（2026-10-30）
+
+- 新增 [`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql)：以新 migration 加入 `blacksmith_item_id`、舊 `ItemBase` 的 `isStackable = false` 相容值與 validator、物品數量限制、唯一來源堆疊索引、共用唯讀活動紀錄及 RLS。Migration 會先拒絕既有越界物品數量；既有 stackability 欄位缺少或非 JSON boolean 時正規化為 `false`，不改寫其他定義欄位，也不改寫既有 migration。
+- 新增 `dispatch_campaign_items_as_actor` service-role wrapper 與 `dispatch-campaign-items` Edge Function。RPC 再驗證 actor／DM、campaign owner、物品定義及數量；同一 transaction 執行堆疊更新／實例建立、活動紀錄與每戰役 100 筆裁切。11–20 列第一次只回報確認需求，確認後使用同一 request ID 並重新計算；重送已提交 request 會回傳既有結果。
+- 新增 `transfer_campaign_currency` 交易 RPC，遠端 UI 不再以多筆 optimistic 狀態寫入轉帳；角色／營地箱 GP 與相容 JSONB 鏡像、事件同交易提交。既有物品移轉與購物車結帳／核准／拒絕／取消函式以新 wrapper 擴充事件寫入。
+- 事件以 campaign advisory lock 序列化新增與裁切。私密背包／錢包事件只開放 DM、操作者與相關角色擁有者讀取；物品定義快照不放入公開可讀的私人事件列。
+- 驗證：`npm run typecheck`、`npm run lint` 通過；`npm run test:e2e -- tests/e2e/phase-3-inventory.spec.ts` 14 項通過。E2E 使用 Supabase mock 驗證貨幣轉帳改走 RPC，不驗證 SQL/RLS/Realtime/交易回滾。
+- 派發交易新增列會保存 `isHomebrew`、`isImportant` 及來源 ID；對既有來源堆疊合併前，會同時核對定義與兩項標記，避免同一來源資料被不一致地合併。
+- 尚未執行 migration、連線 Supabase、執行隔離環境資料庫測試或部署 Function。官方規則書目錄是靜態檔案，RPC 尚無可信 server-side catalog 快照可比對來源 ID 與定義；目前只驗證 canonical 格式及資料庫 validator，因此此項來源驗證需在隔離驗收前補足。階段五的跨帳號 RLS、併發、回滾與部署驗收仍未完成。
 
 ### 階段四：派發 UI 與同步
 
