@@ -51,6 +51,7 @@ type EditorValues = {
 	isEquippable: boolean;
 	isConsumable: boolean;
 	isImportant: boolean;
+	isStackable: boolean;
 	affixesJson: string;
 	isShared: boolean;
 };
@@ -73,6 +74,7 @@ const EMPTY_FORM: EditorValues = {
 	isEquippable: false,
 	isConsumable: false,
 	isImportant: false,
+	isStackable: false,
 	affixesJson: '[]',
 	isShared: false,
 };
@@ -128,6 +130,7 @@ function toEditorValues(item: BlacksmithTemplate): EditorValues {
 		isEquippable: item.isEquippable,
 		isConsumable: item.isConsumable,
 		isImportant: item.isImportant,
+		isStackable: item.isStackable ?? false,
 		affixesJson: JSON.stringify(item.affixes, null, 2),
 		isShared: item.isShared,
 	};
@@ -195,6 +198,7 @@ function createTemplateValues(form: EditorValues): BlacksmithTemplateValues {
 		isEquippable: form.isEquippable,
 		isConsumable: form.isConsumable,
 		isRequireAttunement: form.isRequireAttunement,
+		isStackable: form.isStackable,
 		affixes: parseAffixes(form.affixesJson),
 	};
 	let base: AllItem;
@@ -799,6 +803,16 @@ function BlacksmithWorkshopPage() {
 									}
 								/>
 								重要物品
+							</label>
+							<label className='flex items-center gap-2 text-sm text-foreground'>
+								<input
+									type='checkbox'
+									checked={form.isStackable}
+									onChange={(event) =>
+										updateForm('isStackable', event.target.checked)
+									}
+								/>
+								可堆疊
 							</label>
 						</div>
 						<label className='block text-xs text-muted-foreground'>

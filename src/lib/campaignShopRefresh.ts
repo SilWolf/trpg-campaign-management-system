@@ -405,6 +405,7 @@ export function blacksmithItemToCampaignShopSnapshot(
 		isEquippable: item.isEquippable,
 		isConsumable: item.isConsumable,
 		isRequireAttunement: item.isRequireAttunement,
+		isStackable: item.isStackable ?? false,
 		isHomebrew: false,
 		isImportant: false,
 	};

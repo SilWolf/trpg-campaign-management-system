@@ -28,34 +28,11 @@ import {
 	splitInventoryStack,
 	transferInventoryStack,
 } from '@/lib/inventoryTransactions';
-
-const DEFAULT_FORM: HomebrewForm = {
-	name: '',
-	category: 'Weapon',
-	subTypes: ['長劍 (雙用)'],
-	rarity: 'Rare',
-	icon: 'Sword',
-	weaponProperties: {
-		damage: '1d8+2 揮砍',
-		mastery: 'Vex',
-		properties: [],
-	},
-	armorProperties: { ac: '' },
-	weight: '3',
-	valueGp: '1000',
-	quantity: '1',
-	isRequireAttunement: true,
-	isIdentified: false,
-	maxCharges: '0',
-	effects: '',
-	flavor: '',
-	dmNotes: '',
-	isPrivate: false,
-	isEquippable: true,
-	isConsumable: false,
-	isImportant: false,
-	affixes: [],
-};
+import {
+	createDefaultItemDefinitionForm,
+	itemDefinitionFormToItem,
+	itemToDefinitionForm,
+} from '@/lib/itemDefinitions';
 
 const MAX_GP_CENTS = 100_000_000;
 
@@ -89,47 +66,6 @@ function updateCharacterWallet(
 		[gpField]: balanceCents / 100,
 		[legacyField]: legacyWalletFromGpCents(BigInt(balanceCents)),
 	};
-}
-
-function formToAllItem(form: HomebrewForm): AllItem {
-	const maxCharges = Number.parseInt(form.maxCharges, 10) || 0;
-	const common = {
-		name: form.name.trim(),
-		subTypes: form.subTypes,
-		rarity: form.rarity,
-		icon: form.icon.trim(),
-		weight: Number.parseFloat(form.weight) || 0,
-		valueGp: Number.parseFloat(form.valueGp) || 0,
-		affixes: form.affixes,
-		effects: form.effects || '無特殊規則描述。',
-		flavor: form.flavor || '',
-		dmNotes: form.dmNotes || '',
-		maxCharges,
-		isEquippable: form.isEquippable,
-		isConsumable: form.isConsumable,
-		isRequireAttunement: form.isRequireAttunement,
-	};
-	if (form.category === 'Weapon') {
-		const damage = form.weaponProperties.damage.trim();
-		if (!damage) throw new Error('武器必須填寫傷害描述。');
-		return {
-			...common,
-			category: 'Weapon',
-			weaponProperties: {
-				damage,
-				...(form.weaponProperties.mastery
-					? { mastery: form.weaponProperties.mastery }
-					: {}),
-				properties: form.weaponProperties.properties,
-			},
-		};
-	}
-	if (form.category === 'Armor') {
-		const ac = form.armorProperties.ac.trim();
-		if (!ac) throw new Error('護甲必須填寫護甲值。');
-		return { ...common, category: 'Armor', armorProperties: { ac } };
-	}
-	return { ...common, category: form.category };
 }
 
 interface UseInventoryActionsProps {
@@ -179,7 +115,9 @@ export function useInventoryActions({
 	const [copiedAffix, setCopiedAffix] = useState<ItemAffix | null>(null);
 	const [isHomebrewModalOpen, setIsHomebrewModalOpen] = useState(false);
 	const [editingItemId, setEditingItemId] = useState<string | null>(null);
-	const [newItemForm, setNewItemForm] = useState<HomebrewForm>(DEFAULT_FORM);
+	const [newItemForm, setNewItemForm] = useState<HomebrewForm>(
+		createDefaultItemDefinitionForm,
+	);
 
 	const toggleEquip = (item: InventoryItem) => {
 		setItems((prev) =>
@@ -779,7 +717,7 @@ export function useInventoryActions({
 	const openCreateHomebrewModal = () => {
 		setEditingItemId(null);
 		setNewItemForm({
-			...DEFAULT_FORM,
+			...createDefaultItemDefinitionForm(),
 			isPrivate: currentBagTab === 'private',
 		});
 		setIsHomebrewModalOpen(true);
@@ -789,31 +727,10 @@ export function useInventoryActions({
 		const flags = resolveItemFlags(item);
 		setEditingItemId(item.id);
 		setNewItemForm({
-			name: item.name,
-			category: item.category,
-			subTypes: [...item.subTypes],
-			rarity: item.rarity,
-			icon: item.icon,
-			weaponProperties:
-				item.category === 'Weapon'
-					? { ...item.weaponProperties, mastery: item.weaponProperties.mastery ?? '' }
-					: { damage: '', mastery: '', properties: [] },
-			armorProperties:
-				item.category === 'Armor' ? { ...item.armorProperties } : { ac: '' },
-			weight: String(item.weight),
-			valueGp: String(item.valueGp),
-			quantity: String(item.quantity),
-			isRequireAttunement: item.isRequireAttunement,
-			isIdentified: item.isIdentified,
-			maxCharges: String(item.maxCharges),
-			effects: item.effects,
-			flavor: item.flavor,
-			dmNotes: item.dmNotes || '',
-			isPrivate: Boolean(item.isPrivate),
+			...itemToDefinitionForm(item),
 			isEquippable: flags.isEquippable,
 			isConsumable: flags.isConsumable,
 			isImportant: flags.isImportant,
-			affixes: item.affixes ? [...item.affixes] : [],
 		});
 		setIsHomebrewModalOpen(true);
 	};
@@ -831,7 +748,7 @@ export function useInventoryActions({
 
 		let baseItem: AllItem;
 		try {
-			baseItem = formToAllItem(newItemForm);
+			baseItem = itemDefinitionFormToItem(newItemForm);
 		} catch (error) {
 			showToast(
 				error instanceof Error ? error.message : '物品資料無效。',

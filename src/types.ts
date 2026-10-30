@@ -203,6 +203,7 @@ export type ItemBase = {
 	isEquippable: boolean;
 	isConsumable: boolean;
 	isRequireAttunement: boolean;
+	isStackable: boolean;
 };
 
 type GeneralItem = Omit<ItemBase, 'category'> & {
@@ -370,6 +371,7 @@ export type HomebrewForm = {
 	isEquippable: boolean;
 	isConsumable: boolean;
 	isImportant: boolean;
+	isStackable: boolean;
 	affixes: ItemAffix[];
 };
 

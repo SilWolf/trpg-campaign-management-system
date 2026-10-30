@@ -112,10 +112,12 @@ function readCanonicalItemBase(value: unknown): AllItem | null {
 				value.maxCharges < 0)) ||
 		typeof value.isEquippable !== 'boolean' ||
 		typeof value.isConsumable !== 'boolean' ||
-		typeof value.isRequireAttunement !== 'boolean'
+		typeof value.isRequireAttunement !== 'boolean' ||
+		(value.isStackable !== undefined && typeof value.isStackable !== 'boolean')
 	) {
 		return null;
 	}
+	const normalized = { ...value, isStackable: value.isStackable ?? false };
 	if (value.category === 'Weapon') {
 		if (
 			!isRecord(value.weaponProperties) ||
@@ -129,15 +131,15 @@ function readCanonicalItemBase(value: unknown): AllItem | null {
 		) {
 			return null;
 		}
-		return value as unknown as AllItem;
+		return normalized as unknown as AllItem;
 	}
 	if (value.category === 'Armor') {
 		if (!isRecord(value.armorProperties) || typeof value.armorProperties.ac !== 'string') {
 			return null;
 		}
-		return value as unknown as AllItem;
+		return normalized as unknown as AllItem;
 	}
-	return value as unknown as AllItem;
+	return normalized as unknown as AllItem;
 }
 
 function legacyCategory(category: string): ItemBaseCategory {
@@ -200,6 +202,7 @@ function createLegacyItemBase(row: {
 		isConsumable:
 			Boolean(row.is_consumable) || row.category === 'Consumable',
 		isRequireAttunement: Boolean(row.requires_attunement),
+		isStackable: false,
 	};
 	if (category === 'Weapon') {
 		return {
@@ -236,6 +239,7 @@ function serializeItemBase(item: AllItem): AllItem {
 		isEquippable: item.isEquippable,
 		isConsumable: item.isConsumable,
 		isRequireAttunement: item.isRequireAttunement,
+		isStackable: item.isStackable,
 	};
 	if (item.category === 'Weapon') {
 		return { ...common, category: item.category, weaponProperties: item.weaponProperties };
@@ -527,6 +531,7 @@ const fromDbCampaignShopItemSnapshot = (
 			isEquippable: false,
 			isConsumable: false,
 			isRequireAttunement: false,
+			isStackable: false,
 			isHomebrew: false,
 			isImportant: false,
 			isIdentified: false,

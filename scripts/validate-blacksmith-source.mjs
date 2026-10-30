@@ -113,8 +113,10 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 		'isEquippable',
 		'isConsumable',
 		'isRequireAttunement',
+		'isStackable',
 		'source',
 	];
+	const legacyItemKeys = itemKeys.filter((key) => key !== 'isStackable');
 	const categories = new Set([
 		'Weapon',
 		'Armor',
@@ -162,7 +164,22 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 				: item.category === 'Armor'
 					? [...itemKeys, 'armorProperties']
 					: itemKeys;
-		expectObject(item, itemLabel, expectedItemKeys);
+		const legacyExpectedItemKeys =
+			item.category === 'Weapon'
+				? [...legacyItemKeys, 'weaponProperties']
+				: item.category === 'Armor'
+					? [...legacyItemKeys, 'armorProperties']
+					: legacyItemKeys;
+		const exactKeys =
+			(value, keys) =>
+				value &&
+				typeof value === 'object' &&
+				!Array.isArray(value) &&
+				Object.keys(value).length === keys.length &&
+				keys.every((key) => Object.hasOwn(value, key));
+		if (!exactKeys(item, expectedItemKeys) && !exactKeys(item, legacyExpectedItemKeys)) {
+			fail(`${itemLabel} 欄位與來源合約不符`);
+		}
 		for (const key of [
 			'itemId',
 			'name',
@@ -214,7 +231,12 @@ for (const [catalogIndex, catalog] of index.catalogs.entries()) {
 				fail(`${affixLabel}.isHidden 必須是布林值`);
 			}
 		}
-		for (const key of ['isEquippable', 'isConsumable', 'isRequireAttunement']) {
+		for (const key of [
+			'isEquippable',
+			'isConsumable',
+			'isRequireAttunement',
+			...(Object.hasOwn(item, 'isStackable') ? ['isStackable'] : []),
+		]) {
 			if (typeof item[key] !== 'boolean') fail(`${itemLabel}.${key} 必須是布林值`);
 		}
 		if (

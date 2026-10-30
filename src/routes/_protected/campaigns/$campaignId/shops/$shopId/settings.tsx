@@ -81,6 +81,7 @@ type ItemForm = {
 	weight: string;
 	valueGp: string;
 	isRequireAttunement: boolean;
+	isStackable: boolean;
 	maxCharges: string;
 	effects: string;
 	flavor: string;
@@ -117,6 +118,7 @@ const EMPTY_ITEM: ItemForm = {
 	weight: '0',
 	valueGp: '0',
 	isRequireAttunement: false,
+	isStackable: false,
 	maxCharges: '0',
 	effects: '',
 	flavor: '',
@@ -175,6 +177,7 @@ function itemFormFromSnapshot(
 		weight: String(snapshot.weight),
 		valueGp: String(snapshot.valueGp),
 		isRequireAttunement: snapshot.isRequireAttunement,
+		isStackable: snapshot.isStackable ?? false,
 		maxCharges: String(snapshot.maxCharges),
 		effects: snapshot.effects,
 		flavor: snapshot.flavor,
@@ -235,6 +238,7 @@ function snapshotFromTemplate(
 		isEquippable: template.isEquippable,
 		isConsumable: template.isConsumable,
 		isRequireAttunement: template.isRequireAttunement,
+		isStackable: template.isStackable ?? false,
 		isHomebrew: true,
 		isImportant: template.isImportant,
 	};
@@ -590,6 +594,7 @@ function CampaignShopsPage() {
 			isEquippable: itemForm.isEquippable,
 			isConsumable: itemForm.isConsumable,
 			isRequireAttunement: itemForm.isRequireAttunement,
+			isStackable: itemForm.isStackable,
 		};
 		let base: AllItem;
 		if (itemForm.category === 'Weapon') {
@@ -1556,6 +1561,7 @@ function CampaignShopsPage() {
 											{(
 												[
 													['isRequireAttunement', '需要調諧', 'accent-primary'],
+													['isStackable', '可堆疊', 'accent-primary'],
 													['isEquippable', '可裝備', 'accent-primary'],
 													['isConsumable', '消耗品', 'accent-primary'],
 													['isImportant', '重要物品', 'accent-primary'],

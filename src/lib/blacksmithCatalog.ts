@@ -90,8 +90,10 @@ const ITEM_KEYS = [
 	'isEquippable',
 	'isConsumable',
 	'isRequireAttunement',
+	'isStackable',
 	'source',
 ];
+const LEGACY_ITEM_KEYS = ITEM_KEYS.filter((key) => key !== 'isStackable');
 const WEAPON_ITEM_KEYS = ['weaponProperties'];
 const ARMOR_ITEM_KEYS = ['armorProperties'];
 const LOOKUP_KEYS = ['schemaVersion', 'catalogId', 'items'];
@@ -296,7 +298,13 @@ function readItemFile(
 				: record.category === 'Armor'
 					? [...ITEM_KEYS, ...ARMOR_ITEM_KEYS]
 					: ITEM_KEYS;
-		if (!hasExactKeys(record, expectedKeys)) {
+		const legacyKeys =
+			record.category === 'Weapon'
+				? [...LEGACY_ITEM_KEYS, ...WEAPON_ITEM_KEYS]
+				: record.category === 'Armor'
+					? [...LEGACY_ITEM_KEYS, ...ARMOR_ITEM_KEYS]
+					: LEGACY_ITEM_KEYS;
+		if (!hasExactKeys(record, expectedKeys) && !hasExactKeys(record, legacyKeys)) {
 			throw new Error(`「${catalog.title}」第 ${index + 1} 筆物品欄位不符來源合約。`);
 		}
 		return record;
@@ -419,6 +427,10 @@ function adaptCatalogItems(
 				record.isRequireAttunement,
 				`${label} isRequireAttunement`,
 			),
+			isStackable:
+				record.isStackable === undefined
+					? false
+					: readBoolean(record.isStackable, `${label} isStackable`),
 			source: readString(record.source, `${label} source`),
 			aliases: lookup.aliases,
 			searchTerms: lookup.searchTerms,
@@ -556,6 +568,12 @@ export async function loadBlacksmithCatalogs(
 	const catalog = catalogs.find((entry) => entry.catalogId === catalogId);
 	if (!catalog) throw new Error(`找不到規則書目錄：${catalogId}`);
 
+	return loadBlacksmithCatalogItems(catalog);
+}
+
+export async function loadBlacksmithCatalogItems(
+	catalog: BlacksmithCatalogDefinition,
+): Promise<BlacksmithItem[]> {
 	const [itemFile, lookupFile] = await Promise.all([
 		fetchJson(publicDataUrl(catalog.itemsFile), `「${catalog.title}」物品檔`),
 		fetchJson(publicDataUrl(catalog.lookupFile), `「${catalog.title}」lookup 檔`),

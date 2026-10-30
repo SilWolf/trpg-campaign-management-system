@@ -44,6 +44,48 @@ export async function loadBlacksmithTemplates(
 	};
 }
 
+export async function loadMyBlacksmithTemplates(
+	ownerId: string,
+): Promise<BlacksmithTemplate[]> {
+	const { data, error } = await requireSupabase()
+		.from('blacksmith_items')
+		.select('*')
+		.eq('owner_id', ownerId)
+		.order('updated_at', { ascending: false });
+	if (error) throw error;
+	return (data ?? []).map(fromDbBlacksmithItem);
+}
+
+export async function loadSharedBlacksmithOwners(
+	ownerId: string,
+): Promise<string[]> {
+	const { data, error } = await requireSupabase()
+		.from('blacksmith_items')
+		.select('owner_id')
+		.eq('is_shared', true)
+		.neq('owner_id', ownerId)
+		.order('owner_id', { ascending: true });
+	if (error) throw error;
+	return [...new Set((data ?? []).map((row) => row.owner_id))];
+}
+
+export async function loadSharedBlacksmithTemplates(
+	ownerId: string,
+	authorId: string,
+): Promise<BlacksmithTemplate[]> {
+	if (!authorId || authorId === ownerId) {
+		throw new Error('分享者來源無效。');
+	}
+	const { data, error } = await requireSupabase()
+		.from('blacksmith_items')
+		.select('*')
+		.eq('owner_id', authorId)
+		.eq('is_shared', true)
+		.order('updated_at', { ascending: false });
+	if (error) throw error;
+	return (data ?? []).map(fromDbBlacksmithItem);
+}
+
 export async function saveBlacksmithTemplate(
 	values: BlacksmithTemplateValues,
 	ownerId: string,

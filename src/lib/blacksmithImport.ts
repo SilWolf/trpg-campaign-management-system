@@ -25,7 +25,7 @@ function toItemBase(source: AllItem): AllItem {
 		icon: source.icon ?? null,
 		weight: source.weight,
 		valueGp: source.valueGp,
-		affixes: source.affixes ?? [],
+		affixes: (source.affixes ?? []).map((affix) => ({ ...affix })),
 		effects: source.effects,
 		flavor: source.flavor ?? null,
 		dmNotes: source.dmNotes,
@@ -33,6 +33,7 @@ function toItemBase(source: AllItem): AllItem {
 		isEquippable: source.isEquippable,
 		isConsumable: source.isConsumable,
 		isRequireAttunement: source.isRequireAttunement,
+		isStackable: source.isStackable ?? false,
 	};
 	if (source.category === 'Weapon') {
 		return {
