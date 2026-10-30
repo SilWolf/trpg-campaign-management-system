@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Gift, Plus, Search, Trash2, X } from 'lucide-react';
+import { EyeOff, Gift, Plus, Search, Trash2, X } from 'lucide-react';
 
 import { Button, Input, Select, Textarea } from '@/components/ui';
 import { useToast } from '@/contexts/FeedbackContext';
@@ -422,11 +422,11 @@ export default function ItemDistributionDialog({
 									))}
 								</Select>
 							</label>
-							<label className='block text-sm font-medium text-foreground'>
-								背包類型
-								<Select
-									aria-label='派發背包類型'
-									value={isPrivate ? 'private' : 'public'}
+							<label className='flex min-h-10 items-center gap-2 text-sm font-medium text-foreground'>
+								<input
+									type='checkbox'
+									aria-label='設為秘密物品'
+									checked={canChoosePrivate && isPrivate}
 									disabled={
 										!canChoosePrivate ||
 										isSubmitting ||
@@ -434,13 +434,12 @@ export default function ItemDistributionDialog({
 									}
 									onChange={(event) => {
 										resetSubmission();
-										setIsPrivate(event.target.value === 'private');
+										setIsPrivate(event.target.checked);
 									}}
-									className='mt-1 w-full'
-								>
-									<option value='public'>公開背包</option>
-									<option value='private'>私人背包</option>
-								</Select>
+									className='h-4 w-4 accent-dm'
+								/>
+								<EyeOff className='h-4 w-4 text-private' aria-hidden='true' />
+								<span>設為秘密物品</span>
 							</label>
 						</div>
 						{ownerId === CAMP_CHEST_ID && (

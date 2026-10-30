@@ -55,7 +55,6 @@ function CampaignInventoryPage() {
 	const [viewSelection, setViewSelection] = useState('dm');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
 	const [activeCharId, setActiveCharId] = useState<string>('tav');
-	const [bagTab, setBagTab] = useState<'public' | 'private'>('public');
 	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
 	const [previewPlayerState, setPreviewPlayerState] = useState<{
 		campaignId: string;
@@ -296,15 +295,15 @@ function CampaignInventoryPage() {
 		];
 	}, [characters, campChestCurrency]);
 	const canViewPrivateBag = !isCampChestActive && charPerms.canReadPrivateBag;
-	const currentBagTab = !canViewPrivateBag ? 'public' : bagTab;
-
-	const canReadCurrentBag =
-		currentBagTab === 'private'
-			? charPerms.canReadPrivateBag
-			: charPerms.canReadPublicBag;
-	const canEditCurrentBag =
-		currentBagTab === 'private'
-			? charPerms.canEditPrivateBag
+	const canEditPrivateBag =
+		canViewPrivateBag && charPerms.canEditPrivateBag;
+	const canReadPublicBag =
+		!isCampChestActive && charPerms.canReadPublicBag;
+	const canEditAnyBag =
+		charPerms.canEditPublicBag || charPerms.canEditPrivateBag;
+	const canEditItem = (item: InventoryItem) =>
+		item.isPrivate
+			? canEditPrivateBag
 			: charPerms.canEditPublicBag;
 
 	const allCharacterItems = useMemo(
@@ -313,40 +312,36 @@ function CampaignInventoryPage() {
 	);
 
 	const visibleBagItems = useMemo(() => {
-		if (!canReadCurrentBag) return [];
-		return allCharacterItems.filter((item) =>
-			currentBagTab === 'private' ? Boolean(item.isPrivate) : !item.isPrivate,
-		);
-	}, [allCharacterItems, canReadCurrentBag, currentBagTab]);
+		return allCharacterItems.filter((item) => {
+			if (item.isPrivate) return canViewPrivateBag;
+			return isCampChestActive || canReadPublicBag;
+		});
+	}, [
+		allCharacterItems,
+		canViewPrivateBag,
+		canReadPublicBag,
+		isCampChestActive,
+	]);
 
 	const attunedCount = useMemo(
-		() =>
-			allCharacterItems.filter((item) => {
-				if (item.isPrivate && !charPerms.canReadPrivateBag) return false;
-				if (!item.isPrivate && !charPerms.canReadPublicBag) return false;
-				return item.attuned;
-			}).length,
-		[
-			allCharacterItems,
-			charPerms.canReadPrivateBag,
-			charPerms.canReadPublicBag,
-		],
+		() => visibleBagItems.filter((item) => item.attuned).length,
+		[visibleBagItems],
 	);
 
-	// 狀態列顯示的錢包（隨當前公開/私人分頁切換）
-	const isDisplayingPrivateWallet =
-		!isCampChestActive && currentBagTab === 'private';
-	const canReadDisplayedWallet = isDisplayingPrivateWallet
-		? charPerms.canReadPrivateWallet
-		: charPerms.canReadPublicWallet;
-	const canEditDisplayedWallet = isDisplayingPrivateWallet
-		? charPerms.canEditPrivateWallet
-		: charPerms.canEditPublicWallet;
+	const canReadPublicWallet =
+		isCampChestActive || charPerms.canReadPublicWallet;
+	const canReadPrivateWallet =
+		!isCampChestActive && charPerms.canReadPrivateWallet;
+	const canEditAnyWallet =
+		charPerms.canEditPublicWallet || charPerms.canEditPrivateWallet;
+	const preferredWalletType =
+		!isCampChestActive &&
+		!charPerms.canEditPublicWallet &&
+		charPerms.canEditPrivateWallet
+			? 'private'
+			: 'public';
 	const canDispatchItems =
 		effectiveIsDm && isRemoteCampaign && !isGuest && Boolean(user?.id);
-	const displayedGp = isDisplayingPrivateWallet
-		? activeCharacter.privateGp
-		: activeCharacter.gp;
 
 	const currencyStats = useMemo(() => {
 		const readableGpCents =
@@ -368,10 +363,9 @@ function CampaignInventoryPage() {
 
 	// 負重計算嚴格過濾無閱讀權限的背包與錢包，避免洩漏暗袋重量
 	const encumbranceStats = useMemo(() => {
-		const itemsForCalc = allCharacterItems.filter((item) => {
-			if (item.isPrivate) return charPerms.canReadPrivateBag;
-			return charPerms.canReadPublicBag;
-		});
+		const itemsForCalc = allCharacterItems.filter((item) =>
+			item.isPrivate ? canViewPrivateBag : isCampChestActive || canReadPublicBag,
+		);
 		const itemsWeight = itemsForCalc.reduce(
 			(sum, item) => sum + item.weight * item.quantity,
 			0,
@@ -396,8 +390,9 @@ function CampaignInventoryPage() {
 	}, [
 		allCharacterItems,
 		visibleBagItems,
-		charPerms.canReadPrivateBag,
-		charPerms.canReadPublicBag,
+		canViewPrivateBag,
+		canReadPublicBag,
+		isCampChestActive,
 		currencyStats.coinWeight,
 		activeCharacter.str,
 	]);
@@ -436,6 +431,8 @@ function CampaignInventoryPage() {
 		isRemoteCampaign,
 		characters,
 		setCharacters,
+		canEditPublicBag: charPerms.canEditPublicBag,
+		canEditPrivateBag: charPerms.canEditPrivateBag,
 		campChestCurrency,
 		setCampChestCurrency,
 		items,
@@ -446,8 +443,6 @@ function CampaignInventoryPage() {
 		setViewerCharId,
 		activeCharacter,
 		attunedCount,
-		currentBagTab,
-		setBagTab,
 		setSelectedItemId,
 		showToast,
 	});
@@ -490,10 +485,11 @@ function CampaignInventoryPage() {
 				countCoinWeight={countCoinWeight}
 				setCountCoinWeight={setCountCoinWeight}
 				coinWeight={currencyStats.coinWeight}
-				displayedGp={displayedGp}
-				isDisplayingPrivateWallet={isDisplayingPrivateWallet}
-				canReadDisplayedWallet={canReadDisplayedWallet}
-				canEditDisplayedWallet={canEditDisplayedWallet}
+				publicGp={activeCharacter.gp}
+				privateGp={activeCharacter.privateGp}
+				canReadPublicWallet={canReadPublicWallet}
+				canReadPrivateWallet={canReadPrivateWallet}
+				canEditAnyWallet={canEditAnyWallet}
 				onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
 			/>
 
@@ -551,20 +547,16 @@ function CampaignInventoryPage() {
 						countCoinWeight={countCoinWeight}
 						setCountCoinWeight={setCountCoinWeight}
 						coinWeight={currencyStats.coinWeight}
-						displayedGp={displayedGp}
-						isDisplayingPrivateWallet={isDisplayingPrivateWallet}
-						canReadDisplayedWallet={canReadDisplayedWallet}
-						canEditDisplayedWallet={canEditDisplayedWallet}
+						publicGp={activeCharacter.gp}
+						privateGp={activeCharacter.privateGp}
+						canReadPublicWallet={canReadPublicWallet}
+						canReadPrivateWallet={canReadPrivateWallet}
+						canEditAnyWallet={canEditAnyWallet}
 						onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
 					/>
 
 					<InventoryToolbar
-						allCharacterItems={allCharacterItems}
-						canReadPublicBag={charPerms.canReadPublicBag}
-						canViewPrivateBag={canViewPrivateBag}
-						canEditCurrentBag={canEditCurrentBag}
-						currentBagTab={currentBagTab}
-						setBagTab={setBagTab}
+						canEditAnyBag={canEditAnyBag}
 						searchQuery={searchQuery}
 						setSearchQuery={setSearchQuery}
 						displayMode={displayMode}
@@ -580,8 +572,8 @@ function CampaignInventoryPage() {
 						inspectedItemId={inspectedItem?.id ?? null}
 						totalItemsValueGp={encumbranceStats.totalItemsValueGp}
 						rarityConfig={RARITY_CONFIG}
-						canReadCurrentBag={canReadCurrentBag}
-						canEditCurrentBag={canEditCurrentBag}
+						canEditAnyBag={canEditAnyBag}
+						canEditItem={canEditItem}
 						isItemMatchingFilter={isItemMatchingFilter}
 						setSelectedItemId={handleSelectItem}
 						toggleEquip={actions.toggleEquip}
@@ -598,9 +590,7 @@ function CampaignInventoryPage() {
 						activeCharId={activeCharId}
 						viewerCharId={viewerCharId}
 						canEditItemBag={canEditInspectedItem}
-						canMoveBetweenPublicAndPrivate={
-							charPerms.canEditPublicBag && charPerms.canEditPrivateBag
-						}
+						canMakeItemPublic={canEditPrivateBag}
 						adjustCharges={actions.adjustCharges}
 						toggleEquip={actions.toggleEquip}
 						toggleAttune={actions.toggleAttune}
@@ -616,7 +606,7 @@ function CampaignInventoryPage() {
 							actions.openEditItemModal(item);
 						}}
 						onUpdatePlayerNotes={actions.updatePlayerNotes}
-						onTogglePrivate={actions.togglePrivateItem}
+						onMakeItemPublic={actions.makeItemPublic}
 						copiedAffix={actions.copiedAffix}
 						onCopyAffix={actions.handleCopyAffix}
 						onPasteAffix={actions.handlePasteAffixToItem}
@@ -654,9 +644,7 @@ function CampaignInventoryPage() {
 									activeCharId={activeCharId}
 									viewerCharId={viewerCharId}
 									canEditItemBag={canEditInspectedItem}
-									canMoveBetweenPublicAndPrivate={
-										charPerms.canEditPublicBag && charPerms.canEditPrivateBag
-									}
+									canMakeItemPublic={canEditPrivateBag}
 									adjustCharges={actions.adjustCharges}
 									toggleEquip={actions.toggleEquip}
 									toggleAttune={actions.toggleAttune}
@@ -675,7 +663,7 @@ function CampaignInventoryPage() {
 										actions.openEditItemModal(item);
 									}}
 									onUpdatePlayerNotes={actions.updatePlayerNotes}
-									onTogglePrivate={actions.togglePrivateItem}
+									onMakeItemPublic={actions.makeItemPublic}
 									copiedAffix={actions.copiedAffix}
 									onCopyAffix={actions.handleCopyAffix}
 									onPasteAffix={actions.handlePasteAffixToItem}
@@ -720,7 +708,7 @@ function CampaignInventoryPage() {
 			<CurrencyPanel
 				isOpen={isCoinModalOpen}
 				activeCharacter={activeCharacter}
-				initialWalletTab={currentBagTab}
+				initialWalletTab={preferredWalletType}
 				sourceWallets={currencyWalletOptions.sourceWallets}
 				destinationWallets={currencyWalletOptions.destinationWallets}
 				onClose={() => setIsCoinModalOpen(false)}
@@ -733,7 +721,7 @@ function CampaignInventoryPage() {
 					wallets={dmCurrencyWallets}
 					initialWalletId={JSON.stringify([
 						activeCharacter.id,
-						isCampChestActive ? 'public' : currentBagTab,
+						isCampChestActive ? 'public' : preferredWalletType,
 					])}
 					onClose={() => setIsCurrencyEditOpen(false)}
 					onSave={actions.setCurrencyBalance}

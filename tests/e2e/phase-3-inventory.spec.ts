@@ -19,23 +19,24 @@ function findCharacterWrite(
 		);
 }
 
-test('一般成員只能閱讀公開背包與公開錢包，私人資料和負重不會洩漏', async ({
+test('一般成員只能閱讀公開物品與錢包，私人資料和負重不會洩漏', async ({
 	page,
 }) => {
 	await mockSupabase(page, { campaignInventoryRole: 'player' });
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
 
-	await expect(page.getByRole('button', { name: /公開行囊/ })).toHaveAttribute(
-		'aria-pressed',
-		'true',
-	);
-	await expect(page.getByRole('button', { name: /私人暗袋/ })).toHaveCount(0);
 	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
 	await expect(page.getByTestId('inventory-item-inventory-private-letter')).toHaveCount(
 		0,
 	);
+	await expect(page.getByTestId('inventory-private-group')).toHaveCount(0);
 	await expect(page.getByTestId('inventory-encumbrance')).toContainText('1.4 / 150 lbs');
+	await expect(page.getByTestId('currency-summary-gp')).toContainText('20 GP');
+	await expect(page.getByTestId('currency-summary-gp')).toContainText(
+		'私人錢包',
+	);
+	await expect(page.getByTestId('currency-summary-gp')).not.toContainText('80 GP');
 
 	await expect(page.getByTestId('inventory-currency-edit')).toHaveCount(0);
 	await expect(page.getByTestId('inventory-currency-open')).toHaveCount(0);
@@ -48,7 +49,7 @@ test('一般成員只能閱讀公開背包與公開錢包，私人資料和負�
 	await expect(page.getByText('一鍵將零錢換整為金幣 (GP)')).toHaveCount(0);
 });
 
-test('DM 可切換公開與私人背包、搜尋檢視並開啟轉帳', async ({ page }) => {
+test('DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳', async ({ page }) => {
 	const { requests } = await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 	});
@@ -56,18 +57,17 @@ test('DM 可切換公開與私人背包、搜尋檢視並開啟轉帳', async ({
 	await page.goto(inventoryUrl);
 
 	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
-	await page.getByRole('button', { name: /私人暗袋/ }).click();
 	await expect(page.getByTestId('inventory-item-inventory-private-letter')).toBeVisible();
-	await expect(page.getByRole('button', { name: /私人暗袋/ })).toHaveAttribute(
-		'aria-pressed',
-		'true',
-	);
+	await expect(page.getByTestId('inventory-private-group').first()).toBeVisible();
 
-	await page.getByRole('button', { name: /公開行囊/ }).click();
 	await page.getByRole('searchbox', { name: '搜尋道具名稱' }).fill('治療');
 	await expect(
 		page.getByTestId('inventory-item-inventory-public-potion'),
 	).toHaveAttribute('data-filter-match', 'true');
+	await expect(
+		page.getByTestId('inventory-item-inventory-private-letter'),
+	).toHaveAttribute('data-filter-match', 'false');
+	await page.getByRole('searchbox', { name: '搜尋道具名稱' }).fill('');
 	await page.getByRole('button', { name: '列表' }).click();
 	await expect(page.getByRole('button', { name: '列表' })).toHaveAttribute(
 		'aria-pressed',
@@ -119,13 +119,20 @@ test('DM 可切換公開與私人背包、搜尋檢視並開啟轉帳', async ({
 	await expect(page.getByTestId('currency-source-wallet')).toContainText(
 		'測試冒險者 — 公開錢包（20 GP）',
 	);
+	await expect(
+		page.getByTestId('currency-target-wallet').getByRole('option', {
+			name: '測試冒險者 — 私人錢包（80 GP）',
+		}),
+	).toHaveCount(0);
 	await expect(page.getByTestId('currency-panel')).not.toContainText('+1');
 	await expect(page.getByTestId('currency-panel')).not.toContainText('−1');
 	await expect(page.getByTestId('currency-panel')).not.toContainText('+0.01');
 	await expect(page.getByTestId('currency-panel')).not.toContainText('−0.01');
 	await page.getByRole('button', { name: '取消' }).click();
-	await page.getByRole('button', { name: /私人暗袋/ }).click();
 	await page.getByTestId('inventory-currency-open').last().click();
+	await page.getByTestId('currency-source-wallet').selectOption(
+		JSON.stringify(['inventory-character', 'private']),
+	);
 	await expect(page.getByTestId('currency-source-wallet')).toHaveValue(
 		JSON.stringify(['inventory-character', 'private']),
 	);
@@ -135,7 +142,42 @@ test('DM 可切換公開與私人背包、搜尋檢視並開啟轉帳', async ({
 	);
 });
 
-test('只有 DM 可開啟修改存款表單並直接設定各戶口金額', async ({ page }) => {
+test('秘密物品只能單向公開，且不得直接移入營地儲物箱', async ({ page }) => {
+	const { requests, campaignShopRpcRequests } = await mockSupabase(page, {
+		campaignInventoryRole: 'dm',
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(inventoryUrl);
+
+	await page.getByTestId('inventory-item-inventory-public-potion').click();
+	await expect(page.getByRole('button', { name: '公開物品' })).toHaveCount(0);
+
+	await page.getByTestId('inventory-item-inventory-private-letter').click();
+	await expect(page.getByRole('button', { name: '公開物品' })).toBeVisible();
+	await expect(
+		page.getByRole('button', { name: /送往營地儲物箱/ }),
+	).toBeDisabled();
+	await page.getByRole('button', { name: '公開物品' }).click();
+
+	await expect
+		.poll(() => campaignShopRpcRequests.at(-1))
+		.toMatchObject({
+			name: 'make_inventory_item_public',
+			body: {
+				p_campaign_id: 'inventory-campaign',
+				p_item_id: 'inventory-private-letter',
+			},
+		});
+	expect(
+		requests.some(
+			(request) =>
+				request.startsWith('PATCH /rest/v1/inventory_items') &&
+				request.includes('is_private'),
+		),
+	).toBe(false);
+});
+
+test('遠端角色錢包需使用授權交易；營地箱餘額仍可由 DM 設定', async ({ page }) => {
 	const { characterWrites, campaignUpdates } = await mockSupabase(page, {
 		campaignInventoryRole: 'dm',
 	});
@@ -148,27 +190,25 @@ test('只有 DM 可開啟修改存款表單並直接設定各戶口金額', asyn
 	await expect(page.getByTestId('currency-edit-balance')).toHaveValue('20');
 	await page.getByTestId('currency-edit-balance').fill('123.45');
 	await page.getByTestId('currency-edit-save').click();
-	await expect(page.getByTestId('currency-edit-panel')).toHaveCount(0);
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
-		.toMatchObject({
-			gp: 123.45,
-			currencies: { gp: 123, cp: 45 },
-		});
+	await expect(page.getByTestId('currency-edit-panel')).toBeVisible();
+	await expect(page.getByRole('status').last()).toContainText(
+		'遠端角色錢包目前只能透過轉帳異動',
+	);
+	expect(findCharacterWrite(characterWrites, 'inventory-character')).toBeUndefined();
+	await page.getByRole('button', { name: '取消' }).click();
 
 	await page.getByTestId('inventory-currency-edit').last().click();
 	await page.getByTestId('currency-edit-wallet').selectOption({
 		label: '測試冒險者 — 私人錢包（80 GP）',
 	});
-	await expect(page.getByTestId('currency-edit-balance')).toHaveValue('80');
 	await page.getByTestId('currency-edit-balance').fill('0');
 	await page.getByTestId('currency-edit-save').click();
-	await expect
-		.poll(() => findCharacterWrite(characterWrites, 'inventory-character'))
-		.toMatchObject({
-			private_gp: 0,
-			private_currencies: { gp: 0, cp: 0 },
-		});
+	await expect(page.getByTestId('currency-edit-panel')).toBeVisible();
+	await expect(page.getByRole('status').last()).toContainText(
+		'遠端角色錢包目前只能透過轉帳異動',
+	);
+	expect(findCharacterWrite(characterWrites, 'inventory-character')).toBeUndefined();
+	await page.getByRole('button', { name: '取消' }).click();
 
 	await page.getByTestId('inventory-currency-edit').last().click();
 	await page.getByTestId('currency-edit-wallet').selectOption({
@@ -315,8 +355,16 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	await page.getByTestId('currency-source-wallet').selectOption({
 		label: '測試冒險者 — 公開錢包（20 GP）',
 	});
-	await page.getByTestId('currency-target-wallet').selectOption({
+	await expect(
+		page.getByTestId('currency-target-wallet').getByRole('option', {
+			name: '測試冒險者 — 私人錢包（80 GP）',
+		}),
+	).toHaveCount(0);
+	await page.getByTestId('currency-source-wallet').selectOption({
 		label: '測試冒險者 — 私人錢包（80 GP）',
+	});
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '測試冒險者 — 公開錢包（20 GP）',
 	});
 	await amountInput.fill('0.01');
 	await page.getByTestId('currency-transfer-submit').click();
@@ -325,8 +373,29 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 		name: 'transfer_campaign_currency',
 		body: {
 			p_source_character_id: 'inventory-character',
-			p_source_wallet: 'public',
+			p_source_wallet: 'private',
 			p_target_character_id: 'inventory-character',
+			p_target_wallet: 'public',
+			p_amount_cents: 1,
+		},
+	});
+
+	await page.getByTestId('inventory-currency-open').last().click();
+	await page.getByTestId('currency-source-wallet').selectOption({
+		label: '測試冒險者 — 私人錢包（80 GP）',
+	});
+	await page.getByTestId('currency-target-wallet').selectOption({
+		label: '移轉目標 — 私人錢包（0 GP）',
+	});
+	await amountInput.fill('0.01');
+	await page.getByTestId('currency-transfer-submit').click();
+	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
+	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
+		name: 'transfer_campaign_currency',
+		body: {
+			p_source_character_id: 'inventory-character',
+			p_source_wallet: 'private',
+			p_target_character_id: 'inventory-target-character',
 			p_target_wallet: 'private',
 			p_amount_cents: 1,
 		},
@@ -354,25 +423,22 @@ test('可選擇來源與目標錢包並在單筆轉帳後關閉對話框', async
 	});
 
 	await page.getByTestId('inventory-currency-open').last().click();
-	await page.getByTestId('currency-source-wallet').selectOption({
-		label: '測試冒險者 — 私人錢包（80 GP）',
-	});
-	await page.getByTestId('currency-target-wallet').selectOption({
-		label: '移轉目標 — 私人錢包（0 GP）',
-	});
-	await amountInput.fill('0.01');
-	await page.getByTestId('currency-transfer-submit').click();
-	await expect(page.getByTestId('currency-panel')).toHaveCount(0);
-	expect(campaignShopRpcRequests.at(-1)).toMatchObject({
-		name: 'transfer_campaign_currency',
-		body: {
-			p_source_character_id: 'inventory-character',
-			p_source_wallet: 'private',
-			p_target_character_id: 'inventory-target-character',
-			p_target_wallet: 'private',
-			p_amount_cents: 1,
-		},
-	});
+	await page.getByTestId('currency-source-wallet').selectOption(
+		JSON.stringify(['camp-chest', 'public']),
+	);
+	await expect(
+		page
+			.getByTestId('currency-target-wallet')
+			.locator('option')
+			.filter({ hasText: '私人錢包' }),
+	).toHaveCount(0);
+	await expect(
+		page.getByTestId('currency-target-wallet').getByRole('option', {
+			name: '移轉目標 — 公開錢包（0 GP）',
+		}),
+	).toHaveCount(1);
+	await page.getByRole('button', { name: '取消' }).click();
+
 	expect(characterWrites).toEqual([]);
 	expect(campaignUpdates).toEqual([]);
 });
@@ -400,8 +466,11 @@ test('轉帳驗證至少 0.01 GP、來源餘額與不同戶口', async ({
 
 	await amountInput.fill('0.01');
 	await expect(
-		page.getByTestId('currency-target-wallet').locator('option:disabled'),
-	).toContainText('與轉出戶口相同');
+		page
+			.getByTestId('currency-target-wallet')
+			.locator('option')
+			.filter({ hasText: '測試冒險者 — 私人錢包' }),
+	).toHaveCount(0);
 	await page.getByTestId('currency-target-wallet').selectOption({
 		label: '移轉目標 — 公開錢包（1000000 GP）',
 	});

@@ -10,7 +10,7 @@ async function addNewDraftItem(page: import('@playwright/test').Page) {
 	await expect(page.getByText('派發測試長劍', { exact: true })).toBeVisible();
 }
 
-test('只有 DM 可見派發入口；新增物品以單一 Function 交易提交並套用目標背包', async ({
+test('只有 DM 可見派發入口；新增物品以單一 Function 交易提交並套用秘密狀態', async ({
 	page,
 }) => {
 	const { functionRequests, requests } = await mockSupabase(page, {
@@ -22,18 +22,17 @@ test('只有 DM 可見派發入口；新增物品以單一 Function 交易提交
 	await expect(page.getByTestId('inventory-dispatch-items')).toBeVisible();
 	await page.getByTestId('inventory-dispatch-items').click();
 	await expect(page.getByRole('dialog', { name: '派發物品' })).toBeVisible();
-	await expect(page.getByLabel('派發背包類型')).toBeDisabled();
+	await expect(page.getByLabel('設為秘密物品')).toBeDisabled();
 
 	await addNewDraftItem(page);
 	await page.getByLabel('派發接收目標').selectOption('inventory-character');
-	await page.getByLabel('派發背包類型').selectOption('private');
+	await page.getByLabel('設為秘密物品').check();
 	await page.getByLabel('派發原因').fill('通過試煉的獎勵');
 	const submitButton = page.getByTestId('item-distribution-submit');
 	await submitButton.click();
 	await expect(submitButton).toBeDisabled();
 
 	await expect(page.getByRole('dialog', { name: '派發物品' })).toHaveCount(0);
-	await page.getByTestId('inventory-bag-private').click();
 	await expect(
 		page.getByTestId('inventory-item-dispatch-inventory-1'),
 	).toBeVisible();
@@ -64,6 +63,35 @@ test('只有 DM 可見派發入口；新增物品以單一 Function 交易提交
 				/^PATCH \/rest\/v1\/inventory_items/.test(request),
 		),
 	).toBe(false);
+});
+
+test('派發至營地儲物箱時秘密選項固定關閉並送出公開狀態', async ({
+	page,
+}) => {
+	const { functionRequests } = await mockSupabase(page, {
+		campaignInventoryRole: 'dm',
+	});
+	await seedAuthenticatedSession(page);
+	await page.goto(inventoryUrl);
+	await page.getByTestId('inventory-dispatch-items').click();
+	await addNewDraftItem(page);
+
+	const privateCheckbox = page.getByLabel('設為秘密物品');
+	await page.getByLabel('派發接收目標').selectOption('inventory-character');
+	await privateCheckbox.check();
+	await page.getByLabel('派發接收目標').selectOption('camp-chest');
+	await expect(privateCheckbox).not.toBeChecked();
+	await expect(privateCheckbox).toBeDisabled();
+
+	await page.getByTestId('item-distribution-submit').click();
+	await expect(page.getByRole('dialog', { name: '派發物品' })).toHaveCount(0);
+	expect(functionRequests).toHaveLength(1);
+	expect(functionRequests[0]).toMatchObject({
+		body: {
+			ownerId: 'camp-chest',
+			isPrivate: false,
+		},
+	});
 });
 
 test('11 至 20 筆新增列先要求確認，失敗時保留派發草稿', async ({ page }) => {

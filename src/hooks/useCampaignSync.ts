@@ -13,13 +13,12 @@ import {
 	fromDbCampaignCurrency,
 	toDbItem,
 	fromDbItem,
-	toDbCharacter,
-	fromDbCharacter,
+	toDbCharacterProfile,
+	loadCampaignCharacters,
 	syncCharacterGpFromLegacyWallets,
 	toDbPermission,
 	fromDbPermission,
 	type DbInventoryItem,
-	type DbCharacter,
 	type DbCharacterPermission,
 	type CampaignCurrency,
 	type DbCampaignCurrency,
@@ -105,7 +104,7 @@ export function useCampaignSync(
 			try {
 				const [
 					{ data: campaignRow, error: campaignErr },
-					{ data: charRows, error: charErr },
+					loadedChars,
 					{ data: itemRows, error: itemErr },
 					{ data: permRows, error: permErr },
 				] = await Promise.all([
@@ -114,7 +113,7 @@ export function useCampaignSync(
 						.select('camp_chest_gp')
 						.eq('id', campaignId)
 						.single(),
-					supabase.from('characters').select('*').eq('campaign_id', campaignId),
+					loadCampaignCharacters(campaignId),
 					supabase
 						.from('inventory_items')
 						.select(INVENTORY_ITEM_SELECT)
@@ -125,13 +124,10 @@ export function useCampaignSync(
 						.eq('campaign_id', campaignId),
 				]);
 
-				if (campaignErr || charErr || itemErr || permErr) {
-					throw campaignErr || charErr || itemErr || permErr;
+				if (campaignErr || itemErr || permErr) {
+					throw campaignErr || itemErr || permErr;
 				}
 
-				const loadedChars = ((charRows ?? []) as DbCharacter[])
-					.filter((row) => row.id !== CAMP_CHEST_ID)
-					.map(fromDbCharacter);
 				const loadedItems = ((itemRows ?? []) as DbInventoryItem[]).map(
 					fromDbItem,
 				);
@@ -161,41 +157,6 @@ export function useCampaignSync(
 		// 2. 訂閱 Realtime
 		const channel = supabase
 			.channel(`campaign-realtime-${campaignId}`)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'characters',
-					filter: `campaign_id=eq.${campaignId}`,
-				},
-				(payload) => {
-					if (payload.eventType === 'DELETE') {
-						const deletedId = (payload.old as { id: string }).id;
-						setCharactersState((prev) =>
-							prev.filter((c) => c.id !== deletedId),
-						);
-					} else {
-						try {
-							const updatedChar = fromDbCharacter(
-								payload.new as DbCharacter,
-							);
-							if (updatedChar.id === CAMP_CHEST_ID) return;
-							setCharactersState((prev) => {
-								const exists = prev.some((c) => c.id === updatedChar.id);
-								return exists
-									? prev.map((c) =>
-											c.id === updatedChar.id ? updatedChar : c,
-										)
-									: [...prev, updatedChar];
-							});
-						} catch (error) {
-							console.error('Realtime 角色 GP 資料無效：', error);
-							if (isMounted) setSyncStatus('error');
-						}
-					}
-				},
-			)
 			.on(
 				'postgres_changes',
 				{
@@ -253,13 +214,19 @@ export function useCampaignSync(
 			campaignId,
 			() => {
 				void (async () => {
-					const { data, error } = await client
-						.from('inventory_items')
-						.select(INVENTORY_ITEM_SELECT)
-						.eq('campaign_id', campaignId);
-					if (error) throw error;
+					const [loadedCharacters, itemResult] = await Promise.all([
+						loadCampaignCharacters(campaignId),
+						client
+							.from('inventory_items')
+							.select(INVENTORY_ITEM_SELECT)
+							.eq('campaign_id', campaignId),
+					]);
+					if (itemResult.error) throw itemResult.error;
 					if (isMounted) {
-						setItemsState(((data ?? []) as DbInventoryItem[]).map(fromDbItem));
+						setCharactersState(loadedCharacters);
+						setItemsState(
+							((itemResult.data ?? []) as DbInventoryItem[]).map(fromDbItem),
+						);
 					}
 				})().catch((error: unknown) => {
 					console.error('戰役安全資料同步失敗：', error);
@@ -330,7 +297,7 @@ export function useCampaignSync(
 					(async () => {
 						if (changedChars.length > 0) {
 							const payload = changedChars.map((char) => ({
-								...toDbCharacter(char),
+									...toDbCharacterProfile(char),
 								campaign_id: campaignId,
 							}));
 							const { error } = await supabase

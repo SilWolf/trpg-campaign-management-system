@@ -20,6 +20,7 @@ import {
 	type CampaignShopOrderStatus,
 	type CampaignShopRefreshPolicy,
 	type InventoryItem,
+	CAMP_CHEST_ID,
 	type ItemBaseCategory,
 	type ItemBaseRarity,
 	type WeaponItemMastery,
@@ -918,7 +919,7 @@ export const fromDbBlacksmithItem = (
 	};
 };
 
-export interface DbCharacter {
+export interface DbCharacterProfile {
 	id: string;
 	name: string;
 	title: string;
@@ -926,11 +927,35 @@ export interface DbCharacter {
 	str: number;
 	user_id: string;
 	campaign_id: string;
+}
+
+export interface DbCharacter extends DbCharacterProfile {
 	gp?: number | string | null;
 	private_gp?: number | string | null;
 	currencies?: Partial<LegacyCurrencyWallet> | null;
 	private_currencies?: Partial<LegacyCurrencyWallet> | null;
 }
+
+export interface DbCharacterWallet {
+	character_id: string;
+	wallet_type: 'public' | 'private';
+	balance_gp: number | string;
+}
+
+export const CHARACTER_PROFILE_SELECT =
+	'id,name,title,avatar,str,user_id,campaign_id';
+
+export const toDbCharacterProfile = (
+	char: Character,
+): DbCharacterProfile => ({
+	id: char.id,
+	name: char.name,
+	title: char.title,
+	avatar: normalizeAvatarReference(char.avatar),
+	str: Number(char.str),
+	user_id: char.userId,
+	campaign_id: char.campaignId,
+});
 
 export const toDbCharacter = (char: Character): DbCharacter => {
 	const gpCents = gpValueToCents(char.gp, '角色公開錢包 GP');
@@ -942,17 +967,58 @@ export const toDbCharacter = (char: Character): DbCharacter => {
 		throw new Error('角色 GP 餘額與舊錢包相容資料不一致。');
 	}
 	return {
-		id: char.id,
-		name: char.name,
-		title: char.title,
-		avatar: normalizeAvatarReference(char.avatar),
-		str: Number(char.str),
-		user_id: char.userId,
-		campaign_id: char.campaignId,
+		...toDbCharacterProfile(char),
 		gp: Number(gpCents) / 100,
 		private_gp: Number(privateGpCents) / 100,
 		currencies: char.currencies,
 		private_currencies: char.privateCurrencies,
+	};
+};
+
+export const fromDbCharacterProfile = (
+	row: DbCharacterProfile,
+): Character => ({
+	id: row.id,
+	name: row.name,
+	title: row.title,
+	avatar: normalizeAvatarReference(row.avatar),
+	str: Number(row.str),
+	userId: row.user_id,
+	campaignId: row.campaign_id,
+	gp: 0,
+	privateGp: 0,
+	currencies: legacyWalletFromGpCents(0n),
+	privateCurrencies: legacyWalletFromGpCents(0n),
+});
+
+export const fromDbCharacterWallets = (
+	character: Character,
+	wallets: readonly DbCharacterWallet[],
+): Character => {
+	let gpCents = 0n;
+	let privateGpCents = 0n;
+	for (const wallet of wallets) {
+		if (wallet.character_id !== character.id) {
+			throw new Error('角色錢包資料與角色識別不一致。');
+		}
+		const balance = gpValueToCents(
+			wallet.balance_gp,
+			`角色 ${character.id} 錢包 GP`,
+		);
+		if (wallet.wallet_type === 'public') {
+			gpCents = balance;
+		} else if (wallet.wallet_type === 'private') {
+			privateGpCents = balance;
+		} else {
+			throw new Error('角色錢包類型無效。');
+		}
+	}
+	return {
+		...character,
+		gp: Number(gpCents) / 100,
+		privateGp: Number(privateGpCents) / 100,
+		currencies: legacyWalletFromGpCents(gpCents),
+		privateCurrencies: legacyWalletFromGpCents(privateGpCents),
 	};
 };
 
@@ -996,6 +1062,66 @@ export const fromDbCharacter = (row: DbCharacter): Character => {
 				: privateCurrencies,
 	};
 };
+
+export async function loadCampaignCharacters(
+	campaignId: string,
+	characterIds?: readonly string[],
+): Promise<Character[]> {
+	if (!supabase) {
+		throw new Error('讀取戰役角色需要設定 Supabase。');
+	}
+	const client = supabase;
+	let characterQuery = client
+		.from('characters')
+		.select(CHARACTER_PROFILE_SELECT)
+		.eq('campaign_id', campaignId);
+	if (characterIds) {
+		characterQuery = characterQuery.in('id', [...characterIds]);
+	}
+	const [{ data: characterRows, error: characterError }, walletResult] =
+		await Promise.all([
+			characterQuery,
+			client.rpc('get_campaign_character_wallets', {
+				p_campaign_id: campaignId,
+				p_character_ids: characterIds ? [...characterIds] : null,
+			}),
+		]);
+	if (characterError) throw characterError;
+	if (walletResult.error) throw walletResult.error;
+	if (!Array.isArray(walletResult.data)) {
+		throw new Error('戰役角色錢包服務回傳了無效資料。');
+	}
+
+	const characters = ((characterRows ?? []) as DbCharacterProfile[]).filter(
+		(row) => row.id !== CAMP_CHEST_ID,
+	);
+	const characterIdsInResult = new Set(characters.map((character) => character.id));
+	const wallets = walletResult.data as DbCharacterWallet[];
+	for (const wallet of wallets) {
+		if (
+			!wallet ||
+			typeof wallet.character_id !== 'string' ||
+			(wallet.wallet_type !== 'public' && wallet.wallet_type !== 'private') ||
+			(typeof wallet.balance_gp !== 'string' &&
+				typeof wallet.balance_gp !== 'number') ||
+			!characterIdsInResult.has(wallet.character_id)
+		) {
+			throw new Error('戰役角色錢包服務回傳了無效資料。');
+		}
+	}
+	const walletsByCharacter = new Map<string, DbCharacterWallet[]>();
+	for (const wallet of wallets) {
+		const entries = walletsByCharacter.get(wallet.character_id) ?? [];
+		entries.push(wallet);
+		walletsByCharacter.set(wallet.character_id, entries);
+	}
+	return characters.map((row) =>
+		fromDbCharacterWallets(
+			fromDbCharacterProfile(row),
+			walletsByCharacter.get(row.id) ?? [],
+		),
+	);
+}
 
 export interface DbCampaignJourney {
 	id: string;

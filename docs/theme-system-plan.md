@@ -39,6 +39,7 @@
 | `accent` | 互動中的強調或選取表面及其前景文字 | Hover、目前選取的選單項目 |
 | `success` | 成功結果或正向完成狀態 | 儲存成功、已完成 |
 | `destructive` | 具破壞性或不可逆的操作，以及危險錯誤 | 刪除、移除角色、失敗狀態 |
+| `private` | 秘密資料的視覺語境；使用紅色而不代表危險操作 | 私人背包、私人錢包 |
 | `warning` | 需要注意或可能造成影響，但未必是錯誤 | 權限提醒、尚未保存、即將過期 |
 | `info` | 中性資訊、說明或提示 | 說明文字、一般提示、資訊型標籤 |
 | `disabled` | 不可互動或目前不可用的控制項狀態 | 停用按鈕、不可編輯欄位 |
@@ -52,6 +53,8 @@
 `disabled` 是控制項狀態，不是可任意套用在一般訊息上的狀態色。優先以 HTML `disabled`／`aria-disabled` 和 `disabled:` 樣式表達不可操作；disabled token 用於該狀態的背景、文字與邊框，且必須確保停用狀態仍可辨識。
 
 每個主題都應提供完整且一致的 token，確保切換主題不會改變上述語意，並維持文字與背景的足夠對比。
+
+`private` 僅用於標示秘密資料，與表示破壞性操作的 `destructive` 分開；各主題同時提供 `private` 前景與 `private-surface` 表面 token，搭配文字標示與 `EyeOff` 圖示，不單靠顏色傳遞權限狀態。
 
 在 Tailwind CSS v4 中，建議由 CSS variables 提供主題值，再透過 `@theme inline` 將其暴露為 Tailwind utilities。概念示例：
 

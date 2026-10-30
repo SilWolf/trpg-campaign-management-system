@@ -29,7 +29,6 @@ import {
 	Send,
 	Trash2,
 	Lock,
-	Unlock,
 	Edit3,
 	StickyNote,
 	Check,
@@ -39,6 +38,7 @@ import {
 	ArrowUp,
 	ArrowDown,
 	Wand2,
+	Globe2,
 } from 'lucide-react';
 import { Button, Input, Textarea } from '@/components/ui';
 import { CharacterAvatar } from '@/components/CharacterAvatar';
@@ -52,7 +52,7 @@ interface ItemTooltipProps {
 	activeCharId: string;
 	viewerCharId: string;
 	canEditItemBag?: boolean;
-	canMoveBetweenPublicAndPrivate?: boolean;
+	canMakeItemPublic?: boolean;
 	adjustCharges: (item: InventoryItem, delta: number) => void;
 	toggleEquip: (item: InventoryItem) => void;
 	toggleAttune: (item: InventoryItem) => void;
@@ -69,7 +69,7 @@ interface ItemTooltipProps {
 	deleteItem: (item: InventoryItem) => void;
 	onOpenEditModal: (item: InventoryItem) => void;
 	onUpdatePlayerNotes: (item: InventoryItem, notes: string) => void;
-	onTogglePrivate: (item: InventoryItem) => void;
+	onMakeItemPublic: (item: InventoryItem) => void;
 	copiedAffix: ItemAffix | null;
 	onCopyAffix: (affix: ItemAffix) => void;
 	onPasteAffix: (item: InventoryItem) => void;
@@ -88,7 +88,7 @@ export default function ItemTooltip({
 	activeCharId,
 	viewerCharId,
 	canEditItemBag = true,
-	canMoveBetweenPublicAndPrivate = false,
+	canMakeItemPublic = false,
 	adjustCharges,
 	toggleEquip,
 	toggleAttune,
@@ -98,7 +98,7 @@ export default function ItemTooltip({
 	deleteItem,
 	onOpenEditModal,
 	onUpdatePlayerNotes,
-	onTogglePrivate,
+	onMakeItemPublic,
 	copiedAffix,
 	onCopyAffix,
 	onPasteAffix,
@@ -115,7 +115,8 @@ export default function ItemTooltip({
 	}, [inspectedItem?.id, inspectedItem?.playerNotes, inspectedItem?.quantity]);
 
 	const isInCampChest = inspectedItem?.ownerId === CAMP_CHEST_ID;
-	const canManagePrivacy = !isInCampChest && canMoveBetweenPublicAndPrivate;
+	const canManagePrivacy =
+		!isInCampChest && Boolean(inspectedItem?.isPrivate) && canMakeItemPublic;
 
 	return (
 		<div className='flex flex-col'>
@@ -157,10 +158,10 @@ export default function ItemTooltip({
 											)}
 											{inspectedItem.isPrivate && (
 												<span
-													title='私人背包物品 (其他玩家不可見)'
-													className='absolute -top-1.5 -right-1.5 bg-card border border-border text-foreground p-0.5 rounded-full shadow'
+													title='秘密物品（其他玩家不可見）'
+													className='absolute -top-1.5 -right-1.5 bg-private-surface border border-private/60 text-private p-0.5 rounded-full shadow'
 												>
-													<Lock className='w-3 h-3' />
+													<EyeOff className='w-3 h-3' />
 												</span>
 											)}
 										</div>
@@ -183,9 +184,9 @@ export default function ItemTooltip({
 													</span>
 												)}
 												{inspectedItem.isPrivate && (
-													<span className='text-[10px] px-1.5 py-0.5 rounded bg-background/90 border border-border/60 text-foreground flex items-center gap-1 font-medium'>
-														<Lock className='w-2.5 h-2.5' />
-														私人專屬
+													<span className='text-[10px] px-1.5 py-0.5 rounded bg-private-surface/70 border border-private/50 text-private flex items-center gap-1 font-medium'>
+														<EyeOff className='w-2.5 h-2.5' />
+														秘密物品
 													</span>
 												)}
 											</div>
@@ -657,20 +658,10 @@ export default function ItemTooltip({
 														type='button'
 														variant='secondary'
 														size='sm'
-														onClick={() => onTogglePrivate(inspectedItem)}
-														prefixIcon={
-															inspectedItem.isPrivate ? (
-																<Unlock />
-															) : (
-																<Lock />
-															)
-														}
+														onClick={() => onMakeItemPublic(inspectedItem)}
+														prefixIcon={<Globe2 />}
 													>
-														{inspectedItem.isPrivate ? (
-															<span>移回公開袋</span>
-														) : (
-															<span>藏入私人袋</span>
-														)}
+														<span>公開物品</span>
 													</Button>
 												)}
 
@@ -781,6 +772,12 @@ export default function ItemTooltip({
 															type='button'
 															variant='secondary'
 															size='sm'
+															disabled={Boolean(inspectedItem.isPrivate)}
+															title={
+																inspectedItem.isPrivate
+																	? '秘密物品必須先公開才能移入營地儲物箱'
+																	: undefined
+															}
 															onClick={() =>
 																transferItemToCharacter(
 																	inspectedItem,
@@ -794,6 +791,11 @@ export default function ItemTooltip({
 																? ` (${transferQty})`
 																: ''}
 														</Button>
+													)}
+													{!isInCampChest && inspectedItem.isPrivate && (
+														<span className='text-[10px] text-private'>
+															秘密物品須先公開，才能移入營地儲物箱。
+														</span>
 													)}
 
 													{characters

@@ -21,7 +21,7 @@ import {
 	requestCampaignShopItem,
 	subscribeCampaignSecureChanges,
 } from '@/lib/campaignShops';
-import { supabase } from '@/lib/supabase';
+import { supabase, type DbCharacterWallet } from '@/lib/supabase';
 import type {
 	CampaignShop,
 	CampaignShopItem,
@@ -50,12 +50,6 @@ interface CharacterNameRow {
 	id: string;
 	name: string;
 	user_id: string;
-}
-
-interface CharacterWalletRow {
-	id: string;
-	gp: number | string;
-	private_gp: number | string;
 }
 
 interface CharacterWalletPermissionRow {
@@ -299,21 +293,41 @@ export function ShopTransactionsPanel({
 			return;
 		}
 
-		const { data: walletRows, error: walletError } = await client
-			.from('characters')
-			.select('id,gp,private_gp')
-			.eq('campaign_id', campaignId)
-			.in(
-				'id',
-				permittedRows.map((row) => row.id),
-			);
-		if (walletError) throw walletError;
-		const wallets = new Map(
-			((walletRows ?? []) as CharacterWalletRow[]).map((row) => [row.id, row]),
+		const { data: walletRows, error: walletError } = await client.rpc(
+			'get_campaign_character_wallets',
+			{
+				p_campaign_id: campaignId,
+				p_character_ids: permittedRows.map((row) => row.id),
+			},
 		);
+		if (walletError) throw walletError;
+		if (!Array.isArray(walletRows)) {
+			throw new Error('商店錢包服務回傳了無效資料。');
+		}
+		const walletsByCharacter = new Map<string, DbCharacterWallet[]>();
+		for (const wallet of walletRows as DbCharacterWallet[]) {
+			if (
+				!wallet ||
+				typeof wallet.character_id !== 'string' ||
+				(wallet.wallet_type !== 'public' && wallet.wallet_type !== 'private') ||
+				(typeof wallet.balance_gp !== 'string' &&
+					typeof wallet.balance_gp !== 'number')
+			) {
+				throw new Error('商店錢包服務回傳了無效資料。');
+			}
+			const wallets = walletsByCharacter.get(wallet.character_id) ?? [];
+			wallets.push(wallet);
+			walletsByCharacter.set(wallet.character_id, wallets);
+		}
 		const nextCharacters = permittedRows.flatMap((row) => {
-			const wallet = wallets.get(row.id);
-			if (!wallet) return [];
+			const wallets = walletsByCharacter.get(row.id) ?? [];
+			const publicWallet = wallets.find(
+				(wallet) => wallet.wallet_type === 'public',
+			);
+			const privateWallet = wallets.find(
+				(wallet) => wallet.wallet_type === 'private',
+			);
+			if (!publicWallet && !privateWallet) return [];
 			const permission = permissions.find(
 				(candidate) => candidate.character_id === row.id,
 			);
@@ -321,18 +335,22 @@ export function ShopTransactionsPanel({
 				{
 					id: row.id,
 					name: row.name,
-					gpCents: gpToCents(wallet.gp),
-					privateGpCents: gpToCents(wallet.private_gp),
+					gpCents: publicWallet ? gpToCents(publicWallet.balance_gp) : 0,
+					privateGpCents: privateWallet
+						? gpToCents(privateWallet.balance_gp)
+						: 0,
 					canUsePublicWallet:
-						isDm ||
+						Boolean(publicWallet) &&
+						(isDm ||
 						(permission
 							? permission.public_wallet_access === 2
-							: row.user_id === userId),
+							: row.user_id === userId)),
 					canUsePrivateWallet:
-						isDm ||
+						Boolean(privateWallet) &&
+						(isDm ||
 						(permission
 							? permission.private_wallet_access === 2
-							: row.user_id === userId),
+							: row.user_id === userId)),
 				},
 			];
 		});

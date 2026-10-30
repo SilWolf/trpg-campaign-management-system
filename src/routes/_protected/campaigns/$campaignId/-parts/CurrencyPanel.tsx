@@ -63,6 +63,19 @@ function walletOptionLabel(wallet: CurrencyWalletOption): string {
 	return `${wallet.characterName} — ${typeLabel}${balance}`;
 }
 
+function canTransferToWallet(
+	source: CurrencyWalletOption,
+	target: CurrencyWalletOption,
+): boolean {
+	if (walletOptionId(source) === walletOptionId(target)) return false;
+	if (source.characterId === CAMP_CHEST_ID) {
+		return (
+			target.characterId !== CAMP_CHEST_ID && target.walletType === 'public'
+		);
+	}
+	return source.walletType === 'private' || target.walletType === 'public';
+}
+
 export default function CurrencyPanel({
 	isOpen,
 	activeCharacter,
@@ -84,6 +97,11 @@ export default function CurrencyPanel({
 	const targetWallet = destinationWallets.find(
 		(wallet) => walletOptionId(wallet) === targetWalletId,
 	);
+	const availableDestinationWallets = sourceWallet
+		? destinationWallets.filter((wallet) =>
+				canTransferToWallet(sourceWallet, wallet),
+			)
+		: [];
 	const splitRecipientIds = Array.from(
 		new Set(
 			destinationWallets
@@ -111,7 +129,7 @@ export default function CurrencyPanel({
 		((isSplitTarget && splitRecipientIds.length > 0) ||
 			(!isSplitTarget &&
 				targetWallet !== undefined &&
-				sourceWalletId !== targetWalletId)) &&
+				canTransferToWallet(sourceWallet, targetWallet))) &&
 		amountCents !== null &&
 		amountCents > 0 &&
 		amountCents <= sourceBalanceCents &&
@@ -151,17 +169,18 @@ export default function CurrencyPanel({
 		);
 		const keepSplitTarget =
 			targetWalletId === SPLIT_OTHER_CHARACTERS && hasSplitRecipients;
-		const currentTarget = destinationWallets.find(
-			(wallet) =>
-				walletOptionId(wallet) === targetWalletId &&
-				walletOptionId(wallet) !== nextSourceId,
+		const availableTargets = nextSource
+			? destinationWallets.filter((wallet) =>
+					canTransferToWallet(nextSource, wallet),
+				)
+			: [];
+		const currentTarget = availableTargets.find(
+			(wallet) => walletOptionId(wallet) === targetWalletId,
 		);
 		const nextTarget = keepSplitTarget
 			? SPLIT_OTHER_CHARACTERS
 			: (currentTarget ??
-				destinationWallets.find(
-					(wallet) => walletOptionId(wallet) !== nextSourceId,
-				));
+				availableTargets[0]);
 
 		setSourceWalletId(nextSourceId);
 		setTargetWalletId(
@@ -228,12 +247,6 @@ export default function CurrencyPanel({
 						onChange={(event) => {
 							const nextSourceId = event.target.value;
 							setSourceWalletId(nextSourceId);
-							if (nextSourceId === targetWalletId) {
-								const nextTarget = destinationWallets.find(
-									(wallet) => walletOptionId(wallet) !== nextSourceId,
-								);
-								setTargetWalletId(nextTarget ? walletOptionId(nextTarget) : '');
-							}
 						}}
 					>
 						{sourceWallets.map((wallet) => (
@@ -288,13 +301,11 @@ export default function CurrencyPanel({
 						<option value={SPLIT_OTHER_CHARACTERS}>
 							平分給其他角色（{splitRecipientIds.length} 名）
 						</option>
-						{destinationWallets.map((wallet) => {
+						{availableDestinationWallets.map((wallet) => {
 							const id = walletOptionId(wallet);
 							return (
-								<option key={id} value={id} disabled={id === sourceWalletId}>
-									{id === sourceWalletId
-										? `${walletOptionLabel(wallet)}（與轉出戶口相同）`
-										: walletOptionLabel(wallet)}
+								<option key={id} value={id}>
+									{walletOptionLabel(wallet)}
 								</option>
 							);
 						})}

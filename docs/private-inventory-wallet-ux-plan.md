@@ -11,7 +11,7 @@
 - 背包頁目前以 `bagTab` 在公開／私人背包間切換，分類與操作入口分別位於 [`index.tsx`](../src/routes/_protected/campaigns/$campaignId/index.tsx)、[`InventoryToolbar.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/InventoryToolbar.tsx) 及 [`InventoryGrid.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/InventoryGrid.tsx)。
 - 物品以 `inventory_items.is_private` 表示秘密狀態；`CharacterPermission` 仍分別有公開／私人背包及錢包讀取、修改權限，見 [`types.ts`](../src/types.ts) 與 [`useCharacterPermissions.ts`](../src/hooks/useCharacterPermissions.ts)。
 - 角色錢包為 `characters.gp`／`private_gp`，營地箱只有 `campaigns.camp_chest_gp`。GP 欄位、精度及相容欄位背景見 [`currency-simplification-plan.md`](./currency-simplification-plan.md)。
-- DM 派發已有 `isPrivate` 請求欄位及營地箱強制公開的伺服器規則；現有 dialog 仍以公開／私人背包選項呈現，見 [`ItemDistributionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDistributionDialog.tsx)、[`dispatch-campaign-items/index.ts`](../supabase/functions/dispatch-campaign-items/index.ts) 及 [`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql)。
+- DM 派發沿用 `isPrivate` 請求欄位及營地箱強制公開的伺服器規則；dialog 以秘密物品 checkbox 設定狀態，見 [`ItemDistributionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDistributionDialog.tsx)、[`dispatch-campaign-items/index.ts`](../supabase/functions/dispatch-campaign-items/index.ts) 及 [`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql)。
 - 目前物品轉移的本機 fallback 會把轉移品改成公開；錢包轉帳 UI 允許選來源與目的錢包。兩者都須與新規則同步，不能只改遠端 UI。相關程式為 [`useInventoryActions.ts`](../src/hooks/useInventoryActions.ts)、[`inventoryTransactions.ts`](../src/lib/inventoryTransactions.ts) 及 [`CurrencyPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/CurrencyPanel.tsx)。
 - **安全阻擋項：**歷史 migration 中的 `inventory_items` RLS 只檢查戰役成員資格，GP migration 曾授予 authenticated 直接讀取 `gp`、`private_gp` 的欄位權限。階段一已新增增量安全 migration，但尚未套用或在隔離環境驗收；不能把 repo SQL 或 UI 過濾視為有效網路層隔離。正式與隔離專案的有效 grants、RLS、REST、RPC 及 Realtime 狀態仍須由維護者實測確認。
 
@@ -154,25 +154,82 @@
 - [x] 新增增量 migration 與 SQL 合約測試；未改寫既有 migration。
 - [ ] 尚未在隔離 PostgreSQL/Supabase 套用 migration 或執行 SQL 合約測試；目前環境沒有 `psql`、Supabase CLI 或 Docker。
 - [ ] 尚未以匿名、不同 ACL 使用者及 DM 對 REST、RPC、Realtime 做真實網路驗收，也未驗證競爭交易與失敗回滾。
-- [ ] 階段二尚未更新 `useCampaignSync.ts` 等前端查詢；新欄位邊界會使舊的角色 `select('*')`／完整角色 Realtime 流程不再可用，因此**不可單獨部署此階段的 migration**。部署前須完成階段二並在隔離環境驗收；正式環境仍未部署。
+- [x] 階段二已完成本機前端讀取／同步改造；仍須先在隔離環境套用 migration 並驗收，**不可單獨部署 migration 或前端改動**。正式環境仍未部署。
+
+## 階段二執行紀錄（2026-10-31）
+
+### 已完成
+
+- [`supabase.ts`](../src/lib/supabase.ts) 新增明確的 `CHARACTER_PROFILE_SELECT`、角色安全投影轉換及 `loadCampaignCharacters`。角色基本資料與 `get_campaign_character_wallets` 分開讀取；錢包 RPC 只使用登入者實際 ACL 回傳的餘額，未回傳的錢包在前端固定為 0，不從前端 DM 預覽角色推導讀取權。
+- [`useCampaignSync.ts`](../src/hooks/useCampaignSync.ts) 移除角色 `select('*')` 與完整角色 Postgres Changes row 監聽；初始載入及安全 Broadcast 通知均重新讀取安全角色投影、授權錢包與物品。角色資料 upsert 僅送出非錢包欄位；物品仍使用明確欄位清單。
+- [`settings/index.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/index.tsx) 的角色初始載入改用安全讀取 helper；新增角色只回傳安全角色欄位，不再以 `select('*')` 讀取餘額。
+- [`ShopTransactionsPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/shops/-parts/ShopTransactionsPanel.tsx) 移除直接讀取 `characters.gp`／`private_gp`，改呼叫授權錢包 RPC；[`campaignShops.ts`](../src/lib/campaignShops.ts) 嚴格驗證安全 Broadcast 的操作種類。
+- 階段一 migration 會拒絕角色錢包欄位直接寫入，但目前沒有 DM 直接設定角色餘額的授權 RPC。因此遠端角色錢包「直接設定」改為明確提示並拒絕；轉帳仍走既有交易 RPC，營地箱餘額仍寫入 campaigns。訪客／離線角色錢包編輯保留本機行為。部署前仍需決定是否新增受權限驗證的 DM 餘額設定 RPC。
+- 更新 E2E Supabase mock，依呼叫者角色／擁有者與可讀 ACL 合約回傳錢包 RPC 結果；調整遠端直接設定錢包的測試預期。測試替身不證明實際資料庫授權正確。
+
+### 驗證與限制
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`
+- [x] `npm run test:e2e -- tests/e2e/phase-3-inventory.spec.ts tests/e2e/campaign-shop-purchase.spec.ts tests/e2e/phase-2-settings.spec.ts`（42 項通過；均使用 Playwright/Supabase mock）
+- [ ] 尚未在隔離 Supabase 驗證欄位 grants、`get_campaign_character_wallets`、REST 與安全 Broadcast；目前改動依賴階段一 migration 已套用。
+- [x] 階段三與階段四已完成本機 UI、轉帳方向、DM 派發及 fallback 改造；執行部署前仍須完成階段五與隔離環境驗收，並決定遠端 DM 直接設定角色錢包的 RPC／UI 行為。
+
+## 階段三執行紀錄（2026-10-31）
+
+### 已完成
+
+- [`index.tsx`](../src/routes/_protected/campaigns/$campaignId/index.tsx) 移除背包分頁狀態與分頁篩選；公開／秘密物品依各自讀取 ACL 合併呈現，角色操作權依物品 `isPrivate` 決定。負重、同調數及估值只使用可讀物品與可讀錢包。
+- [`InventoryToolbar.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/InventoryToolbar.tsx) 移除公開／私人切換，保留搜尋、排序及三種檢視模式；[`InventoryGrid.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/InventoryGrid.tsx) 在各分類內分開呈現公開物品及紅色秘密外框，使用 `EyeOff` 與主題語意 token `private`／`private-surface`。
+- [`CharacterStatusBar.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/CharacterStatusBar.tsx) 同處顯示公開與私人 GP，分別按錢包讀取權限遮罩；無私人讀取權時固定顯示鎖定提示，不顯示實際金額。營地箱只顯示公開錢包。
+- [`CurrencyPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/CurrencyPanel.tsx) 依來源錢包動態篩選目的戶口：公開來源只列公開目的端，私人來源可列公開／私人目的端，營地箱來源只列角色公開戶口；[`useInventoryActions.ts`](../src/hooks/useInventoryActions.ts) 同步拒絕公開轉私人。
+- [`ItemTooltip.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemTooltip.tsx) 移除公開物品改回秘密的操作，秘密物品只能呼叫 `make_inventory_item_public` RPC 公開；秘密物品不可選營地箱。訪客／離線轉移保留秘密狀態，並拒絕秘密物品直接移入營地箱。
+- 為三套主題加入 `private` 前景與 `private-surface` 表面語意色彩，並更新 [`theme-system-plan.md`](./theme-system-plan.md) 說明此 token 標記秘密語境、不同於危險操作的 `destructive`。
+- 更新 [`phase-3-inventory.spec.ts`](../tests/e2e/phase-3-inventory.spec.ts) 與 [`supabase-mock.ts`](../tests/e2e/supabase-mock.ts)，覆蓋合併背包、無權限遮罩、公開化 RPC 與錢包目的端方向。
+
+### 驗證與限制
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`（含語意色彩政策檢查）
+- [x] `npm run build`
+- [x] `npm run test:e2e -- tests/e2e/phase-3-inventory.spec.ts`（15 項通過；使用 Playwright／Supabase mock）
+- [ ] 階段三 E2E 不代表真實 REST、RLS、RPC、Realtime 或資料庫交易驗收；隔離環境仍須套用 migration 並完成階段五驗收。正式環境未部署。
+- [x] DM 派發秘密 checkbox、營地箱強制公開及整批伺服器驗證已於階段四完成。
+
+## 階段四執行紀錄（2026-10-31）
+
+### 已完成
+
+- [`ItemDistributionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDistributionDialog.tsx) 將公開／私人背包選擇改為預設未勾選的「設為秘密物品」checkbox；選擇營地儲物箱時會清除並停用 checkbox，送出前及 payload 仍強制 `isPrivate = false`。
+- 檢視 [`dispatch-campaign-items/index.ts`](../supabase/functions/dispatch-campaign-items/index.ts) 與既有派發交易 RPC：Edge Function 驗證 `isPrivate` 必須為 boolean 並拒絕營地箱秘密派發；RPC 再驗證 DM 身分、戰役與接收角色、營地箱公開限制及整批資料，維持單一交易、批次確認與 request ID 防重送。既有伺服器邊界已符合要求，未改寫既有 migration 或逐筆直接寫入。
+- 檢視 [`useInventoryActions.ts`](../src/hooks/useInventoryActions.ts) 的本機 fallback：秘密物品公開化僅能單向進行；角色間移轉保留 `isPrivate`，私人物品直接移入營地箱會被拒絕；堆疊合併由 [`canStackItems`](../src/types.ts) 區分公開／秘密物品。GP fallback 同步限制公開來源不得轉入私人錢包、營地箱只有公開錢包，並驗證相同戶口、來源餘額及目標上限。
+- 更新 [`item-distribution.spec.ts`](../tests/e2e/item-distribution.spec.ts)，覆蓋一般角色秘密派發及選擇營地箱後取消秘密狀態、停用選項並以公開狀態提交。
+
+### 驗證與限制
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`
+- [x] `npm run test:e2e -- tests/e2e/item-distribution.spec.ts`（10 項通過；使用 Playwright／Supabase mock）
+- [ ] 合併執行派發與階段三回歸測試時 24/25 項通過；階段三「DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳」在既有選取邊框顏色 assertion 失敗，與本階段派發改動無關，未在此擴大修改。
+- [ ] Playwright／Supabase mock 只驗證前端流程與 mock 合約，不代表 Edge Function、RPC、RLS、Realtime 或資料庫交易已在真實隔離環境驗收；正式環境未部署。
 
 ## 驗收清單
 
 ### 使用者介面
 
-- [ ] 公開與秘密物品不再以兩個分頁切換；各自出現在正確分類與顯示模式。
-- [ ] 私人外框與私人 GP 使用紅色主色調及 `EyeOff` 代表 icon，不以綠色／鎖頭作為 private 語境的主視覺。
-- [ ] 秘密物品有明確的整體外框語境；無閱讀權限者看不到秘密物品、數量、重量、搜尋結果或詳情。
-- [ ] 錢包摘要以公開 GP 加私人 GP 呈現；私人部分使用 `text-private`，無權限時不透露實際餘額。
-- [ ] 營地箱不顯示私人區塊／私人錢包，也不能由 UI 派發私人物品或收取秘密物品。
-- [ ] DM 派發一般角色可勾選秘密狀態；選營地箱時強制公開。
+- [x] 公開與秘密物品不再以兩個分頁切換；各自出現在正確分類與顯示模式。
+- [x] 私人外框與私人 GP 使用紅色主色調及 `EyeOff` 代表 icon，不以綠色／鎖頭作為 private 語境的主視覺。
+- [x] 秘密物品有明確的整體外框語境；前端對無閱讀權限者不呈現秘密物品、數量、重量、搜尋結果或詳情。真實 REST 隔離仍待驗收。
+- [x] 錢包摘要以公開 GP 加私人 GP 呈現；私人部分使用 `text-private`，無權限時不透露實際餘額。
+- [x] 營地箱不顯示私人區塊／私人錢包；派發 UI 固定公開且不能接收秘密物品。
+- [x] DM 派發一般角色可勾選秘密狀態；選營地箱時清除並停用選項，提交值強制公開。
 
 ### 交易規則
 
-- [ ] 秘密物品轉至其他角色後仍是秘密；公開物品轉移後仍公開；UI 不再要求選擇接收背包。
-- [ ] 私人物品不能直接轉入營地箱；公開後可依既有來源權限轉入。
-- [ ] 秘密物品可公開，公開物品不可再轉回秘密；UI、本機 fallback、REST/RPC 均一致。
-- [ ] 私人錢包可轉至角色公開／私人錢包；公開錢包只可轉至公開錢包；任何角色錢包均可轉至營地箱公開錢包，但營地箱來源只可用公開錢包。
+- [x] 秘密物品轉至其他角色後仍是秘密；公開物品轉移後仍公開；UI 不再要求選擇接收背包。
+- [x] 私人物品不能直接轉入營地箱；公開後可依既有來源權限轉入。
+- [x] 秘密物品可公開，公開物品不可再轉回秘密；前端透過公開化 RPC、本機 fallback 維持單向規則。資料庫端仍待隔離環境驗收。
+- [x] 前端依方向篩選錢包目的端；資料庫 `transfer_campaign_currency` 仍須完成真實 RPC 驗收。
 - [ ] 私人 GP 可轉為公開；公開 GP 不能轉回私人。來源不足、同一戶口、目標上限、跨 campaign 或缺少來源修改權皆被拒絕。
 
 ### 網路隔離

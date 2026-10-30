@@ -1,4 +1,4 @@
-import { Coins, Lock, Scale, Tent } from 'lucide-react';
+import { Coins, EyeOff, Scale, Tent } from 'lucide-react';
 import { Button, Checkbox } from '@/components/ui';
 import { CharacterAvatar } from '@/components/CharacterAvatar';
 import {
@@ -26,11 +26,16 @@ export interface CharacterStatusBarProps {
 	countCoinWeight: boolean;
 	setCountCoinWeight: (count: boolean) => void;
 	coinWeight: number;
-	displayedGp: number;
-	isDisplayingPrivateWallet: boolean;
-	canReadDisplayedWallet: boolean;
-	canEditDisplayedWallet: boolean;
+	publicGp: number;
+	privateGp: number;
+	canReadPublicWallet: boolean;
+	canReadPrivateWallet: boolean;
+	canEditAnyWallet: boolean;
 	onOpenCurrencyPanel: () => void;
+}
+
+function formatGp(value: number): string {
+	return value.toFixed(2).replace(/\.?0+$/, '');
 }
 
 export default function CharacterStatusBar({
@@ -48,10 +53,11 @@ export default function CharacterStatusBar({
 	countCoinWeight,
 	setCountCoinWeight,
 	coinWeight,
-	displayedGp,
-	isDisplayingPrivateWallet,
-	canReadDisplayedWallet,
-	canEditDisplayedWallet,
+	publicGp,
+	privateGp,
+	canReadPublicWallet,
+	canReadPrivateWallet,
+	canEditAnyWallet,
 	onOpenCurrencyPanel,
 }: CharacterStatusBarProps) {
 	if (placement === 'characters') {
@@ -218,21 +224,19 @@ export default function CharacterStatusBar({
 			<div className='lg:col-span-6 flex flex-col justify-between border-t lg:border-t-0 border-border pt-3 lg:pt-0'>
 				<div className='flex items-center justify-between mb-1.5'>
 					<span className='text-xs text-muted-foreground flex items-center gap-1'>
-						{isDisplayingPrivateWallet ? (
-							<Lock className='w-3.5 h-3.5 text-muted-foreground' />
-						) : (
+						{isCampChestActive ? (
 							<Coins className='w-3.5 h-3.5 text-money' />
+						) : (
+							<EyeOff className='w-3.5 h-3.5 text-private' />
 						)}
 						<span className='text-highlight'>
 							{isCampChestActive
 								? '營地公庫錢包'
-								: isDisplayingPrivateWallet
-									? '私人暗袋錢包'
-									: '角色公開錢包'}
+								: '公開與私人錢包'}
 						</span>
 					</span>
 					<div className='flex items-center gap-1.5'>
-						{canEditDisplayedWallet && (
+						{canEditAnyWallet && (
 							<Button
 								type='button'
 								variant='secondary'
@@ -246,7 +250,7 @@ export default function CharacterStatusBar({
 					</div>
 				</div>
 
-				{canEditDisplayedWallet ? (
+				{canEditAnyWallet ? (
 					<Button
 						type='button'
 						variant='ghost'
@@ -255,8 +259,16 @@ export default function CharacterStatusBar({
 						onClick={onOpenCurrencyPanel}
 						aria-label='GP 餘額，點擊開啟轉帳'
 					>
-						<div className='text-xs font-mono font-bold text-money'>
-							{canReadDisplayedWallet ? `${displayedGp} GP` : '🔒'}
+						<div className='flex flex-wrap items-center justify-center gap-1.5 text-xs font-mono font-bold text-money'>
+							<span>{canReadPublicWallet ? `${formatGp(publicGp)} GP` : '🔒'}</span>
+							{!isCampChestActive && (
+								<span className='inline-flex items-center gap-1 text-private'>
+									<EyeOff className='size-3' />
+									{canReadPrivateWallet
+										? `(+ ${formatGp(privateGp)} GP)`
+										: '(+ 🔒 私人錢包)'}
+								</span>
+							)}
 						</div>
 						<div className='text-[9px] opacity-80'>GP 餘額</div>
 					</Button>
@@ -265,10 +277,18 @@ export default function CharacterStatusBar({
 						data-testid='currency-summary-gp'
 						className='inline-flex flex-col items-center justify-center rounded-control px-3 py-2 text-sm'
 					>
-					<div className='text-xs font-mono font-bold text-money'>
-						{canReadDisplayedWallet ? `${displayedGp} GP` : '🔒'}
-					</div>
-					<div className='text-[9px] opacity-80'>GP 餘額</div>
+						<div className='flex flex-wrap items-center justify-center gap-1.5 text-xs font-mono font-bold text-money'>
+							<span>{canReadPublicWallet ? `${formatGp(publicGp)} GP` : '🔒'}</span>
+							{!isCampChestActive && (
+								<span className='inline-flex items-center gap-1 text-private'>
+									<EyeOff className='size-3' />
+									{canReadPrivateWallet
+										? `(+ ${formatGp(privateGp)} GP)`
+										: '(+ 🔒 私人錢包)'}
+								</span>
+							)}
+						</div>
+						<div className='text-[9px] opacity-80'>GP 餘額</div>
 					</div>
 				)}
 			</div>

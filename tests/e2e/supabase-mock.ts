@@ -988,6 +988,83 @@ export async function mockSupabase(
 		}
 
 		if (
+			url.pathname === '/rest/v1/rpc/get_campaign_character_wallets' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as {
+				p_campaign_id?: string;
+				p_character_ids?: string[] | null;
+			};
+			const isInventoryCampaign =
+				body.p_campaign_id === 'inventory-campaign';
+			const role = isInventoryCampaign
+				? campaignInventoryRole
+				: campaignSettingsRole;
+			const rows = isInventoryCampaign ? inventoryCharacters : campaignCharacters;
+			const requestedIds = Array.isArray(body.p_character_ids)
+				? new Set(body.p_character_ids)
+				: null;
+			const wallets = (options.blankCampaign ? [] : rows).flatMap((character) => {
+				if (
+					character.campaign_id !== body.p_campaign_id ||
+					(requestedIds && !requestedIds.has(character.id))
+				) {
+					return [];
+				}
+				const isDm = role === 'dm';
+				const isOwner = character.user_id === testUser.id;
+				const isDefaultPublicRead =
+					isInventoryCampaign || character.user_id !== testUser.id;
+				const walletAccess =
+					options.campaignShopWalletAccess ??
+					{ public: 1, private: 0 };
+				const canReadPublic =
+					isDm ||
+					isOwner ||
+					(isDefaultPublicRead && walletAccess.public >= 1);
+				const canReadPrivate =
+					isDm ||
+					isOwner ||
+					(!isInventoryCampaign && walletAccess.private >= 1);
+				const publicBalance = isInventoryCampaign
+					? character.id === 'inventory-character'
+						? (options.campaignInventoryWalletGp?.public ?? 20)
+						: character.id === 'inventory-target-character'
+							? (options.campaignInventoryTargetGp ?? 0)
+							: 0
+					: (options.campaignShopWalletGp ?? 0);
+				const privateBalance =
+					isInventoryCampaign && character.id === 'inventory-character'
+						? (options.campaignInventoryWalletGp?.private ?? 80)
+						: isInventoryCampaign
+							? 0
+							: (options.campaignShopWalletGp ?? 0);
+				return [
+					...(canReadPublic
+						? [
+								{
+									character_id: character.id,
+									wallet_type: 'public',
+									balance_gp: publicBalance,
+								},
+							]
+						: []),
+					...(canReadPrivate
+						? [
+								{
+									character_id: character.id,
+									wallet_type: 'private',
+									balance_gp: privateBalance,
+								},
+							]
+						: []),
+				];
+			});
+			await route.fulfill({ json: wallets });
+			return;
+		}
+
+		if (
 			url.pathname === '/rest/v1/rpc/transfer_campaign_currency' &&
 			method === 'POST'
 		) {
@@ -1017,6 +1094,19 @@ export async function mockSupabase(
 					recipientCount,
 				},
 			});
+			return;
+		}
+
+		if (
+			url.pathname === '/rest/v1/rpc/make_inventory_item_public' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as Record<string, unknown>;
+			campaignShopRpcRequests.push({
+				name: 'make_inventory_item_public',
+				body,
+			});
+			await route.fulfill({ json: null });
 			return;
 		}
 
@@ -1357,21 +1447,6 @@ export async function mockSupabase(
 			url.pathname === '/rest/v1/characters' &&
 			method === 'GET'
 		) {
-			if (url.searchParams.get('select') === 'id,gp,private_gp') {
-				const walletAmount = options.campaignShopWalletGp ?? 0;
-				await route.fulfill({
-					json: campaignCharacters
-						.filter((row) =>
-							url.searchParams.get('id')?.includes(row.id),
-						)
-						.map((row) => ({
-							id: row.id,
-							gp: walletAmount,
-							private_gp: walletAmount,
-						})),
-				});
-				return;
-			}
 			await route.fulfill({
 				json: options.blankCampaign
 					? []

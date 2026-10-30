@@ -88,7 +88,10 @@ const ORDER_SELECT =
 	'id,checkout_id,campaign_id,shop_id,shop_item_id,character_id,item_snapshot,shop_name_snapshot,unit_price_gp,quantity,total_price_gp,status,requires_approval,created_at,updated_at,reviewed_at,is_identified';
 
 type SecureChangeListener = {
-	onChange: (change: { rowId: string; action: string }) => void;
+	onChange: (change: {
+		rowId: string;
+		action: 'insert' | 'update' | 'delete';
+	}) => void;
 	onError: (error: Error) => void;
 };
 
@@ -99,7 +102,10 @@ const secureChangeChannels = new Map<
 
 export function subscribeCampaignSecureChanges(
 	campaignId: string,
-	onChange: (change: { rowId: string; action: string }) => void,
+	onChange: (change: {
+		rowId: string;
+		action: 'insert' | 'update' | 'delete';
+	}) => void,
 	onError: (error: Error) => void,
 ): () => void {
 	const listener = { onChange, onError };
@@ -122,7 +128,9 @@ export function subscribeCampaignSecureChanges(
 					!('row_id' in payload) ||
 					typeof payload.row_id !== 'string' ||
 					!('action' in payload) ||
-					typeof payload.action !== 'string'
+					(payload.action !== 'insert' &&
+						payload.action !== 'update' &&
+						payload.action !== 'delete')
 				) {
 					for (const registered of listeners) {
 						registered.onError(new Error('戰役安全同步通知格式無效。'));

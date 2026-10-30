@@ -30,6 +30,17 @@ async function callInventoryTransaction(
 	return data;
 }
 
+export async function makeInventoryItemPublic(
+	campaignId: string,
+	itemId: string,
+): Promise<void> {
+	const { error } = await requireSupabase().rpc('make_inventory_item_public', {
+		p_campaign_id: campaignId,
+		p_item_id: itemId,
+	});
+	if (error) throw error;
+}
+
 export function splitInventoryStack(
 	campaignId: string,
 	itemId: string,

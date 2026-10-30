@@ -1,9 +1,7 @@
 import {
 	ArrowUpDown,
-	Globe,
 	Grid3x3,
 	LayoutGrid,
-	Lock,
 	List,
 	Search,
 	Gem,
@@ -11,16 +9,11 @@ import {
 	Weight,
 	Boxes,
 } from 'lucide-react';
-import type { InventoryDisplayMode, InventoryItem } from '@/types';
+import type { InventoryDisplayMode } from '@/types';
 import { Button, Input } from '@/components/ui';
 
 export interface InventoryToolbarProps {
-	allCharacterItems: InventoryItem[];
-	canReadPublicBag: boolean;
-	canViewPrivateBag: boolean;
-	canEditCurrentBag: boolean;
-	currentBagTab: 'public' | 'private';
-	setBagTab: (tab: 'public' | 'private') => void;
+	canEditAnyBag: boolean;
 	searchQuery: string;
 	setSearchQuery: (query: string) => void;
 	displayMode: InventoryDisplayMode;
@@ -30,12 +23,7 @@ export interface InventoryToolbarProps {
 }
 
 export default function InventoryToolbar({
-	allCharacterItems,
-	canReadPublicBag,
-	canViewPrivateBag,
-	canEditCurrentBag,
-	currentBagTab,
-	setBagTab,
+	canEditAnyBag,
 	searchQuery,
 	setSearchQuery,
 	displayMode,
@@ -46,48 +34,6 @@ export default function InventoryToolbar({
 	return (
 		<div className='p-3.5 bg-background/90 border-b border-primary/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
 			<div className='space-y-2 w-full'>
-				<div className='flex flex-wrap items-center gap-2'>
-					<Button
-						type='button'
-						variant={currentBagTab === 'public' ? 'primary' : 'ghost'}
-						size='sm'
-						data-testid='inventory-bag-public'
-						aria-pressed={currentBagTab === 'public'}
-						onClick={() => setBagTab('public')}
-						prefixIcon={<Globe />}
-					>
-						<span>
-							公開行囊 (
-							{canReadPublicBag
-								? allCharacterItems.filter((item) => !item.isPrivate).length
-								: '🔒'}
-							)
-						</span>
-					</Button>
-
-					{canViewPrivateBag ? (
-						<Button
-							type='button'
-							variant={currentBagTab === 'private' ? 'primary' : 'ghost'}
-							size='sm'
-							data-testid='inventory-bag-private'
-							aria-pressed={currentBagTab === 'private'}
-							onClick={() => setBagTab('private')}
-							prefixIcon={<Lock />}
-						>
-							<span>
-								私人暗袋 (
-								{allCharacterItems.filter((item) => item.isPrivate).length})
-							</span>
-						</Button>
-					) : (
-						<span className='text-[11px] text-muted-foreground flex items-center gap-1 px-2'>
-							<Lock className='w-3 h-3' />
-							<span>私人暗袋已隱藏</span>
-						</span>
-					)}
-				</div>
-
 				<div className='flex items-center gap-2'>
 					<div className='relative flex-1'>
 						<Search className='w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2' />
@@ -200,7 +146,7 @@ export default function InventoryToolbar({
 							>
 								依重量排序
 							</Button>
-							{canEditCurrentBag && (
+							{canEditAnyBag && (
 								<>
 									<div className='border-t border-border my-1' />
 									<Button

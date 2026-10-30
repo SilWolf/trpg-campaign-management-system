@@ -18,7 +18,6 @@ import {
 	Package,
 	HelpCircle,
 	Sparkles,
-	Lock,
 	EyeOff,
 	Coins,
 } from 'lucide-react';
@@ -31,8 +30,8 @@ interface InventoryGridProps {
 	inspectedItemId: string | null;
 	totalItemsValueGp: number;
 	rarityConfig: Record<ItemBaseRarity, RarityStyle>;
-	canReadCurrentBag?: boolean;
-	canEditCurrentBag?: boolean;
+	canEditAnyBag: boolean;
+	canEditItem: (item: InventoryItem) => boolean;
 	isItemMatchingFilter: (item: InventoryItem | null | undefined) => boolean;
 	setSelectedItemId: (id: string) => void;
 	toggleEquip: (item: InventoryItem) => void;
@@ -77,27 +76,12 @@ export default function InventoryGrid({
 	inspectedItemId,
 	totalItemsValueGp,
 	rarityConfig,
-	canReadCurrentBag = true,
-	canEditCurrentBag = true,
+	canEditAnyBag,
+	canEditItem,
 	isItemMatchingFilter,
 	setSelectedItemId,
 	toggleEquip,
 }: InventoryGridProps) {
-	if (!canReadCurrentBag) {
-		return (
-			<div className='p-12 flex-1 flex flex-col items-center justify-center text-muted-foreground text-xs space-y-2 border-t border-border/60'>
-				<Lock className='w-8 h-8 text-muted-foreground mb-1' />
-				<p className='font-serif text-sm text-primary-foreground/80 font-bold'>
-					此背包已鎖定
-				</p>
-				<p className='text-muted-foreground text-center max-w-sm leading-relaxed'>
-					你沒有檢視此角色該背包的閱讀權限。若需存取，請至上方「戰役與角色設定」向角色擁有者或
-					DM 申請授權。
-				</p>
-			</div>
-		);
-	}
-
 	const groupedItems: Record<ItemSection, InventoryItem[]> = {
 		Equipment: [],
 		Consumable: [],
@@ -122,6 +106,16 @@ export default function InventoryGrid({
 				<div className='space-y-4'>
 					{SECTION_CONFIG.map((sec) => {
 						const sectionItems = groupedItems[sec.key];
+						const itemGroups = [
+							{
+								isPrivate: false,
+								items: sectionItems.filter((item) => !item.isPrivate),
+							},
+							{
+								isPrivate: true,
+								items: sectionItems.filter((item) => item.isPrivate),
+							},
+						].filter((group) => group.items.length > 0);
 						const IconComp = sec.icon;
 
 						return (
@@ -174,15 +168,35 @@ export default function InventoryGrid({
 									<div className='px-3 py-2.5 text-[11px] text-muted-foreground italic'>
 										尚無{sec.title.split(' ')[0]}
 									</div>
-								) : displayMode === 'grid6' || displayMode === 'grid' ? (
-									<div
-										className={
-											isSixPerRow
-												? 'p-2.5 grid grid-cols-6 gap-2'
-												: 'p-2 grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5'
-										}
-									>
-										{sectionItems.map((item) => {
+								) : (
+									<div className='space-y-2 p-2.5'>
+										{itemGroups.map((group) => (
+											<div
+												key={group.isPrivate ? 'private' : 'public'}
+												data-testid={
+													group.isPrivate ? 'inventory-private-group' : undefined
+												}
+												className={
+													group.isPrivate
+														? 'rounded-md border border-private/70 bg-private-surface/20 overflow-hidden'
+														: ''
+												}
+											>
+												{group.isPrivate && (
+													<div className='flex items-center gap-1.5 border-b border-private/50 bg-private-surface/40 px-2.5 py-1.5 text-[11px] font-semibold text-private'>
+														<EyeOff className='size-3.5' />
+														<span>秘密物品</span>
+													</div>
+												)}
+												{displayMode === 'grid6' || displayMode === 'grid' ? (
+													<div
+														className={
+															isSixPerRow
+																? 'p-2.5 grid grid-cols-6 gap-2'
+																: 'p-2 grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5'
+														}
+													>
+														{group.items.map((item) => {
 											const masked =
 												!item.isIdentified && viewMode === 'player';
 											const rStyle = masked
@@ -203,7 +217,7 @@ export default function InventoryGrid({
 													data-filter-match={matches}
 													onClick={() => setSelectedItemId(item.id)}
 													onDoubleClick={() => {
-														if (isEquippable && canEditCurrentBag) {
+														if (isEquippable && canEditItem(item)) {
 															toggleEquip(item);
 														}
 													}}
@@ -246,7 +260,10 @@ export default function InventoryGrid({
 
 													<div className='absolute top-1 right-1 flex items-center gap-0.5'>
 														{item.isPrivate && (
-															<Lock className='w-3 h-3 text-muted-foreground drop-shadow' />
+															<EyeOff
+																className='w-3 h-3 text-private drop-shadow'
+																aria-label='秘密物品'
+															/>
 														)}
 														{!item.isIdentified && viewMode === 'dm' && (
 															<EyeOff className='w-3 h-3 text-muted-foreground drop-shadow' />
@@ -260,11 +277,11 @@ export default function InventoryGrid({
 													)}
 												</Button>
 											);
-										})}
-									</div>
-								) : (
-									<div className='divide-y divide-border/70'>
-										{sectionItems.map((item) => {
+														})}
+													</div>
+												) : (
+													<div className='divide-y divide-border/70'>
+														{group.items.map((item) => {
 											const masked =
 												!item.isIdentified && viewMode === 'player';
 											const damage = getItemDamage(item);
@@ -287,7 +304,7 @@ export default function InventoryGrid({
 													data-filter-match={matches}
 													onClick={() => setSelectedItemId(item.id)}
 													onDoubleClick={() => {
-														if (isEquippable && canEditCurrentBag) {
+														if (isEquippable && canEditItem(item)) {
 															toggleEquip(item);
 														}
 													}}
@@ -334,7 +351,7 @@ export default function InventoryGrid({
 																	</span>
 																)}
 																{item.isPrivate && (
-																	<Lock className='w-3 h-3 text-muted-foreground' />
+																	<EyeOff className='w-3 h-3 text-private' />
 																)}
 																{!item.isIdentified && viewMode === 'dm' && (
 																	<EyeOff className='w-3 h-3 text-muted-foreground' />
@@ -365,7 +382,11 @@ export default function InventoryGrid({
 													</div>
 												</Button>
 											);
-										})}
+														})}
+													</div>
+												)}
+											</div>
+										))}
 									</div>
 								)}
 							</div>
@@ -377,7 +398,7 @@ export default function InventoryGrid({
 			<div className='pt-2.5 border-t border-border/80 flex items-center justify-between text-xs text-muted-foreground'>
 				<span>
 					共 <strong className='text-foreground'>{items.length}</strong> 項物品
-					{canEditCurrentBag
+					{canEditAnyBag
 						? '（雙擊「裝備」類別物品可快速穿脫）'
 						: '（唯讀模式）'}
 				</span>

@@ -25,6 +25,7 @@ import {
 	legacyWalletToGpCents,
 } from '@/lib/supabase';
 import {
+	makeInventoryItemPublic,
 	splitInventoryStack,
 	transferCampaignCurrency,
 	transferInventoryStack,
@@ -75,6 +76,8 @@ interface UseInventoryActionsProps {
 	isRemoteCampaign: boolean;
 	characters: Character[];
 	setCharacters: Dispatch<SetStateAction<Character[]>>;
+	canEditPublicBag: boolean;
+	canEditPrivateBag: boolean;
 	campChestCurrency: Record<CurrencyType, number>;
 	setCampChestCurrency: Dispatch<SetStateAction<Record<CurrencyType, number>>>;
 	items: InventoryItem[];
@@ -85,8 +88,6 @@ interface UseInventoryActionsProps {
 	setViewerCharId: Dispatch<SetStateAction<string>>;
 	activeCharacter: Character;
 	attunedCount: number;
-	currentBagTab: 'public' | 'private';
-	setBagTab: Dispatch<SetStateAction<'public' | 'private'>>;
 	setSelectedItemId: Dispatch<SetStateAction<string>>;
 	showToast: (message: string, kind?: ToastKind) => void;
 }
@@ -97,6 +98,8 @@ export function useInventoryActions({
 	isRemoteCampaign,
 	characters,
 	setCharacters,
+	canEditPublicBag,
+	canEditPrivateBag,
 	campChestCurrency,
 	setCampChestCurrency,
 	items,
@@ -107,8 +110,6 @@ export function useInventoryActions({
 	setViewerCharId,
 	activeCharacter,
 	attunedCount,
-	currentBagTab,
-	setBagTab,
 	setSelectedItemId,
 	showToast,
 }: UseInventoryActionsProps) {
@@ -166,18 +167,28 @@ export function useInventoryActions({
 		showToast(`📝 已儲存「${item.name}」的玩家備註`);
 	};
 
-	const togglePrivateItem = (item: InventoryItem) => {
-		const targetPrivateState = !item.isPrivate;
+	const makeItemPublic = (item: InventoryItem) => {
+		if (!item.isPrivate) {
+			showToast('公開物品無法再次設為秘密。', 'warning');
+			return;
+		}
+		if (isRemoteCampaign) {
+			void makeInventoryItemPublic(campaignId, item.id)
+				.then(() => showToast(`已將「${item.name}」公開至共用背包。`))
+				.catch((error: unknown) =>
+					showToast(
+						error instanceof Error ? error.message : '公開物品失敗。',
+						'error',
+					),
+				);
+			return;
+		}
 		setItems((prev) =>
 			prev.map((i) =>
-				i.id === item.id ? { ...i, isPrivate: targetPrivateState } : i,
+				i.id === item.id && i.isPrivate ? { ...i, isPrivate: false } : i,
 			),
 		);
-		showToast(
-			targetPrivateState
-				? `🔒 已將「${item.name}」藏入私人暗袋（其他玩家不可見）`
-				: `🌐 已將「${item.name}」移回公開行囊`,
-		);
+		showToast(`已將「${item.name}」公開至共用背包。`);
 	};
 
 	const adjustCharges = (item: InventoryItem, delta: number) => {
@@ -241,6 +252,10 @@ export function useInventoryActions({
 		transferQty?: number,
 	) => {
 		if (targetCharId === item.ownerId) return;
+		if (targetCharId === CAMP_CHEST_ID && item.isPrivate) {
+			showToast('秘密物品必須先公開，才能移入營地儲物箱。', 'warning');
+			return;
+		}
 
 		const qty = Math.max(
 			1,
@@ -276,7 +291,7 @@ export function useInventoryActions({
 			quantity: qty,
 			equipped: false,
 			attuned: false,
-			isPrivate: false,
+			isPrivate: Boolean(item.isPrivate),
 		};
 
 		setItems((prev) => {
@@ -364,9 +379,15 @@ export function useInventoryActions({
 		setItems((prev) => {
 			const others = prev.filter((i) => i.ownerId !== activeCharId);
 			const currentOwnerItems = prev.filter((i) => i.ownerId === activeCharId);
+			const readOnlyItems = currentOwnerItems.filter((item) =>
+				item.isPrivate ? !canEditPrivateBag : !canEditPublicBag,
+			);
+			const editableItems = currentOwnerItems.filter((item) =>
+				item.isPrivate ? canEditPrivateBag : canEditPublicBag,
+			);
 			const consolidated: InventoryItem[] = [];
 
-			currentOwnerItems.forEach((item) => {
+			editableItems.forEach((item) => {
 				const existing = consolidated.find((target) =>
 					canStackItems(target, item),
 				);
@@ -374,7 +395,7 @@ export function useInventoryActions({
 				else consolidated.push({ ...item });
 			});
 
-			return [...others, ...consolidated];
+			return [...others, ...readOnlyItems, ...consolidated];
 		});
 		showToast('📦 已成功將背包內所有同名同詞條的物品自動合併疊加！');
 	};
@@ -429,6 +450,13 @@ export function useInventoryActions({
 				const character = characters.find((entry) => entry.id === characterId);
 				if (!character || !['public', 'private'].includes(walletType)) {
 					showToast('找不到要修改的角色戶口。', 'error');
+					return false;
+				}
+				if (isRemoteCampaign) {
+					showToast(
+						'遠端角色錢包目前只能透過轉帳異動；直接設定需先完成授權管理服務。',
+						'warning',
+					);
 					return false;
 				}
 				setCharacters((previous) =>
@@ -502,9 +530,10 @@ export function useInventoryActions({
 			(sourceCharacterId === CAMP_CHEST_ID && sourceWallet === 'private') ||
 			((targetCharacterId === CAMP_CHEST_ID ||
 				targetCharacterId === null) &&
-				targetWallet === 'private')
+				targetWallet === 'private') ||
+			(sourceWallet === 'public' && targetWallet === 'private')
 		) {
-			showToast('平分轉帳與營地公庫只支援公開錢包。', 'warning');
+			showToast('公開錢包與營地公庫只能轉入公開錢包。', 'warning');
 			return false;
 		}
 		if (targetCharacterId === null && splitRecipients.length === 0) {
@@ -754,7 +783,7 @@ export function useInventoryActions({
 		setEditingItemId(null);
 		setNewItemForm({
 			...createDefaultItemDefinitionForm(),
-			isPrivate: currentBagTab === 'private',
+			isPrivate: false,
 		});
 		setIsHomebrewModalOpen(true);
 	};
@@ -849,7 +878,6 @@ export function useInventoryActions({
 		};
 
 		setItems((prev) => [...prev, createdItem]);
-		setBagTab(targetPrivate ? 'private' : 'public');
 		setSelectedItemId(createdItem.id);
 		setIsHomebrewModalOpen(false);
 		showToast(
@@ -862,7 +890,7 @@ export function useInventoryActions({
 		toggleAttune,
 		toggleIdentify,
 		updatePlayerNotes,
-		togglePrivateItem,
+		makeItemPublic,
 		adjustCharges,
 		consumeOrSplitStack,
 		transferItemToCharacter,

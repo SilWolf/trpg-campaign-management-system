@@ -23,6 +23,8 @@
 	--success-foreground: #d1fae5;
 	--destructive: #7f1d1d;
 	--destructive-foreground: #fee2e2;
+	--private: #fca5a5;
+	--private-surface: #450a0a;
 	--warning: #b45309;
 	--warning-foreground: #fffbeb;
 	--info: #0369a1;
@@ -94,6 +96,8 @@
 	--success-foreground: #f0fdf4;
 	--destructive: #991b1b;
 	--destructive-foreground: #fef2f2;
+	--private: #991b1b;
+	--private-surface: #fee2e2;
 	--warning: #92400e;
 	--warning-foreground: #fffbeb;
 	--info: #075985;
@@ -168,6 +172,8 @@
 	--success-foreground: #f0fdf4;
 	--destructive: #991b1b;
 	--destructive-foreground: #fef2f2;
+	--private: #7f1d1d;
+	--private-surface: #fef2f2;
 	--warning: #92400e;
 	--warning-foreground: #fffbeb;
 	--info: #075985;
@@ -307,6 +313,8 @@
 	--color-success-foreground: var(--success-foreground);
 	--color-destructive: var(--destructive);
 	--color-destructive-foreground: var(--destructive-foreground);
+	--color-private: var(--private);
+	--color-private-surface: var(--private-surface);
 	--color-warning: var(--warning);
 	--color-warning-foreground: var(--warning-foreground);
 	--color-info: var(--info);

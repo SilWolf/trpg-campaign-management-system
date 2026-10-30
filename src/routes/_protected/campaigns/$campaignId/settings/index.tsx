@@ -4,9 +4,11 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useConfirm, useToast } from '@/contexts/FeedbackContext';
 import {
 	supabase,
-	fromDbCharacter,
+	loadCampaignCharacters,
+	fromDbCharacterProfile,
 	fromDbPermission,
-	toDbCharacter,
+	toDbCharacterProfile,
+	CHARACTER_PROFILE_SELECT,
 } from '@/lib/supabase';
 import {
 	DEFAULT_AVATAR_REFERENCE,
@@ -127,22 +129,19 @@ function CampaignSettingsPage() {
 			membersList.sort((a, b) => orderWeight[a.type] - orderWeight[b.type]);
 			setAllMembers(membersList);
 
-			const [{ data: charData }, { data: permData }] = await Promise.all([
-				supabase.from('characters').select('*').eq('campaign_id', campaignId),
+			const [characters, { data: permData }] = await Promise.all([
+				loadCampaignCharacters(campaignId),
 				supabase
 					.from('character_permissions')
 					.select('*')
 					.eq('campaign_id', campaignId),
 			]);
 
-			if (charData) {
-				const characters = charData.map(fromDbCharacter);
-				setCampaignCharacters(characters);
-				setActiveCharacterId(
-					characters.find((character) => character.id !== CAMP_CHEST_ID)?.id ??
-						'',
-				);
-			}
+			setCampaignCharacters(characters);
+			setActiveCharacterId(
+				characters.find((character) => character.id !== CAMP_CHEST_ID)?.id ??
+					'',
+			);
 
 			if (permData) {
 				setAllPermissions(
@@ -754,12 +753,12 @@ function CampaignSettingsPage() {
 		try {
 			const { data, error } = await supabase
 				.from('characters')
-				.insert(toDbCharacter(character))
-				.select('*')
+				.insert(toDbCharacterProfile(character))
+				.select(CHARACTER_PROFILE_SELECT)
 				.single();
 			if (error) throw error;
 
-			const createdCharacter = fromDbCharacter(data);
+			const createdCharacter = fromDbCharacterProfile(data);
 			setCampaignCharacters((previous) => [...previous, createdCharacter]);
 			setActiveTab('characters');
 			setActiveCharacterId(createdCharacter.id);
