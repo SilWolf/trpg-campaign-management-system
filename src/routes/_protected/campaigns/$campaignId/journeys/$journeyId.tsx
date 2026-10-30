@@ -427,16 +427,16 @@ function CampaignJourneyDetails() {
 			{!roleLoading && isDm && (
 				<section
 					data-testid='journey-dm-note'
-					className='border-t border-primary/40 bg-primary/10 p-4 sm:p-6'
+					className='border-t border-dm/50 bg-dm/10 p-4 sm:p-6'
 				>
 					<div className='flex flex-wrap items-center justify-between gap-3'>
-						<h2 className='font-serif text-xl font-bold text-primary-foreground'>
+						<h2 className='font-serif text-xl font-bold text-dm'>
 							DM 專屬筆記
 						</h2>
 						{currentDmNoteState.status === 'ready' && !isEditingDmNote && (
 							<Button
 								type='button'
-								variant='secondary'
+								variant='secondary-dm'
 								onClick={() => {
 									setDmNoteDraft(currentDmNoteState.note?.content ?? '');
 									setIsEditingDmNote(true);
@@ -460,7 +460,7 @@ function CampaignJourneyDetails() {
 							</p>
 							<Button
 								type='button'
-								variant='secondary'
+								variant='secondary-dm'
 								onClick={() =>
 									setDmNoteReloadVersion((version) => version + 1)
 								}
@@ -493,11 +493,12 @@ function CampaignJourneyDetails() {
 								campaignId={campaignId}
 								journeyId={journey.id}
 								onInsert={insertDmNoteImage}
+								buttonVariant='secondary-dm'
 							/>
 							<div className='flex flex-wrap justify-end gap-2'>
 								<Button
 									type='button'
-									variant='secondary'
+									variant='secondary-dm'
 									onClick={() => {
 										setDmNoteDraft(
 											currentDmNoteState.note?.content ?? '',
@@ -509,6 +510,7 @@ function CampaignJourneyDetails() {
 								</Button>
 								<Button
 									type='button'
+									variant='primary-dm'
 									loading={isSavingDmNote}
 									onClick={() => void handleSaveDmNote()}
 									data-testid='journey-dm-note-save'

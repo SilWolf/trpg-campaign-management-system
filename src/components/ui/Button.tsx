@@ -10,7 +10,10 @@ export type ButtonVariant =
 	| 'secondary-active'
 	| 'destructive'
 	| 'danger'
-	| 'ghost';
+	| 'ghost'
+	| 'primary-dm'
+	| 'secondary-dm'
+	| 'ghost-dm';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonStyleProps {
@@ -48,6 +51,12 @@ const variantClasses: Record<ButtonVariant, string> = {
 		'border border-destructive/70 bg-destructive/80 text-destructive-foreground hover:bg-destructive',
 	ghost:
 		'border border-transparent bg-transparent text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+	'primary-dm':
+		'border border-dm/70 bg-dm text-dm-foreground hover:bg-dm/90',
+	'secondary-dm':
+		'border border-dm/50 bg-dm/10 text-dm hover:border-dm hover:bg-dm/20',
+	'ghost-dm':
+		'border border-transparent bg-transparent text-dm hover:bg-dm/10',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

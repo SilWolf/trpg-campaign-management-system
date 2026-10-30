@@ -150,54 +150,34 @@ test('DM 覆寫商店來源圖片採 campaign 路徑並只保存 128 參照', as
 	);
 });
 
-test('DM 可將戰役圖片上傳到背包物品並同步其 campaign 參照', async ({
+test('DM 可切換預覽玩家並依其權限顯示背包介面', async ({
 	page,
 }) => {
 	await mockSupabase(page, { campaignInventoryRole: 'dm' });
 	await seedAuthenticatedSession(page);
-	const { uploadedPaths } = await mockImageStorage(page);
-	let insertedItems: Record<string, unknown>[] | null = null;
-	await page.route(
-		'http://127.0.0.1:54321/rest/v1/inventory_items**',
-		async (route) => {
-			if (route.request().method() === 'POST') {
-				const payload = route.request().postDataJSON() as unknown;
-				insertedItems = Array.isArray(payload)
-					? (payload as Record<string, unknown>[])
-					: [payload as Record<string, unknown>];
-			}
-			await route.fallback();
-		},
-	);
 
 	await page.goto('/campaigns/inventory-campaign');
-	await page.getByTestId('inventory-create-item').click();
-	await page
-		.getByTestId('homebrew-item-name')
-		.fill('戰役專屬插圖護符');
-	await page.getByLabel('選擇要上傳的物品圖片').setInputFiles({
-		name: 'inventory-item.png',
-		mimeType: 'image/png',
-		buffer: await createPngBuffer(page),
-	});
-	await expect(
-		page.getByRole('status').filter({ hasText: '128 與 512 WebP 圖片已上傳' }),
-	).toBeVisible();
-	expect(uploadedPaths).toHaveLength(2);
-	expect(
-		uploadedPaths.every((path) =>
-			path.includes('/campaign-assets/inventory-campaign/items/'),
-		),
-	).toBe(true);
+	const viewSelector = page.getByTestId('inventory-view-selector');
+	await expect(viewSelector).toHaveValue('dm');
+	await expect(viewSelector.locator('option')).toHaveText([
+		'DM',
+		'其他玩家',
+		'移轉目標',
+	]);
+	await expect(page.getByTestId('inventory-create-item')).toHaveCount(0);
+	await expect(page.getByTestId('dm-operation-bar')).toBeVisible();
 
-	await page.getByRole('button', { name: '鑄造並放入背包' }).click();
-	await expect(
-		page.getByRole('heading', { name: '戰役專屬插圖護符' }),
-	).toBeVisible();
-	await expect.poll(() => insertedItems).not.toBeNull();
-	expect(insertedItems?.[0].icon).toMatch(
-		/^storage:campaign-assets\/inventory-campaign\/items\/[0-9a-f-]+\/128[.]webp$/,
-	);
+	await viewSelector.selectOption('transfer-player-id');
+	await expect(page.getByTestId('dm-operation-bar')).toHaveCount(0);
+	await page
+		.getByTestId('inventory-character-inventory-character')
+		.first()
+		.click();
+	await expect(page.getByTestId('inventory-bag-private')).toHaveCount(0);
+
+	await viewSelector.selectOption('dm');
+	await expect(page.getByTestId('dm-operation-bar')).toBeVisible();
+	await expect(page.getByTestId('inventory-bag-private')).toBeVisible();
 });
 
 test('鍛造圖片變體失敗時保留舊參照並回報不可清理的資產路徑', async ({

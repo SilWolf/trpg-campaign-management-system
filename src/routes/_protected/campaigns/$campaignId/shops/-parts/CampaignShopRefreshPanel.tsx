@@ -469,10 +469,10 @@ export function CampaignShopRefreshPanel({
 
 	return (
 		<section
-			className='rounded-lg border border-border/70 bg-card/50 p-4'
+			className='rounded-lg border border-dm/50 bg-card/50 p-4'
 			data-testid='shop-refresh-panel'
 		>
-			<div className='flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4'>
+			<div className='flex flex-wrap items-start justify-between gap-3 border-b border-dm/40 pb-4'>
 				<div>
 					<h2 className='font-serif text-xl font-bold text-foreground'>
 						店舖刷新政策
@@ -562,7 +562,7 @@ export function CampaignShopRefreshPanel({
 												</p>
 												<Button
 													type='button'
-													variant='ghost'
+													variant='destructive'
 													size='sm'
 													aria-label={`移除規則 ${ruleIndex + 1} 的候選 ${candidateIndex + 1}`}
 													onClick={() =>
@@ -719,7 +719,7 @@ export function CampaignShopRefreshPanel({
 								)}
 								<Button
 									type='button'
-									variant='secondary'
+									variant='secondary-dm'
 									data-testid={`refresh-add-candidate-${ruleIndex}`}
 									onClick={() => addCandidate(ruleIndex)}
 									disabled={isLoadingCatalogs}
@@ -873,7 +873,7 @@ export function CampaignShopRefreshPanel({
 
 			<Button
 				type='button'
-				variant='secondary'
+				variant='secondary-dm'
 				onClick={() =>
 					updatePolicy({ ...policy, rules: [...policy.rules, createRule()] })
 				}
@@ -892,7 +892,7 @@ export function CampaignShopRefreshPanel({
 				<div className='flex flex-wrap items-center justify-end gap-2'>
 					<Button
 						type='button'
-						variant='secondary'
+						variant='secondary-dm'
 						disabled={isSaving || isLoadingCatalogs || !isPolicyDirty}
 						onClick={() => void savePolicy()}
 						prefixIcon={<Check />}
@@ -901,6 +901,7 @@ export function CampaignShopRefreshPanel({
 					</Button>
 					<Button
 						type='button'
+						variant='primary-dm'
 						disabled={
 							isGenerating || isSaving || isPolicyDirty || isLoadingCatalogs
 						}
@@ -920,7 +921,7 @@ export function CampaignShopRefreshPanel({
 				onCancel={(event) => {
 					if (isGenerating || isApplying) event.preventDefault();
 				}}
-				className='m-auto max-h-[90dvh] w-[min(48rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-primary/70 bg-background p-0 text-foreground shadow-2xl backdrop:bg-background/80'
+				className='m-auto max-h-[90dvh] w-[min(48rem,calc(100%-2rem))] overflow-y-auto rounded-lg border border-dm/70 bg-background p-0 text-foreground shadow-2xl backdrop:bg-background/80'
 			>
 				{preview && (
 					<div className='p-4 sm:p-5'>
@@ -954,7 +955,7 @@ export function CampaignShopRefreshPanel({
 							<div className='flex items-center gap-2'>
 								<Button
 									type='button'
-									variant='secondary'
+									variant='secondary-dm'
 									disabled={isGenerating || isApplying}
 									onClick={() => void generatePreview()}
 									prefixIcon={<RotateCw />}
@@ -963,7 +964,7 @@ export function CampaignShopRefreshPanel({
 								</Button>
 								<Button
 									type='button'
-									variant='ghost'
+									variant='ghost-dm'
 									aria-label='關閉刷新預覽'
 									disabled={isGenerating || isApplying}
 									onClick={closePreview}
@@ -1028,7 +1029,7 @@ export function CampaignShopRefreshPanel({
 									: '本次沒有選中商品。清除模式確認後會直接刪除既有商品，保留歷史訂單快照並拒絕待審訂單；請再次確認後才會套用。'}
 							</p>
 						)}
-						<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary/40 pt-3'>
+						<div className='mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-dm/40 pt-3'>
 							<p className='text-xs text-muted-foreground'>
 								確認後會呼叫單一交易
 								RPC。預覽過期或失敗時不會部分套用，且可保留預覽重試。
@@ -1071,7 +1072,7 @@ export function CampaignShopRefreshPanel({
 					<div className='mt-5 flex justify-end gap-2'>
 						<Button
 							type='button'
-							variant='secondary'
+							variant='secondary-dm'
 							onClick={() => setDeletingRuleIndex(null)}
 						>
 							取消

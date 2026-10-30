@@ -151,6 +151,7 @@ export function CampaignShopSettingsPanel({
 					<div className='flex justify-end border-t border-border pt-4'>
 						<Button
 							type='submit'
+							variant='primary-dm'
 							disabled={
 								isLoading ||
 								isSaving ||

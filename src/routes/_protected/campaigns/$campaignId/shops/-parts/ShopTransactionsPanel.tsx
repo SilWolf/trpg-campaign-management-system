@@ -1037,7 +1037,7 @@ export function ShopTransactionsPanel({
 										<div className='mt-3 flex justify-end gap-2'>
 											<Button
 												type='button'
-												variant='secondary'
+												variant='secondary-dm'
 												disabled={busyOrderId === order.id}
 												onClick={() =>
 													void runOrderAction(
@@ -1052,6 +1052,7 @@ export function ShopTransactionsPanel({
 											</Button>
 											<Button
 												type='button'
+												variant='primary-dm'
 												disabled={busyOrderId === order.id}
 												onClick={() =>
 													void runOrderAction(

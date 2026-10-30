@@ -116,7 +116,7 @@ export function CampaignShopDialog({
 		>
 			<form
 				onSubmit={(event) => void handleSubmit(event)}
-				className='my-auto grid w-full max-w-xl gap-4 rounded-lg border border-primary/50 bg-card p-4 shadow-2xl sm:grid-cols-2'
+				className='my-auto grid w-full max-w-xl gap-4 rounded-lg border border-dm/60 bg-card p-4 shadow-2xl sm:grid-cols-2'
 				data-testid='shop-editor'
 				role='dialog'
 				aria-modal='true'
@@ -131,7 +131,7 @@ export function CampaignShopDialog({
 					</h2>
 					<Button
 						type='button'
-						variant='ghost'
+						variant='ghost-dm'
 						aria-label='關閉商店編輯'
 						disabled={isSaving}
 						onClick={onClose}
@@ -207,7 +207,7 @@ export function CampaignShopDialog({
 				<div className='flex justify-end gap-2 sm:col-span-2'>
 					<Button
 						type='button'
-						variant='ghost'
+						variant='ghost-dm'
 						disabled={isSaving}
 						onClick={onClose}
 					>
@@ -215,6 +215,7 @@ export function CampaignShopDialog({
 					</Button>
 					<Button
 						type='submit'
+						variant='primary-dm'
 						loading={isSaving}
 						prefixIcon={<Check />}
 					>

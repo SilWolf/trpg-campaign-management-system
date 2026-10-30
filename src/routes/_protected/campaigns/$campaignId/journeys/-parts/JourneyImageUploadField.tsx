@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { ImagePlus, LoaderCircle } from 'lucide-react';
-import { Button } from '@/components/ui';
+import { Button, type ButtonVariant } from '@/components/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/FeedbackContext';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -11,6 +11,7 @@ interface JourneyImageUploadFieldProps {
 	journeyId?: string;
 	onInsert: (reference: string) => void;
 	disabled?: boolean;
+	buttonVariant?: ButtonVariant;
 }
 
 export function JourneyImageUploadField({
@@ -18,6 +19,7 @@ export function JourneyImageUploadField({
 	journeyId,
 	onInsert,
 	disabled = false,
+	buttonVariant = 'secondary',
 }: JourneyImageUploadFieldProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [isUploading, setIsUploading] = useState(false);
@@ -58,7 +60,7 @@ export function JourneyImageUploadField({
 			<div className='flex flex-wrap items-center gap-3'>
 				<Button
 					type='button'
-					variant='secondary'
+					variant={buttonVariant}
 					size='sm'
 					disabled={!canUpload || isUploading}
 					onClick={() => fileInputRef.current?.click()}

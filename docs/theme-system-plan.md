@@ -120,31 +120,31 @@
 [data-theme='printing'] {
   --background: /* 適合列印的白色頁面底色 */;
   --foreground: /* 適合列印的深灰或黑色主要文字 */;
-  --card: /* 灰階卡片或面板底色 */;
-  --card-foreground: /* 灰階卡片或面板文字 */;
-  --popover: /* 灰階浮層底色 */;
-  --popover-foreground: /* 灰階浮層文字 */;
-  --primary: /* 灰階主要操作底色 */;
-  --primary-foreground: /* 灰階主要操作文字 */;
-  --secondary: /* 灰階次要操作底色 */;
-  --secondary-foreground: /* 灰階次要操作文字 */;
-  --muted: /* 淺灰低強調表面底色 */;
-  --muted-foreground: /* 適合列印的中深灰低強調文字 */;
-  --accent: /* 灰階互動強調或選取底色 */;
-  --accent-foreground: /* 灰階互動強調或選取文字 */;
-  --success: /* 灰階成功狀態色，需以文字或圖示補充辨識 */;
-  --success-foreground: /* 灰階成功狀態文字 */;
-  --destructive: /* 灰階危險狀態色，需以文字或圖示補充辨識 */;
-  --destructive-foreground: /* 灰階危險狀態文字 */;
-  --warning: /* 灰階警告狀態色，需以文字或圖示補充辨識 */;
-  --warning-foreground: /* 灰階警告狀態文字 */;
-  --info: /* 灰階資訊狀態色 */;
-  --info-foreground: /* 灰階資訊狀態文字 */;
-  --disabled: /* 灰階停用控制項底色 */;
-  --disabled-foreground: /* 灰階停用控制項文字 */;
-  --border: /* 列印友善的灰階邊框色 */;
-  --input: /* 灰階輸入欄位色 */;
-  --ring: /* 灰階鍵盤焦點環色 */;
+  --card: /* 適合列印的白色卡片或面板底色 */;
+  --card-foreground: /* 高對比卡片或面板文字 */;
+  --popover: /* 白色浮層底色 */;
+  --popover-foreground: /* 高對比浮層文字 */;
+  --primary: /* 列印清晰的主要操作色 */;
+  --primary-foreground: /* 主要操作文字 */;
+  --secondary: /* 淺色次要操作底色 */;
+  --secondary-foreground: /* 深色次要操作文字 */;
+  --muted: /* 淺色低強調表面底色 */;
+  --muted-foreground: /* 適合列印的低強調文字 */;
+  --accent: /* 淺色互動強調或選取底色 */;
+  --accent-foreground: /* 高對比互動強調文字 */;
+  --success: /* 成功狀態色 */;
+  --success-foreground: /* 成功狀態文字 */;
+  --destructive: /* 危險狀態色 */;
+  --destructive-foreground: /* 危險狀態文字 */;
+  --warning: /* 警告狀態色 */;
+  --warning-foreground: /* 警告狀態文字 */;
+  --info: /* 資訊狀態色 */;
+  --info-foreground: /* 資訊狀態文字 */;
+  --disabled: /* 停用控制項底色 */;
+  --disabled-foreground: /* 停用控制項文字 */;
+  --border: /* 清晰且適合列印的邊框色 */;
+  --input: /* 白色輸入欄位底色 */;
+  --ring: /* 鍵盤焦點環色 */;
 }
 
 @theme inline {
@@ -178,7 +178,7 @@
 }
 ```
 
-主題識別值固定為 `default`、`dnd`、`printing`。`default` 是預設的《博德之門 3》黑金風格；`dnd` 是龍與地下城奶白配棕紅風格；`printing` 以灰階為主並以白底、深色文字及清晰邊界支援直接列印。以上 CSS 僅示意映射關係與視覺方向，具體色票、對比值及列印樣式仍須在設計 token 階段定稿。
+主題識別值固定為 `default`、`dnd`、`printing`。`default` 是預設的《博德之門 3》黑金風格；`dnd` 是龍與地下城奶白配棕紅風格；`printing` 使用白底、無漸層及高對比色彩，兼顧列印可讀性與保留語意色彩。以上 CSS 僅示意映射關係與視覺方向，具體色票、對比值及列印樣式仍須在設計 token 階段定稿。
 
 ### 保留領域資訊，不另造一套顏色語境
 
@@ -358,7 +358,7 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 - 頁面一般背景、文字、邊框、表單、選取及錯誤／警告狀態改用已核准的語意 token；登入／邀請／大廳及戰役根容器的背景光暈改為引用 token 的 `color-mix`，不再保留原始色碼或 rgba 陰影。
 - E2E 測試移除依賴 Tailwind 色階 class 的斷言，改驗證危險確認、內容可見性及既有互動結果。
 
-**產品領域色彩決策（使用者確認）：** 移除私人背包／錢包、營地箱、DM／魔法標籤及貨幣面額的專屬色彩，以文字、圖示、中性 token 和選取狀態區分；保留稀有度顏色作為內容分類例外，包含 `RARITY_CONFIG` 動態樣式及商店列表的稀有度邊線。
+**產品領域色彩決策（使用者確認）：** 原決策移除私人背包／錢包、營地箱、DM／魔法標籤及貨幣面額的專屬色彩，以文字、圖示、中性 token 和選取狀態區分；保留稀有度顏色作為內容分類例外，包含 `RARITY_CONFIG` 動態樣式及商店列表的稀有度邊線。依 2026-10-30 的 [`DM 語境主題規劃`](./dm-theme-context-plan.md)，另核准僅供 DM 身分或 DM 視角限定介面的 `dm` 語意 token 與 Button variants；不擴及私人背包、營地箱、魔法詞條或貨幣面額，也不改變權限判定。
 
 **驗證結果：**
 
@@ -379,7 +379,7 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 3. 初始化時優先讀取已儲存偏好，避免頁面載入後短暫閃現另一個主題；未設定偏好時固定使用 `default`，避免作業系統外觀偏好意外覆蓋產品指定的預設黑金風格。
 4. 主題控制項應可鍵盤操作、具清楚可存取名稱，且不依賴顏色本身表達目前選取狀態。
 5. 確認訪客／離線模式仍可使用主題偏好；主題功能不得要求 Supabase 可用。
-6. 為 `printing` 驗證實際瀏覽器列印預覽，並視需要建立 `@media print` 規則處理導覽／操作控制項隱藏、頁面分頁、背景墨水用量與避免內容被截斷；灰階 CSS variables 本身不等於完整列印支援。
+6. 為 `printing` 驗證實際瀏覽器列印預覽，並視需要建立 `@media print` 規則處理導覽／操作控制項隱藏、頁面分頁、背景墨水用量與避免內容被截斷；主題 CSS variables 本身不等於完整列印支援。
 
 **完成條件：** 能在 `default`、`dnd`、`printing` 三種風格切換，且只需改變主題屬性及變數、不需逐頁切換 class；偏好載入穩定；核心頁面、互動狀態、文字對比及列印結果皆通過驗收。
 
@@ -387,11 +387,11 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 
 已完成三套主題與切換能力，未變更戰役資料、Supabase Schema 或登入需求：
 
-- [`src/index.css`](../src/index.css) 為 `default`、`dnd`、`printing` 提供完整語意 token；`default` 延續黑金色，`dnd` 使用羊皮紙底色與棕紅強調，`printing` 使用灰階配白底與深色文字。原生表單控制項的 `color-scheme` 也會隨主題切換。
+- [`src/index.css`](../src/index.css) 為 `default`、`dnd`、`printing` 提供完整語意 token；`default` 延續黑金色，`dnd` 使用羊皮紙底色與棕紅強調，`printing` 使用白底、無漸層及高對比色彩。原生表單控制項的 `color-scheme` 也會隨主題切換。
 - 根元素以 `data-theme` 套用樣式，未設定時回退至 `default`。[`index.html`](../index.html) 在 app module 載入前同步讀取偏好，避免首屏閃現其他主題；無效值會清除並記錄警告，若瀏覽器封鎖儲存，仍可使用當前工作階段的主題並記錄警告。
 - [`src/contexts/ThemeContext.tsx`](../src/contexts/ThemeContext.tsx) 與 [`src/lib/themes.ts`](../src/lib/themes.ts) 管理主題狀態與識別值。偏好以 `trpg-theme` 存於 `localStorage`，屬於此瀏覽器／裝置的使用者偏好；本版不寫入 campaign 或 Supabase profile，也不提供跨裝置同步。
 - [`src/components/ThemeSwitcher.tsx`](../src/components/ThemeSwitcher.tsx) 使用具可存取名稱的原生選單，支援鍵盤切換，並以目前選取的主題名稱而非色彩單獨表示狀態。切換器可在登入、邀請及已登入／訪客使用的系統導覽中操作，不依賴 Supabase；登入表單的既有鍵盤焦點順序維持不變。
-- `@media print` 將列印輸出轉為黑白、移除背景與陰影，隱藏導覽及操作控制項，並避免卡片內容跨頁切斷；設定主題為 `printing` 時，可同時在螢幕預覽灰階版面。
+- `@media print` 保留主題色彩、移除背景圖與陰影，隱藏導覽及操作控制項，並避免卡片內容跨頁切斷；設定主題為 `printing` 時，可同時在螢幕預覽白底、無漸層的列印友善版面。
 
 **決策與使用者確認：** 本輪沒有需要向使用者追問的歧義，因此沒有額外的使用者答覆。因需求未提出跨裝置同步，依本計畫建議採用 `localStorage`；若未來需要登入後跨裝置同步，再另行評估 profile 欄位及資料遷移。
 
@@ -411,7 +411,7 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 ### Phase 5：防回歸與文件收尾
 
 1. 加入 lint 或 CI 檢查，逐步禁止新增一般用途的硬編碼色階 class，並檢查元件與頁面是否只使用核准的語意角色及基礎 token。
-2. 只為無法使用 token 的品牌素材或第三方元件保留明確例外；列出原因與範圍，不以新增產品專屬色彩語境作為一般解法。稀有度色彩依先前確認，作為內容分類的既有窄範圍例外。
+2. 只為無法使用 token 的品牌素材或第三方元件保留明確例外；列出原因與範圍，不以新增產品專屬色彩語境作為一般解法。稀有度色彩依先前確認，作為內容分類的既有窄範圍例外；`dm` token 依專案規劃作為僅限 DM 專屬介面的窄範圍例外。
 3. 更新 UI 元件、設計 token 與新增主題的文件，說明新增 token、檢查對比及處理例外的方法。
 4. 驗證代表性頁面在主題切換前後沒有水平溢位、不可辨識狀態或文字可讀性回歸。
 
@@ -424,7 +424,7 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 - [`src/components/ui/README.md`](../src/components/ui/README.md) 補充核准 token 用法、lint 執行方式、色彩對比與例外處理說明。
 - 為保留跨主題一致的黑色對話框遮罩，新增不隨主題變化的基礎 `overlay` token；該 token 只代表通用遮罩層，不擴充產品領域色彩角色。
 - [`tests/e2e/theme-system.spec.ts`](../tests/e2e/theme-system.spec.ts) 新增三套主題在登入及戰役設定頁的 375px 回歸檢查，量測主要文字與實際背景的 WCAG AA 一般文字對比（至少 4.5:1），並檢查水平溢位；另有既有切換、儲存、列印與主題功能測試。
-- **使用者確認與決策：** 本階段沒有需要另行確認的歧義；沿用已確認的稀有度顏色例外。無需新增產品專屬色彩 token，也不改變主題色票及互動行為。
+- **使用者確認與決策：** 本階段沿用已確認的稀有度顏色例外；DM 語境是後續明確核准且範圍受限的新增例外，詳見 [`DM 語境主題規劃`](./dm-theme-context-plan.md)。不因此新增其他產品領域色彩，也不改變主題色票及互動行為。
 
 **驗證結果：**
 
@@ -439,9 +439,9 @@ Utility 家族以 Tailwind 前綴分組；漸層的 `from`、`via`、`to` 分列
 
 ### 視覺延伸修正與 Phase 4 回歸驗收（2026-10-28）
 
-- 六種稀有度的前景、底色、邊框、卡片／標題漸層及光暈均由主題 CSS variables 提供；`dnd` 使用深色文字搭配淺色表面，`printing` 使用六種不同灰階底色，裝飾漸層與光暈關閉。細節見 [`theme-system-visual-polish-plan.md`](./theme-system-visual-polish-plan.md)。
-- `printing` 螢幕裝飾效果使用 `--theme-decoration-gradient`、`--theme-decoration-shadow`、`--theme-decoration-filter`；列印媒體維持白底黑字、灰色邊界、隱藏操作控制、連結底線與避免卡片跨頁切斷。
-- [`tests/e2e/theme-system.spec.ts`](../tests/e2e/theme-system.spec.ts) 實際讀取 computed styles，檢查六稀有度 × 三主題的前景色對比（包含漸層色階）均至少 4.5:1，並驗證列印灰階的區別、列印媒體及 `dnd` 標題；登入、設定、Blacksmith、背包與商店頁面於 1280px／375px 均切換三主題檢查文字對比及水平溢位。
+- 六種稀有度的前景、底色、邊框、卡片／標題漸層及光暈均由主題 CSS variables 提供；`dnd` 與 `printing` 使用高對比文字搭配淺色表面，`printing` 保留各稀有度色彩並關閉裝飾漸層與光暈。細節見 [`theme-system-visual-polish-plan.md`](./theme-system-visual-polish-plan.md)。
+- `printing` 螢幕裝飾效果使用 `--theme-decoration-gradient`、`--theme-decoration-shadow`、`--theme-decoration-filter`；列印媒體維持白底、保留主題色彩、隱藏操作控制、連結底線與避免卡片跨頁切斷。
+- [`tests/e2e/theme-system.spec.ts`](../tests/e2e/theme-system.spec.ts) 實際讀取 computed styles，檢查六稀有度 × 三主題的前景色對比（包含漸層色階）均至少 4.5:1，並驗證列印主題色彩區別、列印媒體及 `dnd` 標題；登入、設定、Blacksmith、背包與商店頁面於 1280px／375px 均切換三主題檢查文字對比及水平溢位。
 - Phase 4 相關驗證：主題／背包／Blacksmith／商店 E2E 共 29 項通過；`npm run typecheck`、`npm run lint`、`npm run build`、`git diff --check` 通過。
 - **使用者確認（2026-10-28）：** 接受以 Chromium print-media 自動化驗收取代人工開啟原生列印對話框／目視 PDF。已依此結案；記錄明確保留本次沒有人工目視實際 PDF。
 - 除上述列印驗收方式確認外，本次沒有其他需要追問的規格問題。

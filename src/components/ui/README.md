@@ -27,7 +27,7 @@ if (await confirm({ title: '刪除角色', message: '角色與相關資料將被
 
 ## Button
 
-`variant` 可選 `primary`（主要操作，預設）、`secondary`（次要操作）、`destructive`（危險操作）、`danger`（相容舊呼叫的危險操作別名）或 `ghost`（低強度操作）。`size` 可選 `sm`、`md`（預設）或 `lg`。原生按鈕屬性均可使用；按鈕預設 `type="button"`，提交表單時請明確指定 `type="submit"`。
+`variant` 可選 `primary`（主要操作，預設）、`secondary`（次要操作）、`destructive`（危險操作）、`danger`（相容舊呼叫的危險操作別名）、`ghost`（低強度操作），以及供 DM 專屬操作使用的 `primary-dm`、`secondary-dm`、`ghost-dm`。DM variants 分別代表主要、次要與低強度操作，並依目前主題呈現 DM 語境色。只在按鈕確實因 DM 身分或 DM 視角才會呈現／可用時使用；variant 只代表視覺語意，不執行權限檢查，也不能取代既有授權邏輯。破壞性操作仍使用 `destructive`。`size` 可選 `sm`、`md`（預設）或 `lg`。原生按鈕屬性均可使用；按鈕預設 `type="button"`，提交表單時請明確指定 `type="submit"`。
 
 ```tsx
 <Button type="submit" variant="primary" size="md" loading={saving}>
@@ -35,6 +35,9 @@ if (await confirm({ title: '刪除角色', message: '角色與相關資料將被
 </Button>
 <Button type="button" variant="destructive" onClick={handleDelete}>
 	刪除
+</Button>
+<Button type="button" variant="primary-dm" onClick={handleDmAction}>
+	執行 DM 操作
 </Button>
 ```
 

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Drawer } from 'vaul';
-import { X } from 'lucide-react';
+import { Coins, Crown, Gift, X } from 'lucide-react';
 
 import { Button } from '@/components/ui';
 import AppHeader from './-parts/AppHeader';
@@ -16,7 +16,7 @@ import InventoryToolbar from './-parts/InventoryToolbar';
 import ItemDistributionDialog from './-parts/ItemDistributionDialog';
 import ItemTooltip from './-parts/ItemTooltip';
 import { useCampaignSync } from '@/hooks/useCampaignSync';
-import { gpFromLegacyCurrencyWallet } from '@/lib/supabase';
+import { gpFromLegacyCurrencyWallet, supabase } from '@/lib/supabase';
 import { useInventoryActions } from '@/hooks/useInventoryActions';
 import {
 	evaluateCharacterPermissions,
@@ -52,17 +52,68 @@ function CampaignInventoryPage() {
 	const { isGuest } = useAuth();
 	const toast = useToast();
 
-	const [viewMode, setViewMode] = useState<ViewMode>('player');
+	const [viewSelection, setViewSelection] = useState('dm');
 	const [viewerCharId, setViewerCharId] = useState<string>('tav');
 	const [activeCharId, setActiveCharId] = useState<string>('tav');
 	const [bagTab, setBagTab] = useState<'public' | 'private'>('public');
 	const [displayMode, setDisplayMode] = useState<InventoryDisplayMode>('grid');
+	const [previewPlayerState, setPreviewPlayerState] = useState<{
+		campaignId: string;
+		players: { id: string; name: string }[];
+	}>({ campaignId: '', players: [] });
+	const previewPlayers =
+		previewPlayerState.campaignId === campaignId
+			? previewPlayerState.players
+			: [];
+	const isSelectedPlayerAvailable = previewPlayers.some(
+		(player) => player.id === viewSelection,
+	);
+	const viewMode: ViewMode =
+		isDm && (viewSelection === 'dm' || !isSelectedPlayerAvailable)
+			? 'dm'
+			: 'player';
+	const effectiveIsDm = isDm && viewMode === 'dm';
+	const effectiveUserId =
+		isDm && viewMode === 'player' ? viewSelection : user?.id;
 
 	useEffect(() => {
-		// eslint-disable-next-line react-hooks/set-state-in-effect
-		if (isDm) setViewMode('dm');
-		else setViewMode('player');
-	}, [isDm]);
+		if (!isDm || !supabase) {
+			return;
+		}
+
+		let cancelled = false;
+		void (async () => {
+			const { data, error } = await supabase
+				.from('campaign_members')
+				.select(
+					'user_id, role, accepted_at, profiles (full_name, email)',
+				)
+				.eq('campaign_id', campaignId);
+
+			if (cancelled) return;
+			if (error) {
+				toast.error('無法載入戰役玩家，請稍後重試。');
+				return;
+			}
+
+			const players = (data ?? [])
+				.filter((member) => member.role === 'player' && member.accepted_at)
+				.map((member) => {
+					const profile = Array.isArray(member.profiles)
+						? member.profiles[0]
+						: member.profiles;
+					return {
+						id: member.user_id,
+						name: profile?.full_name || profile?.email || member.user_id,
+					};
+				});
+			setPreviewPlayerState({ campaignId, players });
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [campaignId, isDm, toast]);
 
 	const {
 		characters,
@@ -82,6 +133,16 @@ function CampaignInventoryPage() {
 		!isGuest && Boolean(user?.id),
 	);
 	useEffect(() => {
+		const viewerCharacter = characters.find(
+			(character) =>
+				character.userId === effectiveUserId &&
+				character.id !== CAMP_CHEST_ID,
+		);
+		// eslint-disable-next-line react-hooks/set-state-in-effect
+		setViewerCharId(viewerCharacter?.id ?? '');
+	}, [characters, effectiveUserId]);
+
+	useEffect(() => {
 		if (
 			activeCharId === CAMP_CHEST_ID ||
 			characters.some((character) => character.id === activeCharId)
@@ -92,7 +153,8 @@ function CampaignInventoryPage() {
 		const nextCharacter =
 			characters.find(
 				(character) =>
-					character.userId === user?.id && character.id !== CAMP_CHEST_ID,
+					character.userId === effectiveUserId &&
+					character.id !== CAMP_CHEST_ID,
 			) ??
 			characters.find((character) => character.id !== CAMP_CHEST_ID) ??
 			characters[0];
@@ -104,7 +166,7 @@ function CampaignInventoryPage() {
 			// 空白戰役仍可直接進入虛擬營地箱。
 			setActiveCharId(CAMP_CHEST_ID);
 		}
-	}, [activeCharId, characters, syncStatus, user?.id]);
+	}, [activeCharId, characters, effectiveUserId, syncStatus]);
 	const [selectedItemId, setSelectedItemId] = useState('item-1');
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -134,12 +196,12 @@ function CampaignInventoryPage() {
 		};
 	}, [characters, activeCharId, campaignId, campChestCurrency]);
 
-	// 計算當前登入使用者對 activeCharacter 的 7 項細粒度權限
+	// 依目前預覽身分計算 activeCharacter 的細粒度權限
 	const charPerms = useCharacterPermissions(
 		activeCharId,
-		user?.id,
+		effectiveUserId,
 		permissions,
-		isDm,
+		effectiveIsDm,
 		viewMode,
 		activeCharacter?.userId,
 	);
@@ -153,9 +215,9 @@ function CampaignInventoryPage() {
 			if (character.id === CAMP_CHEST_ID) continue;
 			const walletPermissions = evaluateCharacterPermissions(
 				character.id,
-				user?.id,
+				effectiveUserId,
 				permissions,
-				isDm,
+				effectiveIsDm,
 				viewMode,
 				character.userId,
 			);
@@ -200,7 +262,14 @@ function CampaignInventoryPage() {
 		destinationWallets.push(campChestWallet);
 
 		return { sourceWallets, destinationWallets };
-	}, [characters, permissions, user?.id, isDm, viewMode, campChestCurrency]);
+	}, [
+		characters,
+		permissions,
+		effectiveUserId,
+		effectiveIsDm,
+		viewMode,
+		campChestCurrency,
+	]);
 	const dmCurrencyWallets = useMemo<CurrencyWalletOption[]>(() => {
 		const wallets = characters.flatMap((character) => [
 			{
@@ -273,6 +342,8 @@ function CampaignInventoryPage() {
 	const canEditDisplayedWallet = isDisplayingPrivateWallet
 		? charPerms.canEditPrivateWallet
 		: charPerms.canEditPublicWallet;
+	const canDispatchItems =
+		effectiveIsDm && isRemoteCampaign && !isGuest && Boolean(user?.id);
 	const displayedGp = isDisplayingPrivateWallet
 		? activeCharacter.privateGp
 		: activeCharacter.gp;
@@ -361,7 +432,7 @@ function CampaignInventoryPage() {
 
 	const actions = useInventoryActions({
 		campaignId,
-		isDm,
+		isDm: effectiveIsDm,
 		isRemoteCampaign,
 		characters,
 		setCharacters,
@@ -390,14 +461,18 @@ function CampaignInventoryPage() {
 
 			<AppHeader
 				isDm={isDm}
-				viewMode={viewMode}
-				setViewMode={setViewMode}
-				characters={characters}
-				viewerCharId={viewerCharId}
-				setViewerCharId={setViewerCharId}
-				setActiveCharId={setActiveCharId}
+				viewSelection={viewMode === 'dm' ? 'dm' : viewSelection}
+				onViewSelectionChange={(selection) => {
+					setViewSelection(selection);
+					if (selection !== 'dm') {
+						const playerCharacter = characters.find(
+							(character) => character.userId === selection,
+						);
+						if (playerCharacter) setActiveCharId(playerCharacter.id);
+					}
+				}}
+				players={previewPlayers}
 				syncStatus={syncStatus}
-				onCreateHomebrew={actions.openCreateHomebrewModal}
 			/>
 
 			<CharacterStatusBar
@@ -419,13 +494,48 @@ function CampaignInventoryPage() {
 				isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 				canReadDisplayedWallet={canReadDisplayedWallet}
 				canEditDisplayedWallet={canEditDisplayedWallet}
-				isDm={isDm}
 				onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
-				onOpenCurrencyEdit={() => setIsCurrencyEditOpen(true)}
 			/>
 
 			<main className='relative z-10 max-w-7xl mx-auto px-4 lg:px-8 py-5 flex flex-col lg:flex-row lg:items-start gap-6'>
 				<div className='w-full lg:w-7/12 flex flex-col bg-gradient-to-b from-card via-background to-background border-2 border-primary/50 rounded-lg shadow-lg overflow-hidden'>
+					{effectiveIsDm && (
+						<section
+							aria-label='DM 操作'
+							data-testid='dm-operation-bar'
+							className='flex flex-wrap items-center justify-between gap-3 border-b border-dm/50 bg-dm/5 px-3.5 py-3'
+						>
+							<div className='flex items-center gap-2 text-sm font-serif font-bold text-dm'>
+								<Crown className='size-4' />
+								<span>DM 操作</span>
+							</div>
+							<div className='flex flex-wrap items-center gap-2'>
+								<Button
+									type='button'
+									variant='secondary-dm'
+									size='sm'
+									data-testid='inventory-currency-edit'
+									onClick={() => setIsCurrencyEditOpen(true)}
+									prefixIcon={<Coins />}
+								>
+									增減金錢
+								</Button>
+								{canDispatchItems && (
+									<Button
+										type='button'
+										variant='secondary-dm'
+										size='sm'
+										data-testid='inventory-dispatch-items'
+										onClick={() => setIsItemDistributionOpen(true)}
+										prefixIcon={<Gift />}
+									>
+										派發物品
+									</Button>
+								)}
+							</div>
+						</section>
+					)}
+
 					<CharacterStatusBar
 						placement='status'
 						characters={characters}
@@ -445,9 +555,7 @@ function CampaignInventoryPage() {
 						isDisplayingPrivateWallet={isDisplayingPrivateWallet}
 						canReadDisplayedWallet={canReadDisplayedWallet}
 						canEditDisplayedWallet={canEditDisplayedWallet}
-						isDm={isDm}
 						onOpenCurrencyPanel={() => setIsCoinModalOpen(true)}
-						onOpenCurrencyEdit={() => setIsCurrencyEditOpen(true)}
 					/>
 
 					<InventoryToolbar
@@ -463,12 +571,6 @@ function CampaignInventoryPage() {
 						setDisplayMode={setDisplayMode}
 						handleAutoSort={actions.handleAutoSort}
 						handleConsolidateStacks={actions.handleConsolidateStacks}
-						canDispatchItems={
-							isDm && isRemoteCampaign && !isGuest && Boolean(user?.id)
-						}
-						onOpenItemDistribution={() =>
-							setIsItemDistributionOpen(true)
-						}
 					/>
 
 					<InventoryGrid
@@ -589,7 +691,7 @@ function CampaignInventoryPage() {
 				isOpen={actions.isHomebrewModalOpen}
 				isEditing={Boolean(actions.editingItemId)}
 				campaignId={campaignId}
-				canManageItemImage={isDm && !isGuest && Boolean(user)}
+				canManageItemImage={effectiveIsDm && !isGuest && Boolean(user)}
 				form={actions.newItemForm}
 				setForm={actions.setNewItemForm}
 				onSubmit={actions.handleSaveHomebrewOrEditItem}
@@ -603,7 +705,7 @@ function CampaignInventoryPage() {
 				onCopyAffix={actions.handleCopyAffix}
 			/>
 
-			{isDm && isRemoteCampaign && !isGuest && user?.id && (
+			{effectiveIsDm && isRemoteCampaign && !isGuest && user?.id && (
 					<ItemDistributionDialog
 						isOpen={isItemDistributionOpen}
 						campaignId={campaignId}
@@ -625,7 +727,7 @@ function CampaignInventoryPage() {
 				onTransferCurrency={actions.transferCurrency}
 			/>
 
-			{isDm && isCurrencyEditOpen && (
+			{effectiveIsDm && isCurrencyEditOpen && (
 				<CurrencyEditPanel
 					isOpen={isCurrencyEditOpen}
 					wallets={dmCurrencyWallets}

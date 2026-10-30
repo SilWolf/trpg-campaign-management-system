@@ -159,9 +159,9 @@ export default function ItemDefinitionDialog({
 				aria-modal='true'
 				aria-labelledby='item-definition-dialog-title'
 				tabIndex={-1}
-				className='bg-background border-2 border-border/60 rounded-lg max-w-2xl w-full p-5 shadow-lg my-8'
+				className='bg-background border-2 border-dm/60 rounded-lg max-w-2xl w-full p-5 shadow-lg my-8'
 			>
-				<div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
+				<div className='flex items-center justify-between border-b border-dm/40 pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
 						<Sparkles className='w-5 h-5 text-muted-foreground' />
 						<h2
@@ -175,7 +175,7 @@ export default function ItemDefinitionDialog({
 					</div>
 					<Button
 						type='button'
-						variant='ghost'
+						variant='ghost-dm'
 						size='sm'
 						aria-label='關閉自創道具編輯'
 						onClick={onClose}
@@ -555,7 +555,7 @@ export default function ItemDefinitionDialog({
 								{copiedAffix && (
 									<Button
 										type='button'
-										variant='secondary'
+										variant='secondary-dm'
 										size='sm'
 										onClick={pasteAffixToForm}
 										prefixIcon={<ClipboardPaste />}
@@ -565,7 +565,7 @@ export default function ItemDefinitionDialog({
 								)}
 								<Button
 									type='button'
-									variant='secondary'
+									variant='secondary-dm'
 									size='sm'
 									onClick={addEmptyAffix}
 									prefixIcon={<Plus />}
@@ -610,7 +610,7 @@ export default function ItemDefinitionDialog({
 											<div className='flex items-center gap-1 shrink-0'>
 												<Button
 													type='button'
-													variant='ghost'
+													variant='ghost-dm'
 													size='sm'
 													onClick={() => moveAffixInForm(idx, -1)}
 													disabled={idx === 0}
@@ -620,7 +620,7 @@ export default function ItemDefinitionDialog({
 												</Button>
 												<Button
 													type='button'
-													variant='ghost'
+													variant='ghost-dm'
 													size='sm'
 													onClick={() => moveAffixInForm(idx, 1)}
 													disabled={idx === affixes.length - 1}
@@ -631,7 +631,7 @@ export default function ItemDefinitionDialog({
 
 												<Button
 													type='button'
-													variant='ghost'
+													variant='ghost-dm'
 													size='sm'
 													onClick={() =>
 														updateAffixField(idx, { isHidden: !affix.isHidden })
@@ -658,7 +658,7 @@ export default function ItemDefinitionDialog({
 
 												<Button
 													type='button'
-													variant='ghost'
+													variant='ghost-dm'
 													size='sm'
 													onClick={() => {
 														if (affix.name.trim()) onCopyAffix?.(affix);
@@ -709,7 +709,7 @@ export default function ItemDefinitionDialog({
 							/>
 						</div>
 						<div>
-							<label className='block text-foreground mb-1'>
+							<label className='block text-dm mb-1'>
 								🔒 DM 隱藏筆記 (支援 Markdown，僅 DM 可見)
 							</label>
 							<Textarea
@@ -806,14 +806,14 @@ export default function ItemDefinitionDialog({
 					<div className='flex justify-end gap-2 pt-3 border-t border-border'>
 						<Button
 							type='button'
-							variant='secondary'
+							variant='secondary-dm'
 							onClick={onClose}
 						>
 							取消
 						</Button>
 						<Button
 							type='submit'
-							variant='primary'
+							variant='primary-dm'
 							prefixIcon={
 								isEditing ? (
 									<Save />

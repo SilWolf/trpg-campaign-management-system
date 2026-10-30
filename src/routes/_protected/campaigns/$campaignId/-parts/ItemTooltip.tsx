@@ -381,7 +381,7 @@ export default function ItemTooltip({
 												{viewMode === 'dm' && copiedAffix && (
 													<Button
 														type='button'
-														variant='secondary'
+														variant='secondary-dm'
 														size='sm'
 														onClick={() => onPasteAffix(inspectedItem)}
 														title={`貼上詞條：${copiedAffix.name}`}
@@ -420,7 +420,7 @@ export default function ItemTooltip({
 																	<div className='flex items-center gap-1 shrink-0'>
 																		<Button
 																			type='button'
-																			variant='ghost'
+																			variant='ghost-dm'
 																			size='sm'
 																			onClick={() => moveAffix(idx, -1)}
 																			disabled={idx === 0}
@@ -430,7 +430,7 @@ export default function ItemTooltip({
 																		</Button>
 																		<Button
 																			type='button'
-																			variant='ghost'
+																			variant='ghost-dm'
 																			size='sm'
 																			onClick={() => moveAffix(idx, 1)}
 																			disabled={
@@ -442,7 +442,7 @@ export default function ItemTooltip({
 																		</Button>
 																		<Button
 																			type='button'
-																			variant='ghost'
+																			variant='ghost-dm'
 																			size='sm'
 																			onClick={() =>
 																				toggleAffixHidden(affix.id)
@@ -463,7 +463,7 @@ export default function ItemTooltip({
 																		</Button>
 																		<Button
 																			type='button'
-																			variant='ghost'
+																			variant='ghost-dm'
 																			size='sm'
 																			onClick={() => onCopyAffix(affix)}
 																			title='複製此詞條以貼到其他物品'
@@ -579,8 +579,8 @@ export default function ItemTooltip({
 
 								{/* DM 專屬秘密筆記 */}
 								{viewMode === 'dm' && inspectedItem.dmNotes && (
-									<div className='bg-muted border border-border rounded-md p-3'>
-										<div className='flex items-center gap-1.5 text-xs font-bold text-highlight mb-1'>
+									<div className='bg-muted border border-dm/60 rounded-md p-3'>
+										<div className='flex items-center gap-1.5 text-xs font-bold text-dm mb-1'>
 											<Eye className='w-3.5 h-3.5' />
 											<span>DM 專屬隱藏筆記 (玩家不可見)</span>
 										</div>
@@ -851,11 +851,11 @@ export default function ItemTooltip({
 
 									{/* DM 專屬控制列 */}
 									{viewMode === 'dm' && (
-										<div className='pt-2 mt-2 border-t border-border flex flex-wrap items-center justify-between gap-2'>
+										<div className='pt-2 mt-2 border-t border-dm/50 flex flex-wrap items-center justify-between gap-2'>
 											<div className='flex items-center gap-2'>
 												<Button
 													type='button'
-													variant='secondary'
+													variant='secondary-dm'
 													size='sm'
 													onClick={() => onOpenEditModal(inspectedItem)}
 													prefixIcon={<Edit3 />}
@@ -865,7 +865,7 @@ export default function ItemTooltip({
 												{!inspectedItem.isIdentified && (
 													<Button
 														type='button'
-														variant='secondary'
+														variant='secondary-dm'
 														size='sm'
 														onClick={() => void toggleIdentify(inspectedItem)}
 														prefixIcon={<Eye />}

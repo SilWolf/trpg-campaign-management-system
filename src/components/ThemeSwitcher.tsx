@@ -6,7 +6,7 @@ import { isTheme, type Theme } from '@/lib/themes';
 const THEME_LABELS: Record<Theme, string> = {
 	default: '博德之門黑金',
 	dnd: '龍與地下城羊皮紙',
-	printing: '灰階列印',
+	printing: '列印友善',
 };
 
 export function ThemeSwitcher() {

@@ -30,9 +30,7 @@ export interface CharacterStatusBarProps {
 	isDisplayingPrivateWallet: boolean;
 	canReadDisplayedWallet: boolean;
 	canEditDisplayedWallet: boolean;
-	isDm: boolean;
 	onOpenCurrencyPanel: () => void;
-	onOpenCurrencyEdit: () => void;
 }
 
 export default function CharacterStatusBar({
@@ -54,9 +52,7 @@ export default function CharacterStatusBar({
 	isDisplayingPrivateWallet,
 	canReadDisplayedWallet,
 	canEditDisplayedWallet,
-	isDm,
 	onOpenCurrencyPanel,
-	onOpenCurrencyEdit,
 }: CharacterStatusBarProps) {
 	if (placement === 'characters') {
 		return (
@@ -236,17 +232,6 @@ export default function CharacterStatusBar({
 						</span>
 					</span>
 					<div className='flex items-center gap-1.5'>
-						{isDm && (
-							<Button
-								type='button'
-								variant='secondary'
-								size='sm'
-								data-testid='inventory-currency-edit'
-								onClick={onOpenCurrencyEdit}
-							>
-								修改
-							</Button>
-						)}
 						{canEditDisplayedWallet && (
 							<Button
 								type='button'

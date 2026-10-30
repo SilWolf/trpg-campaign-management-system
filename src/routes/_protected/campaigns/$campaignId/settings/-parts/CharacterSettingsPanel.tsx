@@ -488,7 +488,7 @@ export function CharacterSettingsPanel({
 								<span>角色危險操作區 — {currentSelectedChar.name}</span>
 							</div>
 							{isDm && (
-								<section className='rounded-lg border border-border/70 bg-background/70 p-4 space-y-4'>
+								<section className='rounded-lg border border-dm/50 bg-background/70 p-4 space-y-4'>
 									<div className='flex items-center gap-2 border-b border-border pb-3'>
 										<ArrowRightLeft className='w-4 h-4 text-foreground' />
 										<div>
@@ -543,7 +543,7 @@ export function CharacterSettingsPanel({
 														);
 													}
 												}}
-												variant='secondary'
+												variant='secondary-dm'
 												prefixIcon={<ArrowRightLeft />}
 											>
 												轉移擁有權

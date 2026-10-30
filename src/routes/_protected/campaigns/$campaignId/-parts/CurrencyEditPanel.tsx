@@ -76,7 +76,7 @@ export default function CurrencyEditPanel({
 				aria-modal='true'
 				aria-labelledby='currency-edit-heading'
 				data-testid='currency-edit-panel'
-				className='bg-background border-2 border-primary/70 rounded-lg max-w-md w-full p-5 shadow-lg my-8'
+				className='bg-background border-2 border-dm/70 rounded-lg max-w-md w-full p-5 shadow-lg my-8'
 			>
 				<div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
@@ -90,7 +90,7 @@ export default function CurrencyEditPanel({
 					</div>
 					<Button
 						type='button'
-						variant='ghost'
+						variant='ghost-dm'
 						size='sm'
 						aria-label='關閉修改存款'
 						onClick={onClose}
@@ -141,12 +141,12 @@ export default function CurrencyEditPanel({
 					<div className='flex items-center justify-between border-t border-border pt-3'>
 						<span className='text-xs text-muted-foreground'></span>
 						<div className='flex gap-2'>
-							<Button type='button' variant='secondary' onClick={onClose}>
+							<Button type='button' variant='secondary-dm' onClick={onClose}>
 								取消
 							</Button>
 							<Button
 								type='button'
-								variant='primary'
+								variant='primary-dm'
 								data-testid='currency-edit-save'
 								disabled={!selectedWallet || balanceCents === null}
 								onClick={() => {

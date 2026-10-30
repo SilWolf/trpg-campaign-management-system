@@ -285,7 +285,7 @@ function CampaignShopDetail() {
 						to='/campaigns/$campaignId/shops/$shopId/settings'
 						params={{ campaignId, shopId }}
 					>
-						<Button type='button' variant='secondary' prefixIcon={<Pencil />}>
+						<Button type='button' variant='secondary-dm' prefixIcon={<Pencil />}>
 							商店設定
 						</Button>
 					</Link>

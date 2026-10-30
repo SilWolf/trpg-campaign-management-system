@@ -369,9 +369,9 @@ export default function ItemDistributionDialog({
 					aria-modal='true'
 					aria-labelledby='item-distribution-title'
 					tabIndex={-1}
-					className='my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl'
+					className='my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-dm/60 bg-background shadow-2xl'
 				>
-					<header className='flex items-center justify-between gap-3 border-b border-border p-4'>
+					<header className='flex items-center justify-between gap-3 border-b border-dm/40 p-4'>
 						<div>
 							<h2
 								id='item-distribution-title'
@@ -385,7 +385,7 @@ export default function ItemDistributionDialog({
 						</div>
 						<Button
 							type='button'
-							variant='ghost'
+							variant='ghost-dm'
 							size='sm'
 							aria-label='關閉物品派發'
 							disabled={isSubmitting}
@@ -464,7 +464,7 @@ export default function ItemDistributionDialog({
 									<Button
 										ref={searchImportButtonRef}
 										type='button'
-										variant='secondary'
+										variant='secondary-dm'
 										size='sm'
 										disabled={
 											draftItems.length >= 10 ||
@@ -479,7 +479,7 @@ export default function ItemDistributionDialog({
 									<Button
 										ref={newDefinitionButtonRef}
 										type='button'
-										variant='secondary'
+										variant='secondary-dm'
 										size='sm'
 										disabled={
 											draftItems.length >= 10 ||
@@ -555,7 +555,7 @@ export default function ItemDistributionDialog({
 												<div className='flex items-end justify-end gap-2'>
 													<Button
 														type='button'
-														variant='secondary'
+														variant='secondary-dm'
 														size='sm'
 														disabled={
 															isSubmitting || confirmationCount !== null
@@ -631,7 +631,7 @@ export default function ItemDistributionDialog({
 						<footer className='flex flex-wrap justify-end gap-2 border-t border-border pt-3'>
 							<Button
 								type='button'
-								variant='secondary'
+								variant='secondary-dm'
 								disabled={isSubmitting}
 								onClick={() => {
 									if (confirmationCount !== null) {
@@ -645,7 +645,7 @@ export default function ItemDistributionDialog({
 							</Button>
 							<Button
 								type='submit'
-								variant='primary'
+								variant='primary-dm'
 								data-testid='item-distribution-submit'
 								loading={isSubmitting}
 								disabled={

@@ -62,6 +62,7 @@ function CampaignShopsIndex() {
 				{isDm && (
 					<Button
 						type='button'
+						variant='primary-dm'
 						onClick={() => setIsCreating(true)}
 						prefixIcon={<Plus />}
 					>

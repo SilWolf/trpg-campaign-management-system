@@ -808,7 +808,7 @@ function CampaignShopsPage() {
 			data-campaign-id={campaignId}
 			className='relative z-10 mx-auto max-w-7xl px-4 py-6 text-foreground lg:px-8'
 		>
-			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-primary/40 pb-5 sm:flex-row sm:items-end'>
+			<div className='mb-6 flex flex-col justify-between gap-4 border-b border-dm/40 pb-5 sm:flex-row sm:items-end'>
 				<div>
 					<p className='text-xs font-semibold tracking-[0.2em] text-muted-foreground'>
 						戰役商店
@@ -823,7 +823,7 @@ function CampaignShopsPage() {
 				<div className='flex flex-wrap gap-2'>
 					<Button
 						type='button'
-						variant='secondary'
+						variant='secondary-dm'
 						onClick={() => {
 							void reloadShops()
 								.then(reloadItems)
@@ -864,7 +864,7 @@ function CampaignShopsPage() {
 				<section className='min-w-0 space-y-6'>
 					{selectedShop ? (
 						<>
-							<div className='overflow-hidden rounded-lg border border-border bg-card/70'>
+							<div className='overflow-hidden rounded-lg border border-dm/40 bg-card/70'>
 								{selectedShop.backgroundImageUrl ? (
 									<img
 										src={selectedShop.backgroundImageUrl}
@@ -895,7 +895,7 @@ function CampaignShopsPage() {
 									</div>
 									<Button
 										type='button'
-										variant='secondary'
+										variant='secondary-dm'
 										onClick={() => startShopEdit(selectedShop)}
 										prefixIcon={<Pencil />}
 									>
@@ -913,7 +913,7 @@ function CampaignShopsPage() {
 								onReloadItems={reloadItems}
 							/>
 
-							<section className='rounded-lg border border-border bg-card/50 p-4'>
+							<section className='rounded-lg border border-dm/40 bg-card/50 p-4'>
 								<div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
 									<div>
 										<h2 className='font-serif text-xl font-bold text-card-foreground'>
@@ -926,7 +926,7 @@ function CampaignShopsPage() {
 									<div className='flex items-center gap-3'>
 										<Button
 											type='button'
-											variant='secondary'
+											variant='secondary-dm'
 											onClick={() => setIsImportDialogOpen(true)}
 											prefixIcon={<PackagePlus />}
 										>
@@ -958,7 +958,7 @@ function CampaignShopsPage() {
 														>
 															<Button
 																type='button'
-																variant='ghost'
+																variant='ghost-dm'
 																aria-label={`查看${item.itemSnapshot.name}`}
 																aria-pressed={isSelected}
 																onClick={() => setSelectedItemId(item.id)}
@@ -1017,7 +1017,7 @@ function CampaignShopsPage() {
 															</Button>
 															<Button
 																type='button'
-																variant='ghost'
+																variant='ghost-dm'
 																size='sm'
 																onClick={() => startItemEdit(item)}
 																aria-label={`編輯${item.itemSnapshot.name}`}
@@ -1059,7 +1059,7 @@ function CampaignShopsPage() {
 												<div className='flex gap-2'>
 													<Button
 														type='button'
-														variant='secondary'
+														variant='secondary-dm'
 														size='sm'
 														aria-label='上一頁'
 														disabled={currentPage === 1}
@@ -1072,7 +1072,7 @@ function CampaignShopsPage() {
 													</Button>
 													<Button
 														type='button'
-														variant='secondary'
+														variant='secondary-dm'
 														size='sm'
 														aria-label='下一頁'
 														disabled={currentPage === pageCount}
@@ -1267,7 +1267,7 @@ function CampaignShopsPage() {
 												)}
 												<Button
 													type='button'
-													variant='secondary'
+													variant='secondary-dm'
 													onClick={() => startItemEdit(selectedItem)}
 													prefixIcon={<Pencil />}
 												>
@@ -1298,13 +1298,13 @@ function CampaignShopsPage() {
 								<div className='fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4'>
 									<form
 										onSubmit={handleSaveItem}
-										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-border/70 bg-background p-5 shadow-2xl'
+										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-dm/60 bg-background p-5 shadow-2xl'
 										data-testid='shop-item-editor'
 										role='dialog'
 										aria-modal='true'
 										aria-labelledby='shop-item-editor-title'
 									>
-										<div className='flex items-center justify-between border-b border-border pb-3'>
+										<div className='flex items-center justify-between border-b border-dm/40 pb-3'>
 											<h2
 												id='shop-item-editor-title'
 												className='font-serif text-xl font-bold text-foreground'
@@ -1313,7 +1313,7 @@ function CampaignShopsPage() {
 											</h2>
 											<Button
 												type='button'
-												variant='ghost'
+												variant='ghost-dm'
 												aria-label='取消商品編輯'
 												onClick={() => {
 													setEditingItem(null);
@@ -1648,7 +1648,7 @@ function CampaignShopsPage() {
 												)}
 												<Button
 													type='button'
-													variant='ghost'
+													variant='destructive'
 													disabled={isSaving}
 													onClick={() => void handleDeleteItem(editingItem)}
 													prefixIcon={<Trash2 />}
@@ -1660,10 +1660,10 @@ function CampaignShopsPage() {
 											</div>
 										)}
 
-										<div className='flex justify-end gap-2 border-t border-border pt-3'>
+										<div className='flex justify-end gap-2 border-t border-dm/40 pt-3'>
 											<Button
 												type='button'
-												variant='ghost'
+												variant='ghost-dm'
 												onClick={() => {
 													setEditingItem(null);
 													setDeleteConfirmationItemId(null);
@@ -1673,6 +1673,7 @@ function CampaignShopsPage() {
 											</Button>
 											<Button
 												type='submit'
+												variant='primary-dm'
 												loading={isSaving}
 												prefixIcon={<Check />}
 											>
@@ -1689,10 +1690,10 @@ function CampaignShopsPage() {
 										role='dialog'
 										aria-modal='true'
 										aria-labelledby='shop-source-dialog-title'
-										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-border/70 bg-background p-5 shadow-2xl'
+										className='my-auto max-h-[90vh] w-full max-w-3xl space-y-4 overflow-y-auto rounded-xl border border-dm/60 bg-background p-5 shadow-2xl'
 										data-testid='shop-source-dialog'
 									>
-										<div className='flex items-start justify-between gap-4 border-b border-border pb-3'>
+										<div className='flex items-start justify-between gap-4 border-b border-dm/40 pb-3'>
 											<div>
 												<h2
 													id='shop-source-dialog-title'
@@ -1706,7 +1707,7 @@ function CampaignShopsPage() {
 											</div>
 											<Button
 												type='button'
-												variant='ghost'
+												variant='ghost-dm'
 												aria-label='關閉鍛造工坊匯入'
 												onClick={() => setIsImportDialogOpen(false)}
 												prefixIcon={<X />}
@@ -1727,7 +1728,7 @@ function CampaignShopsPage() {
 												<Button
 													key={tab}
 													type='button'
-													variant='secondary'
+													variant='secondary-dm'
 													role='tab'
 													aria-selected={sourceTab === tab}
 													onClick={() => setSourceTab(tab)}
@@ -1773,6 +1774,7 @@ function CampaignShopsPage() {
 														<Button
 															type='button'
 															size='sm'
+															variant='primary-dm'
 															disabled={isSaving}
 															onClick={() => void handleSourceImport(source)}
 															prefixIcon={<Plus />}

@@ -138,9 +138,9 @@ test('DM 語境色彩依主題切換並維持文字對比', async ({ page }) => 
 		},
 		{
 			theme: 'printing',
-			dm: '#7e22ce',
+			dm: '#6b21a8',
 			foreground: '#ffffff',
-			mappedDm: 'rgb(126, 34, 206)',
+			mappedDm: 'rgb(107, 33, 168)',
 			mappedForeground: 'rgb(255, 255, 255)',
 		},
 	]);
@@ -180,7 +180,7 @@ test('DM 語境色彩依主題切換並維持文字對比', async ({ page }) => 
 	}
 });
 
-test('六種稀有度在三套主題維持 AA 對比與灰階區別', async ({ page }) => {
+test('六種稀有度在三套主題維持 AA 對比與色彩區別', async ({ page }) => {
 	await page.goto('/login');
 
 	const rarities = [
@@ -272,20 +272,20 @@ test('六種稀有度在三套主題維持 AA 對比與灰階區別', async ({ p
 
 		if (theme === 'printing') {
 			expect(themeResults.every((sample) => sample.glow === 'none')).toBe(true);
-			const grayscaleBackgrounds = themeResults.map((sample) => {
+			const coloredBackgrounds = themeResults.map((sample) => {
 				const channels = sample.background.match(/[\d.]+/g)?.slice(0, 3);
 				expect(channels).toHaveLength(3);
-				expect(new Set(channels).size).toBe(1);
-				return channels?.[0];
+				expect(new Set(channels).size).toBeGreaterThan(1);
+				return sample.background;
 			});
-			expect(new Set(grayscaleBackgrounds).size).toBe(rarities.length);
+			expect(new Set(coloredBackgrounds).size).toBe(rarities.length);
 		}
 	}
 
 	expect(contrastResults).toHaveLength(rarities.length * 3);
 });
 
-test('列印預覽移除操作介面並使用黑白背景', async ({ page }) => {
+test('列印預覽移除操作介面並保留主題色彩', async ({ page }) => {
 	await page.emulateMedia({ media: 'print' });
 	await page.goto('/login');
 	await page.locator('html').evaluate((element) => {
@@ -332,8 +332,8 @@ test('列印預覽移除操作介面並使用黑白背景', async ({ page }) => 
 	expect(printStyles).toEqual({
 		background: 'rgb(255, 255, 255)',
 		foreground: 'rgb(17, 17, 17)',
-		articleBorder: 'rgb(126, 34, 206)',
-		dmText: 'rgb(126, 34, 206)',
+		articleBorder: 'rgb(107, 33, 168)',
+		dmText: 'rgb(107, 33, 168)',
 		articleBreakInside: 'avoid',
 		linkDecoration: 'underline',
 		hasBackgroundImage: false,

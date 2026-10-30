@@ -111,11 +111,12 @@ export function GeneralSettingsPanel({
 						</div>
 
 						{isDm && (
-							<div className='flex justify-end pt-3 border-t border-border'>
+							<div className='flex justify-end pt-3 border-t border-dm/40'>
 								<Button
 									data-testid='campaign-save'
 									type='submit'
 									size='sm'
+									variant='primary-dm'
 									prefixIcon={<Save />}
 								>
 									<span>儲存變更</span>
@@ -227,7 +228,11 @@ export function GeneralSettingsPanel({
 																		parseInt(e.target.value, 10) || 0,
 																	)
 																}
-																className='w-12 rounded px-1.5 py-0.5 text-center font-mono font-bold text-primary-foreground border-primary/60 bg-card focus-visible:border-primary'
+																className={`w-12 rounded px-1.5 py-0.5 text-center font-mono font-bold bg-card ${
+																	isDm
+																		? 'text-dm border-dm/60 focus-visible:border-dm'
+																		: 'text-primary-foreground border-primary/60 focus-visible:border-primary'
+																}`}
 															/>
 														) : (
 															<span className='font-mono font-bold text-primary-foreground'>
@@ -247,8 +252,8 @@ export function GeneralSettingsPanel({
 						)}
 
 						{isDm && (
-							<div className='pt-4 border-t border-border space-y-2.5'>
-								<div className='flex items-center gap-2 text-primary-foreground font-serif font-bold text-sm'>
+							<div className='pt-4 border-t border-dm/40 space-y-2.5'>
+								<div className='flex items-center gap-2 text-dm font-serif font-bold text-sm'>
 									<span>📧 Email 邀請冒險者</span>
 								</div>
 								<p className='text-xs text-muted-foreground'>
@@ -272,7 +277,7 @@ export function GeneralSettingsPanel({
 									<Button
 										data-testid='campaign-email-invite'
 										type='submit'
-										variant='secondary'
+										variant='primary-dm'
 									>
 										發送邀請
 									</Button>

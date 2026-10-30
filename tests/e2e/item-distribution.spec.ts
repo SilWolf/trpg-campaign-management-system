@@ -33,7 +33,7 @@ test('只有 DM 可見派發入口；新增物品以單一 Function 交易提交
 	await expect(submitButton).toBeDisabled();
 
 	await expect(page.getByRole('dialog', { name: '派發物品' })).toHaveCount(0);
-	await page.getByLabel('切換公開或私人背包').selectOption('private');
+	await page.getByTestId('inventory-bag-private').click();
 	await expect(
 		page.getByTestId('inventory-item-dispatch-inventory-1'),
 	).toBeVisible();

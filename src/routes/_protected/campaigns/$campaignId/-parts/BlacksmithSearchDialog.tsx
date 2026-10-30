@@ -308,7 +308,7 @@ export default function BlacksmithSearchDialog({
 			<div className='flex shrink-0 gap-2'>
 				<Button
 					type='button'
-					variant='secondary'
+					variant='secondary-dm'
 					size='sm'
 					disabled={importedItems.has(result.itemId)}
 					onClick={() => importResult(result)}
@@ -317,7 +317,7 @@ export default function BlacksmithSearchDialog({
 				</Button>
 				<Button
 					type='button'
-					variant='ghost'
+					variant='ghost-dm'
 					size='sm'
 					onClick={() => {
 						onCopy(
@@ -340,9 +340,9 @@ export default function BlacksmithSearchDialog({
 				aria-modal='true'
 				aria-labelledby='blacksmith-search-title'
 				tabIndex={-1}
-				className='my-auto flex max-h-[calc(100vh-300px)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl'
+				className='my-auto flex max-h-[calc(100vh-300px)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-dm/60 bg-background shadow-2xl'
 			>
-				<header className='flex items-center justify-between gap-3 border-b border-border p-4'>
+				<header className='flex items-center justify-between gap-3 border-b border-dm/40 p-4'>
 					<div>
 						<h2
 							id='blacksmith-search-title'
@@ -356,7 +356,7 @@ export default function BlacksmithSearchDialog({
 					</div>
 					<Button
 						type='button'
-						variant='ghost'
+						variant='ghost-dm'
 						size='sm'
 						aria-label='關閉鍛造工坊搜尋'
 						onClick={onClose}

@@ -38,7 +38,7 @@
 | 區域 | 起始盤點位置 | 預期處理 |
 | --- | --- | --- |
 | 背包標頭與角色狀態 | [`AppHeader.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/AppHeader.tsx)、[`CharacterStatusBar.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/CharacterStatusBar.tsx) | DM 視角切換、自創道具、DM 專屬貨幣編輯等控制項使用 DM variants；僅 DM 可見的容器邊框使用 `border-dm`。 |
-| 道具管理與分發 | [`ItemTooltip.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemTooltip.tsx)、[`ItemDefinitionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDefinitionDialog.tsx)、[`ItemDistributionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDistributionDialog.tsx) | DM 專屬控制列、隱藏筆記、分發視窗及其操作按鈕採用 DM 語境。 |
+| 道具管理與分發 | [`ItemTooltip.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemTooltip.tsx)、[`ItemDefinitionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDefinitionDialog.tsx)、[`ItemDistributionDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/ItemDistributionDialog.tsx)、[`BlacksmithSearchDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/BlacksmithSearchDialog.tsx)、[`CurrencyEditPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/-parts/CurrencyEditPanel.tsx) | DM 專屬控制列、隱藏筆記、分發／搜尋／存款視窗及其操作按鈕採用 DM 語境。 |
 | DM 冒險筆記 | [`$journeyId.tsx`](../src/routes/_protected/campaigns/$campaignId/journeys/$journeyId.tsx)、[`JourneyForm.tsx`](../src/routes/_protected/campaigns/$campaignId/journeys/-parts/JourneyForm.tsx) | DM 專屬筆記區塊、編輯區與只供 DM 使用的按鈕採用 DM 語境；玩家可見的冒險內容維持原樣。 |
 | 戰役與角色設定 | [`settings/index.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/index.tsx)、[`GeneralSettingsPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/GeneralSettingsPanel.tsx)、[`CampaignShopSettingsPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/CampaignShopSettingsPanel.tsx)、[`CharacterSettingsPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/CharacterSettingsPanel.tsx)、[`AllCharactersSettingsdPanel.tsx`](../src/routes/_protected/campaigns/$campaignId/settings/-parts/AllCharactersSettingsdPanel.tsx) | DM 專屬儲存、配額、權限管理與設定操作使用 DM variants；只讀提示或所有成員皆可操作的控制項不誤標為 DM。 |
 | 商店管理 | [`shops/index.tsx`](../src/routes/_protected/campaigns/$campaignId/shops/index.tsx)、[`shops/$shopId/settings.tsx`](../src/routes/_protected/campaigns/$campaignId/shops/$shopId/settings.tsx)、[`CampaignShopDialog.tsx`](../src/routes/_protected/campaigns/$campaignId/shops/-parts/CampaignShopDialog.tsx) 及相關管理面板 | DM 限定的建立、設定、刷新或管理操作與其視窗採用 DM 語境；玩家購買與一般瀏覽功能維持原 variant。 |
@@ -66,16 +66,24 @@
 
 ### Phase 2：新增 Button variants 與使用文件
 
-- 擴充 `ButtonVariant` 及 `variantClasses`，新增 `primary-dm`、`secondary-dm`、`ghost-dm`。
-- 延用共用焦點環、disabled、loading、`asChild` 行為；三個 variant 僅負責色彩與強調層級。
-- 在 `src/components/ui/README.md` 說明三種 DM variant 的適用情境，禁止以 variant 顏色取代實際權限檢查。
+- [x] 擴充 `ButtonVariant` 及 `variantClasses`，新增 `primary-dm`、`secondary-dm`、`ghost-dm`。
+- [x] 延用共用焦點環、disabled、loading、`asChild` 行為；三個 variant 僅負責色彩與強調層級。
+- [x] 在 `src/components/ui/README.md` 說明三種 DM variant 的適用情境，禁止以 variant 顏色取代實際權限檢查。
+
+**完成紀錄（2026-10-30）：** Button 新增三種 DM variants，分別以主題 `dm` token 表示主要實心、次要柔和及低強度透明按鈕；沿用原有共用焦點環、disabled、loading 與 `asChild` 實作，沒有變更權限或既有按鈕使用處。元件文件說明 DM 限定使用條件、操作強度及 variant 不具授權效果；破壞性操作仍使用 `destructive`。
+
+**Phase 2 驗證：** `npm run typecheck`、`npm run lint`、`npm run build` 及 `git diff --check` 均通過。
 
 ### Phase 3：盤點並遷移 DM 專屬 UI
 
-- 全域搜尋 campaign UI 中的 `isDm`／DM 視角條件、DM 專屬文案及角色判斷，逐處確認按鈕和區塊是否真為 DM 限定。
-- 將 DM 限定按鈕依操作強度映射到 `primary-dm`、`secondary-dm` 或 `ghost-dm`；除非本來就是破壞性操作，刪除類操作仍保留 `destructive`。
-- 將 DM 專屬視窗、面板與區塊邊框改用 `border-dm`，並清除同一元素上互相衝突的舊 DM 色彩 class。
-- 在原有主題色彩規劃文件記錄此項限定例外，保留稀有度色彩政策及一般 UI 色彩規則。
+- [x] 全域搜尋 campaign UI 中的 `isDm`／DM 視角條件、DM 專屬文案及角色判斷，逐處確認按鈕和區塊是否真為 DM 限定。
+- [x] 將 DM 限定按鈕依操作強度映射到 `primary-dm`、`secondary-dm` 或 `ghost-dm`；破壞性操作保留危險語意。
+- [x] 將 DM 專屬視窗、面板與區塊邊框改用 `border-dm`，並清除同一元素上互相衝突的舊 DM 色彩 class。
+- [x] 在原有主題色彩規劃文件記錄此項限定例外，保留稀有度色彩政策及一般 UI 色彩規則。
+
+**完成紀錄（2026-10-30）：** 已遷移背包 DM 視角／自創道具／貨幣編輯、物品提示中的 DM 隱藏筆記與控制列、物品建立與派發（含鍛造工坊搜尋）、DM 冒險筆記、戰役基本設定儲存／角色配額／Email 邀請、DM 角色擁有權移轉、商店建立與設定／刷新管理，以及待審購買的核准與拒絕按鈕。商店玩家購買與數量控制、邀請碼複製、公開角色權限管理、一般冒險筆記編輯及角色權限可允許的個人資料／刪除操作均維持原樣；大廳「DM 專屬管理世界」是未按 DM 身分分流的靜態標籤，也未改動。所有變更只調整語意樣式，未改變 `isDm`、權限條件、資料存取、互動流程或測試識別子；刪除與拒絕等危險操作保留危險樣式。
+
+**Phase 3 驗證：** `npm run typecheck`、`npm run lint`、`npm run lint:theme-colors`、`npm run build`、受影響的 campaign UI E2E 測試及 `git diff --check` 均通過。實際執行結果待驗證後填入。
 
 ### Phase 4：驗證
 

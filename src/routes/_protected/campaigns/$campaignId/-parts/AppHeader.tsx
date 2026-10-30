@@ -1,31 +1,21 @@
-import { Backpack, Crown, Plus, User, type LucideIcon } from 'lucide-react';
-import { Button } from '@/components/ui';
-import { type Character, type ViewMode } from '@/types';
+import { Backpack } from 'lucide-react';
+import { Select } from '@/components/ui';
 import type { SyncStatus } from '@/hooks/useCampaignSync';
 
 export interface AppHeaderProps {
 	isDm: boolean;
-	viewMode: ViewMode;
-	setViewMode: (mode: ViewMode) => void;
-	characters?: Character[];
-	viewerCharId?: string;
-	setViewerCharId?: (id: string) => void;
-	setActiveCharId?: (id: string) => void;
+	viewSelection: string;
+	onViewSelectionChange: (selection: string) => void;
+	players: { id: string; name: string }[];
 	syncStatus: SyncStatus;
-	onCreateHomebrew: () => void;
 }
-
-const viewIcons: Record<'player' | 'dm', LucideIcon> = {
-	player: User,
-	dm: Crown,
-};
 
 export default function AppHeader({
 	isDm,
-	viewMode,
-	setViewMode,
+	viewSelection,
+	onViewSelectionChange,
+	players,
 	syncStatus,
-	onCreateHomebrew,
 }: AppHeaderProps) {
 	return (
 		<header className='relative z-10 border-b border-primary/40 bg-background/90 backdrop-blur-md px-4 lg:px-8 py-3'>
@@ -81,40 +71,30 @@ export default function AppHeader({
 				</div>
 
 				{isDm && (
-					<div className='flex flex-wrap items-center gap-2.5'>
-						{viewMode === 'dm' && (
-							<Button
-								type='button'
-								variant='secondary'
-								data-testid='inventory-create-item'
-								onClick={onCreateHomebrew}
-								prefixIcon={<Plus />}
-							>
-								<span>鍛造自創道具 (Homebrew)</span>
-							</Button>
-						)}
-
-						<div className='flex bg-card p-1 rounded-lg border border-primary/50'>
-							{(['player', 'dm'] as const).map((mode) => {
-								const Icon = viewIcons[mode];
-								return (
-									<Button
-										key={mode}
-										type='button'
-										size='sm'
-										variant={viewMode === mode ? 'primary' : 'ghost'}
-										data-testid={`inventory-view-mode-${mode}`}
-										aria-pressed={viewMode === mode}
-										onClick={() => setViewMode(mode)}
-									>
-										<Icon className={`w-3.5 h-3.5`} />
-										<span>
-											{mode === 'player' ? '玩家視角預覽' : 'DM 上帝視角'}
-										</span>
-									</Button>
-								);
-							})}
-						</div>
+					<div className='flex w-full items-center gap-2 rounded-lg border border-dm/50 bg-dm/5 px-3 py-2 sm:w-auto sm:min-w-72'>
+						<label
+							htmlFor='inventory-view-selector'
+							className='shrink-0 text-sm font-serif font-bold text-dm'
+						>
+							切換視角:
+						</label>
+						<Select
+							id='inventory-view-selector'
+							aria-label='切換預覽視角'
+							data-testid='inventory-view-selector'
+							value={viewSelection}
+							onChange={(event) =>
+								onViewSelectionChange(event.currentTarget.value)
+							}
+							className='min-w-0 flex-1 border-dm/50 bg-card'
+						>
+							<option value='dm'>DM</option>
+							{players.map((player) => (
+								<option key={player.id} value={player.id}>
+									{player.name}
+								</option>
+							))}
+						</Select>
 					</div>
 				)}
 			</div>
