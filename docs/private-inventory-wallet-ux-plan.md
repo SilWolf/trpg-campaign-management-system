@@ -213,6 +213,30 @@
 - [ ] 合併執行派發與階段三回歸測試時 24/25 項通過；階段三「DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳」在既有選取邊框顏色 assertion 失敗，與本階段派發改動無關，未在此擴大修改。
 - [ ] Playwright／Supabase mock 只驗證前端流程與 mock 合約，不代表 Edge Function、RPC、RLS、Realtime 或資料庫交易已在真實隔離環境驗收；正式環境未部署。
 
+## 階段五執行紀錄（2026-10-31）
+
+### 本機回歸
+
+- [x] `npm run typecheck`
+- [x] `npm run lint`（包含 ESLint 與主題色彩政策檢查）
+- [x] `npm run build`（Vite production build 與靜態圖庫驗證通過；有既存的大型 chunk 提示，未阻擋建置）
+- [x] `npm run test:e2e`（Chromium 131/131 通過；使用 Playwright／Supabase mock）
+- [x] `npx playwright test tests/e2e/item-image-upload.spec.ts tests/e2e/phase-3-inventory.spec.ts`（20/20 通過）
+
+### 回歸修正
+
+- 背包選取框的 `border-l-primary` 曾被 ghost 按鈕的透明 border 樣式蓋過，導致選取狀態看不見。改由選取項目的左框直接使用 `--primary` 主題色，並讓 E2E 等待 CSS 色彩轉場完成後再比對。
+- 圖片上傳測試仍檢查已移除的 `inventory-bag-private` 分頁。改為依目前單一背包介面，檢查 `inventory-private-group` 在玩家預覽中隱藏、DM 視角中顯示。
+- 首次完整 E2E 因上述兩項失敗為 129 通過／2 失敗；修正後完整重跑 131/131 通過。
+
+### 隔離環境驗收與限制
+
+- [ ] 尚未執行 [`private_inventory_wallet_security.sql`](../supabase/tests/private_inventory_wallet_security.sql)，也未在隔離 PostgreSQL／Supabase 套用私人背包／錢包安全 migration。
+- [ ] 尚未以不同 ACL 使用者驗證 REST 欄位 grants、RLS、錢包 RPC 授權、Edge Function、Realtime／Broadcast 隔離，以及跨 campaign 存取。
+- [ ] 尚未驗證真實資料庫中的轉帳方向、併發、交易失敗回滾及交易後資料一致性。
+- 本次環境找不到 `psql`、Supabase CLI 或 Docker；沒有連線或修改任何 Supabase 專案，也沒有執行 migration 或部署。Playwright 測試使用 mock，不能替代以上驗收。
+- **階段五狀態：本機回歸完成；隔離環境驗收未完成。** 在維護者提供並確認隔離專案與安全執行環境、完成上述驗收前，不得宣稱資料庫安全驗收通過或部署至正式環境。
+
 ## 驗收清單
 
 ### 使用者介面

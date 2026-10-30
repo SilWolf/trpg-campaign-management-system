@@ -104,7 +104,13 @@ test('DM 可在合併背包搜尋檢視物品並開啟雙錢包轉帳', async ({
 		};
 	});
 	expect(selectionStyles.borderLeftWidth).toBe('2px');
-	expect(selectionStyles.borderLeftColor).toBe(selectionStyles.primaryColor);
+	await expect
+		.poll(() =>
+			publicPotion.evaluate(
+				(element) => getComputedStyle(element).borderLeftColor,
+			),
+		)
+		.toBe(selectionStyles.primaryColor);
 	await page.getByTestId('inventory-consume-item').click();
 	await expect
 		.poll(() =>

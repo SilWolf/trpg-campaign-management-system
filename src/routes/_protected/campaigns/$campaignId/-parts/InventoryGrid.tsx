@@ -308,11 +308,12 @@ export default function InventoryGrid({
 															toggleEquip(item);
 														}
 													}}
-													className={`w-full rounded-none px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition border-l-2 hover:bg-card/80 ${
-														isInspected
-															? 'border-l-primary'
-															: 'border-l-transparent'
-													} ${!matches ? 'opacity-25 grayscale' : ''}`}
+													style={{
+														borderLeftColor: isInspected
+															? 'var(--primary)'
+															: 'transparent',
+													}}
+													className={`w-full rounded-none px-3 py-2 flex items-center justify-between gap-3 cursor-pointer transition border-l-2 hover:bg-card/80 ${!matches ? 'opacity-25 grayscale' : ''}`}
 												>
 													<div className='flex items-center gap-2.5 min-w-0 flex-1'>
 														<div

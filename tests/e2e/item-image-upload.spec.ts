@@ -173,11 +173,11 @@ test('DM 可切換預覽玩家並依其權限顯示背包介面', async ({
 		.getByTestId('inventory-character-inventory-character')
 		.first()
 		.click();
-	await expect(page.getByTestId('inventory-bag-private')).toHaveCount(0);
+	await expect(page.getByTestId('inventory-private-group')).toHaveCount(0);
 
 	await viewSelector.selectOption('dm');
 	await expect(page.getByTestId('dm-operation-bar')).toBeVisible();
-	await expect(page.getByTestId('inventory-bag-private')).toBeVisible();
+	await expect(page.getByTestId('inventory-private-group')).toBeVisible();
 });
 
 test('鍛造圖片變體失敗時保留舊參照並回報不可清理的資產路徑', async ({
