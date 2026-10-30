@@ -213,7 +213,38 @@ RPC 使用固定 `search_path`、明確撤銷 `PUBLIC`／`anon` 的執行權並�
 - [x] 派發原因最多 200 字；UI、Edge Function 與 RPC 採相同限制，不可靜默截斷。
 - [x] 搜尋關鍵字先 trim；trim 後為空值時保留前一次結果。排序為本人自製物品、官方規則書物品、其他人分享物品。
 - [x] 新派發物品預設未裝備、未調諧、目前充能為 0；營地箱強制公開。
-- [ ] 依現有資料庫 schema 核實 `inventory_items` 欄位／檢查約束、DM helper、既有交易 RPC 與 RLS，再定稿增量 migration。
+- [x] 依 repo schema snapshot、整合 migration、DM helper、既有交易 RPC 與 RLS 核實資料邊界，並定稿後續增量 migration 合約；正式／隔離 Supabase 的實際 schema 驗收仍屬階段五。
+
+### 階段一核實結果與定稿資料合約
+
+階段一已完成產品範圍及 repo 內資料契約鎖定。以下是後續實作必須遵守的唯一合約；不代表已查詢或驗收任何遠端 Supabase 專案。
+
+#### 已鎖定的派發行為
+
+- 一次派發草稿最多 10 列；列數是表單定義列數，不是展開後背包資料列數。可堆疊列數量為 1–1,000,000，不可堆疊列數量為 1–20，後者每件展開成一筆 `quantity = 1` 的 `inventory_items`。
+- 本規則的來源 ID 合併限定於 DM 派發：只有未經定義表單建立／複製／編輯、保留相同非空 canonical 來源 ID 且 `isStackable = true` 的項目，才在相同 campaign、owner 及公開／私人背包內合併。不得以名稱或相似定義合併；沒有來源 ID 的草稿各自建立實例。這不會在階段一改寫既有玩家物品移轉的合併行為。
+- canonical `itemId` 跨官方目錄及鍛造工坊來源全域唯一；派發時存入 `inventory_items.blacksmith_item_id`。此欄位是來源識別而非實例 ID，也不以 `blacksmith_items` 外鍵限制，因來源亦包含官方目錄且派發實例須獨立於來源項目生命週期。
+- 正規化後的 `ItemBase.isStackable` 是布林值；缺少此欄位的既有定義一律 fallback 為 `false`。複製、新建或編輯草稿清除來源 ID，即使內容未變也不得恢復來源合併資格。
+- 新增背包資料列數以服務端鎖定後的計算為準：0–10 列直接提交、11–20 列須明確確認、超過 20 列拒絕。既有堆疊更新及操作紀錄不計入新增列數；任何單列合併後超過 1,000,000 均整筆回滾。
+- 目標只能是本 campaign 的角色背包或公開 `camp-chest`；營地箱是虛擬 owner，不建立角色／權限列且不得設私人。新增實例未裝備、未調諧、`charges = 0`。
+- 同一交易寫入物品變更及一筆 `item_dispatched`；共用操作紀錄每個 campaign 僅保留最近 100 筆。事件的公開摘要不得含私人錢包／暗袋資料；私密快照只能透過相應 RLS 權限讀取。初版沒有派發歷史 UI 或接收者通知。
+- 派發原因可省略，長度 0–200；UI、Edge Function 與 RPC 一致拒絕超長內容，不得截斷。搜尋關鍵字先 trim；trim 後空值不觸發搜尋，並保留前次結果；結果排序為本人自製、官方規則書、他人分享。
+
+#### Repo schema 與授權核實
+
+- [`external/schema.md`](../external/schema.md) 的 `inventory_items` snapshot 記載 `id`、`owner_id`、`campaign_id` 為 `text`，`quantity` 為 `integer NOT NULL DEFAULT 1`，並有 `item_base jsonb`；目前沒有 `blacksmith_item_id` 或 stackability 欄位。該 snapshot 未列出數量正值／上限檢查約束。此為 repo 依據，不保證遠端 schema 與 snapshot 相同。
+- 整合 migration [`20261030000012_v0_1_0.sql`](../supabase/migrations/20261030000012_v0_1_0.sql) 將 `inventory_items.campaign_id` 設為 `NOT NULL`、連至 `campaigns(id) ON DELETE CASCADE`，並以 CHECK 保證 `owner_id = 'camp-chest'` 時 `is_private = false`。`item_base` 由 `is_valid_item_base(jsonb)` 驗證；目前 `ItemBase`、validator 及 DB 欄位尚未包含本功能的 `isStackable` 與來源 ID。
+- `is_campaign_dm(text)` 是 `SECURITY DEFINER`／`STABLE` helper，以 `campaign.dm_id = auth.uid()::text` 判定 DM；campaign／owner ID 是 `text`，登入者 ID 是 `uuid`。新增資料庫函式須延續明確型別邊界、固定 `search_path`，RLS 不得直接查詢自身表格。
+- 現有 `inventory_items` RLS 允許 campaign 成員對其 campaign 資料列執行 `FOR ALL`。因此它不是派發 DM 授權；派發必須經服務端交易函式重新驗證操作者、campaign、角色目標、內容及數量，不能依賴前端隱藏按鈕或 RLS 單獨授權。
+- 商店購買有單一交易流程；`split_inventory_item` 與 `transfer_inventory_item` 也是既有交易 RPC。物品移轉目前依物品定義比對堆疊，並以 PostgreSQL integer 範圍作溢位檢查；本次 canonical 來源 ID 合併規則只定義 DM 派發，但階段三仍須讓所有會修改 `inventory_items.quantity` 的路徑遵守 1,000,000 上限。
+- 商店已有 `checkout_campaign_shop_cart_as_actor` service-role wrapper：驗證 actor UUID／`auth.users`、設定交易內 `request.jwt.claim.sub`，再呼叫以 `auth.uid()` 授權的交易。派發採相同模式：Edge Function 先驗證 bearer token，service-role-only wrapper 接收已驗證 actor，驗證後建立 actor claim 並呼叫內部交易；內部交易仍須用 `is_campaign_dm` 驗證，不得只信任前端提供的 actor 或因 service role 而略過授權。
+- 目前未見共用 `campaign_activity_log`。貨幣轉帳由 `useInventoryActions.transferCurrency` 計算後更新角色／營地箱前端狀態，並非單一資料庫 RPC；階段三必須先提供交易式轉帳，再在原交易中寫入共用事件。商店購買與玩家物品轉交亦須在各自原交易內寫事件。
+
+#### 增量 migration 邊界與驗收限制
+
+- 階段三以新 migration 增加 `inventory_items.blacksmith_item_id`、更新 `ItemBase` validator／相容轉換、加入數量 1–1,000,000 的 DB 防線及建立共用事件表／RLS／交易函式；不得修改已部署的歷史 migration。套用前須檢查既有數量資料，若有小於 1 或大於 1,000,000 的資料即停止並人工處理，不可截斷、拆列或靜默修正。
+- 操作紀錄新增及裁切須依 campaign 序列化，在同一業務交易內寫入並保留穩定排序後最新 100 筆；一般使用者不可直接新增、修改或刪除。事件公開摘要與私密 payload 必須分開授權，避免同一公開可讀資料列夾帶無關成員可見的私人明細。
+- 本階段只鎖定 repo 契約與 migration 設計，沒有建立／部署 migration，也沒有讀取遠端 schema、migration history、RLS、Realtime 或交易回滾結果。正式及隔離環境的核對與驗收仍依 [`database-template-migration.md`](./database-template-migration.md) 在階段五執行；不得宣稱已上線。
 
 ### 階段二：物品定義與搜尋
 
