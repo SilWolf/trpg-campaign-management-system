@@ -54,6 +54,9 @@ export async function mockSupabase(
 		extraInventoryItems?: Record<string, unknown>[];
 		createCampaignError?: string;
 		deleteCampaignCharacterError?: string;
+		campaignItemDistributionError?: string;
+		campaignItemDistributionDelayMs?: number;
+		campaignItemDistributionRequireConfirmationFirst?: boolean;
 		blankCampaign?: boolean;
 		blacksmithSharedItems?: Record<string, unknown>[];
 		blacksmithImportCampaigns?: { id: string; name: string }[];
@@ -368,6 +371,8 @@ export async function mockSupabase(
 			affixes: [],
 		},
 	];
+	let nextDispatchInventoryId = 1;
+	let dispatchConfirmationReturned = false;
 	const campaignMembers = [
 		{
 			user_id: 'settings-dm-id',
@@ -618,6 +623,115 @@ export async function mockSupabase(
 			};
 			functionRequests.push({ name: 'identify-inventory-item', body });
 			await route.fulfill({ json: { itemId: body.itemId } });
+			return;
+		}
+
+		if (
+			url.pathname === '/functions/v1/dispatch-campaign-items' &&
+			method === 'POST'
+		) {
+			const body = request.postDataJSON() as {
+				requestId: string;
+				campaignId: string;
+				ownerId: string;
+				isPrivate: boolean;
+				items: {
+					itemBase: Record<string, unknown>;
+					blacksmithItemId: string | null;
+					isHomebrew: boolean;
+					isImportant: boolean;
+					quantity: number;
+				}[];
+			};
+			functionRequests.push({ name: 'dispatch-campaign-items', body });
+			if (
+				options.campaignItemDistributionRequireConfirmationFirst &&
+				!body.confirmLargeBatch &&
+				!dispatchConfirmationReturned
+			) {
+				dispatchConfirmationReturned = true;
+				await route.fulfill({
+					json: { requiresConfirmation: true, predictedInsertCount: 11 },
+				});
+				return;
+			}
+			if (options.campaignItemDistributionError) {
+				await route.fulfill({
+					status: 409,
+					json: { error: options.campaignItemDistributionError },
+				});
+				return;
+			}
+			const inventoryIds: string[] = [];
+			for (const line of body.items) {
+				const itemBase = line.itemBase;
+				const weaponProperties =
+					typeof itemBase.weaponProperties === 'object' &&
+					itemBase.weaponProperties !== null
+						? (itemBase.weaponProperties as Record<string, unknown>)
+						: null;
+				const armorProperties =
+					typeof itemBase.armorProperties === 'object' &&
+					itemBase.armorProperties !== null
+						? (itemBase.armorProperties as Record<string, unknown>)
+						: null;
+				const rowCount = itemBase.isStackable === true ? 1 : line.quantity;
+				for (let index = 0; index < rowCount; index += 1) {
+					const id = `dispatch-inventory-${nextDispatchInventoryId++}`;
+					inventoryIds.push(id);
+					inventoryItems.push({
+						id,
+						campaign_id: body.campaignId,
+						owner_id: body.ownerId,
+						blacksmith_item_id: line.blacksmithItemId,
+						slot: 0,
+						name: itemBase.name,
+						category: itemBase.category,
+						sub_type: Array.isArray(itemBase.subTypes)
+							? itemBase.subTypes[0] ?? ''
+							: '',
+						rarity: itemBase.rarity,
+						icon: itemBase.icon ?? 'Package',
+						damage: weaponProperties?.damage ?? null,
+						mastery: weaponProperties?.mastery ?? 'None',
+						ac: armorProperties?.ac ?? null,
+						weight: itemBase.weight,
+						value_gp: itemBase.valueGp,
+						quantity: itemBase.isStackable === true ? line.quantity : 1,
+						equipped: false,
+						requires_attunement: itemBase.isRequireAttunement,
+						attuned: false,
+						is_homebrew: line.isHomebrew,
+						is_identified: true,
+						charges: 0,
+						max_charges: itemBase.maxCharges ?? 0,
+						effects: itemBase.effects,
+						flavor: itemBase.flavor ?? '',
+						dm_notes: itemBase.dmNotes,
+						player_notes: '',
+						is_private: body.ownerId === 'camp-chest' ? false : body.isPrivate,
+						is_equippable: itemBase.isEquippable,
+						is_consumable: itemBase.isConsumable,
+						is_important: line.isImportant,
+						affixes: itemBase.affixes,
+						item_base: itemBase,
+					});
+				}
+			}
+			if (options.campaignItemDistributionDelayMs) {
+				await new Promise((resolve) =>
+					setTimeout(resolve, options.campaignItemDistributionDelayMs),
+				);
+			}
+			await route.fulfill({
+				json: {
+					operationId: body.requestId,
+					insertedCount: inventoryIds.length,
+					updatedCount: 0,
+					inventoryIds,
+					replayed: false,
+				},
+			});
 			return;
 		}
 

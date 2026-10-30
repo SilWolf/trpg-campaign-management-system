@@ -10,6 +10,7 @@ import {
 	DollarSign,
 	Weight,
 	Boxes,
+	Gift,
 } from 'lucide-react';
 import type { InventoryDisplayMode, InventoryItem } from '@/types';
 import { Button, Input } from '@/components/ui';
@@ -27,6 +28,8 @@ export interface InventoryToolbarProps {
 	setDisplayMode: (mode: InventoryDisplayMode) => void;
 	handleAutoSort: (sortBy: 'rarity' | 'weight' | 'value') => void;
 	handleConsolidateStacks: () => void;
+	canDispatchItems: boolean;
+	onOpenItemDistribution: () => void;
 }
 
 export default function InventoryToolbar({
@@ -42,11 +45,13 @@ export default function InventoryToolbar({
 	setDisplayMode,
 	handleAutoSort,
 	handleConsolidateStacks,
+	canDispatchItems,
+	onOpenItemDistribution,
 }: InventoryToolbarProps) {
 	return (
 		<div className='p-3.5 bg-background/90 border-b border-primary/40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3'>
 			<div className='space-y-2 w-full'>
-				<div className='flex items-center gap-2'>
+				<div className='flex flex-wrap items-center gap-2'>
 					<Button
 						type='button'
 						variant={currentBagTab === 'public' ? 'primary' : 'ghost'}
@@ -217,6 +222,18 @@ export default function InventoryToolbar({
 							)}
 						</div>
 					</details>
+					{canDispatchItems && (
+						<Button
+							type='button'
+							variant='secondary'
+							size='sm'
+							data-testid='inventory-dispatch-items'
+							onClick={onOpenItemDistribution}
+							prefixIcon={<Gift />}
+						>
+							派發物品
+						</Button>
+					)}
 				</div>
 			</div>
 		</div>

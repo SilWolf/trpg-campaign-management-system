@@ -822,7 +822,7 @@ BEGIN
 					AND source.is_important =
 						(line.value ->> 'isImportant')::boolean
 					AND (
-						source.owner_id = v_actor_id::text
+						source.owner_id = v_actor_id
 						OR source.is_shared IS TRUE
 					)
 			)

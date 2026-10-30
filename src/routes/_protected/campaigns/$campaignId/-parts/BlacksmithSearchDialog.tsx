@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, BookOpen, Hammer, Search, X } from 'lucide-react';
 import { Button, Select } from '@/components/ui';
+import { useToast } from '@/contexts/FeedbackContext';
 import { ITEM_CATEGORY_LABELS, RARITY_CONFIG } from '@/data';
 import {
 	loadBlacksmithCatalogDefinitions,
@@ -17,6 +18,7 @@ import {
 	type BlacksmithImportDraft,
 	type BlacksmithSearchResult,
 } from '@/lib/blacksmithSearch';
+import { useModalFocus } from '@/hooks/useModalFocus';
 import type {
 	BlacksmithCatalogDefinition,
 	BlacksmithItem,
@@ -34,7 +36,7 @@ interface BlacksmithSearchDialogProps {
 	isOpen: boolean;
 	userId: string;
 	onImport: (draft: BlacksmithImportDraft) => void;
-	onCopy: (form: HomebrewForm) => void;
+	onCopy: (form: HomebrewForm, isHomebrew: boolean) => void;
 	onClose: () => void;
 }
 
@@ -77,14 +79,64 @@ export default function BlacksmithSearchDialog({
 		EMPTY_SOURCES,
 		{ search: '', category: 'all', rarity: 'all' },
 	));
+	const [importedItems, setImportedItems] = useState<ReadonlySet<string>>(
+		() => new Set(),
+	);
 	const [isLoading, setIsLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const requestId = useRef(0);
+	const dialogRef = useRef<HTMLElement | null>(null);
+	const importedItemsRef = useRef(new Set<string>());
+	const importTimersRef = useRef(new Map<string, number>());
+	const hasInitializedCatalogSelection = useRef(false);
+	useModalFocus(dialogRef, isOpen, onClose);
+	const toast = useToast();
 	const mineCache = useRef(new Map<string, Promise<BlacksmithTemplate[]>>());
 	const sharedCache = useRef(new Map<string, Promise<BlacksmithTemplate[]>>());
 	const catalogCache = useRef(new Map<string, Promise<BlacksmithItem[]>>());
 	const definitionsPromise = useRef<Promise<BlacksmithCatalogDefinition[]> | null>(
 		null,
+	);
+
+	useEffect(() => {
+		if (!isOpen || hasInitializedCatalogSelection.current) return;
+		let active = true;
+		const definitions =
+			definitionsPromise.current ??
+			(definitionsPromise.current = loadBlacksmithCatalogDefinitions().catch(
+				(error: unknown) => {
+					definitionsPromise.current = null;
+					throw error;
+				},
+			));
+		void definitions
+			.then((catalogs) => {
+				if (!active) return;
+				setSelection((current) => ({
+					...current,
+					catalogIds: catalogs.map((catalog) => catalog.catalogId),
+				}));
+				hasInitializedCatalogSelection.current = true;
+			})
+			.catch((error: unknown) => {
+				if (!active) return;
+				toast.error(
+					error instanceof Error ? error.message : '官方規則書目錄載入失敗。',
+				);
+			});
+		return () => {
+			active = false;
+		};
+	}, [isOpen, toast]);
+
+	useEffect(
+		() => () => {
+			for (const timer of importTimersRef.current.values()) {
+				window.clearTimeout(timer);
+			}
+			importTimersRef.current.clear();
+		},
+		[],
 	);
 
 	useEffect(() => {
@@ -206,6 +258,30 @@ export default function BlacksmithSearchDialog({
 		{ key: 'shared', title: '其他人分享的物品', results: groups.shared, icon: <Hammer /> },
 	] as const;
 
+	const importResult = (result: BlacksmithSearchResult) => {
+		if (importedItemsRef.current.has(result.itemId)) return;
+		try {
+			onImport(createBlacksmithImportDraft(result));
+			importedItemsRef.current.add(result.itemId);
+			setImportedItems((current) => new Set(current).add(result.itemId));
+			toast.success('已成功匯入');
+			const timer = window.setTimeout(() => {
+				importedItemsRef.current.delete(result.itemId);
+				importTimersRef.current.delete(result.itemId);
+				setImportedItems((current) => {
+					const next = new Set(current);
+					next.delete(result.itemId);
+					return next;
+				});
+			}, 1500);
+			importTimersRef.current.set(result.itemId, timer);
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : '物品匯入失敗，請稍後重試。',
+			);
+		}
+	};
+
 	const renderResult = (result: BlacksmithSearchResult) => (
 		<li
 			key={result.itemId}
@@ -213,16 +289,18 @@ export default function BlacksmithSearchDialog({
 			className='flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background/80 p-3'
 		>
 			<div className='flex min-w-0 items-center gap-3'>
-				<ItemIcon
-					iconName={result.item.icon ?? 'Package'}
-					className='h-10 w-10 shrink-0 rounded border border-border p-1 text-muted-foreground'
-				/>
+				<div className='relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background'>
+					<ItemIcon
+						iconName={result.item.icon ?? 'Package'}
+						className='h-full w-full p-1 text-muted-foreground'
+					/>
+				</div>
 				<div className='min-w-0'>
 					<p className='truncate font-semibold text-foreground'>
 						{result.item.name}
 					</p>
 					<p className='truncate text-xs text-muted-foreground'>
-						{result.item.category} · {RARITY_CONFIG[result.item.rarity].label} ·{' '}
+						{ITEM_CATEGORY_LABELS[result.item.category]} · {RARITY_CONFIG[result.item.rarity].label} ·{' '}
 						{result.sourceLabel}
 					</p>
 				</div>
@@ -232,15 +310,21 @@ export default function BlacksmithSearchDialog({
 					type='button'
 					variant='secondary'
 					size='sm'
-					onClick={() => onImport(createBlacksmithImportDraft(result))}
+					disabled={importedItems.has(result.itemId)}
+					onClick={() => importResult(result)}
 				>
-					匯入
+					{importedItems.has(result.itemId) ? '已匯入' : '匯入'}
 				</Button>
 				<Button
 					type='button'
 					variant='ghost'
 					size='sm'
-					onClick={() => onCopy(createBlacksmithCopyForm(result))}
+					onClick={() => {
+						onCopy(
+							createBlacksmithCopyForm(result),
+							'catalogId' in result.item ? false : result.item.isHomebrew,
+						);
+					}}
 				>
 					複製
 				</Button>
@@ -251,10 +335,12 @@ export default function BlacksmithSearchDialog({
 	return (
 		<div className='fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-background/80 p-3 backdrop-blur-sm sm:p-5'>
 			<section
+				ref={dialogRef}
 				role='dialog'
 				aria-modal='true'
 				aria-labelledby='blacksmith-search-title'
-				className='my-auto flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl'
+				tabIndex={-1}
+				className='my-auto flex max-h-[calc(100vh-300px)] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl'
 			>
 				<header className='flex items-center justify-between gap-3 border-b border-border p-4'>
 					<div>

@@ -22,7 +22,9 @@ v0.1.0 將原本 27 個時間戳記 migration 依原順序合併至 [`2026103000
 
 ## 戰役操作紀錄、貨幣交易與 DM 物品派發
 
-[`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql) 是新的增量 migration，尚未套用或連線驗證。它新增 `inventory_items.blacksmith_item_id`、`ItemBase.isStackable` 相容驗證、數量 1–1,000,000 限制、共用唯讀 `campaign_activity_log`（每戰役最多保留 100 筆），並以 transaction-scoped advisory lock 序列化事件新增及裁切。
+[`20261030000015_campaign_activity_and_item_dispatch.sql`](../supabase/migrations/20261030000015_campaign_activity_and_item_dispatch.sql) 新增 `inventory_items.blacksmith_item_id`、`ItemBase.isStackable` 相容驗證、數量 1–1,000,000 限制、共用唯讀 `campaign_activity_log`（每戰役最多保留 100 筆），並以 transaction-scoped advisory lock 序列化事件新增及裁切。請以遠端 schema 與 migration history 分別確認實際執行狀態；在 Dashboard 手動執行 SQL 不會自動登記 CLI migration history，且不得因此重跑非冪等的完整 migration。
+
+[`20261030000016_fix_dispatch_owner_id_type_comparison.sql`](../supabase/migrations/20261030000016_fix_dispatch_owner_id_type_comparison.sql) 修正派發 RPC 將 UUID `blacksmith_items.owner_id` 與文字 actor ID 比較的錯誤。若 migration 15 已在 Dashboard 手動執行，請勿重跑 migration 15；此 migration 會先確認遠端函式包含唯一預期舊比較，再以 `CREATE OR REPLACE FUNCTION` 更新 RPC，若內容不符便停止且不修改。
 
 - `dispatch-campaign-items` 先驗證登入 token 與請求，再呼叫僅授權 `service_role` 的 `dispatch_campaign_items_as_actor`。RPC 以 actor claim 與 `is_campaign_dm` 再驗證 DM、campaign 目標、物品定義、數量、合併及 0–10／11–20／超過 20 筆新增列門檻；11–20 筆第一次只回報確認需求，不寫入物品或事件。相同 request ID 重送會回傳已提交結果。
 - `transfer_campaign_currency` 以資料庫交易更新來源／目標 GP 與舊錢包鏡像，並在同一交易寫入事件；玩家物品移轉及商店結帳／核准／拒絕／取消也在既有交易邊界內新增事件。私人錢包或私人背包事件僅 DM、操作者及相關角色擁有者可讀。

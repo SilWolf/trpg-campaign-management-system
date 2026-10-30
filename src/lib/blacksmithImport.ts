@@ -17,7 +17,7 @@ export type DbBlacksmithImportDefinition = {
 	item_base: AllItem;
 };
 
-function toItemBase(source: AllItem): AllItem {
+export function toBlacksmithItemBase(source: AllItem): AllItem {
 	const base = {
 		name: source.name,
 		subTypes: [...source.subTypes],
@@ -56,7 +56,7 @@ export function toBlacksmithImportDefinition(
 	source: BlacksmithImportSource,
 ): BlacksmithImportDefinition {
 	return {
-		...toItemBase(source),
+		...toBlacksmithItemBase(source),
 		isHomebrew: 'catalogId' in source ? false : source.isHomebrew,
 		isImportant: 'catalogId' in source ? false : source.isImportant,
 	};
@@ -66,7 +66,7 @@ export function toDbBlacksmithImportDefinition(
 	item: BlacksmithImportDefinition,
 ): DbBlacksmithImportDefinition {
 	return {
-		item_base: toItemBase(item),
+		item_base: toBlacksmithItemBase(item),
 		is_homebrew: item.isHomebrew,
 		is_important: item.isImportant,
 	};

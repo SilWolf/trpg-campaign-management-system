@@ -877,7 +877,7 @@ export default function ItemTooltip({
 
 											<Button
 												type='button'
-												variant='danger'
+												variant='destructive'
 												size='sm'
 												onClick={() => deleteItem(inspectedItem)}
 												prefixIcon={<Trash2 />}

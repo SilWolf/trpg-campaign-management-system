@@ -32,7 +32,7 @@ function CampaignLayout() {
 			<div className='fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--primary)_18%,transparent),var(--background)_70%)]' />
 
 			{/* 頂部全域戰役導航列 */}
-			<header className='relative z-20 border-b border-primary/40 bg-background/90 backdrop-blur-md px-4 lg:px-8 py-3'>
+			<header className='relative border-b border-primary/40 bg-background/90 backdrop-blur-md px-4 lg:px-8 py-3'>
 				<div className='mx-auto flex max-w-7xl flex-col gap-3'>
 					<SystemLinkBar />
 					<div className='flex flex-col items-center justify-between gap-3 sm:flex-row'>

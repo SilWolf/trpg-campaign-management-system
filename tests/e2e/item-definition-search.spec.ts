@@ -8,6 +8,7 @@ test('物品定義轉換預設不可堆疊，複製會重建詞條 ID', async ({
 			copyItemToDefinitionForm,
 			createDefaultItemDefinitionForm,
 			itemDefinitionFormToItem,
+			itemToDefinitionForm,
 		} = await import('/src/lib/itemDefinitions.ts');
 		const form = createDefaultItemDefinitionForm();
 		form.name = '測試物品';
@@ -16,11 +17,23 @@ test('物品定義轉換預設不可堆疊，複製會重建詞條 ID', async ({
 			...INITIAL_ITEMS[0],
 			affixes: [{ id: 'source-affix', name: '來源詞條', desc: '來源描述' }],
 		};
+		const roundTrip = itemDefinitionFormToItem(itemToDefinitionForm(source));
 		const copied = copyItemToDefinitionForm(source);
 		return {
 			defaultStackable: createDefaultItemDefinitionForm().isStackable,
 			convertedStackable: converted.isStackable,
+			roundTripPreserved:
+				roundTrip.name === source.name &&
+				roundTrip.category === source.category &&
+				roundTrip.subTypes.join('|') === source.subTypes.join('|') &&
+				roundTrip.rarity === source.rarity &&
+				roundTrip.weight === source.weight &&
+				roundTrip.valueGp === source.valueGp &&
+				roundTrip.isStackable === source.isStackable &&
+				roundTrip.affixes[0]?.id === source.affixes[0].id,
 			copiedStackable: copied.isStackable,
+			copyHasSourceId:
+				'itemId' in copied || 'blacksmithItemId' in copied,
 			sourceAffixId: source.affixes[0].id,
 			copiedAffixId: copied.affixes[0].id,
 			copiedQuantity: copied.quantity,
@@ -32,7 +45,9 @@ test('物品定義轉換預設不可堆疊，複製會重建詞條 ID', async ({
 	expect(result).toMatchObject({
 		defaultStackable: false,
 		convertedStackable: false,
+		roundTripPreserved: true,
 		copiedStackable: false,
+		copyHasSourceId: false,
 		sourceAffixId: 'source-affix',
 		copiedQuantity: '1',
 		copiedPrivate: false,

@@ -13,6 +13,7 @@ import type { CurrencyWalletOption } from './-parts/CurrencyPanel';
 import HomebrewModal from './-parts/HomebrewModal';
 import InventoryGrid from './-parts/InventoryGrid';
 import InventoryToolbar from './-parts/InventoryToolbar';
+import ItemDistributionDialog from './-parts/ItemDistributionDialog';
 import ItemTooltip from './-parts/ItemTooltip';
 import { useCampaignSync } from '@/hooks/useCampaignSync';
 import { gpFromLegacyCurrencyWallet } from '@/lib/supabase';
@@ -68,6 +69,7 @@ function CampaignInventoryPage() {
 		setCharacters,
 		items,
 		setItems,
+		refreshItems,
 		permissions,
 		campChestCurrency,
 		setCampChestCurrency,
@@ -109,6 +111,7 @@ function CampaignInventoryPage() {
 	const [countCoinWeight, setCountCoinWeight] = useState(true);
 	const [isCoinModalOpen, setIsCoinModalOpen] = useState(false);
 	const [isCurrencyEditOpen, setIsCurrencyEditOpen] = useState(false);
+	const [isItemDistributionOpen, setIsItemDistributionOpen] = useState(false);
 	const showToast = (message: string, kind: ToastKind = 'success') => {
 		toast[kind](message);
 	};
@@ -460,6 +463,12 @@ function CampaignInventoryPage() {
 						setDisplayMode={setDisplayMode}
 						handleAutoSort={actions.handleAutoSort}
 						handleConsolidateStacks={actions.handleConsolidateStacks}
+						canDispatchItems={
+							isDm && isRemoteCampaign && !isGuest && Boolean(user?.id)
+						}
+						onOpenItemDistribution={() =>
+							setIsItemDistributionOpen(true)
+						}
 					/>
 
 					<InventoryGrid
@@ -593,6 +602,18 @@ function CampaignInventoryPage() {
 				copiedAffix={actions.copiedAffix}
 				onCopyAffix={actions.handleCopyAffix}
 			/>
+
+			{isDm && isRemoteCampaign && !isGuest && user?.id && (
+					<ItemDistributionDialog
+						isOpen={isItemDistributionOpen}
+						campaignId={campaignId}
+						userId={user.id}
+						characters={characters}
+						items={items}
+						onClose={() => setIsItemDistributionOpen(false)}
+						refreshItems={refreshItems}
+					/>
+			)}
 
 			<CurrencyPanel
 				isOpen={isCoinModalOpen}

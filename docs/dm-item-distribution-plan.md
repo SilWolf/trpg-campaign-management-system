@@ -27,13 +27,13 @@
 
 ## 名詞與資料邊界
 
-| 名稱 | 意義 | 儲存位置 |
-| --- | --- | --- |
-| 物品定義 | 名稱、類別、稀有度、效果、詞條等可複用內容 | 表單狀態或鍛造工坊／規則書來源 |
-| 派發清單列 | 一個待派發物品定義及數量 | 僅前端表單狀態 |
-| 來源物品 ID | 官方目錄或鍛造工坊物品的全域唯一 canonical `itemId`；只表示未修改來源定義 | 官方目錄／`blacksmith_items.id` 經 adapter 正規化，匯入時保留 |
-| 派發物品實例 | 已屬於指定戰役及角色／背包的物品；可選 `blacksmith_item_id` 表示未修改來源副本 | `inventory_items` |
-| 戰役操作紀錄 | 操作者、操作種類、相關角色、公開摘要／必要快照及時間；派發事件另含原因 | 共用 `campaign_activity_log` |
+| 名稱         | 意義                                                                           | 儲存位置                                                      |
+| ------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| 物品定義     | 名稱、類別、稀有度、效果、詞條等可複用內容                                     | 表單狀態或鍛造工坊／規則書來源                                |
+| 派發清單列   | 一個待派發物品定義及數量                                                       | 僅前端表單狀態                                                |
+| 來源物品 ID  | 官方目錄或鍛造工坊物品的全域唯一 canonical `itemId`；只表示未修改來源定義      | 官方目錄／`blacksmith_items.id` 經 adapter 正規化，匯入時保留 |
+| 派發物品實例 | 已屬於指定戰役及角色／背包的物品；可選 `blacksmith_item_id` 表示未修改來源副本 | `inventory_items`                                             |
+| 戰役操作紀錄 | 操作者、操作種類、相關角色、公開摘要／必要快照及時間；派發事件另含原因         | 共用 `campaign_activity_log`                                  |
 
 `blacksmith_item_id` 是來源識別，不是 `inventory_items.id`：每個新背包列仍由伺服器產生新的實例 ID。來源 ID 只在定義未經編輯的直接匯入時保留；表單建立／複製／編輯後必須清除。不得將派發物品寫回鍛造工坊。
 
@@ -183,18 +183,18 @@ RPC 使用固定 `search_path`、明確撤銷 `PUBLIC`／`anon` 的執行權並�
 
 ## 建議檔案範圍
 
-| 範圍 | 預期位置 |
-| --- | --- |
-| 派發按鈕與 dialog 狀態 | `src/routes/_protected/campaigns/$campaignId/index.tsx`，或抽至同路由 `-parts/` |
-| 派發表單、列表與背包選擇 | 新增 `-parts/ItemDistributionDialog.tsx` |
-| 來源選取及搜尋結果 | 新增 `-parts/BlacksmithSearchDialog.tsx`、`-parts/BlacksmithSourceTree.tsx` |
-| 可重用定義編輯表單 | 抽取 `HomebrewModal` 欄位／轉換，或新增 `ItemDefinitionDialog.tsx` |
-| 搜尋 adapter／正規化 | `src/lib/blacksmithCatalog.ts`、`src/lib/blacksmithItems.ts` 或新增 `src/lib/blacksmithSearch.ts` |
-| Edge Function 呼叫及錯誤解析 | 新增 `src/lib/campaignItemDistribution.ts` |
-| 物品／表單轉換型別 | `src/types.ts`、`src/lib/supabase.ts`；`ItemBase.isStackable` 預設及相容值、`InventoryItem.blacksmithItemId` 欄位轉換 |
-| Edge Function | `supabase/functions/dispatch-campaign-items/index.ts` |
+| 範圍                            | 預期位置                                                                                                                                                                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 派發按鈕與 dialog 狀態          | `src/routes/_protected/campaigns/$campaignId/index.tsx`，或抽至同路由 `-parts/`                                                                                                                                      |
+| 派發表單、列表與背包選擇        | 新增 `-parts/ItemDistributionDialog.tsx`                                                                                                                                                                             |
+| 來源選取及搜尋結果              | 新增 `-parts/BlacksmithSearchDialog.tsx`、`-parts/BlacksmithSourceTree.tsx`                                                                                                                                          |
+| 可重用定義編輯表單              | 抽取 `HomebrewModal` 欄位／轉換，或新增 `ItemDefinitionDialog.tsx`                                                                                                                                                   |
+| 搜尋 adapter／正規化            | `src/lib/blacksmithCatalog.ts`、`src/lib/blacksmithItems.ts` 或新增 `src/lib/blacksmithSearch.ts`                                                                                                                    |
+| Edge Function 呼叫及錯誤解析    | 新增 `src/lib/campaignItemDistribution.ts`                                                                                                                                                                           |
+| 物品／表單轉換型別              | `src/types.ts`、`src/lib/supabase.ts`；`ItemBase.isStackable` 預設及相容值、`InventoryItem.blacksmithItemId` 欄位轉換                                                                                                |
+| Edge Function                   | `supabase/functions/dispatch-campaign-items/index.ts`                                                                                                                                                                |
 | Schema／validator／共用操作記錄 | 新增增量 migration，加入 `inventory_items.blacksmith_item_id`、更新 `is_valid_item_base`、建立 `campaign_activity_log` 並擴充購買／轉帳／物品移轉／派發交易；先核對合併版 migration 流程，不修改已部署歷史 migration |
-| 測試 | 搜尋與定義轉換、全域 itemId 唯一性、合併／容量／新增列門檻／確認重試／鎖定單元測試、UI/E2E、Edge Function payload、隔離 Supabase RPC/RLS／保留上限併發驗收 |
+| 測試                            | 搜尋與定義轉換、全域 itemId 唯一性、合併／容量／新增列門檻／確認重試／鎖定單元測試、UI/E2E、Edge Function payload、隔離 Supabase RPC/RLS／保留上限併發驗收                                                           |
 
 初版不預設新增 UI 套件。先驗證現有 `Button`、表單元件及 dialog/overlay 慣例能否支援巢狀 dialog、Escape 關閉、焦點返回及行動版捲動；如原生能力不足，先提出套件選項與影響，再決定是否安裝。
 
@@ -284,32 +284,54 @@ RPC 使用固定 `search_path`、明確撤銷 `PUBLIC`／`anon` 的執行權並�
 
 ### 階段四：派發 UI 與同步
 
-- [ ] 僅向 DM 顯示入口；完成目標背包、逐項數量／編輯／刪除、原因、提交中、錯誤及成功狀態。
-- [ ] 串接 Edge Function；確認成功後以 Realtime／回傳 ID 更新背包，不做前端多筆寫入。
-- [ ] 驗證窄螢幕巢狀 dialog、焦點管理、鍵盤操作、Escape、重複提交及草稿保留。
+- [x] 僅向 DM 顯示入口；完成目標背包、逐項數量／編輯／刪除、原因、提交中、錯誤及成功狀態。
+- [x] 串接 Edge Function；確認成功後以 Realtime／回傳 ID 更新背包，不做前端多筆寫入。
+- [x] 驗證窄螢幕巢狀 dialog、焦點管理、鍵盤操作、Escape、重複提交及草稿保留。
+
+#### 階段四執行紀錄（2026-10-30）
+
+- 在戰役背包工具列加入 DM 專用「派發物品」入口；只在已登入的遠端戰役顯示，訪客／離線模式不會提供看似成功的本機派發。
+- 新增 `ItemDistributionDialog`：接收目標限目前戰役角色與虛擬營地箱；營地箱強制公開。清單支援工坊匯入、新建、複製後編輯、逐列編輯／刪除及數量調整；編輯定義會清除來源 ID，匯入未修改項目則保留 canonical 來源 ID。
+- 新增 `campaignItemDistribution` 呼叫器，派發透過單次 `dispatch-campaign-items` Function；11–20 筆預估新增列先要求確認、超過 20 筆先行阻擋，並以同一 request ID 完成伺服器要求的確認重試。提交期間鎖定表單及重複送出；失敗顯示錯誤並保留目標、原因與清單。
+- 成功後依 RPC 回傳的 inventory row IDs 呼叫 `useCampaignSync.refreshItems`，只更新本機狀態、不觸發 `setItems` 的資料庫寫入；既有 Realtime 訂閱仍負責後續同步。若成功後 ID 對帳失敗，明確提示同步問題，不把已提交的派發誤報為失敗。
+- 新增共用 dialog 焦點管理：限制 Tab 焦點、Escape 關閉最上層 dialog，並在巢狀 dialog 關閉後將焦點還給可用觸發按鈕。定義表單的私人背包欄位只在一般背包編輯模式顯示，派發定義編輯不會讓人誤以為可改變接收目標。
+- 新增派發 E2E：驗證 DM／一般玩家入口差異、公開／私人目標與營地箱限制、Function 單次提交、回傳 ID 對帳、確認取消與重試、超量阻擋、新建後編輯／刪除、失敗留稿、窄螢幕及 Escape／焦點返回。測試使用 Supabase mock；不代表遠端 Realtime、RLS、RPC 交易或 Edge Function 已驗收。
+- 驗證：`npm run typecheck`、`npm run lint`、`npm run build` 通過；派發、階段二定義／搜尋及階段三背包回歸共 22 項 E2E 通過，派發專項最後執行 6 項通過。
+- 本階段未修改／部署 SQL 或 Edge Function，也未連線正式或隔離 Supabase；階段五的真實 schema、RLS、actor 授權、Realtime、原子回滾、併發及部署驗收仍未完成。
 
 ### 階段五：驗收與部署準備
 
-- [ ] 單元測試：定義正規化、表單往返、來源複製不沿用 ID、搜尋條件及結果數量上限。
+- [x] 定義轉換與搜尋契約測試：正規化、表單往返、複製不帶來源 ID、空白搜尋及結果數量上限；透過 Playwright 執行轉換器測試。
 - [ ] E2E：DM 完成官方匯入、自創、複製、編輯、刪除、私人／公開／營地箱派發；玩家看不到入口；失敗不清除草稿。
 - [ ] 隔離 Supabase 多帳號驗收：RLS、RPC actor 授權、跨 campaign 隔離、Realtime、交易原子回滾、共用操作記錄可見性、唯讀限制及每戰役 100 筆保留（含併發）。
-- [ ] 執行 repo 慣例的 typecheck、lint、相關測試及 build。
+- [x] 執行 repo 慣例的 typecheck、lint、相關測試及 build。
 - [ ] 僅依維護者核准的隔離環境驗收、migration history 核對及部署程序發布；不得因本機測試通過而宣稱遠端已驗收或上線。
+
+#### 階段五執行紀錄（2026-10-30）
+
+- 本機通過：`npm run typecheck`、`npm run lint`、`npm run build`、`npm run validate:blacksmith-source`。Build 成功；Vite 顯示既有單一 chunk 超過 500 kB 的建議警告，不影響產物或檢查結果。
+- 相關 Playwright 測試共 15 項通過：`item-distribution.spec.ts` 6 項、`item-definition-search.spec.ts` 2 項、`blacksmith.spec.ts` 7 項。另補上定義表單往返、複製不帶來源 ID 的轉換契約驗證。這些測試使用瀏覽器與 Supabase mock，不能代替真實 Edge Function、資料庫或 RLS 驗收；完整派發流程矩陣仍待補齊。
+- 唯讀執行 `npm run supabase:migrations:list` 失敗，CLI 回報無法以 temp role 認證資料庫；未讀取或輸出任何密碼／金鑰。
+- 唯讀 `npm run supabase:db:dry-run` 未推送變更，但回報遠端 migration history 含有 repo 目前不存在的舊版 migration IDs，無法產生可安全套用的計畫。CLI 輸出的 `migration repair`／`db pull` 建議未執行；不得以修補 history、`--include-all` 或直接推送來繞過版本差異。
+- `dispatch-campaign-items` 已成功部署為使用者提供的狀態；本次未呼叫 Function 清單、未重新部署，也未驗證部署目標、Secrets 或真實請求行為。未執行任何 migration。
+- **階段五尚未完成，部署準備受阻。** 尚無隔離 Supabase 專案參照、可用的唯讀／測試連線及多帳號測試環境；遠端 history 差異也待維護者確認。另階段三所列官方靜態目錄來源尚未由 RPC 對可信 server-side catalog 快照核驗，必須在隔離驗收前處理或明確接受風險。
+- 後續須先由維護者提供隔離專案與測試帳號，核實遠端 schema／history 的實際狀態，再在隔離環境執行 migration、RLS／授權／回滾／Realtime／併發及完整派發矩陣；通過後才可更新本清單並另行取得正式部署授權。
 
 ## 驗收清單
 
 ### UI 與操作
 
-- [ ] 只有 DM 看得到並可使用「派發物品」；直接呼叫 Function 的非 DM 仍被拒絕。
-- [ ] 目標選單只包含當前戰役角色；私人背包只對角色可選，營地箱始終公開。
-- [ ] 清單每列均可調數量、編輯定義、刪除；至少一項才可提交。
-- [ ] 派發原因最多 200 字；送出時計算預計新增的 `inventory_items` 列數；11–20 列顯示確認警告，使用者取消時不送出且保留草稿，確認後才重試提交；超過 20 列時禁止提交並提示減少單次派發的物品數量。
+- [x] DM 遠端頁面才顯示並可使用「派發物品」；玩家／訪客／離線模式不顯示入口。
+- [ ] 直接呼叫 Function 的非 DM、跨戰役目標及未登入請求已在隔離環境驗證為拒絕；本機 E2E mock 不驗證伺服器授權。
+- [x] 目標選單只使用當前戰役角色及虛擬營地箱；私人背包只對角色可選，營地箱始終公開。
+- [x] 清單每列可調數量、編輯定義及刪除；無物品時不可提交。
+- [x] 派發原因 UI 限制 200 字；11–20 列先顯示確認，取消不送出且保留草稿，確認後才提交；UI 預估超過 20 列時禁止送出。
 - [ ] 警告門檻只計新建 `inventory_items` 列，不計既有堆疊更新及 `campaign_activity_log`；UI 預估不可取代 RPC 在鎖定後的權威計算。
 - [ ] 搜尋前 trim 關鍵字；trim 後空值不觸發搜尋，並保留上一組結果。非空搜尋結果按本人自製、官方規則書、他人分享排序。
 - [ ] 搜尋最多回傳 20 筆官方物品及 20 筆鍛造工坊物品；工坊 20 筆名額先給本人自製物品，再給他人分享物品。來源、類型及稀有度篩選皆生效。
 - [ ] 快速連續搜尋不會以舊結果覆蓋新條件；載入、空結果及錯誤狀態可辨識。
 - [ ] 「匯入」直接加入清單；「複製」與「創造新的物品」進入表單後只加入派發草稿，不寫入鍛造工坊。
-- [ ] 交易失敗時保留所有表單內容；成功時只顯示一次完成狀態，不重複派發。
+- [x] 交易失敗時保留派發草稿與原因；成功依交易回應顯示完成並以 ID 對帳，不執行前端多筆寫入。
 
 ### 資料、安全與一致性
 
@@ -323,5 +345,6 @@ RPC 使用固定 `search_path`、明確撤銷 `PUBLIC`／`anon` 的執行權並�
 - [ ] 派發原因為 0–200 字；原因及物品快照與物品建立同交易提交；已建立的物品不依賴鍛造工坊項目仍存在。
 - [ ] 商店購買、玩家貨幣轉帳、玩家物品轉交及 DM 派發都寫入同一 `campaign_activity_log`；每個 campaign 僅保留最近 100 次操作，記錄不可由一般成員修改或刪除。
 - [ ] DM 可讀所有本戰役事件；其他成員僅可讀公開摘要或自己相關事件，無關成員不能讀取私人錢包／暗袋資料。
-- [ ] Realtime／回傳結果使背包顯示新物品；失敗不透過 optimistic state 假報成功。
+- [x] Function 回傳的 inventory IDs 會安全重新載入背包列；失敗不透過 optimistic state 假報成功。
+- [ ] 隔離環境實測 Realtime 投遞及跨帳號背包更新；本機 mock 及 ID 對帳測試不取代真實 Realtime 驗收。
 - [ ] 已在隔離 Supabase 環境驗證 schema、RPC 權限、RLS、回滾及部署步驟；本機 mock 測試不取代真實資料庫驗收。

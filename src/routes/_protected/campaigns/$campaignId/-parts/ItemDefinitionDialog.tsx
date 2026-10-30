@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import type {
 	HomebrewForm,
@@ -30,6 +31,7 @@ import { ITEM_CATEGORY_LABELS } from '@/data';
 import ItemIcon from './ItemIcon';
 import { ITEM_IMAGE_ICON_PREFIX } from '@/lib/itemIcon';
 import { ItemImageUploadField } from '@/components/ItemImageUploadField';
+import { useModalFocus } from '@/hooks/useModalFocus';
 
 export interface ItemDefinitionDialogProps {
 	isOpen: boolean;
@@ -47,6 +49,7 @@ export interface ItemDefinitionDialogProps {
 	dialogTitle?: string;
 	submitLabel?: string;
 	showInventoryFields?: boolean;
+	errorMessage?: string | null;
 }
 
 const ICON_OPTIONS = [
@@ -77,8 +80,11 @@ export default function ItemDefinitionDialog({
 	dialogTitle,
 	submitLabel,
 	showInventoryFields = true,
+	errorMessage = null,
 	characterName = '角色',
 }: ItemDefinitionDialogProps) {
+	const dialogRef = useRef<HTMLDivElement | null>(null);
+	useModalFocus(dialogRef, isOpen, onClose);
 	if (!isOpen) return null;
 	const imageScopeId = campaignId ?? '';
 	const imagePermission = canManageItemImage ?? false;
@@ -147,11 +153,21 @@ export default function ItemDefinitionDialog({
 
 	return (
 		<div className='fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto'>
-			<div className='bg-background border-2 border-border/60 rounded-lg max-w-2xl w-full p-5 shadow-lg my-8'>
+			<div
+				ref={dialogRef}
+				role='dialog'
+				aria-modal='true'
+				aria-labelledby='item-definition-dialog-title'
+				tabIndex={-1}
+				className='bg-background border-2 border-border/60 rounded-lg max-w-2xl w-full p-5 shadow-lg my-8'
+			>
 				<div className='flex items-center justify-between border-b border-border pb-3 mb-4'>
 					<div className='flex items-center gap-2'>
 						<Sparkles className='w-5 h-5 text-muted-foreground' />
-						<h2 className='text-base sm:text-lg font-serif font-bold text-foreground'>
+						<h2
+							id='item-definition-dialog-title'
+							className='text-base sm:text-lg font-serif font-bold text-foreground'
+						>
 							{dialogTitle ?? (isEditing
 								? `DM 編輯物品內容 (${characterName})`
 								: `DM 自創道具鍛造工坊 (發放至：${characterName})`)}
@@ -169,6 +185,14 @@ export default function ItemDefinitionDialog({
 				</div>
 
 				<form onSubmit={onSubmit} className='space-y-3.5 text-xs'>
+					{errorMessage && (
+						<p
+							role='alert'
+							className='rounded-lg border border-destructive/70 bg-destructive/30 p-3 text-sm text-destructive-foreground'
+						>
+							{errorMessage}
+						</p>
+					)}
 					<div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
 						<div className='sm:col-span-2'>
 							<label className='block text-muted-foreground mb-1'>
@@ -765,7 +789,7 @@ export default function ItemDefinitionDialog({
 							}
 						/>}
 
-						<Checkbox
+						{showInventoryFields && <Checkbox
 							label={
 								<div className='flex items-center gap-x-1.5'>
 									<Lock className='w-3.5 h-3.5' />
@@ -776,7 +800,7 @@ export default function ItemDefinitionDialog({
 							onChange={(e) =>
 								setForm({ ...form, isPrivate: e.target.checked })
 							}
-						/>
+						/>}
 					</div>
 
 					<div className='flex justify-end gap-2 pt-3 border-t border-border'>

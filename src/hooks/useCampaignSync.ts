@@ -433,6 +433,39 @@ export function useCampaignSync(
 		[campaignId, isRemoteCampaign],
 	);
 
+	const refreshItems = useCallback(
+		async (itemIds: readonly string[]) => {
+			if (itemIds.length === 0) return;
+			if (!supabase || !isRemoteCampaign || !campaignId) {
+				throw new Error('重新載入派發物品需要連線至戰役伺服器。');
+			}
+			const uniqueItemIds = [...new Set(itemIds)];
+			const { data, error } = await supabase
+				.from('inventory_items')
+				.select(INVENTORY_ITEM_SELECT)
+				.eq('campaign_id', campaignId)
+				.in('id', uniqueItemIds);
+			if (error) throw error;
+
+			const refreshedItems = ((data ?? []) as DbInventoryItem[]).map(fromDbItem);
+			const refreshedIds = new Set(refreshedItems.map((item) => item.id));
+			if (uniqueItemIds.some((id) => !refreshedIds.has(id))) {
+				throw new Error('派發完成，但有物品尚未出現在目前戰役背包。');
+			}
+			setItemsState((previous) => {
+				const refreshedById = new Map(
+					refreshedItems.map((item) => [item.id, item]),
+				);
+				return previous.map((item) => refreshedById.get(item.id) ?? item).concat(
+					refreshedItems.filter(
+						(item) => !previous.some((existing) => existing.id === item.id),
+					),
+				);
+			});
+		},
+		[campaignId, isRemoteCampaign],
+	);
+
 	const setCampChestCurrency: Dispatch<SetStateAction<CampaignCurrency>> =
 		useCallback((updater) => {
 			setCampChestCurrencyState(updater);
@@ -474,6 +507,7 @@ export function useCampaignSync(
 		setCharacters,
 		items,
 		setItems,
+		refreshItems,
 		permissions,
 		setPermissions,
 		campChestCurrency,

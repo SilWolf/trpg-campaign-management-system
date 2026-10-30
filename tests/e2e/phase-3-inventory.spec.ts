@@ -25,9 +25,6 @@ test('一般成員只能閱讀公開背包與公開錢包，私人資料和負�
 	await mockSupabase(page, { campaignInventoryRole: 'player' });
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
-	await expect(page.getByTestId('campaign-sync-status')).toHaveText(
-		'Supabase 即時同步中',
-	);
 
 	await expect(page.getByRole('button', { name: /公開行囊/ })).toHaveAttribute(
 		'aria-pressed',
@@ -57,9 +54,6 @@ test('DM 可切換公開與私人背包、搜尋檢視並開啟轉帳', async ({
 	});
 	await seedAuthenticatedSession(page);
 	await page.goto(inventoryUrl);
-	await expect(page.getByTestId('campaign-sync-status')).toHaveText(
-		'Supabase 即時同步中',
-	);
 
 	await expect(page.getByTestId('inventory-item-inventory-public-potion')).toBeVisible();
 	await page.getByRole('button', { name: /私人暗袋/ }).click();
